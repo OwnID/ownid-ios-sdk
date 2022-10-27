@@ -7,8 +7,7 @@ struct AppCoordinatorView: View {
     @ObservedObject var coordinator: AppCoordinator
     
     var body: some View {
-        GeometryReader { proxy in
-            ScrollView {
+        ScrollView(.vertical, showsIndicators: false) {
                 VStack {
                     HeaderView()
                         .frame(height: 160)
@@ -22,11 +21,9 @@ struct AppCoordinatorView: View {
                         .padding(.bottom)
                         .padding(.bottom)
                 }
-                .frame(minHeight: proxy.size.height)
             }
-        }
-        .background(UISharedColor.background)
-        .edgesIgnoringSafeArea([.top, .bottom])
+            .background(UISharedColor.background)
+            .edgesIgnoringSafeArea([.top, .bottom])
     }
 }
 
