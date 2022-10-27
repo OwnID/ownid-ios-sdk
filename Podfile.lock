@@ -1,0 +1,37 @@
+PODS:
+  - Gigya (1.4.0)
+  - ownid-core-ios-sdk (2.0.0)
+  - ownid-demo-components-ios (1.0.0):
+    - Gigya
+    - ownid-gigya-ios-sdk
+  - ownid-gigya-ios-sdk (2.0.0):
+    - Gigya
+    - ownid-core-ios-sdk
+
+DEPENDENCIES:
+  - Gigya
+  - ownid-core-ios-sdk (from `../ownid-core-ios-sdk/`)
+  - ownid-demo-components-ios (from `../ownid-demo-ios-sdk`)
+  - ownid-gigya-ios-sdk (from `../ownid-gigya-ios-sdk/`)
+
+SPEC REPOS:
+  trunk:
+    - Gigya
+
+EXTERNAL SOURCES:
+  ownid-core-ios-sdk:
+    :path: "../ownid-core-ios-sdk/"
+  ownid-demo-components-ios:
+    :path: "../ownid-demo-ios-sdk"
+  ownid-gigya-ios-sdk:
+    :path: "../ownid-gigya-ios-sdk/"
+
+SPEC CHECKSUMS:
+  Gigya: e1a40d775051b7d2067cc581549ed75f0d2b30c6
+  ownid-core-ios-sdk: 86300a7ddfb45a53c21cb82d6aa164c2876be9a8
+  ownid-demo-components-ios: 448fbedac002d1502fa95d865fbce41ec3a9962a
+  ownid-gigya-ios-sdk: 031336da2a62ef932b68a41a9e8516e057e600bf
+
+PODFILE CHECKSUM: afb9f167be02dd1647ab7134adb3e8df9b88f11b
+
+COCOAPODS: 1.11.3

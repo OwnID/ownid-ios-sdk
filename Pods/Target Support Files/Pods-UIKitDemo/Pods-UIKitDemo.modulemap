@@ -1,0 +1,6 @@
+framework module Pods_UIKitDemo {
+  umbrella header "Pods-UIKitDemo-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,46 +1,3 @@
-![OwnIDSDK](./logo.svg)
-
-# Demo Apps
-This repository represents set of demo apps how to use OwnID mobile SDKs.
-
-Want to see a demo of the OwnID registration and login flows without opening the source code? Ensure TestFlight is installed on your iOS device, then access the [OwnID SDK Firebase Demo beta](https://testflight.apple.com/join/QvMiUpjq).
-
-To get started, please read integration instructions for:
-- [Firebase SDK](https://github.com/OwnID/ownid-firebase-ios-sdk)
-- [Gigya SDK](https://github.com/OwnID/ownid-gigya-ios-sdk)
-- [React SDK](https://github.com/OwnID/react-native-sdk)
-
-## OwnID Core iOS SDK
-The [OwnID](https://ownid.com/) iOS SDK is a client library written in Swift that provides a passwordless login alternative for your iOS application by using cryptographic keys to replace the traditional password. Integrating the SDK with your app adds a Skip Password option to its registration and login screens.
-
-The OwnID iOS SDK consists of a **Core** module along with modules that are specific to an identity platform like Firebase. The Core module provides core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with a browser, handling a redirect URI, and checking and returning results to the iOS application. The following modules extend the Core module for a specific identify management system:
-- **[OwnID Firebase-iOS SDK](https://github.com/OwnID/ownid-firebase-ios-sdk)** - Extends **Core** functionality by providing integration with Email/Password-based [Firebase Authentication](https://firebase.google.com/docs/auth).
-
-- **[OwnID Gigya-iOS SDK](https://github.com/OwnID/ownid-gigya-ios-sdk)** - Extends **Core** functionality by providing integration with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-ios-sdk). In addition, the OwnID Gigya-iOS SDK has a **[Gigya-Screen-Sets](https://github.com/OwnID/ownid-demo-ios-sdk/tree/master/ScreensetsDemo)** integration.
-
-The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 13 and above.
-
- ## Registration and Login Flows
- Use the following diagrams to better understand the registration and login flows provided by the OwnID iOS SDK. The LinkAndLogin flow occurs when an existing user who has traditional account credentials uses the login screen to tap Skip Password for the first time.
-
-## Supported Languages
-The OwnID SDK has built-in support for multiple languages. The SDK loads translations in runtime and selects the best language available. The list of currently supported languages can be found [here](https://i18n.prod.ownid.com/langs.json).
-
-The SDK will also make the RTL adjustments if needed. If the user's mobile device uses a language that is not supported, the SDK displays the Skip Password feature in English.
-
-## Data Privacy
-The OwnID SDK does not store any data on the user's iOS device.
-
-The OwnID SDK collects data and information about events inside the SDK using Log Data. This Log Data does not include any personal data that can be used to identify the user such as username, email, and password. It does include general information like the device Internet Protocol (“IP”) address, device model, operating system version, time and date of events, and other statistics.
-
-Log Data is sent to the OwnID server using an encrypted process so it can be used to collect OwnID service statistics and improve service quality. OwnID does not share Log Data with any third party services.
-
-## Feedback
-We'd love to hear from you! If you have any questions or suggestions, feel free to reach out by creating a GitHub issue.
-
-## License
-
-```
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -218,8 +175,18 @@ We'd love to hear from you! If you have any questions or suggestions, feel free 
 
    END OF TERMS AND CONDITIONS
 
+   APPENDIX: How to apply the Apache License to your work.
 
-   Copyright 2022 OwnID INC.
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -232,5 +199,3 @@ We'd love to hear from you! If you have any questions or suggestions, feel free 
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
-```
