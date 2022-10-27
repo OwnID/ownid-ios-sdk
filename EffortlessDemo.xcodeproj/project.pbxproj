@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		16096030290AFFFA00649D64 /* FirebaseDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */; };
+		16096032290AFFFA00649D64 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16096031290AFFFA00649D64 /* ContentView.swift */; };
+		16096034290AFFFB00649D64 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16096033290AFFFB00649D64 /* Assets.xcassets */; };
+		16096037290AFFFB00649D64 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16096036290AFFFB00649D64 /* Preview Assets.xcassets */; };
 		161C4794290AE9E30014D737 /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161C477B290AE9E30014D737 /* LogInViewModel.swift */; };
 		161C4795290AE9E30014D737 /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161C477C290AE9E30014D737 /* LogInView.swift */; };
 		161C4796290AE9E30014D737 /* ScreenSetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161C477D290AE9E30014D737 /* ScreenSetsView.swift */; };
@@ -33,6 +37,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1609602D290AFFFA00649D64 /* FirebaseDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FirebaseDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseDemoApp.swift; sourceTree = "<group>"; };
+		16096031290AFFFA00649D64 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		16096033290AFFFB00649D64 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		16096036290AFFFB00649D64 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		161C475A290AE94F0014D737 /* ScreensetsDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreensetsDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		161C476C290AE9990014D737 /* UIKitDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UIKitDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		161C477B290AE9E30014D737 /* LogInViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
@@ -70,6 +79,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1609602A290AFFFA00649D64 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		161C4757290AE94F0014D737 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -89,6 +105,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1609602E290AFFFA00649D64 /* FirebaseDemo */ = {
+			isa = PBXGroup;
+			children = (
+				1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */,
+				16096031290AFFFA00649D64 /* ContentView.swift */,
+				16096033290AFFFB00649D64 /* Assets.xcassets */,
+				16096035290AFFFB00649D64 /* Preview Content */,
+			);
+			path = FirebaseDemo;
+			sourceTree = "<group>";
+		};
+		16096035290AFFFB00649D64 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				16096036290AFFFB00649D64 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
 		161C475B290AE94F0014D737 /* ScreensetsDemo */ = {
 			isa = PBXGroup;
 			children = (
@@ -246,6 +281,7 @@
 			children = (
 				161C475B290AE94F0014D737 /* ScreensetsDemo */,
 				161C476D290AE9990014D737 /* UIKitDemo */,
+				1609602E290AFFFA00649D64 /* FirebaseDemo */,
 				16FBF262290A8E0800148C8C /* Products */,
 				77BD2AA4EFD7B47DA3B95320 /* Pods */,
 				26DB8DBAE5E79AFC5C48D0CB /* Frameworks */,
@@ -257,6 +293,7 @@
 			children = (
 				161C475A290AE94F0014D737 /* ScreensetsDemo.app */,
 				161C476C290AE9990014D737 /* UIKitDemo.app */,
+				1609602D290AFFFA00649D64 /* FirebaseDemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -284,6 +321,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1609602C290AFFFA00649D64 /* FirebaseDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1609603A290AFFFB00649D64 /* Build configuration list for PBXNativeTarget "FirebaseDemo" */;
+			buildPhases = (
+				16096029290AFFFA00649D64 /* Sources */,
+				1609602A290AFFFA00649D64 /* Frameworks */,
+				1609602B290AFFFA00649D64 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FirebaseDemo;
+			productName = FirebaseDemo;
+			productReference = 1609602D290AFFFA00649D64 /* FirebaseDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
 		161C4759290AE94F0014D737 /* ScreensetsDemo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 161C4765290AE9500014D737 /* Build configuration list for PBXNativeTarget "ScreensetsDemo" */;
@@ -332,6 +386,9 @@
 				LastSwiftUpdateCheck = 1400;
 				LastUpgradeCheck = 1400;
 				TargetAttributes = {
+					1609602C290AFFFA00649D64 = {
+						CreatedOnToolsVersion = 14.0.1;
+					};
 					161C4759290AE94F0014D737 = {
 						CreatedOnToolsVersion = 14.0.1;
 					};
@@ -356,11 +413,21 @@
 			targets = (
 				161C4759290AE94F0014D737 /* ScreensetsDemo */,
 				161C476B290AE9990014D737 /* UIKitDemo */,
+				1609602C290AFFFA00649D64 /* FirebaseDemo */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1609602B290AFFFA00649D64 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16096037290AFFFB00649D64 /* Preview Assets.xcassets in Resources */,
+				16096034290AFFFB00649D64 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		161C4758290AE94F0014D737 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -470,6 +537,15 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		16096029290AFFFA00649D64 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16096032290AFFFA00649D64 /* ContentView.swift in Sources */,
+				16096030290AFFFA00649D64 /* FirebaseDemoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		161C4756290AE94F0014D737 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -516,6 +592,70 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		16096038290AFFFB00649D64 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"FirebaseDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.FirebaseDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		16096039290AFFFB00649D64 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"FirebaseDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.FirebaseDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		161C4766290AE9500014D737 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 80E6A475A92A829598F55C2D /* Pods-ScreensetsDemo.debug.xcconfig */;
@@ -772,6 +912,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1609603A290AFFFB00649D64 /* Build configuration list for PBXNativeTarget "FirebaseDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16096038290AFFFB00649D64 /* Debug */,
+				16096039290AFFFB00649D64 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		161C4765290AE9500014D737 /* Build configuration list for PBXNativeTarget "ScreensetsDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
