@@ -32,6 +32,12 @@
 		161C47BA290AE9FD0014D737 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161C47AE290AE9FD0014D737 /* Assets.xcassets */; };
 		161C47BB290AE9FD0014D737 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161C47B0290AE9FD0014D737 /* Preview Assets.xcassets */; };
 		161C47BC290AE9FD0014D737 /* GigyaSDKConfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 161C47B1290AE9FD0014D737 /* GigyaSDKConfiguration.json */; };
+		16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */; };
+		16E2D82E290B019D00AF28E4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82D290B019D00AF28E4 /* ContentView.swift */; };
+		16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
+		16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */; };
+		16FCA89E290B038F00CF6E82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */; };
+		16FCA89F290B038F00CF6E82 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */; };
 		2DF41C632DC414FE50D2060E /* Pods_UIKitDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 960785D3E294C3A57E55B8F0 /* Pods_UIKitDemo.framework */; };
 		B94DB2230E2FB874676155EA /* Pods_ScreensetsDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C717260072510B51F65ADB6 /* Pods_ScreensetsDemo.framework */; };
 /* End PBXBuildFile section */
@@ -70,6 +76,14 @@
 		161C47B1290AE9FD0014D737 /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
 		16520AC4290AEE3500E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16520AC6290AEE9900E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		16E2D829290B019D00AF28E4 /* GigyaDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GigyaDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaDemoApp.swift; sourceTree = "<group>"; };
+		16E2D82D290B019D00AF28E4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		16E2D82F290B019D00AF28E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
+		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		262AEDED4FF3F3CD691BAD0F /* Pods-ScreensetsDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.release.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.release.xcconfig"; sourceTree = "<group>"; };
 		78C18A1289C4720FAC750B3A /* Pods-UIKitDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UIKitDemo.debug.xcconfig"; path = "Target Support Files/Pods-UIKitDemo/Pods-UIKitDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		80E6A475A92A829598F55C2D /* Pods-ScreensetsDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.debug.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.debug.xcconfig"; sourceTree = "<group>"; };
@@ -102,12 +116,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		16E2D826290B019D00AF28E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		1609602E290AFFFA00649D64 /* FirebaseDemo */ = {
 			isa = PBXGroup;
 			children = (
+				16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */,
+				16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */,
 				1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */,
 				16096031290AFFFA00649D64 /* ContentView.swift */,
 				16096033290AFFFB00649D64 /* Assets.xcassets */,
@@ -276,12 +299,33 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		16E2D82A290B019D00AF28E4 /* GigyaDemo */ = {
+			isa = PBXGroup;
+			children = (
+				16FCA8A0290B040E00CF6E82 /* Info.plist */,
+				16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */,
+				16E2D82D290B019D00AF28E4 /* ContentView.swift */,
+				16E2D82F290B019D00AF28E4 /* Assets.xcassets */,
+				16E2D831290B019D00AF28E4 /* Preview Content */,
+			);
+			path = GigyaDemo;
+			sourceTree = "<group>";
+		};
+		16E2D831290B019D00AF28E4 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
 		16FBF258290A8E0800148C8C = {
 			isa = PBXGroup;
 			children = (
 				161C475B290AE94F0014D737 /* ScreensetsDemo */,
 				161C476D290AE9990014D737 /* UIKitDemo */,
 				1609602E290AFFFA00649D64 /* FirebaseDemo */,
+				16E2D82A290B019D00AF28E4 /* GigyaDemo */,
 				16FBF262290A8E0800148C8C /* Products */,
 				77BD2AA4EFD7B47DA3B95320 /* Pods */,
 				26DB8DBAE5E79AFC5C48D0CB /* Frameworks */,
@@ -294,6 +338,7 @@
 				161C475A290AE94F0014D737 /* ScreensetsDemo.app */,
 				161C476C290AE9990014D737 /* UIKitDemo.app */,
 				1609602D290AFFFA00649D64 /* FirebaseDemo.app */,
+				16E2D829290B019D00AF28E4 /* GigyaDemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -376,6 +421,23 @@
 			productReference = 161C476C290AE9990014D737 /* UIKitDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		16E2D828290B019D00AF28E4 /* GigyaDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 16E2D836290B019D00AF28E4 /* Build configuration list for PBXNativeTarget "GigyaDemo" */;
+			buildPhases = (
+				16E2D825290B019D00AF28E4 /* Sources */,
+				16E2D826290B019D00AF28E4 /* Frameworks */,
+				16E2D827290B019D00AF28E4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GigyaDemo;
+			productName = GigyaDemo;
+			productReference = 16E2D829290B019D00AF28E4 /* GigyaDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -396,6 +458,9 @@
 						CreatedOnToolsVersion = 14.0.1;
 						LastSwiftMigration = 1400;
 					};
+					16E2D828290B019D00AF28E4 = {
+						CreatedOnToolsVersion = 14.0.1;
+					};
 				};
 			};
 			buildConfigurationList = 16FBF25C290A8E0800148C8C /* Build configuration list for PBXProject "EffortlessDemo" */;
@@ -414,6 +479,7 @@
 				161C4759290AE94F0014D737 /* ScreensetsDemo */,
 				161C476B290AE9990014D737 /* UIKitDemo */,
 				1609602C290AFFFA00649D64 /* FirebaseDemo */,
+				16E2D828290B019D00AF28E4 /* GigyaDemo */,
 			);
 		};
 /* End PBXProject section */
@@ -425,6 +491,8 @@
 			files = (
 				16096037290AFFFB00649D64 /* Preview Assets.xcassets in Resources */,
 				16096034290AFFFB00649D64 /* Assets.xcassets in Resources */,
+				16FCA89E290B038F00CF6E82 /* GoogleService-Info.plist in Resources */,
+				16FCA89F290B038F00CF6E82 /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -450,6 +518,15 @@
 				161C47BC290AE9FD0014D737 /* GigyaSDKConfiguration.json in Resources */,
 				161C47BB290AE9FD0014D737 /* Preview Assets.xcassets in Resources */,
 				161C47BA290AE9FD0014D737 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16E2D827290B019D00AF28E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */,
+				16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -567,6 +644,15 @@
 				161C47B4290AE9FD0014D737 /* ViewController.swift in Sources */,
 				161C47B3290AE9FD0014D737 /* SceneDelegate.swift in Sources */,
 				161C47B5290AE9FD0014D737 /* DemoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16E2D825290B019D00AF28E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16E2D82E290B019D00AF28E4 /* ContentView.swift in Sources */,
+				16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -795,6 +881,72 @@
 			};
 			name = Release;
 		};
+		16E2D834290B019D00AF28E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"GigyaDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GigyaDemo/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.GigyaDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		16E2D835290B019D00AF28E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"GigyaDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GigyaDemo/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.GigyaDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		16FBF26D290A8E0900148C8C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -935,6 +1087,15 @@
 			buildConfigurations = (
 				161C4778290AE99A0014D737 /* Debug */,
 				161C4779290AE99A0014D737 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		16E2D836290B019D00AF28E4 /* Build configuration list for PBXNativeTarget "GigyaDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16E2D834290B019D00AF28E4 /* Debug */,
+				16E2D835290B019D00AF28E4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
