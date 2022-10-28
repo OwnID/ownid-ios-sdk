@@ -1,5 +1,7 @@
 import Combine
 import OwnIDCoreSDK
+import AccountView
+import FirebaseAuth
 
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
@@ -8,6 +10,7 @@ final class LogInViewModel: ObservableObject {
     @Published var email = ""
     @Published var password = ""
     @Published var errorMessage = ""
+    @Published var loggedInModel: AccountModel?
     
     private var bag = Set<AnyCancellable>()
     
@@ -22,7 +25,13 @@ final class LogInViewModel: ObservableObject {
                 case .success(let event):
                     switch event {
                     case .loggedIn:
-                        fatalError("Show account here")
+                        if let email = Auth.auth().currentUser?.email {
+                            let name = Auth.auth().currentUser?.displayName ?? ""
+                            let model = AccountModel(name: name, email: email)
+                            loggedInModel = model
+                        } else {
+                            errorMessage = "Cannot find logged in email"
+                        }
                         
                     case .loading:
                         print("Loading state")

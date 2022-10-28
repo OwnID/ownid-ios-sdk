@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
 import OwnIDFirebaseSDK
 
 @main
@@ -18,6 +19,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
         OwnID.FirebaseSDK.configure()
+        
+        DispatchQueue.main.async {
+            try? Auth.auth().signOut()
+        }
+        
         return true
     }
 }

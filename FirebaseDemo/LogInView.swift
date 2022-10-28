@@ -1,5 +1,6 @@
 import SwiftUI
 import OwnIDCoreSDK
+import AccountView
 
 struct LogInView: View {
     @ObservedObject private var viewModel = LogInViewModel()
@@ -12,6 +13,9 @@ struct LogInView: View {
             Text(viewModel.errorMessage)
                 .font(.headline)
                 .foregroundColor(.red)
+        }
+        .fullScreenCover(item: $viewModel.loggedInModel) { model in
+            AccountView(model: model)
         }
     }
 }
