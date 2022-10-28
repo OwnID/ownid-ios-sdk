@@ -3,10 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>OwnIDRedirectionURL</key>
-	<string>com.ownid.demo.firebase://ownid/redirect/</string>
+	<string>com.ownid.demo.FirebaseDemo://ownid/redirect/</string>
 	<key>OwnIDAppID</key>
-	<string>e8qkk8umn5hxqg</string>
-	<key>OwnIDEnv</key>
-	<string>staging</string>
+	<string>4tb9nt6iaur0zv</string>
 </dict>
 </plist>

@@ -6,6 +6,7 @@ final class RegisterViewModel: ObservableObject {
     @Published var firstName = ""
     @Published var email = ""
     @Published var password = ""
+    @Published var errorMessage = ""
     
     private var bag = Set<AnyCancellable>()
     
@@ -42,6 +43,7 @@ final class RegisterViewModel: ObservableObject {
                     
                 case .failure(let error):
                     print(error.localizedDescription)
+                    errorMessage = error.localizedDescription
                 }
             }
             .store(in: &bag)

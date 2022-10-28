@@ -8,7 +8,7 @@ struct FirebaseDemoApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginAndRegisterView()
         }
     }
 }

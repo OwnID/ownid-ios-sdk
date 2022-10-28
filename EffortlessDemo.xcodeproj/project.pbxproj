@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		16096030290AFFFA00649D64 /* FirebaseDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */; };
-		16096032290AFFFA00649D64 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16096031290AFFFA00649D64 /* ContentView.swift */; };
+		16096032290AFFFA00649D64 /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16096031290AFFFA00649D64 /* LoginAndRegisterView.swift */; };
 		16096034290AFFFB00649D64 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16096033290AFFFB00649D64 /* Assets.xcassets */; };
 		16096037290AFFFB00649D64 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16096036290AFFFB00649D64 /* Preview Assets.xcassets */; };
 		161C4794290AE9E30014D737 /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161C477B290AE9E30014D737 /* LogInViewModel.swift */; };
@@ -33,10 +33,13 @@
 		161C47BB290AE9FD0014D737 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161C47B0290AE9FD0014D737 /* Preview Assets.xcassets */; };
 		161C47BC290AE9FD0014D737 /* GigyaSDKConfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 161C47B1290AE9FD0014D737 /* GigyaSDKConfiguration.json */; };
 		16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC1290B84E30038AD91 /* RegisterViewModel.swift */; };
+		16229EC4290B8F7B0038AD91 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC3290B8F7B0038AD91 /* RegisterView.swift */; };
 		16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */; };
 		16E2D82E290B019D00AF28E4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82D290B019D00AF28E4 /* ContentView.swift */; };
 		16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
 		16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */; };
+		16E35743290BD4170059B5A2 /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35742290BD4170059B5A2 /* LogInViewModel.swift */; };
+		16E35745290BDC800059B5A2 /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35744290BDC800059B5A2 /* LogInView.swift */; };
 		16FCA89E290B038F00CF6E82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */; };
 		16FCA89F290B038F00CF6E82 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */; };
 		2DF41C632DC414FE50D2060E /* Pods_UIKitDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 960785D3E294C3A57E55B8F0 /* Pods_UIKitDemo.framework */; };
@@ -50,7 +53,7 @@
 		1361FCAB8021286EF09FB1DE /* Pods-GigyaDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GigyaDemo.debug.xcconfig"; path = "Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		1609602D290AFFFA00649D64 /* FirebaseDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FirebaseDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseDemoApp.swift; sourceTree = "<group>"; };
-		16096031290AFFFA00649D64 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		16096031290AFFFA00649D64 /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
 		16096033290AFFFB00649D64 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		16096036290AFFFB00649D64 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		161C475A290AE94F0014D737 /* ScreensetsDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreensetsDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -80,6 +83,7 @@
 		161C47B0290AE9FD0014D737 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		161C47B1290AE9FD0014D737 /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
 		16229EC1290B84E30038AD91 /* RegisterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
+		16229EC3290B8F7B0038AD91 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		16520AC4290AEE3500E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16520AC6290AEE9900E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16E2D829290B019D00AF28E4 /* GigyaDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GigyaDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -87,6 +91,8 @@
 		16E2D82D290B019D00AF28E4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		16E2D82F290B019D00AF28E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		16E35742290BD4170059B5A2 /* LogInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
+		16E35744290BDC800059B5A2 /* LogInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
 		16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -146,8 +152,11 @@
 				16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */,
 				16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */,
 				1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */,
+				16096031290AFFFA00649D64 /* LoginAndRegisterView.swift */,
 				16229EC1290B84E30038AD91 /* RegisterViewModel.swift */,
-				16096031290AFFFA00649D64 /* ContentView.swift */,
+				16229EC3290B8F7B0038AD91 /* RegisterView.swift */,
+				16E35742290BD4170059B5A2 /* LogInViewModel.swift */,
+				16E35744290BDC800059B5A2 /* LogInView.swift */,
 				16096033290AFFFB00649D64 /* Assets.xcassets */,
 				16096035290AFFFB00649D64 /* Preview Content */,
 			);
@@ -721,7 +730,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16096032290AFFFA00649D64 /* ContentView.swift in Sources */,
+				16E35745290BDC800059B5A2 /* LogInView.swift in Sources */,
+				16096032290AFFFA00649D64 /* LoginAndRegisterView.swift in Sources */,
+				16E35743290BD4170059B5A2 /* LogInViewModel.swift in Sources */,
+				16229EC4290B8F7B0038AD91 /* RegisterView.swift in Sources */,
 				16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */,
 				16096030290AFFFA00649D64 /* FirebaseDemoApp.swift in Sources */,
 			);
@@ -800,6 +812,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -834,6 +847,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1007,6 +1021,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1041,6 +1056,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
