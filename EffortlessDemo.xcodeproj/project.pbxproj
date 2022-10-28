@@ -32,6 +32,7 @@
 		161C47BA290AE9FD0014D737 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161C47AE290AE9FD0014D737 /* Assets.xcassets */; };
 		161C47BB290AE9FD0014D737 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161C47B0290AE9FD0014D737 /* Preview Assets.xcassets */; };
 		161C47BC290AE9FD0014D737 /* GigyaSDKConfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 161C47B1290AE9FD0014D737 /* GigyaSDKConfiguration.json */; };
+		16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC1290B84E30038AD91 /* RegisterViewModel.swift */; };
 		16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */; };
 		16E2D82E290B019D00AF28E4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82D290B019D00AF28E4 /* ContentView.swift */; };
 		16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
@@ -39,10 +40,14 @@
 		16FCA89E290B038F00CF6E82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */; };
 		16FCA89F290B038F00CF6E82 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */; };
 		2DF41C632DC414FE50D2060E /* Pods_UIKitDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 960785D3E294C3A57E55B8F0 /* Pods_UIKitDemo.framework */; };
+		76AEB2483DC11879C665A7EC /* Pods_GigyaDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9B82C787E8955B52A690592 /* Pods_GigyaDemo.framework */; };
+		9C6406F64EE23FD6336FE2D0 /* Pods_FirebaseDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC69E093CEE11815C8E583C /* Pods_FirebaseDemo.framework */; };
 		B94DB2230E2FB874676155EA /* Pods_ScreensetsDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C717260072510B51F65ADB6 /* Pods_ScreensetsDemo.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0EC69E093CEE11815C8E583C /* Pods_FirebaseDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FirebaseDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1361FCAB8021286EF09FB1DE /* Pods-GigyaDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GigyaDemo.debug.xcconfig"; path = "Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		1609602D290AFFFA00649D64 /* FirebaseDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FirebaseDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseDemoApp.swift; sourceTree = "<group>"; };
 		16096031290AFFFA00649D64 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -74,6 +79,7 @@
 		161C47AE290AE9FD0014D737 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		161C47B0290AE9FD0014D737 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		161C47B1290AE9FD0014D737 /* GigyaSDKConfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = GigyaSDKConfiguration.json; sourceTree = "<group>"; };
+		16229EC1290B84E30038AD91 /* RegisterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
 		16520AC4290AEE3500E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16520AC6290AEE9900E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16E2D829290B019D00AF28E4 /* GigyaDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GigyaDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -86,11 +92,15 @@
 		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		16FCA8A1290B04F400CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		262AEDED4FF3F3CD691BAD0F /* Pods-ScreensetsDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.release.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.release.xcconfig"; sourceTree = "<group>"; };
+		458C92FF08544FE1AF38416D /* Pods-GigyaDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GigyaDemo.release.xcconfig"; path = "Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo.release.xcconfig"; sourceTree = "<group>"; };
 		78C18A1289C4720FAC750B3A /* Pods-UIKitDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UIKitDemo.debug.xcconfig"; path = "Target Support Files/Pods-UIKitDemo/Pods-UIKitDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		80E6A475A92A829598F55C2D /* Pods-ScreensetsDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.debug.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		8C717260072510B51F65ADB6 /* Pods_ScreensetsDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ScreensetsDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		960785D3E294C3A57E55B8F0 /* Pods_UIKitDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_UIKitDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9B82C787E8955B52A690592 /* Pods_GigyaDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GigyaDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C045708A514DEB2E76026AAD /* Pods-FirebaseDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FirebaseDemo.release.xcconfig"; path = "Target Support Files/Pods-FirebaseDemo/Pods-FirebaseDemo.release.xcconfig"; sourceTree = "<group>"; };
 		C1E893536079FEE8E6F32D6C /* Pods-UIKitDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UIKitDemo.release.xcconfig"; path = "Target Support Files/Pods-UIKitDemo/Pods-UIKitDemo.release.xcconfig"; sourceTree = "<group>"; };
+		FC54A76E9FB5300E9F93589C /* Pods-FirebaseDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FirebaseDemo.debug.xcconfig"; path = "Target Support Files/Pods-FirebaseDemo/Pods-FirebaseDemo.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +108,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C6406F64EE23FD6336FE2D0 /* Pods_FirebaseDemo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,6 +132,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76AEB2483DC11879C665A7EC /* Pods_GigyaDemo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,6 +146,7 @@
 				16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */,
 				16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */,
 				1609602F290AFFFA00649D64 /* FirebaseDemoApp.swift */,
+				16229EC1290B84E30038AD91 /* RegisterViewModel.swift */,
 				16096031290AFFFA00649D64 /* ContentView.swift */,
 				16096033290AFFFB00649D64 /* Assets.xcassets */,
 				16096035290AFFFB00649D64 /* Preview Content */,
@@ -350,6 +363,8 @@
 			children = (
 				8C717260072510B51F65ADB6 /* Pods_ScreensetsDemo.framework */,
 				960785D3E294C3A57E55B8F0 /* Pods_UIKitDemo.framework */,
+				0EC69E093CEE11815C8E583C /* Pods_FirebaseDemo.framework */,
+				B9B82C787E8955B52A690592 /* Pods_GigyaDemo.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -361,6 +376,10 @@
 				262AEDED4FF3F3CD691BAD0F /* Pods-ScreensetsDemo.release.xcconfig */,
 				78C18A1289C4720FAC750B3A /* Pods-UIKitDemo.debug.xcconfig */,
 				C1E893536079FEE8E6F32D6C /* Pods-UIKitDemo.release.xcconfig */,
+				FC54A76E9FB5300E9F93589C /* Pods-FirebaseDemo.debug.xcconfig */,
+				C045708A514DEB2E76026AAD /* Pods-FirebaseDemo.release.xcconfig */,
+				1361FCAB8021286EF09FB1DE /* Pods-GigyaDemo.debug.xcconfig */,
+				458C92FF08544FE1AF38416D /* Pods-GigyaDemo.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -372,9 +391,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1609603A290AFFFB00649D64 /* Build configuration list for PBXNativeTarget "FirebaseDemo" */;
 			buildPhases = (
+				188997408DB2691B8F073FA1 /* [CP] Check Pods Manifest.lock */,
 				16096029290AFFFA00649D64 /* Sources */,
 				1609602A290AFFFA00649D64 /* Frameworks */,
 				1609602B290AFFFA00649D64 /* Resources */,
+				2CBC67D22B90AF409A26A635 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -427,9 +448,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 16E2D836290B019D00AF28E4 /* Build configuration list for PBXNativeTarget "GigyaDemo" */;
 			buildPhases = (
+				4EF9D034561AB05B152F3C70 /* [CP] Check Pods Manifest.lock */,
 				16E2D825290B019D00AF28E4 /* Sources */,
 				16E2D826290B019D00AF28E4 /* Frameworks */,
 				16E2D827290B019D00AF28E4 /* Resources */,
+				3F9AEACA52726C113ED4FFF8 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -535,6 +558,28 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		188997408DB2691B8F073FA1 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-FirebaseDemo-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		298DE603F603BA96B2A56AC5 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -552,6 +597,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		2CBC67D22B90AF409A26A635 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FirebaseDemo/Pods-FirebaseDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FirebaseDemo/Pods-FirebaseDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FirebaseDemo/Pods-FirebaseDemo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		3B7C9FFC5F612E8BED4760FB /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -567,6 +629,45 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-UIKitDemo/Pods-UIKitDemo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3F9AEACA52726C113ED4FFF8 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		4EF9D034561AB05B152F3C70 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-GigyaDemo-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		5E2560BA8BC58E03B74F141D /* [CP] Check Pods Manifest.lock */ = {
@@ -621,6 +722,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				16096032290AFFFA00649D64 /* ContentView.swift in Sources */,
+				16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */,
 				16096030290AFFFA00649D64 /* FirebaseDemoApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -682,6 +784,7 @@
 /* Begin XCBuildConfiguration section */
 		16096038290AFFFB00649D64 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FC54A76E9FB5300E9F93589C /* Pods-FirebaseDemo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -715,6 +818,7 @@
 		};
 		16096039290AFFFB00649D64 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C045708A514DEB2E76026AAD /* Pods-FirebaseDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -887,6 +991,7 @@
 		};
 		16E2D834290B019D00AF28E4 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1361FCAB8021286EF09FB1DE /* Pods-GigyaDemo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -920,6 +1025,7 @@
 		};
 		16E2D835290B019D00AF28E4 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 458C92FF08544FE1AF38416D /* Pods-GigyaDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
