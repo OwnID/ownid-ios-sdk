@@ -35,7 +35,6 @@
 		16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC1290B84E30038AD91 /* RegisterViewModel.swift */; };
 		16229EC4290B8F7B0038AD91 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC3290B8F7B0038AD91 /* RegisterView.swift */; };
 		16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */; };
-		16E2D82E290B019D00AF28E4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82D290B019D00AF28E4 /* ContentView.swift */; };
 		16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
 		16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */; };
 		16E35743290BD4170059B5A2 /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35742290BD4170059B5A2 /* LogInViewModel.swift */; };
@@ -43,6 +42,13 @@
 		16E35753290BE3180059B5A2 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35752290BE3180059B5A2 /* AccountView.swift */; };
 		16E35754290BE4600059B5A2 /* AccountView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; };
 		16E35755290BE4600059B5A2 /* AccountView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		16E3575E290C074C0059B5A2 /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35759290C074B0059B5A2 /* LogInView.swift */; };
+		16E3575F290C074C0059B5A2 /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575A290C074B0059B5A2 /* LogInViewModel.swift */; };
+		16E35760290C074C0059B5A2 /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */; };
+		16E35761290C074C0059B5A2 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */; };
+		16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575D290C074C0059B5A2 /* RegisterView.swift */; };
+		16E35763290C07670059B5A2 /* AccountView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; };
+		16E35764290C07670059B5A2 /* AccountView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		16FCA89E290B038F00CF6E82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */; };
 		16FCA89F290B038F00CF6E82 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */; };
 		2DF41C632DC414FE50D2060E /* Pods_UIKitDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 960785D3E294C3A57E55B8F0 /* Pods_UIKitDemo.framework */; };
@@ -59,6 +65,13 @@
 			remoteGlobalIDString = 16E3574A290BE3090059B5A2;
 			remoteInfo = AccountView;
 		};
+		16E35765290C07670059B5A2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 16FBF259290A8E0800148C8C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 16E3574A290BE3090059B5A2;
+			remoteInfo = AccountView;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -69,6 +82,17 @@
 			dstSubfolderSpec = 10;
 			files = (
 				16E35755290BE4600059B5A2 /* AccountView.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16E35767290C07670059B5A2 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				16E35764290C07670059B5A2 /* AccountView.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -115,13 +139,17 @@
 		16520AC6290AEE9900E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16E2D829290B019D00AF28E4 /* GigyaDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GigyaDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaDemoApp.swift; sourceTree = "<group>"; };
-		16E2D82D290B019D00AF28E4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		16E2D82F290B019D00AF28E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		16E35742290BD4170059B5A2 /* LogInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
 		16E35744290BDC800059B5A2 /* LogInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
 		16E3574B290BE3090059B5A2 /* AccountView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AccountView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		16E35752290BE3180059B5A2 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		16E35759290C074B0059B5A2 /* LogInView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
+		16E3575A290C074B0059B5A2 /* LogInViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
+		16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
+		16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
+		16E3575D290C074C0059B5A2 /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -169,6 +197,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				76AEB2483DC11879C665A7EC /* Pods_GigyaDemo.framework in Frameworks */,
+				16E35763290C07670059B5A2 /* AccountView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -363,9 +392,13 @@
 		16E2D82A290B019D00AF28E4 /* GigyaDemo */ = {
 			isa = PBXGroup;
 			children = (
-				16FCA8A0290B040E00CF6E82 /* Info.plist */,
 				16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */,
-				16E2D82D290B019D00AF28E4 /* ContentView.swift */,
+				16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */,
+				16E35759290C074B0059B5A2 /* LogInView.swift */,
+				16E3575A290C074B0059B5A2 /* LogInViewModel.swift */,
+				16E3575D290C074C0059B5A2 /* RegisterView.swift */,
+				16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */,
+				16FCA8A0290B040E00CF6E82 /* Info.plist */,
 				16E2D82F290B019D00AF28E4 /* Assets.xcassets */,
 				16E2D831290B019D00AF28E4 /* Preview Content */,
 			);
@@ -521,10 +554,12 @@
 				16E2D826290B019D00AF28E4 /* Frameworks */,
 				16E2D827290B019D00AF28E4 /* Resources */,
 				3F9AEACA52726C113ED4FFF8 /* [CP] Embed Pods Frameworks */,
+				16E35767290C07670059B5A2 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				16E35766290C07670059B5A2 /* PBXTargetDependency */,
 			);
 			name = GigyaDemo;
 			productName = GigyaDemo;
@@ -856,7 +891,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16E2D82E290B019D00AF28E4 /* ContentView.swift in Sources */,
+				16E3575E290C074C0059B5A2 /* LogInView.swift in Sources */,
+				16E35761290C074C0059B5A2 /* RegisterViewModel.swift in Sources */,
+				16E35760290C074C0059B5A2 /* LoginAndRegisterView.swift in Sources */,
+				16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */,
+				16E3575F290C074C0059B5A2 /* LogInViewModel.swift in Sources */,
 				16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -876,6 +915,11 @@
 			isa = PBXTargetDependency;
 			target = 16E3574A290BE3090059B5A2 /* AccountView */;
 			targetProxy = 16E35756290BE4600059B5A2 /* PBXContainerItemProxy */;
+		};
+		16E35766290C07670059B5A2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 16E3574A290BE3090059B5A2 /* AccountView */;
+			targetProxy = 16E35765290C07670059B5A2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

@@ -4,7 +4,7 @@ import SwiftUI
 struct GigyaDemoApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginAndRegisterView()
         }
     }
 }
