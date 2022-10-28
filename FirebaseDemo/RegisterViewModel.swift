@@ -1,12 +1,15 @@
 import Foundation
 import OwnIDFirebaseSDK
 import Combine
+import AccountView
+import FirebaseAuth
 
 final class RegisterViewModel: ObservableObject {
     @Published var firstName = ""
     @Published var email = ""
     @Published var password = ""
     @Published var errorMessage = ""
+    @Published var loggedInModel: AccountModel?
     
     private var bag = Set<AnyCancellable>()
     
@@ -32,7 +35,13 @@ final class RegisterViewModel: ObservableObject {
                         isOwnIDEnabled = true
                         
                     case .userRegisteredAndLoggedIn:
-                        fatalError("Show account here")
+                        if let email = Auth.auth().currentUser?.email {
+                            let name = Auth.auth().currentUser?.displayName ?? ""
+                            let model = AccountModel(name: name, email: email)
+                            loggedInModel = model
+                        } else {
+                            errorMessage = "Cannot find logged in email"
+                        }
                         
                     case .loading:
                         print("Loading state")

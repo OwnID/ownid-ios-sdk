@@ -1,6 +1,7 @@
 import SwiftUI
 import OwnIDCoreSDK
 import OwnIDFirebaseSDK
+import AccountView
 
 struct RegisterView: View {
     @ObservedObject private var viewModel = RegisterViewModel()
@@ -21,6 +22,9 @@ private extension RegisterView {
             Text(viewModel.errorMessage)
                 .font(.headline)
                 .foregroundColor(.red)
+        }
+        .fullScreenCover(item: $viewModel.loggedInModel) { model in
+            AccountView(model: model)
         }
     }
     
