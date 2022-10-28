@@ -1,0 +1,6 @@
+framework module OwnIDCoreSDK {
+  umbrella header "ownid-core-ios-sdk-umbrella.h"
+
+  export *
+  module * { export * }
+}
