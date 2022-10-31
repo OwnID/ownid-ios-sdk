@@ -15,7 +15,7 @@ target 'ScreensetsDemo' do
   gigya_pods
 end
 
-target 'UIKitDemo' do
+target 'UIKitInjectionDemo' do
   gigya_pods
 end
 

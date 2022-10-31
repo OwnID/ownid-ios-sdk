@@ -88,7 +88,7 @@
 			<key>orderHint</key>
 			<integer>22</integer>
 		</dict>
-		<key>Pods-UIKitDemo.xcscheme</key>
+		<key>Pods-UIKitInjectionDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
