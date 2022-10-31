@@ -2,13 +2,13 @@ import UIKit
 import SwiftUI
 import Combine
 import OwnIDGigyaSDK
-import DemoComponents
+import Gigya
 
 final class ViewController: UIViewController {
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
-    let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: GigyaShared.instance)
+    let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance())
     private var userEmail = ""
     var bag = Set<AnyCancellable>()
     private lazy var ownIdButton = makeOwnIDButton()
@@ -57,17 +57,12 @@ final class ViewController: UIViewController {
                    switch event {
                    case .success(let event):
                        switch event {
-                       // Event when user successfully
-                       // finishes Skip Password
-                       // in OwnID Web App
                        case .readyToRegister:
                            activityIndicator.isHidden = true
                            activityIndicator.stopAnimating()
-
-                       // Event when OwnID creates Firebase
-                       // account and logs in user
+                           
                        case .userRegisteredAndLoggedIn:
-                           break
+                           print("userRegisteredAndLoggedIn")
                          
                        case .loading:
                            activityIndicator.isHidden = false

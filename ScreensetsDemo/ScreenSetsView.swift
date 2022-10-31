@@ -2,10 +2,9 @@ import UIKit
 import Gigya
 import SwiftUI
 import Combine
-import DemoComponents
 
 struct ScreenSets: UIViewControllerRepresentable {
-    let screensetResult: PassthroughSubject<GigyaPluginEvent<OwnIDAccount>, Never>
+    let screensetResult: PassthroughSubject<GigyaPluginEvent<GigyaAccount>, Never>
     
     func makeUIViewController(context: Context) -> ScreenSetsVC {
         let vc = ScreenSetsVC()
@@ -17,7 +16,7 @@ struct ScreenSets: UIViewControllerRepresentable {
 }
 
 public struct ScreenSetsView: View {
-    let screensetResult: PassthroughSubject<GigyaPluginEvent<OwnIDAccount>, Never>
+    let screensetResult: PassthroughSubject<GigyaPluginEvent<GigyaAccount>, Never>
     
     public var body: some View {
         ScreenSets(screensetResult: screensetResult)
@@ -25,12 +24,11 @@ public struct ScreenSetsView: View {
 }
 
 final class ScreenSetsVC: UIViewController {
-    let appConfig = AppConfiguration<GigyaServerConfig>()
-    var screensetResult: PassthroughSubject<GigyaPluginEvent<OwnIDAccount>, Never>!
+    var screensetResult: PassthroughSubject<GigyaPluginEvent<GigyaAccount>, Never>!
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        GigyaShared.instance.showScreenSet(with: appConfig.config.screenSet, viewController: self) { [self] result in
+        Gigya.sharedInstance().showScreenSet(with: "Default-RegistrationLogin", viewController: self) { [self] result in
             screensetResult.send(result)
         }
     }

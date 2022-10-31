@@ -9,7 +9,7 @@
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
-			<integer>27</integer>
+			<integer>0</integer>
 		</dict>
 		<key>EffortlessDemo.xcscheme_^#shared#^_</key>
 		<dict>
@@ -19,7 +19,7 @@
 		<key>FirebaseDemo.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>30</integer>
+			<integer>27</integer>
 		</dict>
 		<key>GigyaDemo.xcscheme_^#shared#^_</key>
 		<dict>
@@ -29,7 +29,7 @@
 		<key>ScreensetsDemo.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>29</integer>
+			<integer>25</integer>
 		</dict>
 		<key>UIKitDemo.xcscheme_^#shared#^_</key>
 		<dict>

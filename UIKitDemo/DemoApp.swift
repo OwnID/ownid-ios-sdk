@@ -1,14 +1,12 @@
 import UIKit
 import OwnIDGigyaSDK
-import DemoComponents
+import Gigya
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    let appConfig = AppConfiguration<GigyaServerConfig>()
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        GigyaShared.instance.initFor(apiKey: appConfig.config.apiKey,
-                                     apiDomain: appConfig.config.apiDomain)
+        Gigya.sharedInstance().initFor(apiKey: "3_O4QE0Kk7QstG4VGDPED5omrr8mgbTuf_Gim8V_Y19YDP75m_msuGtNGQz89X0KWP", apiDomain: "us1.gigya.com")
         OwnID.GigyaSDK.configure()
         return true
     }

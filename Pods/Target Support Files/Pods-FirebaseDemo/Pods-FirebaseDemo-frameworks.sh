@@ -176,10 +176,7 @@ code_sign_if_enabled() {
 }
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Gigya/Gigya.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ownid-core-ios-sdk/OwnIDCoreSDK.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/ownid-demo-components-ios/DemoComponents.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/ownid-gigya-ios-sdk/OwnIDGigyaSDK.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/BoringSSL-GRPC/openssl_grpc.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/FirebaseAuth/FirebaseAuth.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/FirebaseCore/FirebaseCore.framework"
@@ -197,10 +194,7 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/ownid-firebase-ios-sdk/OwnIDFirebaseSDK.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Gigya/Gigya.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ownid-core-ios-sdk/OwnIDCoreSDK.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/ownid-demo-components-ios/DemoComponents.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/ownid-gigya-ios-sdk/OwnIDGigyaSDK.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/BoringSSL-GRPC/openssl_grpc.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/FirebaseAuth/FirebaseAuth.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/FirebaseCore/FirebaseCore.framework"

@@ -5,8 +5,6 @@
 	<key>OwnIDRedirectionURL</key>
 	<string>com.ownid.demo.uikit://ownid/redirect/</string>
 	<key>OwnIDAppID</key>
-	<string>rt4zr2w8z6g09m</string>
-	<key>OwnIDEnv</key>
-	<string>staging</string>
+	<string>l16tzgmvvyf5qn</string>
 </dict>
 </plist>

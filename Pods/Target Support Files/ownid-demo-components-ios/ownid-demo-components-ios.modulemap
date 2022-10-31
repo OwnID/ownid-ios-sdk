@@ -1,6 +1,0 @@
-framework module DemoComponents {
-  umbrella header "ownid-demo-components-ios-umbrella.h"
-
-  export *
-  module * { export * }
-}
