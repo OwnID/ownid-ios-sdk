@@ -11,7 +11,7 @@
         <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="UIKitDemo" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="UIKitInjectionDemo" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="430" height="932"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -20,20 +20,20 @@
                                 <rect key="frame" x="205" y="456" width="20" height="20"/>
                             </activityIndicatorView>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="18" translatesAutoresizingMaskIntoConstraints="NO" id="2Fm-ns-NSd">
-                                <rect key="frame" x="140" y="397" width="150" height="138.33333333333337"/>
+                                <rect key="frame" x="88" y="397" width="254" height="138.33333333333337"/>
                                 <subviews>
                                     <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Email" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="eZd-ke-Y36">
-                                        <rect key="frame" x="0.0" y="0.0" width="150" height="34"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="254" height="34"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
                                     <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="vkj-DF-VYg">
-                                        <rect key="frame" x="0.0" y="52" width="150" height="34"/>
+                                        <rect key="frame" x="0.0" y="52" width="254" height="34"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4ig-1M-0eb">
-                                        <rect key="frame" x="0.0" y="104" width="150" height="34.333333333333343"/>
+                                        <rect key="frame" x="0.0" y="104" width="254" height="34.333333333333343"/>
                                         <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="tinted" title="Register"/>
                                         <connections>
@@ -41,9 +41,6 @@
                                         </connections>
                                     </button>
                                 </subviews>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="150" id="vkA-Mz-gXT"/>
-                                </constraints>
                             </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="0fd-I0-BWC"/>
@@ -53,6 +50,7 @@
                             <constraint firstItem="2Fm-ns-NSd" firstAttribute="centerX" secondItem="0fd-I0-BWC" secondAttribute="centerX" id="7EI-5e-kCH"/>
                             <constraint firstItem="mKb-VP-fR2" firstAttribute="centerX" secondItem="0fd-I0-BWC" secondAttribute="centerX" id="MbG-BC-TLC"/>
                             <constraint firstItem="2Fm-ns-NSd" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="TNc-k1-rFH"/>
+                            <constraint firstItem="2Fm-ns-NSd" firstAttribute="leading" secondItem="0fd-I0-BWC" secondAttribute="leading" constant="88" id="gCD-AL-zdr"/>
                         </constraints>
                     </view>
                     <connections>
