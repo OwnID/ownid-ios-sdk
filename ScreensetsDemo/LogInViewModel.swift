@@ -24,6 +24,7 @@ final class LogInViewModel: ObservableObject {
                             let email = profile.email ?? ""
                             let name = profile.firstName ?? ""
                             let model = AccountModel(name: name, email: email)
+                            try await Task.sleep(until: .now + .seconds(1), clock: .continuous)
                             await MainActor.run {
                                 loggedInModel = model
                             }
