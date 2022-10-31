@@ -55,9 +55,30 @@ final class RegisterViewModel: ObservableObject {
                         isOwnIDEnabled = false
                     }
                     
-                case .failure(let error):
-                    print(error.localizedDescription)
-                    errorMessage = error.localizedDescription
+                case .failure(let ownIDSDKError):
+                    print(ownIDSDKError.localizedDescription)
+                    errorMessage = ownIDSDKError.localizedDescription
+                    switch ownIDSDKError {
+                    case .plugin(let gigyaPluginError):
+                        if let gigyaSDKError = gigyaPluginError as? OwnID.GigyaSDK.Error<GigyaAccount> {
+                            switch gigyaSDKError {
+                            case .login(let loginError):
+                                switch loginError.interruption {
+                                case .pendingVerification:
+                                    errorMessage = ownIDSDKError.localizedDescription + ", pending verification"
+                                    print("pendingVerification")
+
+                                default:
+                                    break
+                                }
+                            default:
+                                break
+                            }
+                        }
+
+                    default:
+                        break
+                    }
                 }
             }
             .store(in: &bag)
