@@ -23,6 +23,10 @@ target 'GigyaDemo' do
   gigya_pods
 end
 
+target 'CustomIntegrationDemo' do
+  core_pods
+end
+
 target 'FirebaseDemo' do
   core_pods
   pod 'ownid-firebase-ios-sdk', :path => '../ownid-firebase-ios-sdk/'

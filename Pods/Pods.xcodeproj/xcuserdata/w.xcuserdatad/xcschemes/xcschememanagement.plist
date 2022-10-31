@@ -67,40 +67,47 @@
 			<key>orderHint</key>
 			<integer>14</integer>
 		</dict>
-		<key>Pods-FirebaseDemo.xcscheme</key>
+		<key>Pods-CustomIntegrationDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>20</integer>
 		</dict>
-		<key>Pods-GigyaDemo.xcscheme</key>
+		<key>Pods-FirebaseDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>21</integer>
 		</dict>
-		<key>Pods-ScreensetsDemo.xcscheme</key>
+		<key>Pods-GigyaDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>22</integer>
 		</dict>
-		<key>Pods-UIKitInjectionDemo.xcscheme</key>
+		<key>Pods-ScreensetsDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>23</integer>
 		</dict>
-		<key>PromisesObjC.xcscheme</key>
+		<key>Pods-UIKitInjectionDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>24</integer>
+		</dict>
+		<key>PromisesObjC.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>25</integer>
 		</dict>
 		<key>abseil.xcscheme</key>
 		<dict>
