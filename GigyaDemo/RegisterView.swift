@@ -61,6 +61,6 @@ private extension RegisterView {
     }
     
     func skipPasswordView() -> some View {
-        OwnID.FirebaseSDK.createRegisterView(viewModel: viewModel.ownIDViewModel, email: $viewModel.email)
+        OwnID.GigyaSDK.createRegisterView(viewModel: viewModel.ownIDViewModel, email: $viewModel.email)
     }
 }

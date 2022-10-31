@@ -15,7 +15,7 @@ final class RegisterViewModel: ObservableObject {
     
     // MARK: OwnID
     @Published var isOwnIDEnabled = false
-    let ownIDViewModel = OwnID.FirebaseSDK.registrationViewModel()
+    let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance())
     
     init() {
         subscribeToEmailChanges()
@@ -35,12 +35,17 @@ final class RegisterViewModel: ObservableObject {
                         isOwnIDEnabled = true
                         
                     case .userRegisteredAndLoggedIn:
-                        if let email = Auth.auth().currentUser?.email {
-                            let name = Auth.auth().currentUser?.displayName ?? ""
-                            let model = AccountModel(name: name, email: email)
-                            loggedInModel = model
-                        } else {
-                            errorMessage = "Cannot find logged in email"
+                        Task.init {
+                            if let profile = try? await Gigya.sharedInstance().getAccount(true).profile {
+                                let email = profile.email ?? ""
+                                let name = profile.firstName ?? ""
+                                let model = AccountModel(name: name, email: email)
+                                await MainActor.run {
+                                    loggedInModel = model
+                                }
+                            } else {
+                                errorMessage = "Cannot find logged in profile"
+                            }
                         }
                         
                     case .loading:
@@ -60,7 +65,10 @@ final class RegisterViewModel: ObservableObject {
     
     func register() {
         if isOwnIDEnabled {
-            ownIDViewModel.register(with: email)
+            let nameValue = "{ \"firstName\": \"\(firstName)\" }"
+            let paramsDict = ["profile": nameValue]
+            let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
+            ownIDViewModel.register(with: email, registerParameters: params)
         } else {
             // ignoring register with default login & password
         }

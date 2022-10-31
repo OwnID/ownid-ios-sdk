@@ -3,7 +3,7 @@ import Gigya
 import OwnIDGigyaSDK
 
 @main
-struct FirebaseDemoApp: App {
+struct GigyaDemoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     var body: some Scene {
