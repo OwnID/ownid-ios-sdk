@@ -34,6 +34,7 @@
 		161C47BC290AE9FD0014D737 /* GigyaSDKConfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 161C47B1290AE9FD0014D737 /* GigyaSDKConfiguration.json */; };
 		16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC1290B84E30038AD91 /* RegisterViewModel.swift */; };
 		16229EC4290B8F7B0038AD91 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC3290B8F7B0038AD91 /* RegisterView.swift */; };
+		16C89BF6290F8DCA00F5FE09 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */; };
 		16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */; };
 		16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
 		16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */; };
@@ -137,6 +138,7 @@
 		16229EC3290B8F7B0038AD91 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		16520AC4290AEE3500E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16520AC6290AEE9900E7D1E7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		16E2D829290B019D00AF28E4 /* GigyaDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GigyaDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaDemoApp.swift; sourceTree = "<group>"; };
 		16E2D82F290B019D00AF28E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -392,13 +394,14 @@
 		16E2D82A290B019D00AF28E4 /* GigyaDemo */ = {
 			isa = PBXGroup;
 			children = (
+				16FCA8A0290B040E00CF6E82 /* Info.plist */,
+				16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */,
 				16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */,
 				16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */,
 				16E35759290C074B0059B5A2 /* LogInView.swift */,
 				16E3575A290C074B0059B5A2 /* LogInViewModel.swift */,
 				16E3575D290C074C0059B5A2 /* RegisterView.swift */,
 				16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */,
-				16FCA8A0290B040E00CF6E82 /* Info.plist */,
 				16E2D82F290B019D00AF28E4 /* Assets.xcassets */,
 				16E2D831290B019D00AF28E4 /* Preview Content */,
 			);
@@ -678,6 +681,7 @@
 			files = (
 				16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */,
 				16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */,
+				16C89BF6290F8DCA00F5FE09 /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
