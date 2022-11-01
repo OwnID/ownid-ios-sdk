@@ -51,7 +51,7 @@ private extension LogInView {
     @ViewBuilder
     func skipPasswordView() -> some View {
         OwnID.FlowsSDK.LoginView(viewModel: viewModel.ownIDViewModel,
-                                 usersEmail: viewModel.ownIDViewModel,
+                                 usersEmail: $viewModel.email,
                                  visualConfig: OwnID.UISDK.VisualLookConfig())
     }
 }

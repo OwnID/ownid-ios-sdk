@@ -54,13 +54,15 @@ final class RegisterViewModel: ObservableObject {
                         }
                         isOwnIDEnabled = true
                         
-                    case .userRegisteredAndLoggedIn:
-                        if let email = Auth.auth().currentUser?.email {
-                            let name = Auth.auth().currentUser?.displayName ?? ""
-                            let model = AccountModel(name: name, email: email)
-                            loggedInModel = model
-                        } else {
-                            errorMessage = "Cannot find logged in email"
+                    case .userRegisteredAndLoggedIn(let previousResultToken):
+                        Task.init {
+                            if let model = try? await ProfileLoader().loadProfile(previousResult: previousResultToken) {
+                                await MainActor.run {
+                                    loggedInModel = model
+                                }
+                            } else {
+                                errorMessage = "Cannot find logged in model"
+                            }
                         }
                         
                     case .loading:
@@ -117,7 +119,7 @@ extension RegisterViewModel {
             }
             .eraseToAnyPublisher()
             .flatMap { _ -> AnyPublisher<OperationResult, Error> in
-                Login.login(ownIdData: ownIdData, password: password, email: email).mapError { $0 as Error }.eraseToAnyPublisher()
+                LogInViewModel.login(ownIdData: ownIdData, email: email).mapError { $0 as Error }.eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
             .receive(on: DispatchQueue.main)
