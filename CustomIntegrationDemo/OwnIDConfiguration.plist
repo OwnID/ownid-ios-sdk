@@ -5,7 +5,7 @@
 	<key>OwnIDRedirectionURL</key>
 	<string>com.ownid.demo.CustomIntegrationDemo://ownid/redirect/</string>
 	<key>OwnIDAppID</key>
-	<string>h19be39z1yi36d</string>
+	<string>d1yk6gcngrc0og</string>
 	<key>OwnIDEnv</key>
 	<string>dev</string>
 </dict>

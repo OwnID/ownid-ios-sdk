@@ -119,7 +119,7 @@ extension RegisterViewModel {
             }
             .eraseToAnyPublisher()
             .flatMap { _ -> AnyPublisher<OperationResult, Error> in
-                LogInViewModel.login(ownIdData: ownIdData, email: email).mapError { $0 as Error }.eraseToAnyPublisher()
+                LogInViewModel.login(ownIdData: ownIdData, password: password, email: email).mapError { $0 as Error }.eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
             .receive(on: DispatchQueue.main)
