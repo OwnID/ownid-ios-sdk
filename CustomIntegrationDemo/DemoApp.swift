@@ -1,7 +1,7 @@
 import SwiftUI
 import OwnIDCoreSDK
 
-extension DemoApp {
+extension AppDelegate {
     static let clientName = "CustomIntegrationDemoApp"
     static let version = "1.0.0"
 }
@@ -20,7 +20,7 @@ struct DemoApp: App {
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        OwnID.CoreSDK.shared.configure(userFacingSDK: DemoApp.info(), underlyingSDKs: [])
+        OwnID.CoreSDK.shared.configure(userFacingSDK: AppDelegate.info(), underlyingSDKs: [])
         
         return true
     }
