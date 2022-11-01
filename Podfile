@@ -2,7 +2,6 @@ platform :ios, '16.0'
 use_frameworks!
 
 def core_pods
-  pod 'ownid-demo-components-ios', :path => '../ownid-demo-ios-sdk'
   pod 'ownid-core-ios-sdk', :path => '../ownid-core-ios-sdk/'
 end
 
@@ -16,12 +15,16 @@ target 'ScreensetsDemo' do
   gigya_pods
 end
 
-target 'UIKitDemo' do
+target 'UIKitInjectionDemo' do
   gigya_pods
 end
 
 target 'GigyaDemo' do
   gigya_pods
+end
+
+target 'CustomIntegrationDemo' do
+  core_pods
 end
 
 target 'FirebaseDemo' do

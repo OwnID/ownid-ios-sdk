@@ -5,7 +5,7 @@ import Gigya
 
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
-    let ownIDViewModel = OwnID.FirebaseSDK.loginViewModel()
+    let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance())
     
     @Published var email = ""
     @Published var password = ""
@@ -25,12 +25,17 @@ final class LogInViewModel: ObservableObject {
                 case .success(let event):
                     switch event {
                     case .loggedIn:
-                        if let email = Auth.auth().currentUser?.email {
-                            let name = Auth.auth().currentUser?.displayName ?? ""
-                            let model = AccountModel(name: name, email: email)
-                            loggedInModel = model
-                        } else {
-                            errorMessage = "Cannot find logged in email"
+                        Task.init {
+                            if let profile = try? await Gigya.sharedInstance().getAccount(true).profile {
+                                let email = profile.email ?? ""
+                                let name = profile.firstName ?? ""
+                                let model = AccountModel(name: name, email: email)
+                                await MainActor.run {
+                                    loggedInModel = model
+                                }
+                            } else {
+                                errorMessage = "Cannot find logged in profile"
+                            }
                         }
                         
                     case .loading:
