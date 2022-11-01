@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct AccountModel: Identifiable {
+public struct AccountModel: Identifiable, Decodable {
     public init(name: String, email: String) {
         self.name = name
         self.email = email

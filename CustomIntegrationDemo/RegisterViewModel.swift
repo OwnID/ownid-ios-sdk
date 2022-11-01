@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import AccountView
+import OwnIDCoreSDK
 
 final class CustomRegistrationParameters: RegisterParameters {
     internal init(firstName: String) {
@@ -33,7 +34,7 @@ final class RegisterViewModel: ObservableObject {
     @Published var isOwnIDEnabled = false
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
                                                                loginPerformer: CustomLoginPerformer(),
-                                                               sdkConfigurationName: DemoApp.clientName,
+                                                               sdkConfigurationName: AppDelegate.clientName,
                                                                webLanguages: .init(rawValue: Locale.preferredLanguages))
     
     init() {
@@ -101,6 +102,7 @@ private extension RegisterViewModel {
 
 extension RegisterViewModel {
     static func register(ownIdData: String?,
+                         password: String,
                          email: String,
                          name: String) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
         var payloadDict = ["email": email, "password": password, "name": name]
