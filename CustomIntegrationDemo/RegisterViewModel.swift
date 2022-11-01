@@ -101,3 +101,7 @@ private extension RegisterViewModel {
             .store(in: &bag)
     }
 }
+
+case .resetTapped:
+  // User tapped activeted button. Rest any data if
+  // needed. 
