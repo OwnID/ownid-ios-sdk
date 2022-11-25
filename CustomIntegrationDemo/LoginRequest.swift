@@ -15,9 +15,9 @@ enum CustomIntegrationDemoError: PluginError {
 struct LoginRequest {
     static func login(ownIdData: Any?,
                       password: String? = .none,
-                      email: String) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
+                      email: String) -> OwnID.LoginResultPublisher {
         if let ownIdData = ownIdData as? [String: String], let token = ownIdData["token"] {
-            return Just(token)
+            return Just(OwnID.LoginResult(operationResult: token))
                 .setFailureType(to: OwnID.CoreSDK.Error.self)
                 .eraseToAnyPublisher()
         }
@@ -41,7 +41,7 @@ struct LoginRequest {
             .eraseToAnyPublisher()
             .map { $0.data }
             .decode(type: LoginResponse.self, decoder: JSONDecoder())
-            .map { $0.token }
+            .map { OwnID.LoginResult(operationResult: $0.token) }
             .receive(on: DispatchQueue.main)
             .mapError { OwnID.CoreSDK.Error.plugin(error: CustomIntegrationDemoError.loginRequestFailed(underlying: $0)) }
             .eraseToAnyPublisher()

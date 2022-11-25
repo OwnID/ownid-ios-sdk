@@ -12,7 +12,7 @@ final class CustomRegistrationParameters: RegisterParameters {
 }
 
 final class CustomRegistration: RegistrationPerformer {
-    func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
+    func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> OwnID.RegistrationResultPublisher {
         let ownIdData = configuration.payload.dataContainer
         return RegisterRequest.register(ownIdData: ownIdData as? String,
                                           password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
@@ -48,13 +48,13 @@ final class RegisterViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case let .readyToRegister(usersEmailFromWebApp):
+                    case let .readyToRegister(usersEmailFromWebApp, _):
                         if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, email.isEmpty {
                             email = usersEmailFromWebApp
                         }
                         isOwnIDEnabled = true
                         
-                    case .userRegisteredAndLoggedIn(let previousResultToken):
+                    case .userRegisteredAndLoggedIn(let previousResultToken, _):
                         Task.init {
                             if let model = try? await ProfileLoader().loadProfile(previousResult: previousResultToken) {
                                 await MainActor.run {
@@ -101,7 +101,3 @@ private extension RegisterViewModel {
             .store(in: &bag)
     }
 }
-
-case .resetTapped:
-  // User tapped activeted button. Rest any data if
-  // needed. 

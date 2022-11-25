@@ -1,13 +1,14 @@
 {
   "name": "ownid-gigya-ios-sdk",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "summary": "ownid-gigya-ios-sdk",
   "description": "ownid-gigya-ios-sdk",
   "homepage": "https://ownid.com",
   "license": "Apache 2.0",
   "authors": "OwnID, Inc",
   "source": {
-    "git": "https://github.com/OwnID/ownid-gigya-ios-sdk.git"
+    "git": "https://github.com/OwnID/ownid-gigya-ios-sdk.git",
+    "tag": "2.1.1"
   },
   "module_name": "OwnIDGigyaSDK",
   "platforms": {
@@ -17,7 +18,7 @@
   "source_files": "Core/**/*",
   "dependencies": {
     "ownid-core-ios-sdk": [
-
+      "2.1.1"
     ],
     "Gigya": [
 

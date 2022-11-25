@@ -6,26 +6,26 @@ struct RegisterRequest {
     static func register(ownIdData: String?,
                          password: String,
                          email: String,
-                         name: String) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
+                         name: String) -> OwnID.RegistrationResultPublisher {
         var payloadDict = ["email": email, "password": password, "name": name]
         if let ownIdData {
             payloadDict["ownIdData"] = ownIdData
         }
         return urlSessionRequest(for: payloadDict)
-            .tryMap { response -> Void in
-                if !response.data.isEmpty {
-                    throw OwnID.CoreSDK.Error.payloadMissing(underlying: String(data: response.data, encoding: .utf8))
-                }
-            }
             .eraseToAnyPublisher()
-            .flatMap { _ -> AnyPublisher<OperationResult, Error> in
-                LoginRequest.login(ownIdData: ownIdData, password: password, email: email).mapError { $0 as Error }.eraseToAnyPublisher()
+            .flatMap { (data, response) -> OwnID.RegistrationResultPublisher in
+                guard data.isEmpty else {
+                    return Fail(error: OwnID.CoreSDK.Error.payloadMissing(underlying: String(data: data, encoding: .utf8)))
+                        .eraseToAnyPublisher()
+                }
+                return LoginRequest.login(ownIdData: ownIdData, password: password, email: email)
+                    .map { loginResult -> OwnID.RegisterResult in
+                        OwnID.RegisterResult(operationResult: loginResult.operationResult)
+                    }
+                    .eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
             .receive(on: DispatchQueue.main)
-            .mapError { error in
-                return OwnID.CoreSDK.Error.flowCancelled
-            }
             .eraseToAnyPublisher()
     }
     

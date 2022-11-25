@@ -28,7 +28,7 @@ final class RegisterViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case let .readyToRegister(usersEmailFromWebApp):
+                    case let .readyToRegister(usersEmailFromWebApp, _):
                         if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, email.isEmpty {
                             email = usersEmailFromWebApp
                         }

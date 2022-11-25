@@ -1,13 +1,14 @@
 {
   "name": "ownid-firebase-ios-sdk",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "summary": "ownid-firebase-ios-sdk",
   "description": "ownid-firebase-ios-sdk",
   "homepage": "https://ownid.com",
   "license": "Apache 2.0",
   "authors": "OwnID, Inc",
   "source": {
-    "git": "https://github.com/OwnID/ownid-firebase-ios-sdk.git"
+    "git": "https://github.com/OwnID/ownid-firebase-ios-sdk.git",
+    "tag": "2.1.1"
   },
   "module_name": "OwnIDFirebaseSDK",
   "platforms": {
@@ -17,7 +18,7 @@
   "source_files": "Core/**/*",
   "dependencies": {
     "ownid-core-ios-sdk": [
-
+      "2.1.1"
     ],
     "FirebaseAuth": [
 
