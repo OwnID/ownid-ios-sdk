@@ -6,7 +6,7 @@ public struct AccountModel: Identifiable, Decodable {
         self.email = email
     }
     
-    public let id = UUID().uuidString
+    public var id = UUID().uuidString
     public let name: String
     public let email: String
 }

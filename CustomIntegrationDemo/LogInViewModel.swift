@@ -4,7 +4,7 @@ import AccountView
 
 final class CustomLoginPerformer: LoginPerformer {
     func login(payload: OwnID.CoreSDK.Payload,
-               email: String) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
+               email: String) -> OwnID.LoginResultPublisher {
         LoginRequest.login(ownIdData: payload.dataContainer, email: email)
     }
 }
@@ -33,7 +33,7 @@ final class LogInViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .loggedIn(let previousResultToken):
+                    case .loggedIn(let previousResultToken, _):
                         Task.init {
                             if let model = try? await ProfileLoader().loadProfile(previousResult: previousResultToken) {
                                 await MainActor.run {
