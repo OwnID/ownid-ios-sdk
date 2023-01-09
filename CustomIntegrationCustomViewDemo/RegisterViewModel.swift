@@ -27,6 +27,7 @@ final class RegisterViewModel: ObservableObject {
     @Published var password = ""
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
+    let customButtonPublisher = PassthroughSubject<Void, Never>()
     
     private var bag = Set<AnyCancellable>()
     
@@ -40,6 +41,7 @@ final class RegisterViewModel: ObservableObject {
     init() {
         subscribeToEmailChanges()
         subscribe(to: ownIDViewModel.eventPublisher)
+        ownIDViewModel.subscribe(to: customButtonPublisher.eraseToAnyPublisher())
     }
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {

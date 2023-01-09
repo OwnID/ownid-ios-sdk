@@ -19,12 +19,14 @@ final class LogInViewModel: ObservableObject {
     @Published var password = ""
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
+    let customButtonPublisher = PassthroughSubject<Void, Never>()
     private var loginToken: String!
     
     private var bag = Set<AnyCancellable>()
     
     init() {
         subscribe(to: ownIDViewModel.eventPublisher)
+        ownIDViewModel.subscribe(to: customButtonPublisher.eraseToAnyPublisher())
     }
     
     func subscribe(to eventsPublisher: OwnID.LoginPublisher) {

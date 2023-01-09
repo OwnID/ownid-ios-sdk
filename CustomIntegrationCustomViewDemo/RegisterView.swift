@@ -60,8 +60,8 @@ private extension RegisterView {
     }
     
     func skipPasswordView() -> some View {
-        OwnID.FlowsSDK.RegisterView(viewModel: viewModel.ownIDViewModel,
-                                 usersEmail: $viewModel.email,
-                                 visualConfig: OwnID.UISDK.VisualLookConfig())
+        CustomActionButton {
+            viewModel.customButtonPublisher.send(())
+        }
     }
 }
