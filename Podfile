@@ -5,6 +5,11 @@ def core_pods
   pod 'ownid-core-ios-sdk'#, :path => '../ownid-core-ios-sdk/'
 end
 
+target 'FirebaseDemo' do
+  core_pods
+  pod 'ownid-firebase-ios-sdk'#, :path => '../ownid-firebase-ios-sdk/'
+end
+
 def gigya_pods
   pod 'Gigya'
   pod 'ownid-gigya-ios-sdk'#, :path => '../ownid-gigya-ios-sdk/'
@@ -27,7 +32,6 @@ target 'CustomIntegrationDemo' do
   core_pods
 end
 
-target 'FirebaseDemo' do
+target 'CustomIntegrationCustomViewDemo' do
   core_pods
-  pod 'ownid-firebase-ios-sdk'#, :path => '../ownid-firebase-ios-sdk/'
 end

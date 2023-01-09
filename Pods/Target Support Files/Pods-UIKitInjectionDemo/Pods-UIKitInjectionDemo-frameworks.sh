@@ -176,13 +176,13 @@ code_sign_if_enabled() {
 }
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Gigya/Gigya.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ownid-core-ios-sdk/OwnIDCoreSDK.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/Gigya/Gigya.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ownid-gigya-ios-sdk/OwnIDGigyaSDK.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Gigya/Gigya.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ownid-core-ios-sdk/OwnIDCoreSDK.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/Gigya/Gigya.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ownid-gigya-ios-sdk/OwnIDGigyaSDK.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then
