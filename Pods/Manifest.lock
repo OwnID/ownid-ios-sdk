@@ -706,14 +706,14 @@ PODS:
     - nanopb/encode (= 2.30909.0)
   - nanopb/decode (2.30909.0)
   - nanopb/encode (2.30909.0)
-  - ownid-core-ios-sdk (2.1.1)
-  - ownid-firebase-ios-sdk (2.1.1):
+  - ownid-core-ios-sdk (2.2.0)
+  - ownid-firebase-ios-sdk (2.2.0):
     - FirebaseAuth
     - FirebaseFirestore
-    - ownid-core-ios-sdk (= 2.1.1)
-  - ownid-gigya-ios-sdk (2.1.1):
+    - ownid-core-ios-sdk (= 2.2.0)
+  - ownid-gigya-ios-sdk (2.2.0):
     - Gigya
-    - ownid-core-ios-sdk (= 2.1.1)
+    - ownid-core-ios-sdk (= 2.2.0)
   - PromisesObjC (2.1.1)
 
 DEPENDENCIES:
@@ -763,9 +763,9 @@ SPEC CHECKSUMS:
   leveldb-library: 50c7b45cbd7bf543c81a468fe557a16ae3db8729
   Libuv-gRPC: 55e51798e14ef436ad9bc45d12d43b77b49df378
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
-  ownid-core-ios-sdk: 9d794f6eed830b0e97cf549cf3ea1fd543a07c0f
-  ownid-firebase-ios-sdk: 37657bbab3095d8982149acfcce9fe34b63c790a
-  ownid-gigya-ios-sdk: 04b216d0f2f789800d3871a25cf825b690c565f3
+  ownid-core-ios-sdk: d5016cfffe8701d210cd7377e62f33322597ddc6
+  ownid-firebase-ios-sdk: aa165b26e3e2986287af607debc7a9fb44ad7953
+  ownid-gigya-ios-sdk: ca86f6cbb881dccb2271313b4eb7570ea514c829
   PromisesObjC: ab77feca74fa2823e7af4249b8326368e61014cb
 
 PODFILE CHECKSUM: f4cac9c7301a733ab46b0a228d9c8e208d371202

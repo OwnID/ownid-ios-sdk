@@ -1,6 +1,6 @@
 {
   "name": "ownid-core-ios-sdk",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "summary": "ownid-core-ios-sdk",
   "description": "ownid-core-ios-sdk",
   "homepage": "https://ownid.com",
@@ -8,7 +8,7 @@
   "authors": "OwnID, Inc",
   "source": {
     "git": "https://github.com/OwnID/ownid-core-ios-sdk.git",
-    "tag": "2.1.1"
+    "tag": "2.2.0"
   },
   "module_name": "OwnIDCoreSDK",
   "platforms": {

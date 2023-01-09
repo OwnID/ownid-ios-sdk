@@ -59,6 +59,10 @@
 		16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575D290C074C0059B5A2 /* RegisterView.swift */; };
 		16E35763290C07670059B5A2 /* AccountView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; };
 		16E35764290C07670059B5A2 /* AccountView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		16EF9EDD296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EDC296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift */; };
+		16EF9EDF296BFE4C00D01AAF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EDE296BFE4C00D01AAF /* ContentView.swift */; };
+		16EF9EE1296BFE4C00D01AAF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */; };
+		16EF9EE4296BFE4C00D01AAF /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16EF9EE3296BFE4C00D01AAF /* Preview Assets.xcassets */; };
 		16FCA89E290B038F00CF6E82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */; };
 		16FCA89F290B038F00CF6E82 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */; };
 		3D14AEFD64ECADE0B36CFFCA /* Pods_CustomIntegrationDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF3FBC7AC6FC312296A9DAB /* Pods_CustomIntegrationDemo.framework */; };
@@ -202,6 +206,11 @@
 		16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
 		16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
 		16E3575D290C074C0059B5A2 /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		16EF9EDA296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CustomIntegrationCustomViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		16EF9EDC296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift; sourceTree = "<group>"; };
+		16EF9EDE296BFE4C00D01AAF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		16EF9EE3296BFE4C00D01AAF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -267,6 +276,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		16E35748290BE3090059B5A2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16EF9ED7296BFE4C00D01AAF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -409,6 +425,25 @@
 			path = AccountView;
 			sourceTree = "<group>";
 		};
+		16EF9EDB296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */ = {
+			isa = PBXGroup;
+			children = (
+				16EF9EDC296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift */,
+				16EF9EDE296BFE4C00D01AAF /* ContentView.swift */,
+				16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */,
+				16EF9EE2296BFE4C00D01AAF /* Preview Content */,
+			);
+			path = CustomIntegrationCustomViewDemo;
+			sourceTree = "<group>";
+		};
+		16EF9EE2296BFE4C00D01AAF /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				16EF9EE3296BFE4C00D01AAF /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
 		16FBF258290A8E0800148C8C = {
 			isa = PBXGroup;
 			children = (
@@ -418,6 +453,7 @@
 				16E3574C290BE3090059B5A2 /* AccountView */,
 				1662AD61291048DB0071894C /* UIKitInjectionDemo */,
 				163998D8291051FA003087CD /* CustomIntegrationDemo */,
+				16EF9EDB296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */,
 				16FBF262290A8E0800148C8C /* Products */,
 				77BD2AA4EFD7B47DA3B95320 /* Pods */,
 				26DB8DBAE5E79AFC5C48D0CB /* Frameworks */,
@@ -433,6 +469,7 @@
 				16E3574B290BE3090059B5A2 /* AccountView.framework */,
 				1662AD60291048DB0071894C /* UIKitInjectionDemo.app */,
 				163998D7291051FA003087CD /* CustomIntegrationDemo.app */,
+				16EF9EDA296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -600,6 +637,23 @@
 			productReference = 16E3574B290BE3090059B5A2 /* AccountView.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		16EF9ED9296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 16EF9EE5296BFE4C00D01AAF /* Build configuration list for PBXNativeTarget "CustomIntegrationCustomViewDemo" */;
+			buildPhases = (
+				16EF9ED6296BFE4C00D01AAF /* Sources */,
+				16EF9ED7296BFE4C00D01AAF /* Frameworks */,
+				16EF9ED8296BFE4C00D01AAF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CustomIntegrationCustomViewDemo;
+			productName = com.ownid.demo.CustomIntegrationCustomViewDemo;
+			productReference = 16EF9EDA296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -607,7 +661,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1400;
+				LastSwiftUpdateCheck = 1420;
 				LastUpgradeCheck = 1400;
 				TargetAttributes = {
 					1609602C290AFFFA00649D64 = {
@@ -628,6 +682,9 @@
 					16E3574A290BE3090059B5A2 = {
 						CreatedOnToolsVersion = 14.0.1;
 						LastSwiftMigration = 1400;
+					};
+					16EF9ED9296BFE4C00D01AAF = {
+						CreatedOnToolsVersion = 14.2;
 					};
 				};
 			};
@@ -650,6 +707,7 @@
 				16E3574A290BE3090059B5A2 /* AccountView */,
 				1662AD5F291048DB0071894C /* UIKitInjectionDemo */,
 				163998D6291051FA003087CD /* CustomIntegrationDemo */,
+				16EF9ED9296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */,
 			);
 		};
 /* End PBXProject section */
@@ -711,6 +769,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16EF9ED8296BFE4C00D01AAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16EF9EE4296BFE4C00D01AAF /* Preview Assets.xcassets in Resources */,
+				16EF9EE1296BFE4C00D01AAF /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -986,6 +1053,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		16EF9ED6296BFE4C00D01AAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16EF9EDF296BFE4C00D01AAF /* ContentView.swift in Sources */,
+				16EF9EDD296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1124,7 +1200,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya.screens.staging;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.ScreensetsDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1158,7 +1234,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya.screens.staging;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.ScreensetsDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1430,6 +1506,66 @@
 			};
 			name = Release;
 		};
+		16EF9EE6296BFE4C00D01AAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"CustomIntegrationCustomViewDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.CustomIntegrationCustomViewDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		16EF9EE7296BFE4C00D01AAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"CustomIntegrationCustomViewDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.CustomIntegrationCustomViewDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		16FBF26D290A8E0900148C8C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1597,6 +1733,15 @@
 			buildConfigurations = (
 				16E35750290BE3090059B5A2 /* Debug */,
 				16E35751290BE3090059B5A2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		16EF9EE5296BFE4C00D01AAF /* Build configuration list for PBXNativeTarget "CustomIntegrationCustomViewDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16EF9EE6296BFE4C00D01AAF /* Debug */,
+				16EF9EE7296BFE4C00D01AAF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
