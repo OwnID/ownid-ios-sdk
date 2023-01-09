@@ -21,7 +21,6 @@
 		16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC1290B84E30038AD91 /* RegisterViewModel.swift */; };
 		16229EC4290B8F7B0038AD91 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC3290B8F7B0038AD91 /* RegisterView.swift */; };
 		163998D229104EC5003087CD /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 163998D129104EC5003087CD /* OwnIDConfiguration.plist */; };
-		163998DC291051FA003087CD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163998DB291051FA003087CD /* ContentView.swift */; };
 		163998DE291051FA003087CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 163998DD291051FA003087CD /* Assets.xcassets */; };
 		163998E1291051FA003087CD /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 163998E0291051FA003087CD /* Preview Assets.xcassets */; };
 		1662AD63291048DB0071894C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662AD62291048DB0071894C /* AppDelegate.swift */; };
@@ -59,10 +58,19 @@
 		16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575D290C074C0059B5A2 /* RegisterView.swift */; };
 		16E35763290C07670059B5A2 /* AccountView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; };
 		16E35764290C07670059B5A2 /* AccountView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		16EF9EDD296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EDC296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift */; };
-		16EF9EDF296BFE4C00D01AAF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EDE296BFE4C00D01AAF /* ContentView.swift */; };
 		16EF9EE1296BFE4C00D01AAF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */; };
 		16EF9EE4296BFE4C00D01AAF /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16EF9EE3296BFE4C00D01AAF /* Preview Assets.xcassets */; };
+		16EF9EEF296C02ED00D01AAF /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EE8296C02ED00D01AAF /* LoginAndRegisterView.swift */; };
+		16EF9EF0296C02ED00D01AAF /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EE9296C02ED00D01AAF /* LogInView.swift */; };
+		16EF9EF1296C02ED00D01AAF /* LoginRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EEA296C02ED00D01AAF /* LoginRequest.swift */; };
+		16EF9EF2296C02ED00D01AAF /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EEB296C02ED00D01AAF /* LogInViewModel.swift */; };
+		16EF9EF3296C02ED00D01AAF /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16EF9EEC296C02ED00D01AAF /* Info.plist */; };
+		16EF9EF4296C02ED00D01AAF /* DemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EED296C02ED00D01AAF /* DemoApp.swift */; };
+		16EF9EF5296C02ED00D01AAF /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16EF9EEE296C02ED00D01AAF /* OwnIDConfiguration.plist */; };
+		16EF9EFA296C02F800D01AAF /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EF6296C02F800D01AAF /* RegisterView.swift */; };
+		16EF9EFB296C02F800D01AAF /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EF7296C02F800D01AAF /* RegisterViewModel.swift */; };
+		16EF9EFC296C02F800D01AAF /* ProfileLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EF8296C02F800D01AAF /* ProfileLoader.swift */; };
+		16EF9EFD296C02F800D01AAF /* RegisterRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EF9EF9296C02F800D01AAF /* RegisterRequest.swift */; };
 		16FCA89E290B038F00CF6E82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */; };
 		16FCA89F290B038F00CF6E82 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */; };
 		3D14AEFD64ECADE0B36CFFCA /* Pods_CustomIntegrationDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF3FBC7AC6FC312296A9DAB /* Pods_CustomIntegrationDemo.framework */; };
@@ -170,7 +178,6 @@
 		16229EC3290B8F7B0038AD91 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		163998D129104EC5003087CD /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		163998D7291051FA003087CD /* CustomIntegrationDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CustomIntegrationDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		163998DB291051FA003087CD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		163998DD291051FA003087CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		163998E0291051FA003087CD /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		163998E52910521E003087CD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -207,10 +214,19 @@
 		16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
 		16E3575D290C074C0059B5A2 /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		16EF9EDA296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CustomIntegrationCustomViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		16EF9EDC296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift; sourceTree = "<group>"; };
-		16EF9EDE296BFE4C00D01AAF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		16EF9EE3296BFE4C00D01AAF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		16EF9EE8296C02ED00D01AAF /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
+		16EF9EE9296C02ED00D01AAF /* LogInView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
+		16EF9EEA296C02ED00D01AAF /* LoginRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginRequest.swift; sourceTree = "<group>"; };
+		16EF9EEB296C02ED00D01AAF /* LogInViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
+		16EF9EEC296C02ED00D01AAF /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		16EF9EED296C02ED00D01AAF /* DemoApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoApp.swift; sourceTree = "<group>"; };
+		16EF9EEE296C02ED00D01AAF /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
+		16EF9EF6296C02F800D01AAF /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		16EF9EF7296C02F800D01AAF /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
+		16EF9EF8296C02F800D01AAF /* ProfileLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileLoader.swift; sourceTree = "<group>"; };
+		16EF9EF9296C02F800D01AAF /* RegisterRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterRequest.swift; sourceTree = "<group>"; };
 		16FCA89C290B038F00CF6E82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		16FCA89D290B038F00CF6E82 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -360,7 +376,6 @@
 				16E0328F291059D000130612 /* RegisterViewModel.swift */,
 				16E0328A2910549B00130612 /* OwnIDConfiguration.plist */,
 				163998E52910521E003087CD /* Info.plist */,
-				163998DB291051FA003087CD /* ContentView.swift */,
 				163998DD291051FA003087CD /* Assets.xcassets */,
 				163998DF291051FA003087CD /* Preview Content */,
 				16E0329D2910EFF900130612 /* ProfileLoader.swift */,
@@ -428,8 +443,17 @@
 		16EF9EDB296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */ = {
 			isa = PBXGroup;
 			children = (
-				16EF9EDC296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift */,
-				16EF9EDE296BFE4C00D01AAF /* ContentView.swift */,
+				16EF9EF8296C02F800D01AAF /* ProfileLoader.swift */,
+				16EF9EF9296C02F800D01AAF /* RegisterRequest.swift */,
+				16EF9EF6296C02F800D01AAF /* RegisterView.swift */,
+				16EF9EF7296C02F800D01AAF /* RegisterViewModel.swift */,
+				16EF9EED296C02ED00D01AAF /* DemoApp.swift */,
+				16EF9EEC296C02ED00D01AAF /* Info.plist */,
+				16EF9EE8296C02ED00D01AAF /* LoginAndRegisterView.swift */,
+				16EF9EEA296C02ED00D01AAF /* LoginRequest.swift */,
+				16EF9EE9296C02ED00D01AAF /* LogInView.swift */,
+				16EF9EEB296C02ED00D01AAF /* LogInViewModel.swift */,
+				16EF9EEE296C02ED00D01AAF /* OwnIDConfiguration.plist */,
 				16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */,
 				16EF9EE2296BFE4C00D01AAF /* Preview Content */,
 			);
@@ -778,6 +802,8 @@
 			files = (
 				16EF9EE4296BFE4C00D01AAF /* Preview Assets.xcassets in Resources */,
 				16EF9EE1296BFE4C00D01AAF /* Assets.xcassets in Resources */,
+				16EF9EF3296C02ED00D01AAF /* Info.plist in Resources */,
+				16EF9EF5296C02ED00D01AAF /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1017,7 +1043,6 @@
 				16E03292291059D000130612 /* LogInView.swift in Sources */,
 				16E0329C2910EBA800130612 /* LoginAndRegisterView.swift in Sources */,
 				16E03295291059D000130612 /* DemoApp.swift in Sources */,
-				163998DC291051FA003087CD /* ContentView.swift in Sources */,
 				16E0329E2910EFF900130612 /* ProfileLoader.swift in Sources */,
 				16E03291291059D000130612 /* RegisterView.swift in Sources */,
 			);
@@ -1057,8 +1082,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16EF9EDF296BFE4C00D01AAF /* ContentView.swift in Sources */,
-				16EF9EDD296BFE4C00D01AAF /* com_ownid_demo_CustomIntegrationCustomViewDemoApp.swift in Sources */,
+				16EF9EF0296C02ED00D01AAF /* LogInView.swift in Sources */,
+				16EF9EF2296C02ED00D01AAF /* LogInViewModel.swift in Sources */,
+				16EF9EFD296C02F800D01AAF /* RegisterRequest.swift in Sources */,
+				16EF9EF4296C02ED00D01AAF /* DemoApp.swift in Sources */,
+				16EF9EFB296C02F800D01AAF /* RegisterViewModel.swift in Sources */,
+				16EF9EFA296C02F800D01AAF /* RegisterView.swift in Sources */,
+				16EF9EFC296C02F800D01AAF /* ProfileLoader.swift in Sources */,
+				16EF9EEF296C02ED00D01AAF /* LoginAndRegisterView.swift in Sources */,
+				16EF9EF1296C02ED00D01AAF /* LoginRequest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1517,6 +1549,7 @@
 				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CustomIntegrationCustomViewDemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1547,6 +1580,7 @@
 				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CustomIntegrationCustomViewDemo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
