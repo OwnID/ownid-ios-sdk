@@ -34,7 +34,6 @@ struct RegisterRequest {
             .setFailureType(to: OwnID.CoreSDK.Error.self)
             .eraseToAnyPublisher()
             .tryMap { try JSONSerialization.data(withJSONObject: $0) }
-            .mapError { OwnID.CoreSDK.Error.initRequestBodyEncodeFailed(underlying: $0) }
             .map { payloadData -> URLRequest in
                 var request = URLRequest(url: URL(string: "https://node-mongo.custom.demo.dev.ownid.com/api/auth/register")!)
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -43,11 +42,12 @@ struct RegisterRequest {
                 return request
             }
             .eraseToAnyPublisher()
-            .flatMap { request -> AnyPublisher<URLSession.DataTaskPublisher.Output, OwnID.CoreSDK.Error> in
+            .flatMap { request -> AnyPublisher<URLSession.DataTaskPublisher.Output, Error> in
                 URLSession.shared.dataTaskPublisher(for: request)
-                    .mapError { OwnID.CoreSDK.Error.statusRequestNetworkFailed(underlying: $0) }
+                    .mapError { $0 as Error }
                     .eraseToAnyPublisher()
             }
+            .mapError { OwnID.CoreSDK.Error.plugin(underlying: CustomIntegrationDemoError.registerRequestFailed(underlying: $0)) }
             .eraseToAnyPublisher()
     }
 }

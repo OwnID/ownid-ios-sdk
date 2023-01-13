@@ -10,6 +10,7 @@ extension String: OperationResult { }
 
 enum CustomIntegrationDemoError: PluginError {
     case loginRequestFailed(underlying: Error)
+    case registerRequestFailed(underlying: Error)
 }
 
 struct LoginRequest {
@@ -35,7 +36,7 @@ struct LoginRequest {
             }
             .flatMap {
                 URLSession.shared.dataTaskPublisher(for: $0)
-                    .mapError { OwnID.CoreSDK.Error.statusRequestNetworkFailed(underlying: $0) }
+                    .mapError { $0 as Error }
                     .eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
