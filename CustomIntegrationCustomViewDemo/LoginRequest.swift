@@ -19,7 +19,7 @@ struct LoginRequest {
                       email: String) -> OwnID.LoginResultPublisher {
         if let ownIdData = ownIdData as? [String: String], let token = ownIdData["token"] {
             return Just(OwnID.LoginResult(operationResult: token))
-                .setFailureType(to: OwnID.CoreSDK.Error.self)
+                .setFailureType(to: OwnID.CoreSDK.CoreErrorLogWrapper.self)
                 .eraseToAnyPublisher()
         }
         let payloadDict = ["email": email, "password": password]
@@ -44,7 +44,7 @@ struct LoginRequest {
             .decode(type: LoginResponse.self, decoder: JSONDecoder())
             .map { OwnID.LoginResult(operationResult: $0.token) }
             .receive(on: DispatchQueue.main)
-            .mapError { OwnID.CoreSDK.Error.plugin(error: CustomIntegrationDemoError.loginRequestFailed(underlying: $0)) }
+            .mapError { .coreLog(entry: .errorEntry(Self.self), error: .plugin(underlying: CustomIntegrationDemoError.loginRequestFailed(underlying: $0))) }
             .eraseToAnyPublisher()
     }
 }

@@ -15,7 +15,7 @@ struct RegisterRequest {
             .eraseToAnyPublisher()
             .flatMap { (data, response) -> OwnID.RegistrationResultPublisher in
                 guard data.isEmpty else {
-                    return Fail(error: OwnID.CoreSDK.Error.payloadMissing(underlying: String(data: data, encoding: .utf8)))
+                    return Fail(error: .coreLog(entry: .errorEntry(Self.self), error: .payloadMissing(underlying: String(data: data, encoding: .utf8))))
                         .eraseToAnyPublisher()
                 }
                 return LoginRequest.login(ownIdData: ownIdData, password: password, email: email)
@@ -29,7 +29,7 @@ struct RegisterRequest {
             .eraseToAnyPublisher()
     }
     
-    private static func urlSessionRequest(for payloadDict: [String: Any]) -> AnyPublisher<URLSession.DataTaskPublisher.Output, OwnID.CoreSDK.Error> {
+    private static func urlSessionRequest(for payloadDict: [String: Any]) -> AnyPublisher<URLSession.DataTaskPublisher.Output, OwnID.CoreSDK.CoreErrorLogWrapper> {
         return Just(payloadDict)
             .setFailureType(to: OwnID.CoreSDK.Error.self)
             .eraseToAnyPublisher()
@@ -47,7 +47,7 @@ struct RegisterRequest {
                     .mapError { $0 as Error }
                     .eraseToAnyPublisher()
             }
-            .mapError { OwnID.CoreSDK.Error.plugin(underlying: CustomIntegrationDemoError.registerRequestFailed(underlying: $0)) }
+            .mapError { .coreLog(entry: .errorEntry(Self.self), error: .plugin(underlying: CustomIntegrationDemoError.registerRequestFailed(underlying: $0))) }
             .eraseToAnyPublisher()
     }
 }
