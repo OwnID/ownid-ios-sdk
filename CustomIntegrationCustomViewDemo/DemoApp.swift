@@ -20,7 +20,9 @@ struct DemoApp: App {
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        OwnID.CoreSDK.shared.configure(userFacingSDK: AppDelegate.info(), underlyingSDKs: [])
+        OwnID.CoreSDK.shared.configure(userFacingSDK: AppDelegate.info(),
+                                       underlyingSDKs: [],
+                                       supportedLanguages: .init(rawValue: Locale.preferredLanguages))
         
         return true
     }
