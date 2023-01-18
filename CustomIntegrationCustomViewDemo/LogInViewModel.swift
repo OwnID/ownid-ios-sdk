@@ -12,8 +12,7 @@ final class CustomLoginPerformer: LoginPerformer {
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
-                                                            sdkConfigurationName: AppDelegate.clientName,
-                                                            webLanguages: .init(rawValue: Locale.preferredLanguages))
+                                                            sdkConfigurationName: AppDelegate.clientName)
     
     @Published var email = ""
     @Published var password = ""

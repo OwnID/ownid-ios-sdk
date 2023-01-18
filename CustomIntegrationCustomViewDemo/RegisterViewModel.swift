@@ -35,8 +35,7 @@ final class RegisterViewModel: ObservableObject {
     @Published var isOwnIDEnabled = false
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
                                                                loginPerformer: CustomLoginPerformer(),
-                                                               sdkConfigurationName: AppDelegate.clientName,
-                                                               webLanguages: .init(rawValue: Locale.preferredLanguages))
+                                                               sdkConfigurationName: AppDelegate.clientName)
     
     init() {
         subscribeToEmailChanges()
