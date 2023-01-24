@@ -91,7 +91,7 @@ final class RegisterViewModel: ObservableObject {
             let nameValue = "{ \"firstName\": \"\(firstName)\" }"
             let paramsDict = ["profile": nameValue]
             let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
-            ownIDViewModel.register(with: email, registerParameters: params)
+            ownIDViewModel.register(registerParameters: params)
         } else {
             // ignoring register with default login & password
         }

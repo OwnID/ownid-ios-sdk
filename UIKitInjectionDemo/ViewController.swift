@@ -9,7 +9,7 @@ final class ViewController: UIViewController {
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
-    private var userEmailPublisher = CurrentValueSubject<String, Never>("")
+    private var userEmailPublisher = PassthroughSubject<String, Never>()
     var bag = Set<AnyCancellable>()
     private lazy var ownIdButton = makeOwnIDButton()
     
@@ -39,11 +39,11 @@ final class ViewController: UIViewController {
     }
     
     @objc func textFieldDidChange(_ textField: UITextField) {
-        userEmailPublisher.value = textField.text ?? ""
+        userEmailPublisher.send(textField.text ?? "")
     }
     
     @IBAction func registerTapped(_ sender: UIButton) {
-        ownIDViewModel.register(with: userEmailPublisher.value)
+        ownIDViewModel.register()
     }
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {

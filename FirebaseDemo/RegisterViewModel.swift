@@ -62,7 +62,7 @@ final class RegisterViewModel: ObservableObject {
     
     func register() {
         if isOwnIDEnabled {
-            ownIDViewModel.register(with: email)
+            ownIDViewModel.register()
         } else {
             // ignoring register with default login & password
         }
