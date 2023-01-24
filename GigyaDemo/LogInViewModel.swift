@@ -5,7 +5,7 @@ import Gigya
 
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
-    let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance())
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
     @Published var email = ""
     @Published var password = ""
@@ -15,6 +15,8 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
+        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), emailPublisher: $email.eraseToAnyPublisher())
+        self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
     

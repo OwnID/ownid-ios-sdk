@@ -11,8 +11,7 @@ final class CustomLoginPerformer: LoginPerformer {
 
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
-    let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
-                                                            sdkConfigurationName: AppDelegate.clientName)
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
     @Published var email = ""
     @Published var password = ""
@@ -23,6 +22,10 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
+        let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
+                                                                sdkConfigurationName: AppDelegate.clientName,
+                                                                emailPublisher: $email.eraseToAnyPublisher())
+        self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
     

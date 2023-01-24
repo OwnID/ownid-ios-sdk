@@ -15,9 +15,11 @@ final class RegisterViewModel: ObservableObject {
     
     // MARK: OwnID
     @Published var isOwnIDEnabled = false
-    let ownIDViewModel = OwnID.FirebaseSDK.registrationViewModel()
+    var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
     
     init() {
+        let ownIDViewModel = OwnID.FirebaseSDK.registrationViewModel(emailPublisher: $email.eraseToAnyPublisher())
+        self.ownIDViewModel = ownIDViewModel
         subscribeToEmailChanges()
         subscribe(to: ownIDViewModel.eventPublisher)
     }

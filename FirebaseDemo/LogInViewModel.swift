@@ -5,7 +5,7 @@ import FirebaseAuth
 
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
-    let ownIDViewModel = OwnID.FirebaseSDK.loginViewModel()
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
     @Published var email = ""
     @Published var password = ""
@@ -15,6 +15,8 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
+        let ownIDViewModel = OwnID.FirebaseSDK.loginViewModel(emailPublisher: $email.eraseToAnyPublisher())
+        self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
     

@@ -8,13 +8,15 @@ final class ViewController: UIViewController {
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
-    let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance())
-    private var userEmail = ""
+    var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
+    private var userEmailPublisher = CurrentValueSubject<String, Never>("")
     var bag = Set<AnyCancellable>()
     private lazy var ownIdButton = makeOwnIDButton()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), emailPublisher: userEmailPublisher.eraseToAnyPublisher())
+                self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
         activityIndicator.isHidden = true
         emailTextField.addTarget(self, action: #selector(ViewController.textFieldDidChange(_:)), for: .editingChanged)
@@ -24,31 +26,24 @@ final class ViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             ownIdButton.view.topAnchor.constraint(equalTo: passwordTextField.topAnchor),
-            ownIdButton.view.leadingAnchor.constraint(equalTo: passwordTextField.trailingAnchor, constant: 10),
+            ownIdButton.view.trailingAnchor.constraint(equalTo: passwordTextField.leadingAnchor, constant: 10),
             ownIdButton.view.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
     
     func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
-        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel, email: emailBinding)
+        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel)
         let headerVC = UIHostingController(rootView: headerView)
         headerVC.view.translatesAutoresizingMaskIntoConstraints = false
         return headerVC
     }
     
-    var emailBinding: Binding<String> {
-        Binding(
-            get: { self.userEmail },
-            set: { _ in }
-        )
-    }
-    
     @objc func textFieldDidChange(_ textField: UITextField) {
-        userEmail = textField.text ?? ""
+        userEmailPublisher.value = textField.text ?? ""
     }
     
     @IBAction func registerTapped(_ sender: UIButton) {
-        ownIDViewModel.register(with: userEmail)
+        ownIDViewModel.register(with: userEmailPublisher.value)
     }
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {
