@@ -39,12 +39,12 @@ private extension LogInView {
     @ViewBuilder
     func passwordField() -> some View {
         HStack(spacing: 8) {
-            SecureField("Password", text: $viewModel.password)
-                .textContentType(.password)
-                .keyboardType(.emailAddress)
             skipPasswordView()
                 .layoutPriority(1)
                 .zIndex(1)
+            SecureField("Password", text: $viewModel.password)
+                .textContentType(.password)
+                .keyboardType(.emailAddress)
         }
     }
     

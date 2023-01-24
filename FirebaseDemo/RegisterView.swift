@@ -49,15 +49,14 @@ private extension RegisterView {
     @ViewBuilder
     func passwordField() -> some View {
         HStack(spacing: 8) {
+            skipPasswordView()
+                .layoutPriority(1)
+                .zIndex(1)
             SecureField("Password", text: $viewModel.password)
                 .textContentType(.password)
                 .keyboardType(.emailAddress)
                 .disabled(viewModel.isOwnIDEnabled)
-            
-                skipPasswordView()
-                    .layoutPriority(1)
-                    .zIndex(1)
-            }
+        }
     }
     
     func skipPasswordView() -> some View {

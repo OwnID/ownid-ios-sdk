@@ -40,7 +40,6 @@ final class RegisterViewModel: ObservableObject {
                                                                    sdkConfigurationName: AppDelegate.clientName,
                                                                    emailPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
-        subscribeToEmailChanges()
         subscribe(to: ownIDViewModel.eventPublisher)
     }
     
@@ -88,18 +87,5 @@ final class RegisterViewModel: ObservableObject {
         } else {
             // ignoring register with default login & password
         }
-    }
-}
-
-private extension RegisterViewModel {
-    func subscribeToEmailChanges() {
-        $email
-            .removeDuplicates()
-            .debounce(for: .seconds(0.77), scheduler: DispatchQueue.main)
-            .sink(receiveValue: { [weak self] value in
-                guard let self = self else { return }
-                self.ownIDViewModel.shouldShowTooltip = self.ownIDViewModel.shouldShowTooltipEmailProcessingClosure(value)
-            })
-            .store(in: &bag)
     }
 }
