@@ -17,7 +17,6 @@ The OwnID Custom-iOS SDK is a client library written in Swift that provides a pa
   + [Add OwnID View](#add-ownid-view)
 * [Errors](#errors)
 * [Advanced Configuration](#advanced-configuration)
-  + [OwnID Web App language](#ownid-web-app-language)
   + [Directing Users to the OwnID iOS App](#directing-users-to-the-ownid-ios-app)
 * [Logging](#logging)
 
@@ -72,7 +71,9 @@ The OwnID SDK must be initialized properly using the `configure()` function, pre
 @main
 struct ExampleApp: App {
     init() {
-        OwnID.CoreSDK.shared.configure(userFacingSDK: ("CustomIntegrationDemoApp", "0.0.1"), underlyingSDKs: [])
+        OwnID.CoreSDK.shared.configure(userFacingSDK: ("CustomIntegrationDemoApp", "0.0.1"),
+                               underlyingSDKs: [],
+                               supportedLanguages: .init(rawValue: Locale.preferredLanguages))
     }
 }
 ```
@@ -91,7 +92,7 @@ final class CustomRegistration: RegistrationPerformer {
 }
 ```
 
-When the user selects Skip Password, your app waits for events while the user interacts with the OwnID Web App, then calls your function to register the user once they have completed the Skip Password process.
+When the user selects Skip Password, your app waits for events while the user interacts SDK, then calls your function to register the user once they have completed the Skip Password process.
 
 ### Customize View Model
 The OwnID view that inserts the Skip Password UI is bound to an instance of the OwnID view model. Before modifying your View layer, create an instance of this view model, `OwnID.FlowsSDK.RegisterView.ViewModel`, within your ViewModel layer with `CustomRegistration` you created earlier:
@@ -103,11 +104,13 @@ final class MyRegisterViewModel: ObservableObject {
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
                                                                loginPerformer: CustomLoginPerformer(),
                                                                sdkConfigurationName: clientName,
-                                                               webLanguages: languages)
+                                                               emailPublisher: AnyPublisher<String, Never>)
 }
 ```
 
-After creating this OwnID view model, your View Model layer should listen to events from the OwnID Event Publisher, which allows your app to know what actions to take based on the user's interaction with the OwnID Web App. Simply add the following to your existing ViewModel layer to subscribe to the OwnID Event Publisher and respond to events (it can be placed just after the code that creates the OwnID view model instance).
+Where `emailPublisher` provides input that user is typing into email field. See example of `@Published` property in demo app.
+
+After creating this OwnID view model, your View Model layer should listen to events from the OwnID Event Publisher, which allows your app to know what actions to take based on the user's interaction. Simply add the following to your existing ViewModel layer to subscribe to the OwnID Event Publisher and respond to events (it can be placed just after the code that creates the OwnID view model instance).
 
 [Complete example](./RegisterViewModel.swift)
 ```swift
@@ -116,7 +119,7 @@ final class MyRegisterViewModel: ObservableObject {
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
                                                                loginPerformer: CustomLoginPerformer(),
                                                                sdkConfigurationName: clientName,
-                                                               webLanguages: languages)
+                                                               emailPublisher: AnyPublisher<String, Never>)
 
     init() {
      subscribe(to: ownIDViewModel.eventPublisher)
@@ -132,14 +135,8 @@ final class MyRegisterViewModel: ObservableObject {
                    // finishes Skip Password
                    // in OwnID Web App
                    case .readyToRegister:
-                     // If needed, ask user to enter
-                     // email (mandatory) and call
-                     // OwnID.FlowsSDK.RegisterView.ViewModel.
-                     // register(with email: String)
-                     // to finish registration.
-                     // This will prepare data and
-                     // call your implementation of registration
-                     ownIDViewModel.register(with: email)
+                     // To finish registration call
+                     ownIDViewModel.register()
 
                    // Event when OwnID creates
                    // account account in your system
@@ -152,7 +149,7 @@ final class MyRegisterViewModel: ObservableObject {
 		                 // needed. 
 
                    case .loading:
-                     // Display loading indicator according to your designs
+                     // Button displays customizable loader
                      
                    }
 
@@ -168,7 +165,7 @@ final class MyRegisterViewModel: ObservableObject {
 **Important:** The OwnID `ownIDViewModel.register` function must be called in response to the `.readyToRegister` event. 
 
 ### Add the OwnID View
-Inserting the OwnID view into your View layer results in the Skip Password option appearing in your app. When the user selects Skip Password, the SDK opens a sheet to interact with the user. The code that creates this view accepts the OwnID view model as its argument. It is suggested that you pass user's email binding for properly creating accounts.
+Inserting the OwnID view into your View layer results in the Skip Password option appearing in your app. When the user selects Skip Password, the SDK opens a sheet to interact with the user. The code that creates this view accepts the OwnID view model as its argument.
 
 It is reccomended to set height of button the same as text field and disable text field when OwnID is enabled. 
 
@@ -176,9 +173,7 @@ It is reccomended to set height of button the same as text field and disable tex
 ```swift
 //Put RegisterView inside your main view, preferably besides password field
 var body: some View {
-    OwnID.FlowsSDK.RegisterView(viewModel: ownIDViewModel,
-                                 usersEmail: email,
-                                 visualConfig: visualLookConfig)
+    OwnID.FlowsSDK.RegisterView(viewModel: ownIDViewModel, visualConfig: visualLookConfig)
 }
 ```
 
@@ -210,7 +205,7 @@ final class MyLogInViewModel: ObservableObject {
     // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
                                                             sdkConfigurationName: clientName,
-                                                            webLanguages: languages)
+                                                            emailPublisher: AnyPublisher<String, Never>)
 }
 ```
 
@@ -222,7 +217,7 @@ final class MyLogInViewModel: ObservableObject {
     // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
                                                             sdkConfigurationName: clientName,
-                                                            webLanguages: languages)
+                                                            emailPublisher: AnyPublisher<String, Never>)
 
  	  init() {
        subscribe(to: ownIDViewModel.eventPublisher)
@@ -240,7 +235,7 @@ final class MyLogInViewModel: ObservableObject {
                      // User is logged in with OwnID
 
                    case .loading:
-                     // Display loading indicator according to your designs
+                     // Button displays customizable loader
                    }
 
                case .failure(let error):
@@ -260,17 +255,10 @@ Inserting the OwnID view into your View layer results in the Skip Password optio
 //Put LoginView inside your main view, preferably below password field
 var body: some View {
   //...
-  // User's email binding `$viewModel.email` is used to display identity
-  // name when logging in. Additionally, this email is used to get
-  // information if user already has OwnID account
-  OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel,
-                                 usersEmail: email,
-                                 visualConfig: visualLookConfig())
+  OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: visualLookConfig())
   //...
 }
 ```
-
-[Complete example](./LogInView.swift)
 
 ## Errors
 All errors from the SDK have an `OwnID.CoreSDK.Error` type. You can use them, for example, to properly ask the user to perform an action.
@@ -307,26 +295,19 @@ case .plugin(let pluginError):
 It is possible to set button visual settings by passing `OwnID.UISDK.VisualLookConfig`.
 
 ```swift
-let tooltipConfig = OwnID.UISDK.TooltipVisualLookConfig(backgroundColor: .pink,
-                                                        borderColor: .accentColor)
-let config = OwnID.UISDK.VisualLookConfig(biometryIconColor: .red,
-                                          shadowColor: .cyan,
-                                          tooltipVisualLookConfig: tooltipConfig)
-OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel,
-                         usersEmail: usersEmail,
-                         visualConfig: config)
+let config = OwnID.UISDK.VisualLookConfig(buttonViewConfig: .init(iconColor: .red, shadowColor: .cyan),
+                                          tooltipVisualLookConfig: .init(borderColor: .indigo, tooltipPosition: .bottom),
+                                          loaderViewConfig: .init(spinnerColor: .accentColor, isSpinnerEnabled: false))
+OwnID.FlowsSDK.createLoginView(viewModel: ownIDViewModel, visualConfig: config)
 ```
 
-### OwnID Web App language
+By default, SDK uses language TAGs list (well-formed [IETF BCP 47 language tag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language)) based on the device locales set by the user in system. You can override this behavior by passing language list manually by passing languages in an array.
 
-By default, the OwnID Web App is launched with a language TAGs list (well-formed [IETF BCP 47 language tag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language)) based on the device locales set by the user in system. You can override this behavior and set the Web App language list manually by passing languages in an array. Example:
-
+Optionally provide list of supported languages of `OwnID.CoreSDK.Languages` as `supportedLanguages` parameter.
 ```swift
-let languages = OwnID.CoreSDK.Languages.init(rawValue: ["he"]))
-OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
-                                   sdkConfigurationName: clientName,
-                                   webLanguages: languages)
+OwnID.CoreSDK.configure(supportedLanguages: .init(rawValue: ["he"]))
 ```
+
 
 ## Logging
-You can enable console logging by calling `OwnID.startDebugConsoleLogger()`.
+You can enable Xcode console & Console.app logging by calling `OwnID.startDebugConsoleLogger()`.
