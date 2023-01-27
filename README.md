@@ -3,7 +3,9 @@
 # Demo Apps
 This repository represents set of demo apps how to use OwnID mobile SDKs.
 
-Want to see a demo of the OwnID registration and login flows without opening the source code? Ensure TestFlight is installed on your iOS device, then access the [OwnID SDK Firebase Demo beta](https://testflight.apple.com/join/QvMiUpjq).
+Want to see a demo of the OwnID registration and login flows without opening the source code? Ensure TestFlight is installed on your iOS device, then access the demos:
+- [OwnID SDK Firebase Demo beta](https://testflight.apple.com/join/QvMiUpjq)
+- [OwnID SDK Gigya Demo beta](https://testflight.apple.com/join/h9Qw7tto)
 
 To get started, please read integration instructions for:
 - [Firebase SDK](https://github.com/OwnID/ownid-firebase-ios-sdk)
