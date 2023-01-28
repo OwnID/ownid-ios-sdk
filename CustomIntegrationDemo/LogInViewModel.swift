@@ -23,7 +23,7 @@ final class LogInViewModel: ObservableObject {
     
     init() {
         let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
-                                                                sdkConfigurationName: AppDelegate.clientName,
+                                                                sdkConfigurationName: DemoApp.clientName,
                                                                 emailPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
