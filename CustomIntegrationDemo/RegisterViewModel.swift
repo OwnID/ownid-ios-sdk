@@ -37,7 +37,7 @@ final class RegisterViewModel: ObservableObject {
     init() {
         let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
                                                                    loginPerformer: CustomLoginPerformer(),
-                                                                   sdkConfigurationName: AppDelegate.clientName,
+                                                                   sdkConfigurationName: DemoApp.clientName,
                                                                    emailPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
