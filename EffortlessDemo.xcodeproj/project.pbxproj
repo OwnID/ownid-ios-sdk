@@ -18,6 +18,12 @@
 		161C4799290AE9E30014D737 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161C4781290AE9E30014D737 /* Assets.xcassets */; };
 		161C479A290AE9E30014D737 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161C4783290AE9E30014D737 /* Preview Assets.xcassets */; };
 		161C47A2290AE9E30014D737 /* DemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161C4793290AE9E30014D737 /* DemoApp.swift */; };
+		161FADB629B76F2D008FC423 /* SampleCode.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 161FADAD29B76F2D008FC423 /* SampleCode.xcconfig */; };
+		161FADB729B76F2D008FC423 /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161FADAE29B76F2D008FC423 /* LoginAndRegisterView.swift */; };
+		161FADB929B76F2D008FC423 /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161FADB029B76F2D008FC423 /* LogInView.swift */; };
+		161FADBA29B76F2D008FC423 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 161FADB129B76F2D008FC423 /* OwnIDConfiguration.plist */; };
+		161FADBC29B76F2D008FC423 /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161FADB329B76F2D008FC423 /* LogInViewModel.swift */; };
+		161FADBD29B76F2D008FC423 /* CognitoDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161FADB429B76F2D008FC423 /* CognitoDemoApp.swift */; };
 		16229EC2290B84E30038AD91 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC1290B84E30038AD91 /* RegisterViewModel.swift */; };
 		16229EC4290B8F7B0038AD91 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16229EC3290B8F7B0038AD91 /* RegisterView.swift */; };
 		163998D229104EC5003087CD /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 163998D129104EC5003087CD /* OwnIDConfiguration.plist */; };
@@ -32,6 +38,8 @@
 		1662AD6F291048DC0071894C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1662AD6D291048DC0071894C /* LaunchScreen.storyboard */; };
 		167C7CEB290FD864008D047B /* AccountView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; };
 		167C7CEC290FD864008D047B /* AccountView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 16E3574B290BE3090059B5A2 /* AccountView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		16A9000229B76E540042C55B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16A9000129B76E540042C55B /* Preview Assets.xcassets */; };
+		16A9FFFE29B76E540042C55B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16A9FFFD29B76E540042C55B /* Assets.xcassets */; };
 		16C89BF6290F8DCA00F5FE09 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */; };
 		16E0328B2910549B00130612 /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16E0328A2910549B00130612 /* OwnIDConfiguration.plist */; };
 		16E03291291059D000130612 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E0328C291059D000130612 /* RegisterView.swift */; };
@@ -80,6 +88,7 @@
 		7C778A8009D59641579F2567 /* Pods_CustomIntegrationCustomViewDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6764DABB97A9D857120F5B9 /* Pods_CustomIntegrationCustomViewDemo.framework */; };
 		92AA9B0C4D9C620989E11421 /* Pods_UIKitInjectionDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8D176B732DFB1C710F304F1 /* Pods_UIKitInjectionDemo.framework */; };
 		9C6406F64EE23FD6336FE2D0 /* Pods_FirebaseDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC69E093CEE11815C8E583C /* Pods_FirebaseDemo.framework */; };
+		B4E133B939CF499FFDE63B05 /* Pods_CognitoDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AC50A77BE22CC7BB292A7A4 /* Pods_CognitoDemo.framework */; };
 		B94DB2230E2FB874676155EA /* Pods_ScreensetsDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C717260072510B51F65ADB6 /* Pods_ScreensetsDemo.framework */; };
 /* End PBXBuildFile section */
 
@@ -180,6 +189,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		049E80F41E6B222DC272CCEF /* Pods-CognitoDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CognitoDemo.debug.xcconfig"; path = "Target Support Files/Pods-CognitoDemo/Pods-CognitoDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		0EC69E093CEE11815C8E583C /* Pods_FirebaseDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FirebaseDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1361FCAB8021286EF09FB1DE /* Pods-GigyaDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GigyaDemo.debug.xcconfig"; path = "Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		1609602D290AFFFA00649D64 /* FirebaseDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FirebaseDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -195,6 +205,13 @@
 		161C4781290AE9E30014D737 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		161C4783290AE9E30014D737 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		161C4793290AE9E30014D737 /* DemoApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoApp.swift; sourceTree = "<group>"; };
+		161FADAD29B76F2D008FC423 /* SampleCode.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
+		161FADAE29B76F2D008FC423 /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
+		161FADAF29B76F2D008FC423 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		161FADB029B76F2D008FC423 /* LogInView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
+		161FADB129B76F2D008FC423 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
+		161FADB329B76F2D008FC423 /* LogInViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
+		161FADB429B76F2D008FC423 /* CognitoDemoApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CognitoDemoApp.swift; sourceTree = "<group>"; };
 		16229EC1290B84E30038AD91 /* RegisterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
 		16229EC3290B8F7B0038AD91 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		163998D129104EC5003087CD /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
@@ -216,6 +233,10 @@
 		1662AD6B291048DC0071894C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1662AD6E291048DC0071894C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1662AD70291048DC0071894C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		16A9000129B76E540042C55B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		16A9FFF729B76E540042C55B /* CognitoDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CognitoDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		16A9FFFD29B76E540042C55B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		16A9FFFF29B76E540042C55B /* CognitoDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CognitoDemo.entitlements; sourceTree = "<group>"; };
 		16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		16E0328A2910549B00130612 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		16E0328C291059D000130612 /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
@@ -265,7 +286,9 @@
 		3152F7A99190783ED4DD802A /* Pods-CustomIntegrationCustomViewDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CustomIntegrationCustomViewDemo.release.xcconfig"; path = "Target Support Files/Pods-CustomIntegrationCustomViewDemo/Pods-CustomIntegrationCustomViewDemo.release.xcconfig"; sourceTree = "<group>"; };
 		3A135F947B95600991D0CFE0 /* Pods-CustomIntegrationCustomViewDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CustomIntegrationCustomViewDemo.debug.xcconfig"; path = "Target Support Files/Pods-CustomIntegrationCustomViewDemo/Pods-CustomIntegrationCustomViewDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		458C92FF08544FE1AF38416D /* Pods-GigyaDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GigyaDemo.release.xcconfig"; path = "Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo.release.xcconfig"; sourceTree = "<group>"; };
+		6AC50A77BE22CC7BB292A7A4 /* Pods_CognitoDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CognitoDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		80E6A475A92A829598F55C2D /* Pods-ScreensetsDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.debug.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		8217F2DBD0927FF753010057 /* Pods-CognitoDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CognitoDemo.release.xcconfig"; path = "Target Support Files/Pods-CognitoDemo/Pods-CognitoDemo.release.xcconfig"; sourceTree = "<group>"; };
 		8C717260072510B51F65ADB6 /* Pods_ScreensetsDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ScreensetsDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6764DABB97A9D857120F5B9 /* Pods_CustomIntegrationCustomViewDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CustomIntegrationCustomViewDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9B82C787E8955B52A690592 /* Pods_GigyaDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GigyaDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -309,6 +332,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				92AA9B0C4D9C620989E11421 /* Pods_UIKitInjectionDemo.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16A9FFF429B76E540042C55B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4E133B939CF499FFDE63B05 /* Pods_CognitoDemo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,6 +474,31 @@
 			path = UIKitInjectionDemo;
 			sourceTree = "<group>";
 		};
+		16A9000029B76E540042C55B /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				16A9000129B76E540042C55B /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		16A9FFF829B76E540042C55B /* CognitoDemo */ = {
+			isa = PBXGroup;
+			children = (
+				161FADB429B76F2D008FC423 /* CognitoDemoApp.swift */,
+				161FADAF29B76F2D008FC423 /* Info.plist */,
+				161FADAE29B76F2D008FC423 /* LoginAndRegisterView.swift */,
+				161FADB029B76F2D008FC423 /* LogInView.swift */,
+				161FADB329B76F2D008FC423 /* LogInViewModel.swift */,
+				161FADB129B76F2D008FC423 /* OwnIDConfiguration.plist */,
+				161FADAD29B76F2D008FC423 /* SampleCode.xcconfig */,
+				16A9FFFD29B76E540042C55B /* Assets.xcassets */,
+				16A9FFFF29B76E540042C55B /* CognitoDemo.entitlements */,
+				16A9000029B76E540042C55B /* Preview Content */,
+			);
+			path = CognitoDemo;
+			sourceTree = "<group>";
+		};
 		16E2D82A290B019D00AF28E4 /* GigyaDemo */ = {
 			isa = PBXGroup;
 			children = (
@@ -516,6 +572,7 @@
 				1662AD61291048DB0071894C /* UIKitInjectionDemo */,
 				163998D8291051FA003087CD /* CustomIntegrationDemo */,
 				16EF9EDB296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */,
+				16A9FFF829B76E540042C55B /* CognitoDemo */,
 				16FBF262290A8E0800148C8C /* Products */,
 				77BD2AA4EFD7B47DA3B95320 /* Pods */,
 				26DB8DBAE5E79AFC5C48D0CB /* Frameworks */,
@@ -532,6 +589,7 @@
 				1662AD60291048DB0071894C /* UIKitInjectionDemo.app */,
 				163998D7291051FA003087CD /* CustomIntegrationDemo.app */,
 				16EF9EDA296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo.app */,
+				16A9FFF729B76E540042C55B /* CognitoDemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -545,6 +603,7 @@
 				D8D176B732DFB1C710F304F1 /* Pods_UIKitInjectionDemo.framework */,
 				1FF3FBC7AC6FC312296A9DAB /* Pods_CustomIntegrationDemo.framework */,
 				B6764DABB97A9D857120F5B9 /* Pods_CustomIntegrationCustomViewDemo.framework */,
+				6AC50A77BE22CC7BB292A7A4 /* Pods_CognitoDemo.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -564,6 +623,8 @@
 				E5DA73DEC1CD8D4F0FC839A2 /* Pods-CustomIntegrationDemo.release.xcconfig */,
 				3A135F947B95600991D0CFE0 /* Pods-CustomIntegrationCustomViewDemo.debug.xcconfig */,
 				3152F7A99190783ED4DD802A /* Pods-CustomIntegrationCustomViewDemo.release.xcconfig */,
+				049E80F41E6B222DC272CCEF /* Pods-CognitoDemo.debug.xcconfig */,
+				8217F2DBD0927FF753010057 /* Pods-CognitoDemo.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -663,6 +724,25 @@
 			productReference = 1662AD60291048DB0071894C /* UIKitInjectionDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		16A9FFF629B76E540042C55B /* CognitoDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 16A9000529B76E540042C55B /* Build configuration list for PBXNativeTarget "CognitoDemo" */;
+			buildPhases = (
+				D0E4B49882FCC0DEF27EA3FD /* [CP] Check Pods Manifest.lock */,
+				16A9FFF329B76E540042C55B /* Sources */,
+				16A9FFF429B76E540042C55B /* Frameworks */,
+				16A9FFF529B76E540042C55B /* Resources */,
+				364C46B8B3E57BDC3BBDFDFC /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CognitoDemo;
+			productName = CognitoDemo;
+			productReference = 16A9FFF729B76E540042C55B /* CognitoDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
 		16E2D828290B019D00AF28E4 /* GigyaDemo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 16E2D836290B019D00AF28E4 /* Build configuration list for PBXNativeTarget "GigyaDemo" */;
@@ -745,6 +825,10 @@
 					1662AD5F291048DB0071894C = {
 						CreatedOnToolsVersion = 14.0.1;
 					};
+					16A9FFF629B76E540042C55B = {
+						CreatedOnToolsVersion = 14.2;
+						LastSwiftMigration = 1420;
+					};
 					16E2D828290B019D00AF28E4 = {
 						CreatedOnToolsVersion = 14.0.1;
 					};
@@ -777,6 +861,7 @@
 				1662AD5F291048DB0071894C /* UIKitInjectionDemo */,
 				163998D6291051FA003087CD /* CustomIntegrationDemo */,
 				16EF9ED9296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */,
+				16A9FFF629B76E540042C55B /* CognitoDemo */,
 			);
 		};
 /* End PBXProject section */
@@ -821,6 +906,17 @@
 				1662AD6C291048DC0071894C /* Assets.xcassets in Resources */,
 				1662AD6A291048DB0071894C /* Main.storyboard in Resources */,
 				163998D229104EC5003087CD /* OwnIDConfiguration.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16A9FFF529B76E540042C55B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				161FADBA29B76F2D008FC423 /* OwnIDConfiguration.plist in Resources */,
+				16A9000229B76E540042C55B /* Preview Assets.xcassets in Resources */,
+				161FADB629B76F2D008FC423 /* SampleCode.xcconfig in Resources */,
+				16A9FFFE29B76E540042C55B /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -925,6 +1021,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FirebaseDemo/Pods-FirebaseDemo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		364C46B8B3E57BDC3BBDFDFC /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-CognitoDemo/Pods-CognitoDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-CognitoDemo/Pods-CognitoDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-CognitoDemo/Pods-CognitoDemo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		3F9AEACA52726C113ED4FFF8 /* [CP] Embed Pods Frameworks */ = {
@@ -1066,6 +1179,28 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		D0E4B49882FCC0DEF27EA3FD /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-CognitoDemo-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		D8F383AAD48676BF7FD1BE12 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1137,6 +1272,17 @@
 			files = (
 				1662AD67291048DB0071894C /* ViewController.swift in Sources */,
 				1662AD63291048DB0071894C /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		16A9FFF329B76E540042C55B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				161FADBC29B76F2D008FC423 /* LogInViewModel.swift in Sources */,
+				161FADB929B76F2D008FC423 /* LogInView.swift in Sources */,
+				161FADBD29B76F2D008FC423 /* CognitoDemoApp.swift in Sources */,
+				161FADB729B76F2D008FC423 /* LoginAndRegisterView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1480,6 +1626,89 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ownid.demo.UIKitInjectionDemo${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		16A9000329B76E540042C55B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049E80F41E6B222DC272CCEF /* Pods-CognitoDemo.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = CognitoDemo/CognitoDemo.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"CognitoDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CognitoDemo/Info.plist;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.CognitoDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		16A9000429B76E540042C55B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8217F2DBD0927FF753010057 /* Pods-CognitoDemo.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = CognitoDemo/CognitoDemo.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"CognitoDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CognitoDemo/Info.plist;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.CognitoDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1840,6 +2069,15 @@
 			buildConfigurations = (
 				1662AD72291048DC0071894C /* Debug */,
 				1662AD73291048DC0071894C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		16A9000529B76E540042C55B /* Build configuration list for PBXNativeTarget "CognitoDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16A9000329B76E540042C55B /* Debug */,
+				16A9000429B76E540042C55B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
