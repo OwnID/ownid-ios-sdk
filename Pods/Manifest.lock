@@ -706,6 +706,8 @@ PODS:
     - nanopb/encode (= 2.30909.0)
   - nanopb/decode (2.30909.0)
   - nanopb/encode (2.30909.0)
+  - ownid-amplify-ios-sdk (2.2.0):
+    - ownid-core-ios-sdk (= 2.2.0)
   - ownid-core-ios-sdk (2.2.0)
   - ownid-firebase-ios-sdk (2.2.0):
     - FirebaseAuth
@@ -718,6 +720,7 @@ PODS:
 
 DEPENDENCIES:
   - Gigya
+  - ownid-amplify-ios-sdk (from `../ownid-amplify-ios-sdk/`)
   - ownid-core-ios-sdk (from `../ownid-core-ios-sdk/`)
   - ownid-firebase-ios-sdk (from `../ownid-firebase-ios-sdk/`)
   - ownid-gigya-ios-sdk (from `../ownid-gigya-ios-sdk/`)
@@ -741,6 +744,8 @@ SPEC REPOS:
     - PromisesObjC
 
 EXTERNAL SOURCES:
+  ownid-amplify-ios-sdk:
+    :path: "../ownid-amplify-ios-sdk/"
   ownid-core-ios-sdk:
     :path: "../ownid-core-ios-sdk/"
   ownid-firebase-ios-sdk:
@@ -763,11 +768,12 @@ SPEC CHECKSUMS:
   leveldb-library: 50c7b45cbd7bf543c81a468fe557a16ae3db8729
   Libuv-gRPC: 55e51798e14ef436ad9bc45d12d43b77b49df378
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
+  ownid-amplify-ios-sdk: 5684fc3c71054b0af748201d72550e78df9f5135
   ownid-core-ios-sdk: d5016cfffe8701d210cd7377e62f33322597ddc6
   ownid-firebase-ios-sdk: aa165b26e3e2986287af607debc7a9fb44ad7953
   ownid-gigya-ios-sdk: ca86f6cbb881dccb2271313b4eb7570ea514c829
   PromisesObjC: ab77feca74fa2823e7af4249b8326368e61014cb
 
-PODFILE CHECKSUM: c33b14a9189c532dc5b6b1fd61e96a32ae440e81
+PODFILE CHECKSUM: 2261efe013d4f1a7035be833d8468c7737ba8bd9
 
 COCOAPODS: 1.11.3

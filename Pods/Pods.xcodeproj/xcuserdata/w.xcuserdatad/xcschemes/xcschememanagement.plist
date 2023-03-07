@@ -67,54 +67,61 @@
 			<key>orderHint</key>
 			<integer>15</integer>
 		</dict>
-		<key>Pods-CustomIntegrationCustomViewDemo.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-			<key>orderHint</key>
-			<integer>21</integer>
-		</dict>
-		<key>Pods-CustomIntegrationDemo.xcscheme</key>
+		<key>Pods-CognitoDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>22</integer>
 		</dict>
-		<key>Pods-FirebaseDemo.xcscheme</key>
+		<key>Pods-CustomIntegrationCustomViewDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>23</integer>
 		</dict>
-		<key>Pods-GigyaDemo.xcscheme</key>
+		<key>Pods-CustomIntegrationDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>24</integer>
 		</dict>
-		<key>Pods-ScreensetsDemo.xcscheme</key>
+		<key>Pods-FirebaseDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>25</integer>
 		</dict>
-		<key>Pods-UIKitInjectionDemo.xcscheme</key>
+		<key>Pods-GigyaDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>26</integer>
 		</dict>
-		<key>PromisesObjC.xcscheme</key>
+		<key>Pods-ScreensetsDemo.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>27</integer>
+		</dict>
+		<key>Pods-UIKitInjectionDemo.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>28</integer>
+		</dict>
+		<key>PromisesObjC.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>29</integer>
 		</dict>
 		<key>abseil.xcscheme</key>
 		<dict>
@@ -158,33 +165,40 @@
 			<key>orderHint</key>
 			<integer>16</integer>
 		</dict>
-		<key>ownid-core-ios-sdk-OwnIDCoreSDK.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-			<key>orderHint</key>
-			<integer>18</integer>
-		</dict>
-		<key>ownid-core-ios-sdk.xcscheme</key>
+		<key>ownid-amplify-ios-sdk.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>17</integer>
 		</dict>
-		<key>ownid-firebase-ios-sdk.xcscheme</key>
+		<key>ownid-core-ios-sdk-OwnIDCoreSDK.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>19</integer>
 		</dict>
-		<key>ownid-gigya-ios-sdk.xcscheme</key>
+		<key>ownid-core-ios-sdk.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>18</integer>
+		</dict>
+		<key>ownid-firebase-ios-sdk.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 			<key>orderHint</key>
 			<integer>20</integer>
+		</dict>
+		<key>ownid-gigya-ios-sdk.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+			<key>orderHint</key>
+			<integer>21</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>

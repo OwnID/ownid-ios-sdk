@@ -1,0 +1,3 @@
+${PODS_ROOT}/Target Support Files/Pods-CognitoDemo/Pods-CognitoDemo-frameworks.sh
+${BUILT_PRODUCTS_DIR}/ownid-core-ios-sdk/OwnIDCoreSDK.framework
+${BUILT_PRODUCTS_DIR}/ownid-amplify-ios-sdk/OwnIDAmplifySDK.framework
