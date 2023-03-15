@@ -6,7 +6,6 @@ final class LogInViewModel: ObservableObject {
     var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
     @Published var email = ""
-    @Published var password = ""
     @Published var errorMessage = ""
     
     private var bag = Set<AnyCancellable>()

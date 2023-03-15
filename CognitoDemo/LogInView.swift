@@ -8,7 +8,6 @@ struct LogInView: View {
         VStack {
             fields()
                 .zIndex(1)
-            Button("Log in", action: { /* ignoring login with password */ })
             Text(viewModel.errorMessage)
                 .font(.headline)
                 .foregroundColor(.red)
@@ -38,14 +37,11 @@ private extension LogInView {
             skipPasswordView()
                 .layoutPriority(1)
                 .zIndex(1)
-            SecureField("Password", text: $viewModel.password)
-                .textContentType(.password)
-                .keyboardType(.emailAddress)
         }
     }
     
     @ViewBuilder
     func skipPasswordView() -> some View {
-        OwnID.AmplifySDK.createLoginView(viewModel: viewModel.ownIDViewModel)
+        OwnID.AmplifySDK.createLoginView(viewModel: viewModel.ownIDViewModel, visualConfig: .init(buttonViewConfig: .init(variant: .authButton)))
     }
 }
