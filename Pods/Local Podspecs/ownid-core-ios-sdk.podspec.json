@@ -25,5 +25,12 @@
       "Resources/**/*"
     ]
   },
+  "testspecs": [
+    {
+      "name": "Tests",
+      "test_type": "unit",
+      "source_files": "Tests/**/*"
+    }
+  ],
   "swift_version": "5.1.1"
 }
