@@ -15,7 +15,7 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
-        let ownIDViewModel = OwnID.FirebaseSDK.loginViewModel(emailPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.FirebaseSDK.loginViewModel(loginIdPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
