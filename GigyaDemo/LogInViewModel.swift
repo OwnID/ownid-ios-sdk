@@ -45,6 +45,26 @@ final class LogInViewModel: ObservableObject {
                     }
                     
                 case .failure(let error):
+                    switch error {
+                    case .plugin(let gigyaPluginError):
+                        if let gigyaSDKError = gigyaPluginError as? OwnID.GigyaSDK.Error<GigyaAccount> {
+                            switch gigyaSDKError {
+                            case .gigyaSDK(let error, let dataDictionary):
+                                switch error {
+                                case .gigyaError(let model):
+                                    //handling the data
+                                    print(dataDictionary)
+                                    print(model.errorMessage)
+                                default: break
+                                }
+                            default:
+                                break
+                            }
+                        }
+
+                    default:
+                        break
+                    }
                     print(error.localizedDescription)
                     errorMessage = error.localizedDescription
                 }
