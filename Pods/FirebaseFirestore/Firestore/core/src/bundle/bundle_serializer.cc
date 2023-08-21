@@ -51,10 +51,9 @@ using core::Bound;
 using core::Direction;
 using core::FieldFilter;
 using core::Filter;
-using core::FilterList;
 using core::LimitType;
 using core::OrderBy;
-using core::OrderByList;
+using core::Query;
 using core::Target;
 using model::DeepClone;
 using model::Document;
@@ -243,8 +242,8 @@ Filter DecodeUnaryFilter(JsonReader& reader, const json& filter) {
   return InvalidFilter();
 }
 
-OrderByList DecodeOrderBy(JsonReader& reader, const json& query) {
-  OrderByList result;
+std::vector<OrderBy> DecodeOrderBy(JsonReader& reader, const json& query) {
+  std::vector<OrderBy> result;
   std::vector<json> default_order_by;
   for (const auto& order_by :
        reader.OptionalArray("orderBy", query, default_order_by)) {
@@ -262,7 +261,7 @@ OrderByList DecodeOrderBy(JsonReader& reader, const json& query) {
                               ? Direction::Ascending
                               : Direction::Descending;
 
-    result = result.push_back(OrderBy(std::move(path), direction));
+    result.emplace_back(std::move(path), direction);
   }
 
   return result;
@@ -378,10 +377,19 @@ BundledQuery BundleSerializer::DecodeBundledQuery(
   int32_t limit = DecodeLimit(reader, structured_query);
   LimitType limit_type = DecodeLimitType(reader, query);
 
-  return BundledQuery(Target(std::move(parent), std::move(collection_group),
-                             std::move(filters), std::move(order_bys), limit,
-                             std::move(start_at), std::move(end_at)),
-                      limit_type);
+  if (!reader.ok()) {
+    return {};
+  }
+
+  return BundledQuery(
+      Query(std::move(parent), std::move(collection_group), std::move(filters),
+            std::move(order_bys), limit,
+            // Not using `limit_type` because bundled queries are what the
+            // backend sees, and there is no limit_to_last for the backend.
+            // Limit type is applied when the query is read back instead.
+            LimitType::None, std::move(start_at), std::move(end_at))
+          .ToTarget(),
+      limit_type);
 }
 
 ResourcePath BundleSerializer::DecodeName(JsonReader& reader,
@@ -400,8 +408,8 @@ ResourcePath BundleSerializer::DecodeName(JsonReader& reader,
   return path.PopFirst(5);
 }
 
-FilterList BundleSerializer::DecodeWhere(JsonReader& reader,
-                                         const json& query) const {
+std::vector<Filter> BundleSerializer::DecodeWhere(JsonReader& reader,
+                                                  const json& query) const {
   // Absent 'where' is a valid case.
   if (!query.contains("where")) {
     return {};
@@ -413,13 +421,12 @@ FilterList BundleSerializer::DecodeWhere(JsonReader& reader,
     return {};
   }
 
-  FilterList result;
   if (where.contains("compositeFilter")) {
     return DecodeCompositeFilter(reader, where.at("compositeFilter"));
   } else if (where.contains("fieldFilter")) {
-    return result.push_back(DecodeFieldFilter(reader, where.at("fieldFilter")));
+    return {DecodeFieldFilter(reader, where.at("fieldFilter"))};
   } else if (where.contains("unaryFilter")) {
-    return result.push_back(DecodeUnaryFilter(reader, where.at("unaryFilter")));
+    return {DecodeUnaryFilter(reader, where.at("unaryFilter"))};
   } else {
     reader.Fail("'where' does not have valid filter");
     return {};
@@ -446,8 +453,8 @@ Filter BundleSerializer::DecodeFieldFilter(JsonReader& reader,
   return FieldFilter::Create(path, op, std::move(value));
 }
 
-FilterList BundleSerializer::DecodeCompositeFilter(JsonReader& reader,
-                                                   const json& filter) const {
+std::vector<Filter> BundleSerializer::DecodeCompositeFilter(
+    JsonReader& reader, const json& filter) const {
   if (reader.RequiredString("op", filter) != "AND") {
     reader.Fail("The SDK only supports composite filters of type 'AND'");
     return {};
@@ -458,14 +465,14 @@ FilterList BundleSerializer::DecodeCompositeFilter(JsonReader& reader,
       reader.OptionalArray("filters", filter, default_filters);
 
   const json default_objects;
-  FilterList result;
+  std::vector<Filter> result;
   for (const auto& f : filters) {
     const json& field_filter =
         reader.OptionalObject("fieldFilter", f, default_objects);
     if (!field_filter.empty()) {
-      result = result.push_back(DecodeFieldFilter(reader, field_filter));
+      result.push_back(DecodeFieldFilter(reader, field_filter));
     } else {
-      result = result.push_back(DecodeUnaryFilter(
+      result.push_back(DecodeUnaryFilter(
           reader, reader.OptionalObject("unaryFilter", f, default_objects)));
     }
 
