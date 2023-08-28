@@ -1,4 +1,4 @@
-![OwnIDSDK](./logo.svg)
+![OwnIDSDK](Docs/logo.svg)
 
 # Demo Apps
 This repository represents set of demo apps how to use OwnID mobile SDKs.
