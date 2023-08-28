@@ -18,8 +18,4 @@ Pod::Spec.new do |s|
 
   s.source_files = 'ownid-core-ios-sdk/Core/**/*', 'ownid-core-ios-sdk/Flows/**/*', 'ownid-core-ios-sdk/UI/**/*'
   s.resource_bundles = { 'OwnIDCoreSDK' => ['ownid-core-ios-sdk/Resources/**/*'] }
-
-  s.test_spec 'Tests' do |test_spec|
-    test_spec.source_files = 'ownid-core-ios-sdk/Tests/**/*'
-  end 
 end

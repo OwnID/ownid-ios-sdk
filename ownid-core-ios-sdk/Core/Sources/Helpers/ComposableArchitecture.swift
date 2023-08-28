@@ -26,7 +26,6 @@ public final class Store<Value, Action>: ObservableObject {
     @Published public private(set) var value: Value
     public private(set) var actionsPublisher = PassthroughSubject<Action, Never>()
     private var viewCancellable: Cancellable?
-    private var globalActionCancellable: Cancellable?
     private var effectCancellables: Set<AnyCancellable> = []
     
     public init(initialValue: Value, reducer: @escaping Reducer<Value, Action>) {
@@ -34,57 +33,24 @@ public final class Store<Value, Action>: ObservableObject {
         self.value = initialValue
     }
     
-    public func cancel() {
-        globalActionCancellable?.cancel()
-        viewCancellable?.cancel()
-        effectCancellables.forEach { $0.cancel() }
-    }
-    
-    private func processEffects(_ effects: [Effect<Action>]) {
+    public func send(_ action: Action) {
+        actionsPublisher.send(action)
+        let effects = self.reducer(&self.value, action)
         effects.forEach { effect in
             var effectCancellable: AnyCancellable?
             var didComplete = false
             effectCancellable = effect.sink(
                 receiveCompletion: { [weak self, weak effectCancellable] _ in
                     didComplete = true
-                    guard let effectCancellable else { return }
+                    guard let effectCancellable = effectCancellable else { return }
                     self?.effectCancellables.remove(effectCancellable)
                 },
                 receiveValue: { [weak self] in self?.send($0) }
             )
-            if !didComplete, let effectCancellable {
+            if !didComplete, let effectCancellable = effectCancellable {
                 self.effectCancellables.insert(effectCancellable)
             }
         }
-    }
-    
-    public func send(_ action: Action) {
-        actionsPublisher.send(action)
-        let effects = self.reducer(&self.value, action)
-        processEffects(effects)
-    }
-    
-    public func view<LocalValue, LocalAction>(
-        value toLocalValue: @escaping (Value) -> LocalValue,
-        action toGlobalAction: @escaping (LocalAction) -> Action,
-        action toLocalAction: @escaping (Action) -> LocalAction?,
-        reducer: @escaping Reducer<LocalValue, LocalAction>
-    ) -> Store<LocalValue, LocalAction> {
-        let localStore = Store<LocalValue, LocalAction>(
-            initialValue: toLocalValue(self.value),
-            reducer: { localValue, localAction in
-                let effects = reducer(&localValue, localAction)
-                self.send(toGlobalAction(localAction))
-                return effects
-            }
-        )
-        localStore.globalActionCancellable = actionsPublisher.sink(receiveValue: { [weak localStore] globalAction in
-            if let localActionForGlobalAction = toLocalAction(globalAction), let localStore {
-                let effects = reducer(&localStore.value, localActionForGlobalAction)
-                localStore.processEffects(effects)
-            }
-        })
-        return localStore
     }
     
     public func view<LocalValue, LocalAction>(
@@ -103,6 +69,35 @@ public final class Store<Value, Action>: ObservableObject {
             localStore?.value = toLocalValue(newValue)
         }
         return localStore
+    }
+}
+
+public func combine<Value, Action>(
+    _ reducers: Reducer<Value, Action>...
+) -> Reducer<Value, Action> {
+    return { value, action in
+        let effects = reducers.flatMap { $0(&value, action) }
+        return effects
+    }
+}
+
+public func pullback<LocalValue, GlobalValue, LocalAction, GlobalAction>(
+    _ reducer: @escaping Reducer<LocalValue, LocalAction>,
+    value: WritableKeyPath<GlobalValue, LocalValue>,
+    action: WritableKeyPath<GlobalAction, LocalAction?>
+) -> Reducer<GlobalValue, GlobalAction> {
+    return { globalValue, globalAction in
+        guard let localAction = globalAction[keyPath: action] else { return [] }
+        let localEffects = reducer(&globalValue[keyPath: value], localAction)
+        
+        return localEffects.map { localEffect in
+            localEffect.map { localAction -> GlobalAction in
+                var globalAction = globalAction
+                globalAction[keyPath: action] = localAction
+                return globalAction
+            }
+            .eraseToEffect()
+        }
     }
 }
 
@@ -142,6 +137,15 @@ extension Effect {
         return Deferred {
             Just(work())
         }.eraseToEffect()
+    }
+}
+
+func compose<A, B, C>(
+    _ f: @escaping (B) -> C,
+    _ g: @escaping (A) -> B
+) -> (A) -> C {
+    return { (a: A) -> C in
+        f(g(a))
     }
 }
 

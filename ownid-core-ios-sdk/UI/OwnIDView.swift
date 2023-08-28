@@ -1,53 +1,93 @@
+import Foundation
 import SwiftUI
-import Combine
 
 public extension OwnID.UISDK {
     struct OwnIDView: View {
+        static func == (lhs: OwnID.UISDK.OwnIDView, rhs: OwnID.UISDK.OwnIDView) -> Bool {
+            lhs.id == rhs.id
+        }
+        private let id = UUID()
         private let visualConfig: VisualLookConfig
         
-        private let coordinateSpaceName = String(describing: OwnID.UISDK.BorderAndHighlightButton.self)
+        private let imageButtonView: ImageButton
+        private let coordinateSpaceName = String(describing: OwnID.UISDK.ImageButton.self)
         @Binding private var isTooltipPresented: Bool
-        @Binding private var isLoading: Bool
-        @Binding private var buttonState: ButtonState
         
-        private let resultPublisher = PassthroughSubject<Void, Never>()
+        @Environment(\.colorScheme) var colorScheme
+        @Environment(\.layoutDirection) var direction
         
         public var eventPublisher: OwnID.UISDK.EventPubliser {
-            resultPublisher
-                .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            imageButtonView.eventPublisher
                 .eraseToAnyPublisher()
-        }
-        
-        private var skipPassword: String {
-            OwnID.CoreSDK.TranslationsSDK.TranslationKey.skipPassword.localized()
         }
         
         public init(viewState: Binding<ButtonState>,
                     visualConfig: VisualLookConfig,
-                    shouldShowTooltip: Binding<Bool>,
-                    isLoading: Binding<Bool>) {
+                    shouldShowTooltip: Binding<Bool>) {
             _isTooltipPresented = shouldShowTooltip
-            _isLoading = isLoading
-            _buttonState = viewState
+            imageButtonView = ImageButton(viewState: viewState, visualConfig: visualConfig)
             self.visualConfig = visualConfig
-            OwnID.CoreSDK.shared.currentMetricInformation = visualConfig.convertToCurrentMetric()
         }
         
+        @ViewBuilder
+        func orView() -> some View {
+            if visualConfig.isOrViewEnabled {
+                OwnID.UISDK.OrView(textSize: visualConfig.orTextSize,
+                                   lineHeight: visualConfig.orLineHeight,
+                                   textColor: visualConfig.orTextColor)
+            }
+        }
+        
+        @ViewBuilder
+        func buttonAndTooltipView() -> some View {
+//            if isTooltipPresented, #available(iOS 16.0, *) {
+//                tooltipView()
+//            } else {
+                buttonView()
+//            }
+        }
+        
+        @ViewBuilder
+        func buttonView() -> some View {
+            imageButtonView
+                .layoutPriority(1)
+//                .popupContainerType(.ownIdButton)
+        }
+        
+//        @ViewBuilder
+//        func tooltipView() -> some View {
+//            TooltipContainerLayout(tooltipPosition: visualConfig.tooltipVisualLookConfig.tooltipPosition) {
+//                TooltipTextAndArrowLayout(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig, isRTL: direction == .rightToLeft) {
+//                    RectangleWithTextView(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig)
+//                        .popupTextContainerType(.text)
+//                    BeakView(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig)
+//                        .rotationEffect(.degrees(visualConfig.tooltipVisualLookConfig.tooltipPosition.beakViewRotationAngle))
+//                        .popupTextContainerType(.beak)
+//                }
+//                .compositingGroup()
+//                .shadow(color: colorScheme == .dark ? .clear : visualConfig.tooltipVisualLookConfig.shadowColor.opacity(0.05), radius: 5, y: 4)
+//                .popupContainerType(.textAndArrowContainer)
+//                Button(action: { isTooltipPresented = false }) {
+//                    Text("")
+//                        .foregroundColor(.clear)
+//                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+//                }
+//                .popupContainerType(.dismissButton)
+//                buttonView()
+//            }
+//        }
+        
         public var body: some View {
-            switch visualConfig.buttonViewConfig.variant {
-            case .authButton:
-                AuthButton(visualConfig: visualConfig,
-                           actionHandler: { resultPublisher.send(()) },
-                           isLoading: $isLoading,
-                           buttonState: $buttonState)
-                
-            case .iconButton:
-                IconButton(visualConfig: visualConfig,
-                           actionHandler: { resultPublisher.send(()) },
-                           isTooltipPresented: $isTooltipPresented,
-                           isLoading: $isLoading,
-                           buttonState: $buttonState)
-                .modifier(AccessibilityLabelModifier(accessibilityLabel: skipPassword))
+            HStack(spacing: 8) {
+                switch visualConfig.widgetPosition {
+                case .end:
+                    orView()
+                    buttonAndTooltipView()
+                    
+                case .start:
+                    buttonAndTooltipView()
+                    orView()
+                }
             }
         }
     }

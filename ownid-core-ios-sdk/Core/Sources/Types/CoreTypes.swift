@@ -2,32 +2,12 @@ import Foundation
 import SwiftUI
 
 public extension OwnID.CoreSDK {
-    /// Describes translations to be used in SDK. Languages chosen by order of initialization.
     struct Languages: RawRepresentable {
         public init(rawValue: [String]) {
             self.rawValue = rawValue
         }
         
-        /// Tells SDK to change language if system language changes
-        var shouldChangeLanguageOnSystemLanguageChange = true
-        
         public let rawValue: [String]
-    }
-}
-
-public extension OwnID.CoreSDK {
-    struct Fido2LoginPayload: Encodable {
-        var credentialId: String
-        var clientDataJSON: String
-        var authenticatorData: String
-        var signature: String
-        let error: String? = nil
-    }
-    
-    struct Fido2RegisterPayload: Encodable {
-        var credentialId: String
-        var clientDataJSON: String
-        var attestationObject: String
     }
 }
 
@@ -55,15 +35,46 @@ public extension OwnID.CoreSDK {
         public let error: String
     }
     
+    struct JWTToken: Identifiable {
+        public var id: String {
+            jwtString
+        }
+        
+        public let jwtString: String
+        
+        public init(for token: StringToken) {
+            jwtString = Self.encoded(token: token.rawValue)
+        }
+        
+        private init(plain: String) {
+            jwtString = Self.encoded(token: plain)
+        }
+        
+        private static func encoded(token: String) -> String {
+            "{\"jwt\":\"\(token)\"}"
+        }
+        
+        public static func initFromPlain(string: String) -> JWTToken {
+            JWTToken(plain: string)
+        }
+    }
+    
     struct Payload {
         /// Used for later processing and creating login\registration requests
         public let dataContainer: Any?
         public let metadata: Any?
         public let context: OwnID.CoreSDK.Context
+        public let nonce: OwnID.CoreSDK.Nonce
         public let loginId: LoginID?
         public let responseType: StatusResponseType
         public let authType: AuthType?
         public let requestLanguage: String?
+    }
+    
+    enum Event {
+        case loading
+        case success(Payload)
+        case cancelled
     }
 }
 
@@ -93,24 +104,6 @@ public extension OwnID.CoreSDK {
                 return true && emailPredicate.evaluate(with: rawValue)
             }
             return false
-        }
-    }
-    
-    struct LoginId {
-        private enum Constants {
-            static let defaultRegex = ".*"
-        }
-        
-        let value: String
-        let settings: LoginIdSettings
-        
-        init(value: String, settings: LoginIdSettings) {
-            self.value = value
-            self.settings = settings
-        }
-        
-        var isValid: Bool {
-            return NSPredicate(format:"SELF MATCHES %@", settings.regex ?? Constants.defaultRegex).evaluate(with: value)
         }
     }
 }

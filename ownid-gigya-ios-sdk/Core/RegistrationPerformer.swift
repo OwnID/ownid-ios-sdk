@@ -8,7 +8,7 @@ public extension OwnID.GigyaSDK {
 }
 
 extension OwnID.GigyaSDK.Registration {
-    public typealias PublisherType = AnyPublisher<OwnID.RegisterResult, OwnID.CoreSDK.CoreErrorLogWrapper>
+    public typealias PublisherType = AnyPublisher<OwnID.RegisterResult, OwnID.CoreSDK.Error>
     
     public struct Parameters: RegisterParameters {
         public init(parameters: [String: Any]) {
@@ -41,19 +41,17 @@ extension OwnID.GigyaSDK.Registration {
     static func register<T: GigyaAccountProtocol>(instance: GigyaCore<T>,
                                                   configuration: OwnID.FlowsSDK.RegistrationConfiguration,
                                                   parameters: RegisterParameters) -> PublisherType {
-        Future<OwnID.RegisterResult, OwnID.CoreSDK.CoreErrorLogWrapper> { promise in
-            func handle(error: OwnID.CoreSDK.Error) {
-                promise(.failure(.coreLog(error: error, type: Self.self)))
+        Future<OwnID.RegisterResult, OwnID.CoreSDK.Error> { promise in
+            func handle(error: OwnID.GigyaSDK.Error) {
+                OwnID.CoreSDK.logger.logGigya(.errorEntry(message: "error: \(error)", Self.self))
+                promise(.failure(.plugin(error: error)))
             }
             
+            guard configuration.email.isValid else { handle(error: .emailIsNotValid); return }
             let gigyaParameters = parameters as? OwnID.GigyaSDK.Registration.Parameters ?? OwnID.GigyaSDK.Registration.Parameters(parameters: [:])
             guard let metadata = configuration.payload.metadata,
                   let dataField = (metadata as? [String: Any])?["dataField"] as? String
-            else {
-                let message = OwnID.GigyaSDK.ErrorMessage.cannotParseRegistrationMetadataParameter
-                handle(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)))
-                return
-            }
+            else { handle(error: .cannotParseRegistrationMetadataParameter); return }
             
             var registerParams = gigyaParameters.parameters
             let ownIDParameters = [dataField: configuration.payload.dataContainer]
@@ -64,30 +62,22 @@ extension OwnID.GigyaSDK.Registration {
                 addLocaleToParams(locale: language, params: &registerParams)
             }
             
-            instance.register(email: configuration.loginId,
+            instance.register(email: configuration.email.rawValue,
                               password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
                               params: registerParams
             ) { result in
                 switch result {
                 case .success(let account):
                     let UID = account.UID ?? ""
-                    OwnID.CoreSDK.logger.log(level: .debug,
-                                                    message: "UID \(UID.logValue)",
-                                                    Self.self)
-                    promise(.success(OwnID.RegisterResult(operationResult: VoidOperationResult(),
-                                                          authType: configuration.payload.authType)))
+                    OwnID.CoreSDK.logger.logGigya(.entry(context: configuration.payload.context, message: "UID \(UID.logValue)", Self.self))
+                    promise(.success(OwnID.RegisterResult(operationResult: VoidOperationResult(), authType: configuration.payload.authType)))
                     
                 case .failure(let error):
-                    OwnID.GigyaSDK.ErrorMapper.mapRegistrationError(error: error,
-                                                                    context: configuration.payload.context,
-                                                                    loginId: configuration.loginId,
-                                                                    authType: configuration.payload.authType)
                     var json: [String: Any]?
                     if case let .gigyaError(data) = error.error {
                         json = data.toDictionary()
                     }
-                    let error = OwnID.GigyaSDK.IntegrationError.gigyaSDKError(gigyaError: error.error, dataDictionary: json)
-                    handle(error: .integrationError(underlying: error))
+                    handle(error: .gigyaSDKError(error: error.error, dataDictionary: json))
                 }
             }
         }

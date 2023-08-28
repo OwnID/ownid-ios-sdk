@@ -7,36 +7,42 @@ public extension OwnID.FlowsSDK {
         }
         private let id = UUID()
         
+        @Binding private var usersEmail: String
         public var visualConfig: OwnID.UISDK.VisualLookConfig
         @ObservedObject public var viewModel: ViewModel
         
         public init(viewModel: ViewModel,
+                    usersEmail: Binding<String>,
                     visualConfig: OwnID.UISDK.VisualLookConfig) {
             self.viewModel = viewModel
+            self._usersEmail = usersEmail
             self.visualConfig = visualConfig
-            self.viewModel.currentMetadata = visualConfig.convertToCurrentMetric()
+            self.viewModel.getEmail = { usersEmail.wrappedValue }
         }
         
         public var body: some View {
-            skipPasswordView()
+            contents()
         }
     }
 }
 
 private extension OwnID.FlowsSDK.RegisterView {
-    func skipPasswordView() -> some View {
-        var config = visualConfig
-        switch visualConfig.buttonViewConfig.variant {
-        case .authButton:
-            config.buttonViewConfig.variant = .iconButton // auth button is only available for login
+    
+    @ViewBuilder
+    func contents() -> some View {
+        switch viewModel.state {
+        case .initial, .coreVM:
+            skipPasswordView(state: .enabled)
             
-        case .iconButton:
-            break
+        case .ownidCreated:
+            skipPasswordView(state: .activated)
         }
-        let view = OwnID.UISDK.OwnIDView(viewState: .constant(viewModel.state.buttonState),
-                                         visualConfig: config,
-                                         shouldShowTooltip: $viewModel.shouldShowTooltip,
-                                         isLoading: .constant(viewModel.state.isLoading))
+    }
+    
+    func skipPasswordView(state: OwnID.UISDK.ButtonState) -> some View {
+        let view = OwnID.UISDK.OwnIDView(viewState: .constant(state),
+                                         visualConfig: visualConfig,
+                                         shouldShowTooltip: $viewModel.shouldShowTooltip)
         viewModel.subscribe(to: view.eventPublisher)
         return view.eraseToAnyView()
     }
