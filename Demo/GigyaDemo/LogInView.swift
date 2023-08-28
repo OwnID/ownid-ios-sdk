@@ -50,6 +50,6 @@ private extension LogInView {
     
     @ViewBuilder
     func skipPasswordView() -> some View {
-        OwnID.GigyaSDK.createLoginView(viewModel: viewModel.ownIDViewModel)
+        OwnID.GigyaSDK.createLoginView(viewModel: viewModel.ownIDViewModel, usersEmail: $viewModel.email)
     }
 }

@@ -18,7 +18,7 @@ final class RegisterViewModel: ObservableObject {
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
     
     init() {
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), emailPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
@@ -61,16 +61,15 @@ final class RegisterViewModel: ObservableObject {
                     errorMessage = ownIDSDKError.localizedDescription
                     switch ownIDSDKError {
                     case .plugin(let gigyaPluginError):
-                        if let gigyaSDKError = gigyaPluginError as? OwnID.GigyaSDK.Error<GigyaAccount> {
-                            switch gigyaSDKError {
-                            case .login(let loginError):
-                                switch loginError.interruption {
-                                case .pendingVerification:
-                                    errorMessage = ownIDSDKError.localizedDescription + ", pending verification"
-                                    print("pendingVerification")
-
-                                default:
-                                    break
+                        if let error = gigyaPluginError as? OwnID.GigyaSDK.Error {
+                            switch error {
+                            case .gigyaSDKError(let networkError, let dataDictionary):
+                                switch networkError {
+                                case .gigyaError(let model):
+                                    //handling the data
+                                    print(dataDictionary ?? "")
+                                    print(model.errorMessage ?? "")
+                                default: break
                                 }
                             default:
                                 break
@@ -90,7 +89,7 @@ final class RegisterViewModel: ObservableObject {
             let nameValue = "{ \"firstName\": \"\(firstName)\" }"
             let paramsDict = ["profile": nameValue]
             let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
-            ownIDViewModel.register(registerParameters: params)
+            ownIDViewModel.register(with: email, registerParameters: params)
         } else {
             // ignoring register with default login & password
         }

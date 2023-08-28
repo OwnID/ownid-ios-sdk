@@ -2,7 +2,7 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:EffortlessDemo.xcodeproj">
+      location = "group:/Users/user/Desktop/OwnID/ownid-ios-sdk-demo/Demo/Demo.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Pods/Pods.xcodeproj">

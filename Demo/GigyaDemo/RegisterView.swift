@@ -60,6 +60,6 @@ private extension RegisterView {
     }
     
     func skipPasswordView() -> some View {
-        OwnID.GigyaSDK.createRegisterView(viewModel: viewModel.ownIDViewModel)
+        OwnID.GigyaSDK.createRegisterView(viewModel: viewModel.ownIDViewModel, email: $viewModel.email)
     }
 }

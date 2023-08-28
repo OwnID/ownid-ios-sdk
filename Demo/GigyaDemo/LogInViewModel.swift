@@ -15,7 +15,7 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
-        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), emailPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
