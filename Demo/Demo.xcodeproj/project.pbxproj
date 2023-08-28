@@ -93,11 +93,6 @@
 		161C4783290AE9E30014D737 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		161C4793290AE9E30014D737 /* DemoApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoApp.swift; sourceTree = "<group>"; };
 		163998D129104EC5003087CD /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		163998DD291051FA003087CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		163998E0291051FA003087CD /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		163998E52910521E003087CD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		164572B9296CA66C002EE650 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
-		164572BA296CA787002EE650 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
 		164572BB296CA796002EE650 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
 		164572BC296CA7A4002EE650 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
 		164572BE296CA7BB002EE650 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
@@ -110,16 +105,6 @@
 		1662AD6E291048DC0071894C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1662AD70291048DC0071894C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		16E0328A2910549B00130612 /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		16E0328C291059D000130612 /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
-		16E0328D291059D000130612 /* LogInView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
-		16E0328E291059D000130612 /* LogInViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
-		16E0328F291059D000130612 /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
-		16E03290291059D000130612 /* DemoApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoApp.swift; sourceTree = "<group>"; };
-		16E0329B2910EBA800130612 /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
-		16E0329D2910EFF900130612 /* ProfileLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileLoader.swift; sourceTree = "<group>"; };
-		16E0329F29115A6800130612 /* LoginRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginRequest.swift; sourceTree = "<group>"; };
-		16E032A129115B3100130612 /* RegisterRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterRequest.swift; sourceTree = "<group>"; };
 		16E2D829290B019D00AF28E4 /* GigyaDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GigyaDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigyaDemoApp.swift; sourceTree = "<group>"; };
 		16E2D82F290B019D00AF28E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -131,19 +116,6 @@
 		16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
 		16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
 		16E3575D290C074C0059B5A2 /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
-		16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		16EF9EE3296BFE4C00D01AAF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		16EF9EE8296C02ED00D01AAF /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
-		16EF9EE9296C02ED00D01AAF /* LogInView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
-		16EF9EEA296C02ED00D01AAF /* LoginRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginRequest.swift; sourceTree = "<group>"; };
-		16EF9EEB296C02ED00D01AAF /* LogInViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
-		16EF9EED296C02ED00D01AAF /* DemoApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoApp.swift; sourceTree = "<group>"; };
-		16EF9EEE296C02ED00D01AAF /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
-		16EF9EF6296C02F800D01AAF /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
-		16EF9EF7296C02F800D01AAF /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
-		16EF9EF8296C02F800D01AAF /* ProfileLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileLoader.swift; sourceTree = "<group>"; };
-		16EF9EF9296C02F800D01AAF /* RegisterRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterRequest.swift; sourceTree = "<group>"; };
-		16EF9EFE296C047200D01AAF /* CustomActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomActionButton.swift; sourceTree = "<group>"; };
 		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1FF3FBC7AC6FC312296A9DAB /* Pods_CustomIntegrationDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CustomIntegrationDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		259386CE692E038FA302921A /* Pods-UIKitInjectionDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UIKitInjectionDemo.debug.xcconfig"; path = "Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo.debug.xcconfig"; sourceTree = "<group>"; };
@@ -232,35 +204,6 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		163998D8291051FA003087CD /* CustomIntegrationDemo */ = {
-			isa = PBXGroup;
-			children = (
-				164572BA296CA787002EE650 /* SampleCode.xcconfig */,
-				16E0329B2910EBA800130612 /* LoginAndRegisterView.swift */,
-				16E03290291059D000130612 /* DemoApp.swift */,
-				16E0328D291059D000130612 /* LogInView.swift */,
-				16E0328E291059D000130612 /* LogInViewModel.swift */,
-				16E0328C291059D000130612 /* RegisterView.swift */,
-				16E0328F291059D000130612 /* RegisterViewModel.swift */,
-				16E0328A2910549B00130612 /* OwnIDConfiguration.plist */,
-				163998E52910521E003087CD /* Info.plist */,
-				163998DD291051FA003087CD /* Assets.xcassets */,
-				163998DF291051FA003087CD /* Preview Content */,
-				16E0329D2910EFF900130612 /* ProfileLoader.swift */,
-				16E0329F29115A6800130612 /* LoginRequest.swift */,
-				16E032A129115B3100130612 /* RegisterRequest.swift */,
-			);
-			path = CustomIntegrationDemo;
-			sourceTree = "<group>";
-		};
-		163998DF291051FA003087CD /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				163998E0291051FA003087CD /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
 		1662AD61291048DB0071894C /* UIKitInjectionDemo */ = {
 			isa = PBXGroup;
 			children = (
@@ -310,35 +253,6 @@
 			path = AccountView;
 			sourceTree = "<group>";
 		};
-		16EF9EDB296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */ = {
-			isa = PBXGroup;
-			children = (
-				164572B9296CA66C002EE650 /* SampleCode.xcconfig */,
-				16EF9EFE296C047200D01AAF /* CustomActionButton.swift */,
-				16EF9EF8296C02F800D01AAF /* ProfileLoader.swift */,
-				16EF9EF9296C02F800D01AAF /* RegisterRequest.swift */,
-				16EF9EF6296C02F800D01AAF /* RegisterView.swift */,
-				16EF9EF7296C02F800D01AAF /* RegisterViewModel.swift */,
-				16EF9EED296C02ED00D01AAF /* DemoApp.swift */,
-				16EF9EE8296C02ED00D01AAF /* LoginAndRegisterView.swift */,
-				16EF9EEA296C02ED00D01AAF /* LoginRequest.swift */,
-				16EF9EE9296C02ED00D01AAF /* LogInView.swift */,
-				16EF9EEB296C02ED00D01AAF /* LogInViewModel.swift */,
-				16EF9EEE296C02ED00D01AAF /* OwnIDConfiguration.plist */,
-				16EF9EE0296BFE4C00D01AAF /* Assets.xcassets */,
-				16EF9EE2296BFE4C00D01AAF /* Preview Content */,
-			);
-			path = CustomIntegrationCustomViewDemo;
-			sourceTree = "<group>";
-		};
-		16EF9EE2296BFE4C00D01AAF /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				16EF9EE3296BFE4C00D01AAF /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
 		16FBF258290A8E0800148C8C = {
 			isa = PBXGroup;
 			children = (
@@ -346,8 +260,6 @@
 				16E2D82A290B019D00AF28E4 /* GigyaDemo */,
 				16E3574C290BE3090059B5A2 /* AccountView */,
 				1662AD61291048DB0071894C /* UIKitInjectionDemo */,
-				163998D8291051FA003087CD /* CustomIntegrationDemo */,
-				16EF9EDB296BFE4C00D01AAF /* CustomIntegrationCustomViewDemo */,
 				16FBF262290A8E0800148C8C /* Products */,
 				77BD2AA4EFD7B47DA3B95320 /* Pods */,
 				26DB8DBAE5E79AFC5C48D0CB /* Frameworks */,
