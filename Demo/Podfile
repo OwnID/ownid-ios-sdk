@@ -1,10 +1,6 @@
 platform :ios, '16.0'
 use_frameworks!
 
-target 'FirebaseDemo' do
-  pod 'ownid-firebase-ios-sdk'
-end
-
 target 'ScreensetsDemo' do
   pod 'ownid-gigya-ios-sdk'
 end

@@ -9,13 +9,12 @@ final class ViewController: UIViewController {
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
-    private var userEmailPublisher = PassthroughSubject<String, Never>()
     var bag = Set<AnyCancellable>()
     private lazy var ownIdButton = makeOwnIDButton()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), emailPublisher: userEmailPublisher.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance())
                 self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
         activityIndicator.isHidden = true
@@ -32,18 +31,23 @@ final class ViewController: UIViewController {
     }
     
     func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
-        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel)
+        let emailBinding = Binding<String>(
+            get: { self.emailTextField.text ?? "" },
+            set: { newText in
+                self.emailTextField.text = newText
+            }
+        )
+        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel, email: emailBinding)
         let headerVC = UIHostingController(rootView: headerView)
         headerVC.view.translatesAutoresizingMaskIntoConstraints = false
         return headerVC
     }
     
     @objc func textFieldDidChange(_ textField: UITextField) {
-        userEmailPublisher.send(textField.text ?? "")
     }
     
     @IBAction func registerTapped(_ sender: UIButton) {
-        ownIDViewModel.register()
+        ownIDViewModel.register(with: emailTextField.text ?? "")
     }
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {

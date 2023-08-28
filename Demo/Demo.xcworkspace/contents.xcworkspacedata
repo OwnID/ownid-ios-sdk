@@ -2,9 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:/Users/user/Desktop/OwnID/ownid-ios-sdk-demo/Demo/Demo.xcodeproj">
+      location = "group:Pods/Pods.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:Pods/Pods.xcodeproj">
+      location = "group:Demo.xcodeproj">
    </FileRef>
 </Workspace>
