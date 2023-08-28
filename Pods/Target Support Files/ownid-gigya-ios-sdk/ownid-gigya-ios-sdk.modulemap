@@ -1,6 +1,0 @@
-framework module OwnIDGigyaSDK {
-  umbrella header "ownid-gigya-ios-sdk-umbrella.h"
-
-  export *
-  module * { export * }
-}

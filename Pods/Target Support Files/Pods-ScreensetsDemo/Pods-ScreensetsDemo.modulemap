@@ -1,6 +1,0 @@
-framework module Pods_ScreensetsDemo {
-  umbrella header "Pods-ScreensetsDemo-umbrella.h"
-
-  export *
-  module * { export * }
-}
