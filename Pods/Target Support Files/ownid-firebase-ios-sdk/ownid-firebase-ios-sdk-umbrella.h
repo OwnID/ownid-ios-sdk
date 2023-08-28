@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double OwnIDFirebaseSDKVersionNumber;
-FOUNDATION_EXPORT const unsigned char OwnIDFirebaseSDKVersionString[];
+FOUNDATION_EXPORT double ownid_firebase_ios_sdkVersionNumber;
+FOUNDATION_EXPORT const unsigned char ownid_firebase_ios_sdkVersionString[];
 

@@ -28,7 +28,7 @@ final class SsoLoginWrapper: NSObject, ProviderWrapperProtocol {
     private var navigationController: UINavigationController?
 
     private var completionHandler: ((_ jsonData: [String: Any]?, _ error: String?) -> Void)? = nil
-
+    
     private var pkceCode: PKCEHelper?
 
     static let callbackURLScheme = "gsapi"
@@ -59,7 +59,7 @@ final class SsoLoginWrapper: NSObject, ProviderWrapperProtocol {
 
     func login(params: [String: Any]?, viewController: UIViewController?,
                completion: @escaping (_ jsonData: [String: Any]?, _ error: String?) -> Void) {
-
+        
         loadProvider(params: params ?? [:])
 
         completionHandler = completion
@@ -87,7 +87,15 @@ final class SsoLoginWrapper: NSObject, ProviderWrapperProtocol {
         requestParams["scope"] = "device_sso"
         requestParams["code_challenge"] = pkceCode?.challenge ?? ""
         requestParams["code_challenge_method"] = "S256"
-        requestParams.merge(params) { _, new  in new }
+        
+        let paramsMapAsJson = params.mapValues {
+            if let p = $0 as? [String: Any] {
+                return p.asJson
+            }
+            return String(describing: $0)
+        }
+        
+        requestParams.merge(paramsMapAsJson) { _, new  in new }
         requestParams.removeValue(forKey: "secret")
 
         let dataURL = URL(string: "\(urlString)?\(requestParams.asURI)")!
@@ -96,7 +104,7 @@ final class SsoLoginWrapper: NSObject, ProviderWrapperProtocol {
     }
 
     private func getUrl(path: String = "") -> String {
-        return "\(EndPoints.fidmUrl)\(self.config?.apiDomain ?? "")\(EndPoints.loginPath)\(self.config?.apiKey ?? "")/\(path)"
+        return "\(config!.cnameEnable ? "https://": EndPoints.fidmUrl)\(self.config?.apiDomain ?? "")\(EndPoints.loginPath)\(self.config?.apiKey ?? "")/\(path)"
     }
 
     private func getSessionFrom(code: String) {
@@ -128,7 +136,7 @@ final class SsoLoginWrapper: NSObject, ProviderWrapperProtocol {
             return
         }
 
-        let json: [String : Any] = ["status": "ok", "accessToken": sessionToken, "tokenSecret": sessionSecret, "sessionExpiration": response["expires_in"] as? Int ?? 0]
+        let json: [String : Any] = ["status": "ok", "accessToken": sessionToken, "tokenSecret": sessionSecret, "sessionExpiration": String(response["expires_in"] as? Int ?? 0)]
 
         self.completionHandler?(json, nil)
     }
@@ -200,6 +208,8 @@ class ASWebAuthenticationLayer: NSObject, ASWebAuthenticationPresentationContext
     }
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        return UIApplication.shared.windows.first!
+        return UIApplication.shared.windows.first { window in
+            return window.isKeyWindow
+        } ?? UIApplication.shared.windows.first!
     }
 }

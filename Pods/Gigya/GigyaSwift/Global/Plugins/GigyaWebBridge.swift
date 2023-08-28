@@ -12,7 +12,7 @@ import WebKit
  The `GigyaWebBridge` acts as the optimal bridge between the Gigya webSdk and the iOS sdk. Supporting complex flows such as screensets, saml etc.
  */
 
-public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageHandler {
+final public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageHandler {
 
     let config: GigyaConfig
 
@@ -27,7 +27,7 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
     let contentController = WKUserContentController()
 
     var webView: WKWebView?
-    weak var viewController: UIViewController?
+    var viewController: UIViewController?
 
     let JSEventHandler = "gsapi"
     let baseURL = "https://www.gigya.com"
@@ -58,6 +58,7 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
 
      */
 
+
     public func attachTo(webView: WKWebView, viewController: UIViewController, pluginEvent: @escaping (GigyaPluginEvent<T>) -> Void) {
         guard let apikey = config.apiKey else { return }
 
@@ -83,6 +84,11 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
         }
 
         GigyaLogger.log(with: self, message: "JS Interface:\n\(JSInterface)")
+        
+        if #available(iOS 16.4, *), GigyaLogger.isDebug() {
+            self.webView?.isInspectable = true
+        }
+
     }
 
     func load(html: String) {
@@ -296,8 +302,7 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
 
                         self.businessApiService.accountService.account = dataEncoded
                         
-//                        self.completion(.onLogin(account: dataEncoded))
-                        self.interruptionManager.responseManager(params: params, data: dataEncoded, completion: self.completion)
+                        self.interruptionManager.responseManager(apiMethod: apiMethod, params: params, data: dataEncoded, completion: self.completion)
                     } catch let error {
                         self.invokeError(callbackId: "internal", error: .jsonParsingError(error: error))
                         
@@ -332,8 +337,7 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
 
                 self.businessApiService.accountService.account = data
 
-                self.interruptionManager.responseManager(params: params, data: data, completion: self.completion)
-//                self.completion(.onLogin(account: data))
+                self.interruptionManager.responseManager(apiMethod: apiMethod, params: params, data: data, completion: self.completion)
             case .failure(let error):
                 GigyaLogger.log(with: self, message: "sendLoginRequest: error:\n\(error.localizedDescription)")
                 self.interruptionManager.interruptionHandler(error: error)
@@ -373,8 +377,8 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
     private func sendRemoveConnectionRequest(callbackId: String, params: [String: String]) {
         GigyaLogger.log(with: self, message: "sendRemoveConnectionRequest: with params:\n\(params)")
 
-        if let provider = params["provider"], let providerType = GigyaSocialProviders(rawValue: provider) {
-            businessApiService.removeConnection(providerName: providerType) { [weak self] result in
+        if let provider = params["provider"], let _ = GigyaSocialProviders(rawValue: provider) {
+            businessApiService.removeConnection(params: params) { [weak self] result in
                 guard let self = self else { return }
                 switch result {
                 case .success(let data):
@@ -429,7 +433,7 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
                     let dataEncoded = try? DecodeEncodeUtils.encodeToDictionary(obj: data)
                     self.invokeCallback(callbackId: callbackId, and: dataEncoded!.asJson)
                     
-                    self.interruptionManager.responseManager(params: params, data: data, completion: self.completion)
+                    self.interruptionManager.responseManager(apiMethod: apiMethod, params: params, data: data, completion: self.completion)
                     
                 case .failure(let data):
                     GigyaLogger.log(with: self, message: "sendOauthRequest: error:\n\(data.error.localizedDescription)")
@@ -467,5 +471,8 @@ public class GigyaWebBridge<T: GigyaAccountProtocol>: NSObject, WKScriptMessageH
             }
         }
     }
-
+    
+    deinit {
+        GigyaLogger.log(with: self, message: "deinit")
+    }
 }

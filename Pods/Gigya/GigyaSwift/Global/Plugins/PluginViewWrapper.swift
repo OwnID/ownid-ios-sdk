@@ -22,14 +22,16 @@ class PluginViewWrapper<T: GigyaAccountProtocol>: PluginViewWrapperProtocol {
     
     let businessApiService: BusinessApiServiceProtocol
 
-    let webBridge: GigyaWebBridge<T>
+    var webBridge: GigyaWebBridge<T>?
 
     var completion: (GigyaPluginEvent<T>) -> Void?
     
     var plugin: String
     
     var params: [String:Any]
-
+    
+    var eventHandler: ((GigyaPluginEvent<T>) -> Void)?
+    
     init(config: GigyaConfig, persistenceService: PersistenceService, sessionService: SessionServiceProtocol, businessApiService: BusinessApiServiceProtocol, webBridge: GigyaWebBridge<T>,
          plugin: String, params: [String: Any], completion: @escaping (GigyaPluginEvent<T>) -> Void) {
         self.config = config
@@ -60,25 +62,33 @@ class PluginViewWrapper<T: GigyaAccountProtocol>: PluginViewWrapperProtocol {
         var pluginViewController: PluginViewController<T>?
 
         // make completionHandler to know when need to dismiss viewController
-        let eventHandler: (GigyaPluginEvent<T>) -> Void = { result in
+        eventHandler = { [weak self] result in
             switch result {
             case .onHide, .onCanceled:
+                pluginViewController?.webView.uiDelegate = nil
+                pluginViewController?.webView.navigationDelegate = nil
                 pluginViewController?.dismiss(animated: true, completion: nil)
+                pluginViewController = nil
+                self?.eventHandler = nil
+                self?.webBridge?.webView = nil
+                self?.webBridge?.viewController = nil
+                self?.webBridge = nil
+                self?.completion(result)
             default:
                 break
             }
 
-            self.completion(result)
+            self?.completion(result)
         }
 
         // Present plugin view controller.
 
-        pluginViewController = PluginViewController(webBridge: webBridge, pluginEvent: eventHandler)
+        pluginViewController = PluginViewController(webBridge: webBridge, pluginEvent: eventHandler!)
 
         let navigationController = UINavigationController(rootViewController: pluginViewController!)
 
         viewController.present(navigationController, animated: true) {
-            self.webBridge.load(html: html)
+            self.webBridge?.load(html: html)
         }
     }
     
@@ -127,7 +137,7 @@ class PluginViewWrapper<T: GigyaAccountProtocol>: PluginViewWrapperProtocol {
                 document.location.href = 'gsapi://on_js_load_error';
                 }, 10000);
             </script>
-            <script src='https://cdns.\(apiDomain)/JS/gigya.js?apikey=\(apiKey)&lang=\(lang)&debug=1' type='text/javascript' onLoad='onJSLoad();'>
+            <script src='https://\(config.cnameEnable ? "" : "cdns.")\(apiDomain)/JS/gigya.js?apikey=\(apiKey)&lang=\(lang)&debug=1' type='text/javascript' onLoad='onJSLoad();'>
                 {
                     deviceType: 'mobile' // consoleLogLevel: 'error'
                 }
@@ -144,5 +154,9 @@ class PluginViewWrapper<T: GigyaAccountProtocol>: PluginViewWrapperProtocol {
             </body>
         """
         return html
+    }
+    
+    deinit {
+        GigyaLogger.log(with: self, message: "deinit")
     }
 }

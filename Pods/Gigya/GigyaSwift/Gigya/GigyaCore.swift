@@ -40,6 +40,8 @@ public final class GigyaCore<T: GigyaAccountProtocol>: GigyaInstanceProtocol {
         return self.container.resolve(PushNotificationsServiceProtocol.self)!
     }()
 
+    private var pluginViewWrapper: PluginViewWrapper<T>?
+    
     private let container: IOCContainer
 
     // MARK: - Biometric service
@@ -73,9 +75,12 @@ public final class GigyaCore<T: GigyaAccountProtocol>: GigyaInstanceProtocol {
 
         // load plist and make init
         let plistConfig = plistFactory.parsePlistConfig()
-
+        
+        // load cname data
+        config.cname = plistConfig?.cname
+        
         if let apiKey = plistConfig?.apiKey, !apiKey.isEmpty {
-            initFor(apiKey: apiKey, apiDomain: plistConfig?.apiDomain)
+            initFor(apiKey: apiKey, apiDomain: plistConfig?.apiDomain, cname: plistConfig?.cname)
         }
 
         if let accountConfig: GigyaAccountConfig = plistConfig?.account {
@@ -96,15 +101,17 @@ public final class GigyaCore<T: GigyaAccountProtocol>: GigyaInstanceProtocol {
 
      - Parameter apiKey:     Client API-KEY
      - Parameter apiDomain:  Request Domain.
+     - Parameter cname:      Custom cname domain.
      */
 
-    public func initFor(apiKey: String, apiDomain: String? = nil) {
+    public func initFor(apiKey: String, apiDomain: String? = nil, cname: String? = nil) {
         guard !apiKey.isEmpty else {
             GigyaLogger.error(with: Gigya.self, message: "please make sure you call 'initWithApi' or add apiKey to plist file")
         }
 
         config.apiDomain = apiDomain ?? self.defaultApiDomain
         config.apiKey = apiKey
+        config.cname = cname
 
         businessApiService.apiService.getSDKConfig()
     }
@@ -260,7 +267,7 @@ public final class GigyaCore<T: GigyaAccountProtocol>: GigyaInstanceProtocol {
      - Parameter completion:        Response `GigyaLoginResult<Bool>`.
      */
 
-    func isAvailable(loginId: String, completion: @escaping (GigyaApiResult<Bool>) -> Void) {
+    public func isAvailable(loginId: String, completion: @escaping (GigyaApiResult<Bool>) -> Void) {
         businessApiService.isAvailable(loginId: loginId, completion: completion)
     }
 
@@ -271,7 +278,7 @@ public final class GigyaCore<T: GigyaAccountProtocol>: GigyaInstanceProtocol {
      - Parameter completion:        Response `GigyaLoginResult<Bool>`.
      */
 
-    func verifyLogin(UID: String, params: [String: Any] = [:], completion: @escaping (GigyaApiResult<T>) -> Void) {
+    public func verifyLogin(UID: String, params: [String: Any] = [:], completion: @escaping (GigyaApiResult<T>) -> Void) {
         businessApiService.verifyLogin(UID: UID, params: params, completion: completion)
     }
 
@@ -393,6 +400,17 @@ public final class GigyaCore<T: GigyaAccountProtocol>: GigyaInstanceProtocol {
     }
 
     /**
+     Remove a social connection from current account.
+
+     - Parameter params: Request parameters.
+     - Parameter completion: Login response `GigyaApiResult<GigyaDictionary>`.
+     */
+
+    public func removeConnection(params: [String: Any] = [:], completion: @escaping (GigyaApiResult<GigyaDictionary>) -> Void) {
+        businessApiService.removeConnection(params: params, completion: completion)
+    }
+    
+    /**
      Get Schema api.
 
      - Parameter params: Request parameters.
@@ -429,8 +447,8 @@ public final class GigyaCore<T: GigyaAccountProtocol>: GigyaInstanceProtocol {
     public func showScreenSet(with name: String, viewController: UIViewController, params: [String: Any] = [:], completion: @escaping (GigyaPluginEvent<T>) -> Void) {
         let webBridge = createWebBridge()
 
-        let wrapper = PluginViewWrapper(config: config, persistenceService: persistenceService, sessionService: sessionService, businessApiService: businessApiService, webBridge: webBridge, plugin: "accounts.screenSet", params: params, completion: completion)
-        wrapper.presentPluginController(viewController: viewController, dataType: T.self, screenSet: name)
+        pluginViewWrapper = PluginViewWrapper(config: config, persistenceService: persistenceService, sessionService: sessionService, businessApiService: businessApiService, webBridge: webBridge, plugin: "accounts.screenSet", params: params, completion: completion)
+        pluginViewWrapper?.presentPluginController(viewController: viewController, dataType: T.self, screenSet: name)
     }
 
     // MARK: - Interruptions
