@@ -1,5 +1,5 @@
 # OwnID Gigya-Screen-Sets iOS Integration Instructions
-The OwnID Gigya-Screen-Sets iOS SDK integrates with an iOS app that uses [Gigya Screen-Sets](https://github.com/SAP/gigya-swift-sdk/tree/main/GigyaSwift#using-screen-sets) for authentication. If your app uses native Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk/) without Screen-Sets, use the **[OwnID Gigya-iOS SDK](../Readme.md)** instead.
+The OwnID Gigya-Screen-Sets iOS SDK integrates with an iOS app that uses [Gigya Screen-Sets](https://github.com/SAP/gigya-swift-sdk/tree/main/GigyaSwift#using-screen-sets) for authentication. If your app uses native Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk/) without Screen-Sets, use the **[OwnID Gigya-iOS SDK](../README.md)** instead.
 
 The OwnID Gigya-Screen-Sets SDK provides a passwordless login alternative for your iOS application by using cryptographic keys to replace the traditional password.
 
