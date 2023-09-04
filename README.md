@@ -9,7 +9,7 @@ The OwnID iOS SDK consists of a **Core** module along with modules that are spec
 
 - **[OwnID Gigya-Screen-Sets iOS SDK](Docs/sdk-gigya-screens-doc.md)** - For apps that use Gigya Screen-Sets authentication.
 
-- **[OwnID Redirect iOS SDK](Docs/sdk-redirect-doc.md)** - Help iOS app that use WebView or CustomTab to redirect back from browser to native app.
+- **[OwnID Redirect iOS SDK](Docs/sdk-gigya-screens-doc.md)** - Help iOS app that use WebView or CustomTab to redirect back from browser to native app.
 
 The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 13 and above.
 
