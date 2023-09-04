@@ -1,5 +1,5 @@
 # OwnID Gigya-Screen-Sets iOS Integration Instructions
-The OwnID Gigya-Screen-Sets iOS SDK integrates with an iOS app that uses [Gigya Screen-Sets](https://github.com/SAP/gigya-swift-sdk/tree/main/GigyaSwift#using-screen-sets) for authentication. If your app uses native Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk/) without Screen-Sets, use the **[OwnID Gigya-iOS SDK](Readme.md)** instead.
+The OwnID Gigya-Screen-Sets iOS SDK integrates with an iOS app that uses [Gigya Screen-Sets](https://github.com/SAP/gigya-swift-sdk/tree/main/GigyaSwift#using-screen-sets) for authentication. If your app uses native Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk/) without Screen-Sets, use the **[OwnID Gigya-iOS SDK](../README.md)** instead.
 
 The OwnID Gigya-Screen-Sets SDK provides a passwordless login alternative for your iOS application by using cryptographic keys to replace the traditional password.
 
@@ -13,7 +13,7 @@ The redirection URL determines where the user lands once they are done using the
 - In the [OwnID Console](http://console.ownid.com), where the custom scheme is the value of the Redirection URL field of your OwnID application.
 - In Xcode, where you navigate to **Info > URL Types**, and then use the **URL Schemes** field to specify the redirection URL scheme.
 
-For example, if your redirection URL scheme is `com.myapp.demo://bazco`, then you must specify this scheme in both places.
+For example, if your redirection URL scheme is `com.myapp.demo://myhost`, then you must specify this scheme in both places.
 
 ## Working with Gigya Screen-Sets
 

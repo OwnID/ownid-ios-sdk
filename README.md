@@ -1,35 +1,25 @@
 ![OwnIDSDK](Docs/logo.svg)
 
-# Demo Apps
-This repository represents set of demo apps how to use OwnID mobile SDKs.
-
-Want to see a demo of the OwnID registration and login flows without opening the source code? Ensure TestFlight is installed on your iOS device, then access the demos:
-- [OwnID SDK Firebase Demo beta](https://testflight.apple.com/join/QvMiUpjq)
-- [OwnID SDK Gigya Demo beta](https://testflight.apple.com/join/h9Qw7tto)
-
-To get started, please read integration instructions for:
-- [Firebase SDK](https://github.com/OwnID/ownid-firebase-ios-sdk)
-- [Gigya SDK](https://github.com/OwnID/ownid-gigya-ios-sdk)
-- [React SDK](https://github.com/OwnID/ownid-react-native-sdk)
-- [Custom Integration Demo](https://github.com/OwnID/ownid-ios-sdk-demo/tree/master/CustomIntegrationDemo)
-
-## OwnID Core iOS SDK
+## OwnID iOS SDK
 The [OwnID](https://ownid.com/) iOS SDK is a client library written in Swift that provides a passwordless login alternative for your iOS application by using cryptographic keys to replace the traditional password. Integrating the SDK with your app adds a Skip Password option to its registration and login screens.
 
 The OwnID iOS SDK consists of a **Core** module along with modules that are specific to an identity platform like Firebase. The Core module provides core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with a browser, handling a redirect URI, and checking and returning results to the iOS application. The following modules extend the Core module for a specific identify management system:
-- **[OwnID Firebase-iOS SDK](https://github.com/OwnID/ownid-firebase-ios-sdk)** - Extends **Core** functionality by providing integration with Email/Password-based [Firebase Authentication](https://firebase.google.com/docs/auth).
 
-- **[OwnID Gigya-iOS SDK](https://github.com/OwnID/ownid-gigya-ios-sdk)** - Extends **Core** functionality by providing integration with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk). In addition, the OwnID Gigya-iOS SDK has a **[Gigya-Screen-Sets](https://github.com/OwnID/ownid-ios-sdk-demo/tree/master/ScreensetsDemo)** integration.
+- **[OwnID Gigya-iOS SDK](Docs/sdk-gigya-doc.md)** - Extends **Core** functionality by providing integration with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk).
+
+- **[OwnID Gigya-Screen-Sets iOS SDK](Docs/sdk-gigya-screens-doc.md)** - For apps that use Gigya Screen-Sets authentication.
+
+- **[OwnID Redirect iOS SDK](Docs/sdk-gigya-screens-doc.md)** - Help iOS app that use WebView or CustomTab to redirect back from browser to native app.
 
 The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 13 and above.
 
- ## Registration and Login Flows
- Use the following diagrams to better understand the registration and login flows provided by the OwnID iOS SDK. The LinkAndLogin flow occurs when an existing user who has traditional account credentials uses the login screen to tap Skip Password for the first time.
+# Demo Apps
+This repository contains OwnID Demo application sources for different types of integrations:
+- Gigya Integration Demo
+- Scrensets Demo
+- UIKitInjection Demo 
 
-## Supported Languages
-The OwnID SDK has built-in support for multiple languages. The SDK loads translations in runtime and selects the best language available. The list of currently supported languages can be found [here](https://i18n.prod.ownid.com/langs.json).
-
-The SDK will also make the RTL adjustments if needed. If the user's mobile device uses a language that is not supported, the SDK displays the Skip Password feature in English.
+You can run these demo apps on a physical device or a simulator.
 
 ## Data Privacy
 The OwnID SDK does not store any data on the user's iOS device.
