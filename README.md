@@ -1,5 +1,5 @@
 ![OwnIDSDK](Docs/logo.svg)
-
+ 
 ## OwnID iOS SDK
 The [OwnID](https://ownid.com/) iOS SDK is a client library written in Swift that provides a passwordless login alternative for your iOS application by using cryptographic keys to replace the traditional password. Integrating the SDK with your app adds a Skip Password option to its registration and login screens.
 
