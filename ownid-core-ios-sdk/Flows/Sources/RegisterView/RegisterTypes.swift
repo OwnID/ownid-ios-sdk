@@ -1,35 +1,22 @@
 import Combine
 import Foundation
 
-extension OwnID.FlowsSDK.RegisterError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-            
-        case .emailIsMissing:
-            return "No email provided"
-        }
-    }
-}
-
 public extension OwnID {
-    typealias RegistrationPublisher = OwnID.FlowsSDK.RegistrationPublisher
+    typealias RegistrationPublisher = AnyPublisher<Result<OwnID.FlowsSDK.RegistrationEvent, OwnID.CoreSDK.Error>, Never>
+    typealias RegistrationResultPublisher = AnyPublisher<OwnID.RegisterResult, OwnID.CoreSDK.CoreErrorLogWrapper>
+    
     struct RegisterResult {
-        public init(operationResult: OperationResult, authType: OwnID.CoreSDK.AuthType?) {
+        public init(operationResult: OperationResult, authType: OwnID.CoreSDK.AuthType? = .none) {
             self.operationResult = operationResult
             self.authType = authType
         }
         
-        let operationResult: OperationResult
-        let authType: OwnID.CoreSDK.AuthType?
+        public let operationResult: OperationResult
+        public let authType: OwnID.CoreSDK.AuthType?
     }
 }
 
 public extension OwnID.FlowsSDK {
-    
-    enum RegisterError: PluginError {
-        case emailIsMissing
-    }
-    
     enum RegistrationEvent {
         case loading
         case resetTapped
@@ -37,17 +24,16 @@ public extension OwnID.FlowsSDK {
         case userRegisteredAndLoggedIn(registrationResult: OperationResult, authType: OwnID.CoreSDK.AuthType?)
     }
     
-    typealias RegistrationPublisher = AnyPublisher<Result<RegistrationEvent, OwnID.CoreSDK.Error>, Never>
     
     struct RegistrationConfiguration {
         public init(payload: OwnID.CoreSDK.Payload,
-                    email: OwnID.CoreSDK.Email) {
+                    loginId: String) {
             self.payload = payload
-            self.email = email
+            self.loginId = loginId
         }
         
         public let payload: OwnID.CoreSDK.Payload
-        public let email: OwnID.CoreSDK.Email
+        public let loginId: String
     }
 }
 
@@ -58,5 +44,5 @@ public struct VoidOperationResult: OperationResult {
 }
 
 public protocol RegistrationPerformer {
-    func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> AnyPublisher<OwnID.RegisterResult, OwnID.CoreSDK.Error>
+    func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> OwnID.RegistrationResultPublisher
 }

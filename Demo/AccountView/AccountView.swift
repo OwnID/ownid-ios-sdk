@@ -1,4 +1,5 @@
 import SwiftUI
+import Gigya
 
 public struct AccountModel: Identifiable, Decodable {
     public init(name: String, email: String) {
@@ -35,7 +36,10 @@ public struct AccountView: View {
                 Text(model.email)
             }
             .padding(.bottom)
-            Button("Close", action: { presentationMode.wrappedValue.dismiss() })
+            Button("Close", action: {
+                Gigya.sharedInstance().logout()
+                presentationMode.wrappedValue.dismiss()
+            })
         }
     }
 }

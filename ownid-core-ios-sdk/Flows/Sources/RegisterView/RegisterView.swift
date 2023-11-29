@@ -7,42 +7,36 @@ public extension OwnID.FlowsSDK {
         }
         private let id = UUID()
         
-        @Binding private var usersEmail: String
         public var visualConfig: OwnID.UISDK.VisualLookConfig
         @ObservedObject public var viewModel: ViewModel
         
         public init(viewModel: ViewModel,
-                    usersEmail: Binding<String>,
                     visualConfig: OwnID.UISDK.VisualLookConfig) {
             self.viewModel = viewModel
-            self._usersEmail = usersEmail
             self.visualConfig = visualConfig
-            self.viewModel.getEmail = { usersEmail.wrappedValue }
+            self.viewModel.currentMetadata = visualConfig.convertToCurrentMetric()
         }
         
         public var body: some View {
-            contents()
+            skipPasswordView()
         }
     }
 }
 
 private extension OwnID.FlowsSDK.RegisterView {
-    
-    @ViewBuilder
-    func contents() -> some View {
-        switch viewModel.state {
-        case .initial, .coreVM:
-            skipPasswordView(state: .enabled)
+    func skipPasswordView() -> some View {
+        var config = visualConfig
+        switch visualConfig.buttonViewConfig.variant {
+        case .authButton:
+            config.buttonViewConfig.variant = .iconButton // auth button is only available for login
             
-        case .ownidCreated:
-            skipPasswordView(state: .activated)
+        case .iconButton:
+            break
         }
-    }
-    
-    func skipPasswordView(state: OwnID.UISDK.ButtonState) -> some View {
-        let view = OwnID.UISDK.OwnIDView(viewState: .constant(state),
-                                         visualConfig: visualConfig,
-                                         shouldShowTooltip: $viewModel.shouldShowTooltip)
+        let view = OwnID.UISDK.OwnIDView(viewState: .constant(viewModel.state.buttonState),
+                                         visualConfig: config,
+                                         shouldShowTooltip: $viewModel.shouldShowTooltip,
+                                         isLoading: .constant(viewModel.state.isLoading))
         viewModel.subscribe(to: view.eventPublisher)
         return view.eraseToAnyView()
     }

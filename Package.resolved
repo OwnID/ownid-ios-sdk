@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "gigya-swift-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SAP/gigya-swift-sdk.git",
+      "state" : {
+        "revision" : "526390738c4e158d8d247150712d31b06d1e023f",
+        "version" : "1.5.8"
+      }
+    }
+  ],
+  "version" : 2
+}

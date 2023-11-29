@@ -14,8 +14,13 @@ final class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance())
-                self.ownIDViewModel = ownIDViewModel
+        
+        let emailPublisher = NotificationCenter.default
+            .publisher(for: UITextField.textDidChangeNotification, object: emailTextField)
+            .map({ ($0.object as? UITextField)?.text ?? "" })
+        
+        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: emailPublisher.eraseToAnyPublisher())
+        self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
         activityIndicator.isHidden = true
         emailTextField.addTarget(self, action: #selector(ViewController.textFieldDidChange(_:)), for: .editingChanged)
@@ -25,19 +30,13 @@ final class ViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             ownIdButton.view.topAnchor.constraint(equalTo: passwordTextField.topAnchor),
-            ownIdButton.view.trailingAnchor.constraint(equalTo: passwordTextField.leadingAnchor, constant: 10),
+            ownIdButton.view.trailingAnchor.constraint(equalTo: passwordTextField.leadingAnchor, constant: -10),
             ownIdButton.view.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
     
     func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
-        let emailBinding = Binding<String>(
-            get: { self.emailTextField.text ?? "" },
-            set: { newText in
-                self.emailTextField.text = newText
-            }
-        )
-        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel, email: emailBinding)
+        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel)
         let headerVC = UIHostingController(rootView: headerView)
         headerVC.view.translatesAutoresizingMaskIntoConstraints = false
         return headerVC
@@ -47,7 +46,7 @@ final class ViewController: UIViewController {
     }
     
     @IBAction func registerTapped(_ sender: UIButton) {
-        ownIDViewModel.register(with: emailTextField.text ?? "")
+        ownIDViewModel.register()
     }
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {

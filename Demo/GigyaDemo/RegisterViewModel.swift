@@ -18,7 +18,7 @@ final class RegisterViewModel: ObservableObject {
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
     
     init() {
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance())
+        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
@@ -60,8 +60,8 @@ final class RegisterViewModel: ObservableObject {
                     print(ownIDSDKError.localizedDescription)
                     errorMessage = ownIDSDKError.localizedDescription
                     switch ownIDSDKError {
-                    case .plugin(let gigyaPluginError):
-                        if let error = gigyaPluginError as? OwnID.GigyaSDK.Error {
+                    case .integrationError(let gigyaPluginError):
+                        if let error = gigyaPluginError as? OwnID.GigyaSDK.IntegrationError {
                             switch error {
                             case .gigyaSDKError(let networkError, let dataDictionary):
                                 switch networkError {
@@ -71,8 +71,6 @@ final class RegisterViewModel: ObservableObject {
                                     print(model.errorMessage ?? "")
                                 default: break
                                 }
-                            default:
-                                break
                             }
                         }
 
@@ -89,7 +87,7 @@ final class RegisterViewModel: ObservableObject {
             let nameValue = "{ \"firstName\": \"\(firstName)\" }"
             let paramsDict = ["profile": nameValue]
             let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
-            ownIDViewModel.register(with: email, registerParameters: params)
+            ownIDViewModel.register(registerParameters: params)
         } else {
             // ignoring register with default login & password
         }
