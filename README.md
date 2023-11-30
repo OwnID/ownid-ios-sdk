@@ -3,18 +3,11 @@
  
 The [OwnID](https://ownid.com/) iOS SDK is a client library written in Swift that provides a passwordless login alternative for your iOS application by using [Passkeys](https://www.passkeys.com/) to replace the traditional password. Integrating the SDK with your app allows the user to perform Registration and Login flows in a native iOS application.
 
-The OwnID iOS SDK consists of a **[Core](Docs/sdk-core-doc.md)** module along with modules that are specific to an identity platform like Firebase or Gigya. The Core module provides core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with a iOS, and checking and returning results to the iOS application. The following modules extend the Core module for a specific identify management system:
-- **[OwnID Firebase iOS SDK](Docs/sdk-firebase-doc.md)** - Extends Core SDK functionality by providing integration with Email/Password-based [Firebase Authentication](https://firebase.google.com/docs/auth).
+The OwnID iOS SDK consists of a **[Core](Docs/sdk-core-doc.md)** module along with modules that are specific to an identity platform like Gigya. The Core module provides core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with an iOS, and checking and returning results to the iOS application. The following modules extend the Core module for a specific identify management system:
 
 - **[OwnID Gigya iOS SDK](Docs/sdk-gigya-doc.md)** - Extends Core SDK functionality by providing integration with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk) for apps that do not use Screen-Sets. For apps that use Screen-Sets with Gigya authentication use [OwnID Redirect iOS SDK](Docs/sdk-redirect-doc.md).
 
-- **[OwnID Redirect iOS SDK](Docs/sdk-redirect-doc.md)** - Help iOS app that use WebView or Safari to redirect back from browser to native app.
-
 The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 14 and above.
-
-## Custom Integration
-
-You can use OwnID Core iOS SDK to gain all of the benefits of OwnID with custom identity platform. Check **[OwnID Core iOS SDK - Custom Integration](Docs/sdk-core-doc.md)** for detailed steps.
 
 ## WebView Integration
 
@@ -22,10 +15,9 @@ You can use OwnID iOS SDK WebView Bridge to seamlessly integrate the native capa
 
 ## Demo applications
 This repository contains OwnID Demo application sources for different types of integrations:
-- Firebase Integration Demo
 - Gigya Integration Demo
+- Gigya UIKit Injection Demo
 - Gigya Screen Sets Integration Demo
-- Custom Integration Demo
 
 You can run these demo apps on a physical device or a simulator.
 
