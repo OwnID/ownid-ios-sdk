@@ -3,9 +3,7 @@
 
 # OwnID Gigya iOS SDK
 
-The OwnID Gigya iOS SDK integrates with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk) for apps that use Gigya Core or Gigya Screen-Sets. If your app uses Gigya Screen-Sets only, you should use the OwnID Gigya-Screen-Sets iOS SDK instead. For instructions, see the **[OwnID Redirect SDK](sdk-redirect-doc.md)** guide.
-
-The OwnID Gigya-iOS SDK is a client library written in Swift that provides a simple way to add the "Skip Password" feature to the registration and login screens of your native application. For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md).
+The OwnID Gigya iOS SDK integrates with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk) in an iOS application. The SDK is a client library written in Swift that provides a simple way to add the "Skip Password" feature to the registration and login screens of your native app. For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md).
 
 ## Table of contents
 * [Before You Begin](#before-you-begin)
@@ -81,7 +79,7 @@ Where:
 
 - The `OwnIDAppID` is the unique AppID, which you can obtain from the [OwnID Console](https://console.ownid.com).
 
-For additional configuration options, including environment configuration, see [Advanced Configuration](https://github.com/OwnID/ios-sdk/blob/master/Docs/sdk-gigya-doc.md#advanced-configuration).
+For additional configuration options, including environment configuration, see [Advanced Configuration](#advanced-configuration).
 
 ## Import OwnID Module
 Once you have added the OwnID package dependency, you need to import the OwnID module so you can access the SDK features. As you implement OwnID in your project, add the following to your source files:
