@@ -12,7 +12,7 @@ The OwnID Gigya iOS SDK integrates with Email/Password-based [Gigya Authenticati
   + [Swift Package Manager](#swift-package-manager)
 * [Enable Passkey Authentication](#enable-passkey-authentication)
 * [Add Property List File to Project](#add-property-list-file-to-project)
-* [Import OwnID Modules](#import-ownid-module)
+* [Import OwnID Module](#import-ownid-module)
 * [Initialize the SDK](#initialize-the-sdk)
   + [Add OwnID WebView Bridge](#add-ownid-webview-bridge)
 * [Implement the Registration Screen](#implement-the-registration-screen)
