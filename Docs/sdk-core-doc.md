@@ -26,7 +26,7 @@ The OwnID iOS SDK is a client library written in Swift that provides a simple wa
   + [OwnID Environment](#ownid-environment)
   + [OwnID SDK Language](#ownid-sdk-language)
   + [Redirection URI Alternatives](#redirection-uri-alternatives)
-  + [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function-)
+  + [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function)
   + [Button Apperance](#button-apperance)
   + [Manually Invoke OwnID Flow](#manually-invoke-ownid-flow)
 
@@ -184,7 +184,7 @@ final class MyRegisterViewModel: ObservableObject {
 ### Add the OwnID View
 Inserting the OwnID view into your View layer results in the Skip Password option appearing in your app. When the user selects Skip Password, the SDK opens a sheet to interact with the user. The code that creates this view accepts the OwnID view model as its argument. It is suggested that you pass user's email binding for properly creating accounts.
 
-It is reccomended to set height of button the same as text field and disable text field when OwnID is enabled. 
+It is recommended to set height of button the same as text field and disable text field when OwnID is enabled. 
 
 ![how it looks like](skip_button_design.png) ![how it looks like](skip_button_design_dark.png)
 
