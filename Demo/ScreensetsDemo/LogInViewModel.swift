@@ -1,7 +1,6 @@
 import SwiftUI
 import Combine
 import Gigya
-import AccountView
 
 final class LogInViewModel: ObservableObject {
     private(set) var screensetResult = PassthroughSubject<GigyaPluginEvent<GigyaAccount>, Never>()

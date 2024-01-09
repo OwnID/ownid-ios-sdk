@@ -1,7 +1,6 @@
 import SwiftUI
 import OwnIDCoreSDK
 import OwnIDGigyaSDK
-import AccountView
 
 struct RegisterView: View {
     @ObservedObject private var viewModel = RegisterViewModel()

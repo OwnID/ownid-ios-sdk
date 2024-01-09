@@ -49,6 +49,6 @@ private extension LogInView {
     
     @ViewBuilder
     func skipPasswordView() -> some View {
-        OwnID.GigyaSDK.createLoginView(viewModel: viewModel.ownIDViewModel)
+        OwnID.FlowsSDK.LoginView(viewModel: viewModel.ownIDViewModel, visualConfig: .init())
     }
 }

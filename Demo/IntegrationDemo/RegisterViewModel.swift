@@ -1,7 +1,6 @@
 import Foundation
-import OwnIDGigyaSDK
+import OwnIDCoreSDK
 import Combine
-import Gigya
 
 final class RegisterViewModel: ObservableObject {
     @Published var firstName = ""
@@ -17,7 +16,10 @@ final class RegisterViewModel: ObservableObject {
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
     
     init() {
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: Registration(),
+                                                                   loginPerformer: Login(),
+                                                                   sdkConfigurationName: IntegrationDemoApp.clientName,
+                                                                   loginIdPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
@@ -34,19 +36,16 @@ final class RegisterViewModel: ObservableObject {
                         }
                         isOwnIDEnabled = true
                         
-                    case .userRegisteredAndLoggedIn:
-                        Task.init {
-                            if let profile = try? await Gigya.sharedInstance().getAccount(true).profile {
-                                let email = profile.email ?? ""
-                                let name = profile.firstName ?? ""
-                                let model = AccountModel(name: name, email: email)
-                                await MainActor.run {
-                                    loggedInModel = model
+                    case .userRegisteredAndLoggedIn(let registrationResult, _):
+                        CustomAuthSystem.fetchUserData(previousResult: registrationResult)
+                            .sink { completionRegister in
+                                if case .failure(let error) = completionRegister {
+                                    self.errorMessage = error.localizedDescription
                                 }
-                            } else {
-                                errorMessage = "Cannot find logged in profile"
+                            } receiveValue: { model in
+                                self.loggedInModel = AccountModel(name: model.name, email: model.email)
                             }
-                        }
+                            .store(in: &bag)
                         
                     case .loading:
                         print("Loading state")
@@ -59,20 +58,13 @@ final class RegisterViewModel: ObservableObject {
                     print(ownIDSDKError.localizedDescription)
                     errorMessage = ownIDSDKError.localizedDescription
                     switch ownIDSDKError {
-                    case .integrationError(let gigyaPluginError):
-                        if let error = gigyaPluginError as? OwnID.GigyaSDK.IntegrationError {
+                    case .integrationError(let integrationError):
+                        if let error = integrationError as? IntegrationError {
                             switch error {
-                            case .gigyaSDKError(let networkError, let dataDictionary):
-                                switch networkError {
-                                case .gigyaError(let model):
-                                    //handling the data
-                                    print(dataDictionary ?? "")
-                                    print(model.errorMessage ?? "")
-                                default: break
-                                }
+                            case .registrationDataError(let message):
+                                print(message)
                             }
                         }
-
                     default:
                         break
                     }
@@ -83,10 +75,7 @@ final class RegisterViewModel: ObservableObject {
     
     func register() {
         if isOwnIDEnabled {
-            let nameValue = "{ \"firstName\": \"\(firstName)\" }"
-            let paramsDict = ["profile": nameValue]
-            let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
-            ownIDViewModel.register(registerParameters: params)
+            ownIDViewModel.register(registerParameters: RegistrationParameters(firstName: firstName))
         } else {
             // ignoring register with default login & password
         }

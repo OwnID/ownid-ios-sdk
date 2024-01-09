@@ -1,6 +1,5 @@
 import Combine
 import OwnIDCoreSDK
-import AccountView
 import Gigya
 
 final class LogInViewModel: ObservableObject {
@@ -46,8 +45,8 @@ final class LogInViewModel: ObservableObject {
                     
                 case .failure(let error):
                     switch error {
-                    case .integrationError(let gigyaPluginError):
-                        if let error = gigyaPluginError as? OwnID.GigyaSDK.IntegrationError {
+                    case .integrationError(let gigyaIntegrationError):
+                        if let error = gigyaIntegrationError as? OwnID.GigyaSDK.IntegrationError {
                             switch error {
                             case .gigyaSDKError(let networkError, let dataDictionary):
                                 switch networkError {

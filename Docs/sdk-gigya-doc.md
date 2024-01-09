@@ -28,7 +28,7 @@ The OwnID Gigya iOS SDK integrates with Email/Password-based [Gigya Authenticati
   + [OwnID Environment](#ownid-environment)
   + [OwnID SDK Language](#ownid-sdk-language)
   + [Redirection URI Alternatives](#redirection-uri-alternatives)
-  + [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function-)
+  + [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function)
   + [Button Apperance](#button-apperance)
   + [Manually Invoke OwnID Flow](#manually-invoke-ownid-flow)
 
@@ -102,7 +102,7 @@ struct ExampleApp: App {
 }
 ```
 
-If you did not follow the recommendation for creating the `OwnIDConfiguration.plist` file, you need to specify arguments when calling the `configure` function. For details, see [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function-).
+If you did not follow the recommendation for creating the `OwnIDConfiguration.plist` file, you need to specify arguments when calling the `configure` function. For details, see [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function).
 
 ### Add OwnID WebView Bridge
  If you're running Gigya with Screen-Sets and want to utilize the [OwnID iOS SDK WebView Bridge](sdk-webbridge-doc.md), then add `OwnID.GigyaSDK.configureWebBridge()`:
@@ -144,14 +144,15 @@ After creating this OwnID view model, your View Model layer should listen to eve
 
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    @Published var email = ""
-    
     // MARK: OwnID
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
+    
+    func createViewModel(loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
+      let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
+      self.ownIDViewModel = ownIDViewModel
+    }
 
     init() {
-     let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
-     self.ownIDViewModel = ownIDViewModel
      subscribe(to: ownIDViewModel.eventPublisher)
     }
 
@@ -236,14 +237,15 @@ After creating this OwnID view model, your View Model layer should listen to eve
 [Complete example](../Demo/GigyaDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    @Published var email = ""
-    
     // MARK: OwnID
-    let ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    
+    func createViewModel(loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
+      let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
+      self.ownIDViewModel = ownIDViewModel
+    }
 
      init() {
-       let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
-       self.ownIDViewModel = ownIDViewModel
        subscribe(to: ownIDViewModel.eventPublisher)
      }
 

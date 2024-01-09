@@ -9,6 +9,10 @@ The OwnID iOS SDK consists of a **[Core](Docs/sdk-core-doc.md)** module along wi
 
 The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 14 and above.
 
+## Other Identity Platforms
+
+You can use OwnID Core iOS SDK to gain all of the benefits of OwnID with custom identity platform. Check **[OwnID Core iOS SDK - Custom Integration](Docs/sdk-core-doc.md)** for detailed steps.
+
 ## WebView Integration
 
 You can use OwnID iOS SDK WebView Bridge to seamlessly integrate the native capabilities of the OwnID iOS SDK into the OwnID WebSDK. Check **[OwnID iOS SDK WebView Bridge](Docs/sdk-webbridge-doc.md)** for detailed steps.
@@ -16,8 +20,9 @@ You can use OwnID iOS SDK WebView Bridge to seamlessly integrate the native capa
 ## Demo applications
 This repository contains OwnID Demo application sources for different types of integrations:
 - Gigya Integration Demo
-- Gigya UIKit Injection Demo
 - Gigya Screen Sets Integration Demo
+- Custom Integration Demo
+- Gigya UIKit Injection Demo
 
 You can run these demo apps on a physical device or a simulator.
 

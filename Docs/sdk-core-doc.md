@@ -59,6 +59,7 @@ The OwnID SDK uses passkeys to authenticate users. To enable passkey support for
 
 When the application starts, the OwnID SDK automatically reads `OwnIDConfiguration.plist` from the file system to configure the default instance that is created. At a minimum, this PLIST file defines a redirection URI and unique app id. Create `OwnIDConfiguration.plist` and define the following mandatory parameters:
 
+[Complete example](../Demo/IntegrationDemo/OwnIDConfiguration.plist)
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -77,6 +78,7 @@ For additional configuration options, including environment configuration, see [
 ## Import OwnID Module
 Once you have added the OwnID package dependency, you need to import the OwnID module so you can access the SDK features. As you implement OwnID in your project, add the following to your source files:
 
+[Complete example](../Demo/IntegrationDemo/IntegrationDemoApp.swift)
 ```swift
 import OwnIDCoreSDK
 ```
@@ -84,6 +86,7 @@ import OwnIDCoreSDK
 ## Initialize the SDK
 The OwnID SDK must be initialized properly using the `configure()` function, preferably in the main entry point of your app (in the `@main` `App` struct). For example, enter:
 
+[Complete example](../Demo/IntegrationDemo/IntegrationDemoApp.swift)
 ```swift
 @main
 struct ExampleApp: App {
@@ -97,6 +100,7 @@ struct ExampleApp: App {
 To make registration workig, you will need to provide your implementation of register process in your system.
 In order to achieve this, supply register logic by implementing `RegistrationPerformer` protocol.
 
+[Complete example](../Demo/IntegrationDemo/AuthPerformer.swift)
 ```swift
 final class CustomRegistration: RegistrationPerformer {
     func register(configuration: OwnID.FlowsSDK.RegistrationParameters, parameters: RegisterParameters) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
@@ -111,6 +115,7 @@ When the user selects Skip Password, your app waits for events while the user in
 ### Customize View Model
 The OwnID view that inserts the Skip Password UI is bound to an instance of the OwnID view model. Before modifying your View layer, create an instance of this view model, `OwnID.FlowsSDK.RegisterView.ViewModel`, within your ViewModel layer with `CustomRegistration` you created earlier:
 
+[Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
     // MARK: OwnID
@@ -123,6 +128,7 @@ final class MyRegisterViewModel: ObservableObject {
 
 After creating this OwnID view model, your View Model layer should listen to events from the OwnID Event Publisher, which allows your app to know what actions to take based on the user's interaction with the OwnID Web App. Simply add the following to your existing ViewModel layer to subscribe to the OwnID Event Publisher and respond to events (it can be placed just after the code that creates the OwnID view model instance).
 
+[Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
     // MARK: OwnID
@@ -182,6 +188,7 @@ It is reccomended to set height of button the same as text field and disable tex
 
 ![how it looks like](skip_button_design.png) ![how it looks like](skip_button_design_dark.png)
 
+[Complete example](../Demo/IntegrationDemo/RegisterView.swift)
 ```swift
 //Put RegisterView inside your main view, preferably besides password field
 var body: some View {
@@ -189,12 +196,11 @@ var body: some View {
 }
 ```
 
-It is recommended that you hide `OwnID.FlowsSDK.RegisterView` when the user starts typing in the password text field. 
-
 ## Implement the Login Screen
 To make login workig, you will need to provide your implementation of login process in your system.
 In order to achieve this, supply login logic by implementing `LoginPerformer` protocol.
 
+[Complete example](../Demo/IntegrationDemo/AuthPerformer.swift)
 ```swift
 final class CustomLoginPerformer: LoginPerformer {
     func login(payload: OwnID.CoreSDK.Payload,
@@ -212,6 +218,7 @@ Like the Registration screen, you add Skip Password to your application's Login 
 ### Customize View Model
 You need to create an instance of the view model, `OwnID.LoginView.ViewModel`, that the OwnID login view uses.
 
+[Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
     // MARK: OwnID
@@ -223,6 +230,7 @@ final class MyLogInViewModel: ObservableObject {
 
 After creating this OwnID view model, you should listen to events from the OwnID Event Publisher, which allows your app to know what actions to take based on the user's interaction with the Skip Password option. Simply add the following to subscribe to the OwnID Event Publisher and respond to events.
 
+[Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
     // MARK: OwnID
@@ -261,6 +269,7 @@ final class MyLogInViewModel: ObservableObject {
 ### Add OwnID View
 Inserting the OwnID view into your View layer results in the Skip Password option appearing in your app. When the user selects Skip Password, the SDK opens a sheet to interact with the user. It is recommended that you place the OwnID view, `OwnID.LoginView`, immediately after the password text field. The code that creates this view accepts the OwnID view model as its argument. It is suggested that you pass user's email binding for properly creating accounts.
 
+[Complete example](../Demo/IntegrationDemo/LogInView.swift)
 ```swift
 //Put LoginView inside your main view, preferably below password field
 var body: some View {
@@ -274,8 +283,6 @@ var body: some View {
 ```
 
 ![how it looks like](skip_button_design.png) ![how it looks like](skip_button_design_dark.png)
-
-It is recommended that you hide `OwnID.FlowsSDK.LoginView` when the user starts typing in the password text field. 
 
 ## Tooltip
 
@@ -310,6 +317,7 @@ All errors from the SDK have an `OwnID.CoreSDK.Error` type. You can use them, fo
 
 Here are these errors:
 
+[Complete example](../ownid-core-ios-sdk/Core/Sources/Types/CoreError.swift)
 ```swift
 switch error {
 case flowCancelled(let flow):

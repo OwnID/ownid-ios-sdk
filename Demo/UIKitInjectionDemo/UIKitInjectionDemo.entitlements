@@ -5,6 +5,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>webcredentials:dev.ownid.com</string>
+		<string>webcredentials:ownid.com</string>
 	</array>
 </dict>
 </plist>

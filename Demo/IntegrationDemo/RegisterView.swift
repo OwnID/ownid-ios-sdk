@@ -1,14 +1,22 @@
 import SwiftUI
 import OwnIDCoreSDK
 
-struct LogInView: View {
-    @ObservedObject private var viewModel = LogInViewModel()
+struct RegisterView: View {
+    @ObservedObject private var viewModel = RegisterViewModel()
     
     var body: some View {
+        content()
+    }
+}
+
+private extension RegisterView {
+    
+    @ViewBuilder
+    func content() -> some View {
         VStack {
             fields()
                 .zIndex(1)
-            Button("Log in", action: { /* ignoring login with password */ })
+            Button("Create Account", action: viewModel.register)
             Text(viewModel.errorMessage)
                 .font(.headline)
                 .foregroundColor(.red)
@@ -17,15 +25,16 @@ struct LogInView: View {
             AccountView(model: model)
         }
     }
-}
-
-private extension LogInView {
     
-    @ViewBuilder
     func fields() -> some View {
         Group {
             VStack(alignment: .leading) {
+                TextField("First name", text: $viewModel.firstName)
+                    .textContentType(.givenName)
+                    .keyboardType(.alphabet)
+                    .padding(.bottom, 9)
                 TextField("Email", text: $viewModel.email)
+                    .autocapitalization(.none)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
                     .padding(.bottom, 9)
@@ -44,11 +53,11 @@ private extension LogInView {
             SecureField("Password", text: $viewModel.password)
                 .textContentType(.password)
                 .keyboardType(.emailAddress)
-        }
+                .disabled(viewModel.isOwnIDEnabled)
+            }
     }
     
-    @ViewBuilder
     func skipPasswordView() -> some View {
-        OwnID.GigyaSDK.createLoginView(viewModel: viewModel.ownIDViewModel)
+        OwnID.FlowsSDK.RegisterView(viewModel: viewModel.ownIDViewModel, visualConfig: .init())
     }
 }
