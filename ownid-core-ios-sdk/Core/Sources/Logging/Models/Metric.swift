@@ -24,9 +24,10 @@ public extension OwnID.CoreSDK {
         case fidoRun
         case fidoNotFinished
         case fidoFinished
+        case fidoFailed
         case loginId
-        case wrongOTP
-        case correctOTP
+        case wrongOTP(name: String)
+        case correctOTP(name: String)
         case resendOTP
         case notYou
         case screenShow(screen: String)
@@ -54,12 +55,14 @@ public extension OwnID.CoreSDK {
                 return "FIDO: Execution Did Not Complete"
             case .fidoFinished:
                 return "FIDO: Execution Completed Successfully"
+            case .fidoFailed:
+                return "FIDO: Failed, trying to register new one"
             case .loginId:
                 return "User entered Login ID"
-            case .wrongOTP:
-                return "[Fallback OTP Code] - Entered Wrong Verification Code"
-            case .correctOTP:
-                return "[Fallback OTP Code] - Entered Correct Verification Code"
+            case .wrongOTP(let name):
+                return "[\(name)] - Entered Wrong Verification Code"
+            case .correctOTP(let name):
+                return "[\(name)] - Entered Correct Verification Code"
             case .resendOTP:
                 return "User select: Resend"
             case .notYou:
@@ -83,6 +86,7 @@ public extension OwnID.CoreSDK {
                     .fidoRun,
                     .fidoNotFinished,
                     .fidoFinished,
+                    .fidoFailed,
                     .loginId,
                     .wrongOTP,
                     .correctOTP,

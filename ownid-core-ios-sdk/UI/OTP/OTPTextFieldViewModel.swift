@@ -15,10 +15,12 @@ extension OwnID.UISDK.OneTimePassword {
         init(codeLength: Int,
              store: Store<OwnID.UISDK.OneTimePassword.ViewState, OwnID.UISDK.OneTimePassword.Action>,
              context: OwnID.CoreSDK.Context?,
+             operationType: OwnID.UISDK.OneTimePassword.OperationType,
              eventService: EventProtocol = OwnID.CoreSDK.eventService) {
             self.codeLength = codeLength
             self.store = store
             self.context = context
+            self.operationType = operationType
             self.eventService = eventService
             storage = Array(repeating: "", count: codeLength + 1)
             codes = Array(repeating: Constants.zeroWidthSpaceCharacter, count: codeLength)
@@ -29,6 +31,7 @@ extension OwnID.UISDK.OneTimePassword {
         let codeLength: Int
         let context: OwnID.CoreSDK.Context?
         let eventService: EventProtocol
+        let operationType: OwnID.UISDK.OneTimePassword.OperationType
         
         private let store: Store<OwnID.UISDK.OneTimePassword.ViewState, OwnID.UISDK.OneTimePassword.Action>
         private var storage: [String]
@@ -58,7 +61,7 @@ extension OwnID.UISDK.OneTimePassword {
             disableTextFields = true
             let code = combineCode()
             if code.count == codeLength {
-                store.send(.codeEntered(code))
+                store.send(.codeEntered(code: code, operationType: operationType))
             }
         }
         

@@ -27,6 +27,15 @@ extension OwnID.UISDK.OneTimePassword {
     enum OperationType: String {
         case verification = "verify"
         case oneTimePasswordSignIn = "sign"
+        
+        var metricName: String {
+            switch self {
+            case .verification:
+                "OTP Code Verification"
+            case .oneTimePasswordSignIn:
+                "Fallback OTP Code"
+            }
+        }
     }
     
     struct OneTimePasswordView: Popup {
@@ -76,7 +85,7 @@ extension OwnID.UISDK.OneTimePassword {
             self.store = store
             self.codeLength = codeLength
             self.restartURL = restartURL
-            self.viewModel = ViewModel(codeLength: codeLength, store: store, context: context)
+            self.viewModel = ViewModel(codeLength: codeLength, store: store, context: context, operationType: operationType)
             self.verificationType = verificationType
             self.operationType = operationType
             self.context = context

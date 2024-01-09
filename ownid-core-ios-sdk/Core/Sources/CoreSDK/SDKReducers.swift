@@ -23,7 +23,8 @@ extension OwnID.CoreSDK {
             
         case let .configurationCreated(configuration, userFacingSDK, underlyingSDKs, isTestingEnvironment):
             state.configurationRequestData = OwnID.CoreSDK.SDKState.ConfigurationRequestData(config: configuration,
-                                                                                             userFacingSDK: userFacingSDK, isLoading: false)
+                                                                                             userFacingSDK: userFacingSDK,
+                                                                                             isLoading: false)
             return [
                 Just(.fetchServerConfiguration).eraseToEffect(),
                 startLoggerIfNeeded(userFacingSDK: userFacingSDK,

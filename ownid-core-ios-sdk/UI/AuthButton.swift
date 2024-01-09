@@ -44,11 +44,13 @@ private extension OwnID.UISDK.AuthButton {
     @ViewBuilder
     func contents() -> some View {
         ZStack {
-            OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.authButtonConfig.loaderViewConfig.color,
-                                          spinnerBackgroundColor: visualConfig.authButtonConfig.loaderViewConfig.backgroundColor,
-                                          viewBackgroundColor: visualConfig.authButtonConfig.backgroundColor)
-            .frame(width: visualConfig.authButtonConfig.loaderHeight, height: visualConfig.authButtonConfig.loaderHeight)
-            .opacity(isLoading ? 1 : 0)
+            if visualConfig.loaderViewConfig.isEnabled {
+                OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.authButtonConfig.loaderViewConfig.color,
+                                              spinnerBackgroundColor: visualConfig.authButtonConfig.loaderViewConfig.backgroundColor,
+                                              viewBackgroundColor: visualConfig.authButtonConfig.backgroundColor)
+                .frame(width: visualConfig.authButtonConfig.loaderHeight, height: visualConfig.authButtonConfig.loaderHeight)
+                .opacity(isLoading ? 1 : 0)
+            }
             Text(localizedKey: translationKey)
                 .fontWithLineHeight(font: .systemFont(ofSize: visualConfig.authButtonConfig.textSize, weight: .medium), lineHeight: visualConfig.authButtonConfig.lineHeight)
                 .foregroundColor(visualConfig.authButtonConfig.textColor)

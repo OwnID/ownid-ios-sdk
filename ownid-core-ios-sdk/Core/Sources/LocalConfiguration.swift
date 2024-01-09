@@ -50,6 +50,7 @@ extension OwnID.CoreSDK {
         var loginIdSettings: LoginIdSettings?
         var enableRegistrationFromLogin: Bool?
         var phoneCodes: [PhoneCode]?
+        var origins: Set<String> = []
         
         var finalStatusURL: ServerURL {
             var url = serverURL!

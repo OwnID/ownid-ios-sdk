@@ -1,10 +1,3 @@
-//
-//  PresentationDetents.swift
-//  private-ownid-core-ios-sdk
-//
-//  Created by user on 14.09.2023.
-//
-
 import SwiftUI
 
 struct PresentationDetents: ViewModifier {

@@ -1,10 +1,3 @@
-//
-//  OwnIDGigyaWebBridgeConfiguration.swift
-//  private-ownid-gigya-ios-sdk
-//
-//  Created by user on 13.10.2023.
-//
-
 import Gigya
 
 extension OwnID.GigyaSDK {

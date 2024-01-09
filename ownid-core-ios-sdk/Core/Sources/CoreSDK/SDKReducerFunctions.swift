@@ -53,7 +53,7 @@ extension OwnID.CoreSDK {
     }
     
     static func fetchServerConfiguration(config: LocalConfiguration,
-                                             apiEndpoint: APIEndpoint,
+                                         apiEndpoint: APIEndpoint,
                                          userFacingSDK: OwnID.CoreSDK.SDKInformation) -> Effect<SDKAction> {
         let effect = Deferred {
             apiEndpoint.serverConfiguration(config.ownIDServerConfigurationURL)
@@ -77,6 +77,7 @@ extension OwnID.CoreSDK {
                     local.loginIdSettings = serverConfiguration.loginIdSettings
                     local.enableRegistrationFromLogin = serverConfiguration.enableRegistrationFromLogin
                     local.phoneCodes = serverConfiguration.phoneCodes
+                    local.origins = Set(serverConfiguration.origins ?? [])
                     return SDKAction.save(configurationLoadingEvent: .loaded(local), userFacingSDK: userFacingSDK)
                 }
                 .catch { _ in

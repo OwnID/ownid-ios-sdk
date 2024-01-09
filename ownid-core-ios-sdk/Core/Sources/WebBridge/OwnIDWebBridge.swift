@@ -1,10 +1,3 @@
-//
-//  OwnIDWebBridge.swift
-//  private-ownid-core-ios-sdk
-//
-//  Created by user on 12.10.2023.
-//
-
 import Foundation
 import WebKit
 
@@ -25,23 +18,40 @@ extension OwnID.CoreSDK {
     }    
     
     public class OwnIDWebBridge: NSObject, WKScriptMessageHandler {
-        private let JSEventHandler = "ownIDJSHandler"
+        private let JSEventHandler = "__ownidNativeBridgeHandler"
         
         private var webView: WKWebView?
-        private var namepace: WebNameSpace?
+        private var namespace: WebNameSpace?
+        private var origins = [URL]()
         
-        public func injectInto(webView: WKWebView) {
+        public func injectInto(webView: WKWebView, allowedOriginRules: Set<String> = []) {
             self.webView = webView
             
             let contentController = webView.configuration.userContentController
             
             let JSInterface = getJSInterface()
             
-            let userScript = WKUserScript(source: JSInterface, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
+            let userScript = WKUserScript(source: JSInterface, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page)
             contentController.addUserScript(userScript)
             
             contentController.removeScriptMessageHandler(forName: JSEventHandler)
             contentController.add(self, name: JSEventHandler)
+            
+            let allOrigins = OwnID.CoreSDK.shared.store.value.firstConfiguration?.origins.union(allowedOriginRules)
+                .compactMap { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { $0 != "*" }
+                .compactMap { URL(string: $0) }
+                .compactMap({ url in
+                    switch url.scheme {
+                    case nil:
+                        return URL(string:"https://\(url)")
+                    case "https" where url.scheme?.caseInsensitiveCompare("https") == .orderedSame:
+                        return url
+                    default:
+                        return nil
+                    }
+                })
+            origins = allOrigins ?? []
         }
         
         private func getJSInterface() -> String {
@@ -49,9 +59,16 @@ extension OwnID.CoreSDK {
             let feature = JSNamespace.FIDO.rawValue
             let JSInterface =  """
                 window.__ownidNativeBridge = {
-                    getNamespaces: function() { return '{\"\(feature)\": \(actions)}'; },
-                    invokeNative: function(namespace, action, callbackPath, params) {
-                        window.webkit.messageHandlers.\(JSEventHandler).postMessage({method: 'invokeNative', data: { namespace, action, callbackPath, params }});
+                    getNamespaces: function getNamespaces() { return '{\"\(feature)\": \(actions)}'; },
+                    invokeNative: function invokeNative(namespace, action, callbackPath, params) {
+                        try {
+                            window.webkit.messageHandlers.\(JSEventHandler).postMessage({method: 'invokeNative', data: { namespace, action, callbackPath, params }});
+                        } catch (error) {
+                            console.error(error);
+                            setTimeout(function errorHandler() {
+                                eval(callbackPath + '(false);');
+                            });
+                        }
                     }
                 }
                 """
@@ -82,8 +99,14 @@ extension OwnID.CoreSDK {
                 
                 switch JSDataModel.namespace {
                 case .FIDO:
-                    namepace = OwnIdGigyaFido()
-                    namepace?.invoke(webView: webView ?? WKWebView(), action: JSDataModel.action, params: JSDataModel.params ?? "") { [weak self] result in
+                    namespace = OwnIDWebBridgeFido()
+                    let bridgeContext = OwnIDWebBridgeContext(webView: webView ?? WKWebView(),
+                                                              sourceOrigin: message.frameInfo.request.url,
+                                                              allowedOriginRules: origins,
+                                                              isMainFrame: message.frameInfo.isMainFrame)
+                    namespace?.invoke(bridgeContext: bridgeContext,
+                                      action: JSDataModel.action,
+                                      params: JSDataModel.params ?? "") { [weak self] result in
                         self?.invokeCallback(callbackPath: JSDataModel.callbackPath, and: result)
                     }
                 }

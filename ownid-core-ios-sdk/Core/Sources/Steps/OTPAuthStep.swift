@@ -143,7 +143,9 @@ extension OwnID.CoreSDK.CoreViewModel {
             return [effect]
         }
         
-        func sendCode(code: String, state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<Action>] {
+        func sendCode(code: String,
+                      operationType: OwnID.UISDK.OneTimePassword.OperationType,
+                      state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<Action>] {
             guard let otpData = step.otpData, let url = URL(string: otpData.url) else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
                 return errorEffect(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
@@ -165,7 +167,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                 })
                 .map({ [self] response in
                     if response.step != nil {
-                        OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .correctOTP,
+                        OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .correctOTP(name: operationType.metricName),
                                                                            category: eventCategory,
                                                                            context: context,
                                                                            loginId: loginId,
@@ -173,7 +175,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                     } else if let error = response.error {
                         let model = OwnID.CoreSDK.UserErrorModel(code: error.errorCode, message: error.message, userMessage: error.userMessage)
                         if model.code == .invalidCode {
-                            OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .wrongOTP,
+                            OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .wrongOTP(name: operationType.metricName),
                                                                                category: eventCategory,
                                                                                context: context,
                                                                                loginId: loginId,

@@ -75,7 +75,7 @@ extension OwnID.GigyaSDK {
                 func handle(error: OwnID.CoreSDK.Error) {
                     promise(.failure(.coreLog(error: error, type: Self.self)))
                 }
-                guard let data = payload.dataContainer as? [String: Any] else {
+                guard let data = payload.data as? [String: Any] else {
                     handle(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: ErrorMessage.cannotParseSession)))
                     return
                 }

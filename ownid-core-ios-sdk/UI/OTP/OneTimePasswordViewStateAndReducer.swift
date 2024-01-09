@@ -19,7 +19,7 @@ extension OwnID.UISDK.OneTimePassword {
     enum Action {
         case viewLoaded
         case codeEnteringStarted
-        case codeEntered(String)
+        case codeEntered(code: String, operationType: OwnID.UISDK.OneTimePassword.OperationType)
         case cancel
         case notYouCancel
         case emailIsNotRecieved(flowFinished: Bool)
@@ -107,7 +107,7 @@ extension OwnID.UISDK.OneTimePassword.Action: CustomDebugStringConvertible {
             return "resendCode"
         case .codeEnteringStarted:
             return "codeEnteringStarted"
-        case .codeEntered(_):
+        case .codeEntered:
             return "codeEntered"
         case .cancel:
             return "cancel"

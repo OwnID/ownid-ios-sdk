@@ -57,7 +57,7 @@ public extension OwnID.CoreSDK {
     
     struct Payload {
         /// Used for later processing and creating login\registration requests
-        public let dataContainer: Any?
+        public let data: Any?
         public let metadata: Any?
         public let context: OwnID.CoreSDK.Context
         public let loginId: LoginID?

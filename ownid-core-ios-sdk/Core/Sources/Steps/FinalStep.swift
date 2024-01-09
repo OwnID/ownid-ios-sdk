@@ -49,7 +49,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                     if let flowInfo = response[Constants.flowInfo] as? [String: Any], let authType = flowInfo[Constants.authType] as? String {
                         authTypeValue = authType
                     }
-                    let payload = OwnID.CoreSDK.Payload(dataContainer: data,
+                    let payload = OwnID.CoreSDK.Payload(data: data,
                                                         metadata: metadata,
                                                         context: context,
                                                         loginId: loginId,

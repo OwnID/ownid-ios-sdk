@@ -1,17 +1,13 @@
-//
-//  OwnIdGigyaFido.swift
-//  private-ownid-core-ios-sdk
-//
-//  Created by user on 13.10.2023.
-//
-
 import WebKit
 
 protocol WebNameSpace {
     var name: String { set get }
     var actions: [OwnID.CoreSDK.JSAction] { set get }
     
-    func invoke(webView: WKWebView, action: OwnID.CoreSDK.JSAction, params: String, completion: @escaping (_ result: String) -> Void)
+    func invoke(bridgeContext: OwnID.CoreSDK.OwnIDWebBridgeContext,
+                action: OwnID.CoreSDK.JSAction,
+                params: String,
+                completion: @escaping (_ result: String) -> Void)
 }
 
 extension OwnID.CoreSDK {
@@ -19,13 +15,20 @@ extension OwnID.CoreSDK {
         let error: CoreViewModel.FidoErrorRequestBody.Error
     }
     
-    final class OwnIdGigyaFido: WebNameSpace {
+    struct OwnIDWebBridgeContext {
+        var webView: WKWebView
+        var sourceOrigin: URL?
+        var allowedOriginRules: [URL]
+        var isMainFrame: Bool
+    }
+    
+    final class OwnIDWebBridgeFido: WebNameSpace {
         var name = "FIDO"
         var actions = [JSAction.create, JSAction.get, JSAction.isAvailable]
         
         private var authManager: AccountManager?
         
-        private var defaultError: CoreViewModel.FidoErrorRequestBody.Error {
+        private func fidoError(message: String = OwnID.CoreSDK.ErrorMessage.dataIsMissing) -> CoreViewModel.FidoErrorRequestBody.Error {
             let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
             return CoreViewModel.FidoErrorRequestBody.Error(name: message,
                                                             type: message,
@@ -33,24 +36,50 @@ extension OwnID.CoreSDK {
                                                             message: message)
         }
         
-        func invoke(webView: WKWebView, action: OwnID.CoreSDK.JSAction, params: String, completion: @escaping (_ result: String) -> Void) {
+        func invoke(bridgeContext: OwnIDWebBridgeContext,
+                    action: OwnID.CoreSDK.JSAction,
+                    params: String,
+                    completion: @escaping (_ result: String) -> Void) {
             let initialValue = AccountManager.State()
             switch action {
             case .isAvailable:
                 completion("\(isPasskeysSupported)")
             case .create, .get:
+                guard bridgeContext.isMainFrame else {
+                    let message = OwnID.CoreSDK.ErrorMessage.webFrameError
+                    completion(handleErrorResult(fidoError: fidoError(message: message)))
+                    return
+                }
+                
+                guard bridgeContext.sourceOrigin?.scheme == "https" else {
+                    let message = OwnID.CoreSDK.ErrorMessage.webSchemeURLError(urlString: bridgeContext.sourceOrigin?.absoluteString ?? "")
+                    completion(handleErrorResult(fidoError: fidoError(message: message)))
+                    return
+                }
+                
+                let allowedOrigin = bridgeContext.allowedOriginRules.first { rule in
+                    if let sourceHost = bridgeContext.sourceOrigin?.host, let allowHost = rule.host {
+                        return sourceHost == allowHost || (allowHost.hasPrefix("*.") && sourceHost.hasSuffix(String(allowHost.dropFirst(2))))
+                    }
+                    return false
+                }
+                
+                guard allowedOrigin != nil else {
+                    let message = OwnID.CoreSDK.ErrorMessage.webSchemeURLError(urlString: bridgeContext.sourceOrigin?.absoluteString ?? "")
+                    completion(handleErrorResult(fidoError: fidoError(message: message)))
+                    return
+                }
+                
                 guard let jsonData = params.data(using: .utf8),
                       let fidoData = try? JSONDecoder().decode(CoreViewModel.FidoStepData.self, from: jsonData) else {
-                    let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                    completion(handleErrorResult(fidoError: defaultError))
+                    completion(handleErrorResult(fidoError: fidoError()))
                     return
                 }
                 
                 guard let jsonData = params.data(using: .utf8),
                       let paramsJson = try? JSONSerialization.jsonObject(with: jsonData, options : .allowFragments) as? [String: Any],
                       let context = paramsJson["context"] as? String else {
-                    let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                    completion(handleErrorResult(fidoError: defaultError))
+                    completion(handleErrorResult(fidoError: fidoError()))
                     return
                 }
                 
@@ -73,16 +102,14 @@ extension OwnID.CoreSDK {
                 case .didFinishLogin(let fido2LoginPayload, _):
                     guard let jsonData = try? JSONEncoder().encode(fido2LoginPayload),
                           let result = String(data: jsonData, encoding: String.Encoding.utf8) else {
-                        let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                        completion(sself.handleErrorResult(fidoError: sself.defaultError))
+                        completion(sself.handleErrorResult(fidoError: sself.fidoError()))
                         return []
                     }
                     completion(result)
                 case .didFinishRegistration(fido2RegisterPayload: let fido2RegisterPayload, _):
                     guard let jsonData = try? JSONEncoder().encode(fido2RegisterPayload),
                           let result = String(data: jsonData, encoding: String.Encoding.utf8) else {
-                        let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                        completion(sself.handleErrorResult(fidoError: sself.defaultError))
+                        completion(sself.handleErrorResult(fidoError: sself.fidoError()))
                         return []
                     }
                     completion(result)

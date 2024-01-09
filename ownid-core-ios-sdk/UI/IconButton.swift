@@ -73,10 +73,12 @@ private extension OwnID.UISDK.IconButton {
             variantImage()
                 .layoutPriority(1)
                 .opacity(isLoading ? 0 : 1)
-            OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.loaderViewConfig.color,
-                                          spinnerBackgroundColor: visualConfig.loaderViewConfig.backgroundColor,
-                                          viewBackgroundColor: visualConfig.buttonViewConfig.backgroundColor)
-            .opacity(isLoading ? 1 : 0)
+            if visualConfig.loaderViewConfig.isEnabled {
+                OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.loaderViewConfig.color,
+                                              spinnerBackgroundColor: visualConfig.loaderViewConfig.backgroundColor,
+                                              viewBackgroundColor: visualConfig.buttonViewConfig.backgroundColor)
+                .opacity(isLoading ? 1 : 0)
+            }
         }
     }
     

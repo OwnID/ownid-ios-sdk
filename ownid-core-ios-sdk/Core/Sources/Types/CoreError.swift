@@ -3,7 +3,6 @@ import AuthenticationServices
 
 public extension OwnID.CoreSDK {
     enum FlowType: String {
-        case instantConnect = "InstantConnect"
         case idCollect = "IdCollect"
         case fidoRegister = "FIDORegister"
         case fidoLogin = "FIDOLogin"
@@ -36,6 +35,11 @@ extension OwnID.CoreSDK {
         static let payloadMissing = "Payload missing"
         static let emptyResponseData = "Response data is empty"
         static let requestError = "Error while performing action"
+        static let webFrameError = "Requests from subframes are not supported"
+        
+        static func webSchemeURLError(urlString: String) -> String {
+            return "WebAuthn not permitted for current URL: \(urlString)"
+        }
         
         static func encodingError(description: String) -> String {
             return "Encoding Failed \(description)"

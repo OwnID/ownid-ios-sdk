@@ -56,7 +56,7 @@ extension OwnID.GigyaSDK.Registration {
             }
             
             var registerParams = gigyaParameters.parameters
-            let ownIDParameters = [dataField: configuration.payload.dataContainer]
+            let ownIDParameters = [dataField: configuration.payload.data]
             registerParams["data"] = ownIDParameters
             
             if var language = configuration.payload.requestLanguage {

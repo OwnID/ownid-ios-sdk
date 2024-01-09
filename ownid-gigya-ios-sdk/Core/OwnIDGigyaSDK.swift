@@ -83,12 +83,5 @@ public extension OwnID {
                                            visualConfig: OwnID.UISDK.VisualLookConfig = .init()) -> OwnID.FlowsSDK.LoginView {
             OwnID.FlowsSDK.LoginView(viewModel: viewModel, visualConfig: visualConfig)
         }
-        
-        public static func showInstantConnectView(viewModel: OwnID.FlowsSDK.LoginView.ViewModel,
-                                                  sdkConfigurationName: String = sdkName,
-                                                  visualConfig: OwnID.UISDK.VisualLookConfig = .init()) {
-//            OwnID.UISDK.showInstantConnectView(viewModel: viewModel,
-//                                               visualConfig: visualConfig)
-        }
     }
 }

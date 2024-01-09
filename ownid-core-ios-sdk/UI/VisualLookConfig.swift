@@ -26,7 +26,7 @@ public extension OwnID.UISDK {
         public var isEnabled: Bool
     }
     
-    enum ButtonVariant: Equatable {
+    enum WidgetType: Equatable {
         case iconButton
         case authButton
     }
@@ -88,19 +88,19 @@ public extension OwnID.UISDK {
                     iconHeight: CGFloat = 28.0,
                     backgroundColor: Color = OwnID.Colors.biometricsButtonBackground,
                     borderColor: Color = OwnID.Colors.biometricsButtonBorder,
-                    variant: ButtonVariant = .iconButton) {
+                    widgetType: WidgetType = .iconButton) {
             self.iconColor = iconColor
             self.iconHeight = iconHeight
             self.backgroundColor = backgroundColor
             self.borderColor = borderColor
-            self.variant = variant
+            self.widgetType = widgetType
         }
         
         public var iconColor: Color
         public var iconHeight: CGFloat
         public var backgroundColor: Color
         public var borderColor: Color
-        public var variant: ButtonVariant
+        public var widgetType: WidgetType
     }
     
     struct VisualLookConfig: Equatable {
@@ -138,7 +138,7 @@ extension OwnID.UISDK.VisualLookConfig {
             current.widgetPositionType = .end
         }
         
-        switch self.buttonViewConfig.variant {
+        switch self.buttonViewConfig.widgetType {
         case .iconButton:
             current.widgetType = .faceid
         case .authButton:

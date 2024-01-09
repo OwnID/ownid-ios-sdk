@@ -122,9 +122,9 @@ extension OwnID.CoreSDK.CoreViewModel {
                 let otpStep = state.otpStep
                 return otpStep?.resend(state: &state) ?? []
                 
-            case .codeEntered(let code):
+            case .codeEntered(let code, let operationType):
                 let otpStep = state.otpStep
-                return otpStep?.sendCode(code: code, state: &state) ?? []
+                return otpStep?.sendCode(code: code, operationType: operationType, state: &state) ?? []
 
             case .cancel:
                 let stopStep = StopStep(flow: .otp)

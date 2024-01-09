@@ -157,7 +157,12 @@ extension OwnID.CoreSDK {
             let creds = credsIds
                 .compactMap { Data(base64urlEncoded: $0) }
                 .map { ASAuthorizationPlatformPublicKeyCredentialDescriptor(credentialID: $0) }
-            registrationRequest.excludedCredentials = creds
+
+            if registrationRequest.responds(to: Selector("setExcludedCredentials:")) {
+                registrationRequest.excludedCredentials = creds
+            } else {
+                OwnID.CoreSDK.logger.log(level: .warning, message: "setExcludedCredentials isn't available", force: true, Self.self)
+            }
             
             let authController = ASAuthorizationController(authorizationRequests: [registrationRequest])
             authController.delegate = self

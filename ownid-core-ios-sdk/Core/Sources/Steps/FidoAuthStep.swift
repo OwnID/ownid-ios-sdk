@@ -63,7 +63,18 @@ extension OwnID.CoreSDK.CoreViewModel {
                     let credsIds = step.fidoData?.credsIds ?? []
                     switch operation {
                     case .login:
-                        authManager.signIn(credsIds: credsIds)
+                        if credsIds.isEmpty {
+                            let message = "Login failed - no credentials specified, trying to register new one"
+                            OwnID.CoreSDK.logger.log(level: .warning, message: message, Self.self)
+                            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .fidoFailed,
+                                                                               category: eventCategory,
+                                                                               context: state.context,
+                                                                               loginId: state.loginId,
+                                                                               source: String(describing: Self.self)))
+                            authManager.signUpWith(userName: state.loginId, credsIds: credsIds)
+                        } else {
+                            authManager.signIn(credsIds: credsIds)
+                        }
                     case .register:
                         authManager.signUpWith(userName: state.loginId, credsIds: credsIds)
                     }
