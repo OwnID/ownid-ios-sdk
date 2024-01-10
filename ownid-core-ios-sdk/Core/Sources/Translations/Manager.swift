@@ -202,11 +202,11 @@ extension OwnID.CoreSDK.TranslationsSDK {
         
         func SDKConfigured(supportedLanguages: OwnID.CoreSDK.Languages) {
             self.supportedLanguages = supportedLanguages
-            initializeLanguagesIfNeeded(supportedLanguages: supportedLanguages, shouldNotify: true)
+            initializeLanguagesIfNeeded(supportedLanguages: supportedLanguages, force: true, shouldNotify: true)
         }
         
-        private func initializeLanguagesIfNeeded(supportedLanguages: OwnID.CoreSDK.Languages, shouldNotify: Bool) {
-            guard !requestsTagsInProgress.contains(supportedLanguages.rawValue.first ?? "") else {
+        private func initializeLanguagesIfNeeded(supportedLanguages: OwnID.CoreSDK.Languages, force: Bool = false, shouldNotify: Bool) {
+            guard !requestsTagsInProgress.contains(supportedLanguages.rawValue.first ?? "") || force else {
                 return
             }
             requestsTagsInProgress.insert(supportedLanguages.rawValue.first ?? "")
