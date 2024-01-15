@@ -146,11 +146,9 @@ public extension OwnID.FlowsSDK.LoginView {
                         
                     case .cancelled(let flow):
                         let error = OwnID.CoreSDK.Error.flowCancelled(flow: flow)
-                        handle(.coreLog(error: error, type: Self.self))
-                        OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error(message: error.localizedDescription),
-                                                                           category: .login,
-                                                                           context: OwnID.CoreSDK.logger.context,
-                                                                           errorMessage: error.localizedDescription))
+                        OwnID.CoreSDK.logger.log(level: .warning, message: error.localizedDescription, Self.self)
+                        handle(OwnID.CoreSDK.CoreErrorLogWrapper(error: error))
+
                     case .loading:
                         resultPublisher.send(.success(.loading))
                     }

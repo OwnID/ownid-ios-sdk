@@ -44,7 +44,10 @@ extension OwnID.CoreSDK {
             return [fetchServerConfiguration(config: configurationRequestData.config,
                                              apiEndpoint: state.apiEndpoint,
                                              userFacingSDK: configurationRequestData.userFacingSDK)]
-            
+        case .updateSupportedLanguages(let supportedLanguages):
+            state.supportedLanguages = supportedLanguages
+            OwnID.CoreSDK.shared.translationsModule.setSupportedLanguages(supportedLanguages)
+            return []
         case .configureForTests:
             state.apiEndpoint = .testMock
             OwnID.CoreSDK.logger.isEnabled = true

@@ -2,6 +2,10 @@ import SwiftUI
 import Combine
 
 public extension OwnID.UISDK {
+    enum AuthType: String {
+        case login, register
+    }
+    
     struct OwnIDView: View {
         private let visualConfig: VisualLookConfig
         
@@ -10,6 +14,7 @@ public extension OwnID.UISDK {
         @Binding private var isLoading: Bool
         @Binding private var buttonState: ButtonState
         
+        private let authType: AuthType
         private let resultPublisher = PassthroughSubject<Void, Never>()
         
         public var eventPublisher: OwnID.UISDK.EventPubliser {
@@ -24,11 +29,13 @@ public extension OwnID.UISDK {
         
         public init(viewState: Binding<ButtonState>,
                     visualConfig: VisualLookConfig,
+                    authType: AuthType,
                     shouldShowTooltip: Binding<Bool>,
                     isLoading: Binding<Bool>) {
             _isTooltipPresented = shouldShowTooltip
             _isLoading = isLoading
             _buttonState = viewState
+            self.authType = authType
             self.visualConfig = visualConfig
             OwnID.CoreSDK.shared.currentMetricInformation = visualConfig.convertToCurrentMetric()
         }
@@ -43,7 +50,8 @@ public extension OwnID.UISDK {
                 
             case .iconButton:
                 IconButton(visualConfig: visualConfig,
-                           actionHandler: { resultPublisher.send(()) },
+                           actionHandler: { resultPublisher.send(()) }, 
+                           authType: authType,
                            isTooltipPresented: $isTooltipPresented,
                            isLoading: $isLoading,
                            buttonState: $buttonState)

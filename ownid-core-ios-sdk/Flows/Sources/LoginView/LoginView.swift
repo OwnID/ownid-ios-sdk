@@ -34,6 +34,7 @@ private extension OwnID.FlowsSDK.LoginView {
     func skipPasswordView() -> some View {
         let view = OwnID.UISDK.OwnIDView(viewState: viewModel.state.buttonStateBinding,
                                          visualConfig: visualConfig,
+                                         authType: .login,
                                          shouldShowTooltip: $viewModel.shouldShowTooltip,
                                          isLoading: viewModel.state.isLoadingBinding)
         viewModel.subscribe(to: view.eventPublisher)

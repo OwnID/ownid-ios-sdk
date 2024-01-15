@@ -6,13 +6,16 @@ extension OwnID.UISDK {
         @State private var isTranslationChanged = false
         
         private let tooltipVisualLookConfig: TooltipVisualLookConfig
+        private let authType: AuthType
         
-        init(tooltipVisualLookConfig: TooltipVisualLookConfig) {
+        init(authType: AuthType,
+            tooltipVisualLookConfig: TooltipVisualLookConfig) {
+            self.authType = authType
             self.tooltipVisualLookConfig = tooltipVisualLookConfig
         }
         
         var body: some View {
-            Text(localizedKey: .tooltip)
+            Text(localizedKey: .tooltip(type: authType.rawValue))
                 .foregroundColor(tooltipVisualLookConfig.textColor)
                 .fontWithLineHeight(font: .systemFont(ofSize: tooltipVisualLookConfig.textSize), lineHeight: tooltipVisualLookConfig.lineHeight)
                 .onReceive(OwnID.CoreSDK.shared.translationsModule.translationsChangePublisher) {

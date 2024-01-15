@@ -18,12 +18,12 @@ final class CustomAuthSystem {
                     let message = "Response data is empty"
                     let error = OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
                                         
-                    return Fail(error: .coreLog(error: OwnID.CoreSDK.Error.integrationError(underlying: error), type: Self.self)).eraseToAnyPublisher()
+                    return Fail(error: OwnID.CoreSDK.CoreErrorLogWrapper(error: OwnID.CoreSDK.Error.integrationError(underlying: error))).eraseToAnyPublisher()
                 }
                 let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String : Any]
                 if let errors = json?["errors"] as? [String], let errorMessage = errors.first {
                     let error = IntegrationError.registrationDataError(message: errorMessage)
-                    return Fail(error: .coreLog(error: OwnID.CoreSDK.Error.integrationError(underlying: error), type: Self.self))
+                    return Fail(error: OwnID.CoreSDK.CoreErrorLogWrapper(error: OwnID.CoreSDK.Error.integrationError(underlying: error)))
                         .eraseToAnyPublisher()
                 } else {
                     return Self.login(ownIdData: ownIdData, password: password, email: email)
@@ -57,7 +57,7 @@ final class CustomAuthSystem {
                     .mapError { OwnID.CoreSDK.Error.integrationError(underlying: $0) }
                     .eraseToAnyPublisher()
             }
-            .mapError { .coreLog(error: .integrationError(underlying: $0), type: Self.self) }
+            .mapError { OwnID.CoreSDK.CoreErrorLogWrapper(error: .integrationError(underlying: $0)) }
             .eraseToAnyPublisher()
     }
     
@@ -92,7 +92,7 @@ final class CustomAuthSystem {
             .mapError { OwnID.CoreSDK.Error.integrationError(underlying: $0) }
             .map { OwnID.LoginResult(operationResult: $0.token) }
             .receive(on: DispatchQueue.main)
-            .mapError { .coreLog(error: .integrationError(underlying: $0), type: Self.self) }
+            .mapError { OwnID.CoreSDK.CoreErrorLogWrapper(error: .integrationError(underlying: $0)) }
             .eraseToAnyPublisher()
     }
     

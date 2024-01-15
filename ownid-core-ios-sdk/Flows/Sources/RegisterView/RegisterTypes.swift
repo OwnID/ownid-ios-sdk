@@ -20,7 +20,7 @@ public extension OwnID.FlowsSDK {
     enum RegistrationEvent {
         case loading
         case resetTapped
-        case readyToRegister(usersEmailFromWebApp: String?, authType: OwnID.CoreSDK.AuthType?)
+        case readyToRegister(loginId: String?, authType: OwnID.CoreSDK.AuthType?)
         case userRegisteredAndLoggedIn(registrationResult: OperationResult, authType: OwnID.CoreSDK.AuthType?)
     }
     

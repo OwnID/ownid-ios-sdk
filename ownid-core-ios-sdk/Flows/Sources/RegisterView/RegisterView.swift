@@ -35,6 +35,7 @@ private extension OwnID.FlowsSDK.RegisterView {
         }
         let view = OwnID.UISDK.OwnIDView(viewState: .constant(viewModel.state.buttonState),
                                          visualConfig: config,
+                                         authType: .register,
                                          shouldShowTooltip: $viewModel.shouldShowTooltip,
                                          isLoading: .constant(viewModel.state.isLoading))
         viewModel.subscribe(to: view.eventPublisher)

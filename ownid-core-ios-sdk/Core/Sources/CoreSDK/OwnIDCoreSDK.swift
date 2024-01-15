@@ -46,7 +46,7 @@ public extension OwnID {
         }
         
         public static func setSupportedLanguages(_ supportedLanguages: [String]) {
-            shared.translationsModule.setSupportedLanguages(supportedLanguages)
+            shared.store.send(.updateSupportedLanguages(supportedLanguages: Languages(rawValue: supportedLanguages)))
         }
         
         public func configure(appID: OwnID.CoreSDK.AppID,

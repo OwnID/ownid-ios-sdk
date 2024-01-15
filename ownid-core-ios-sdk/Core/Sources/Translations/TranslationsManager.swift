@@ -4,7 +4,7 @@ import Combine
 extension OwnID.CoreSDK.TranslationsSDK {
     enum TranslationKey {
         case skipPassword
-        case tooltip
+        case tooltip(type: String)
         case or
         case `continue`
 
@@ -30,8 +30,8 @@ extension OwnID.CoreSDK.TranslationsSDK {
             switch self {
             case .skipPassword:
                 return "widgets.sbs-button.skipPassword"
-            case .tooltip:
-                return "widgets.sbs-button.tooltip-ios"
+            case .tooltip(let type):
+                return "widgets.sbs-button.tooltip.\(type).title-ios"
             case .or:
                 return "widgets.sbs-button.or"
             case .`continue`:
@@ -76,8 +76,8 @@ extension OwnID.CoreSDK.TranslationsSDK {
             switch self {
             case .skipPassword:
                 return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "widgets", "sbs-button", "skipPassword")
-            case .tooltip:
-                return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "widgets", "sbs-button", "tooltip")
+            case .tooltip(let type):
+                return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "widgets", "sbs-button", "tooltip", type, "title")
             case .or:
                 return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "widgets", "sbs-button", "or")
             case .`continue`:
@@ -195,8 +195,8 @@ extension OwnID.CoreSDK.TranslationsSDK {
             return localizableSaver.localizedString(for: keys)
         }
         
-        func setSupportedLanguages(_ supportedLanguages: [String]) {
-            self.supportedLanguages = .init(rawValue: supportedLanguages)
+        func setSupportedLanguages(_ supportedLanguages: OwnID.CoreSDK.Languages) {
+            self.supportedLanguages = supportedLanguages
             initializeLanguagesIfNeeded(supportedLanguages: self.supportedLanguages, shouldNotify: true)
         }
         

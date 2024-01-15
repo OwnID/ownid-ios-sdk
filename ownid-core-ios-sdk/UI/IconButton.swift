@@ -5,6 +5,7 @@ extension OwnID.UISDK {
     struct IconButton: View {
         let visualConfig: VisualLookConfig
         let actionHandler: (() -> Void)
+        let authType: AuthType
         
         @Binding var isTooltipPresented: Bool
         @Binding var isLoading: Bool
@@ -96,7 +97,8 @@ private extension OwnID.UISDK.IconButton {
         if #available(iOS 16.0, *) {
             OwnID.UISDK.TooltipContainerLayout(tooltipPosition: visualConfig.tooltipVisualLookConfig.tooltipPosition) {
                 OwnID.UISDK.TooltipTextAndArrowLayout(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig, isRTL: direction == .rightToLeft) {
-                    OwnID.UISDK.RectangleWithTextView(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig)
+                    OwnID.UISDK.RectangleWithTextView(authType: authType,
+                                                      tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig)
                         .popupTextContainerType(.text)
                     OwnID.UISDK.BeakView(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig)
                         .rotationEffect(.degrees(visualConfig.tooltipVisualLookConfig.tooltipPosition.beakViewRotationAngle))
@@ -129,7 +131,7 @@ private extension OwnID.UISDK.IconButton {
                 .axisToolTip(isPresented: $isTooltipPresented, constant: constant) {
                     visualConfig.tooltipVisualLookConfig.backgroundColor
                 } foreground: {
-                    Text(localizedKey: .tooltip)
+                    Text(localizedKey: .tooltip(type: authType.rawValue))
                         .foregroundColor(tooltipConfig.textColor)
                         .fontWithLineHeight(font: .systemFont(ofSize: tooltipConfig.textSize), lineHeight: tooltipConfig.lineHeight)
                         .padding()

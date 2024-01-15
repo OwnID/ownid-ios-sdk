@@ -188,7 +188,7 @@ public extension OwnID.FlowsSDK.RegisterView {
             }
             if registrationData.payload != nil, registrationData.payload?.loginId == loginId {
                 state = .ownidCreated
-                resultPublisher.send(.success(.readyToRegister(usersEmailFromWebApp: loginId, authType: registrationData.payload?.authType)))
+                resultPublisher.send(.success(.readyToRegister(loginId: loginId, authType: registrationData.payload?.authType)))
                 return
             }
             let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForRegister(loginId: loginId, sdkConfigurationName: sdkConfigurationName)
@@ -228,7 +228,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                                 registrationData.persistedLoginId = loginId
                                 self.loginId = loginId
                             }
-                            resultPublisher.send(.success(.readyToRegister(usersEmailFromWebApp: registrationData.payload?.loginId, authType: registrationData.payload?.authType)))
+                            resultPublisher.send(.success(.readyToRegister(loginId: registrationData.payload?.loginId, authType: registrationData.payload?.authType)))
                             
                         case .session:
                             processLogin(payload: payload)
@@ -236,11 +236,8 @@ public extension OwnID.FlowsSDK.RegisterView {
                         
                     case .cancelled(let flow):
                         let error = OwnID.CoreSDK.Error.flowCancelled(flow: flow)
-                        handle(.coreLog(error: error, type: Self.self))
-                        OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error(message: error.localizedDescription),
-                                                                           category: .registration,
-                                                                           context: OwnID.CoreSDK.logger.context,
-                                                                           errorMessage: error.localizedDescription))
+                        OwnID.CoreSDK.logger.log(level: .warning, message: error.localizedDescription, Self.self)
+                        handle(OwnID.CoreSDK.CoreErrorLogWrapper(error: error))
                         
                     case .loading:
                         resultPublisher.send(.success(.loading))

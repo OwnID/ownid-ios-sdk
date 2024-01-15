@@ -22,10 +22,18 @@ public extension OwnID.CoreSDK.CoreErrorLogWrapper {
                            isOnUI: Bool = false,
                            flowFinished: Bool = true,
                            type: T.Type = T.self) -> OwnID.CoreSDK.CoreErrorLogWrapper {
+        let message: String
+        switch error {
+        case .userError(let errorModel):
+            message = errorModel.message
+        default:
+            message = error.localizedDescription
+        }
+        
         OwnID.CoreSDK.logger.log(level: .error,
                                  function: function,
                                  file: file,
-                                 message: "\(error.localizedDescription)",
+                                 message: message,
                                  type)
         return OwnID.CoreSDK.CoreErrorLogWrapper(error: error, isOnUI: isOnUI, flowFinished: flowFinished)
     }
