@@ -48,7 +48,7 @@ public extension OwnID.CoreSDK {
             case .undo:
                 return "Clicked Undo"
             case .cancel:
-                return "Clicked Cancel (or equivalent)"
+                return "Clicked Cancel"
             case .fidoRun:
                 return "FIDO: About To Execute"
             case .fidoNotFinished:
@@ -68,7 +68,7 @@ public extension OwnID.CoreSDK {
             case .notYou:
                 return "Clicked Not You"
             case .screenShow(let screen):
-                return "Screen show: \(screen)"
+                return "Viewed \(screen)"
             case .fidoSupports(let isFidoSupported):
                 return "Passkey Supported: \(isFidoSupported)"
             case .userPastedCode:

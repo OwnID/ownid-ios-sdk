@@ -2,9 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>OwnIDRedirectionURL</key>
-	<string>com.ownid.demo.GigyaDemo://ownid/redirect/</string>
 	<key>OwnIDAppID</key>
-	<string>5rmz24mxq6zntq</string>
+	<string>l16tzgmvvyf5qn</string>
 </dict>
 </plist>

@@ -39,8 +39,9 @@ extension OwnID.CoreSDK.CoreViewModel {
                                         context: context)
             })
             
+            let operationType: OwnID.UISDK.OneTimePassword.OperationType = self.step.type == .loginIDAuthorization ? .oneTimePasswordSignIn : .verification
             let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
-            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .screenShow(screen: String(describing: Self.self)),
+            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .screenShow(screen: operationType.metricName),
                                                                category: eventCategory,
                                                                loginId: state.loginId,
                                                                source: String(describing: Self.self)))

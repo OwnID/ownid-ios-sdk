@@ -127,6 +127,7 @@ extension OwnID.CoreSDK {
         
         private func setupLog(_ entry: LogItem) -> LogItem {
             let entry = entry
+            print(LoggerConstants.instanceID.uuidString)
             entry.metadata = Metadata(correlationId: LoggerConstants.instanceID.uuidString,
                                       stackTrace: nil,
                                       sessionRequestSequenceNumber: String(sessionRequestSequenceNumber),
