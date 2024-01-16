@@ -64,10 +64,8 @@ public extension OwnID.FlowsSDK.LoginView {
             self.loginPerformer = loginPerformer
             self.eventService = eventService
             updateLoginIdPublisher(loginIdPublisher)
-            Task {
-                // Delay the task by 1 second
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                sendMetric()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+                self?.sendMetric()
             }
         }
         
