@@ -1,6 +1,5 @@
 import Combine
 import OwnIDCoreSDK
-import AccountView
 import Gigya
 
 final class LogInViewModel: ObservableObject {
@@ -15,7 +14,7 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
-        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance())
+        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.eventPublisher)
     }
@@ -46,8 +45,8 @@ final class LogInViewModel: ObservableObject {
                     
                 case .failure(let error):
                     switch error {
-                    case .plugin(let gigyaPluginError):
-                        if let error = gigyaPluginError as? OwnID.GigyaSDK.Error {
+                    case .integrationError(let gigyaIntegrationError):
+                        if let error = gigyaIntegrationError as? OwnID.GigyaSDK.IntegrationError {
                             switch error {
                             case .gigyaSDKError(let networkError, let dataDictionary):
                                 switch networkError {
@@ -57,8 +56,6 @@ final class LogInViewModel: ObservableObject {
                                     print(model.errorMessage)
                                 default: break
                                 }
-                            default:
-                                break
                             }
                         }
 

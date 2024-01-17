@@ -8,19 +8,19 @@ public extension OwnID.UISDK {
             X──────────────X──────────────X
             |                             |
             |                             |
-      left  X           button            X  right
+   leading  X           button            X  trailing
             |                             |
             |                             |
             X──────────────X──────────────X
                          bottom
      */
     enum TooltipPositionType: String {
-        case top, bottom, left, right
+        case top, bottom, leading, trailing
     }
 }
 
 public extension OwnID.UISDK {
-    struct TooltipVisualLookConfig {
+    struct TooltipVisualLookConfig: Equatable {
         public init(backgroundColor: Color = OwnID.Colors.biometricsButtonBackground,
                     borderColor: Color = OwnID.Colors.biometricsButtonBorder,
                     textColor: Color = OwnID.Colors.defaultBlackColor,
@@ -28,7 +28,7 @@ public extension OwnID.UISDK {
                     lineHeight: CGFloat = 23,
                     shadowColor: Color = OwnID.Colors.defaultBlackColor,
                     isNativePlatform: Bool = true,
-                    tooltipPosition: OwnID.UISDK.TooltipPositionType = .top) {
+                    tooltipPosition: OwnID.UISDK.TooltipPositionType = .bottom) {
             self.backgroundColor = backgroundColor
             self.borderColor = borderColor
             self.textColor = textColor
@@ -57,9 +57,9 @@ extension OwnID.UISDK.TooltipPositionType {
             return 180
         case .bottom:
             return 0
-        case .left:
+        case .leading:
             return 90
-        case .right:
+        case .trailing:
             return -90
         }
     }

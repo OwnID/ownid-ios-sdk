@@ -1,86 +1,121 @@
 import Foundation
+import AuthenticationServices
 
-/// Designed to be used in plugin SDKs and emit all errors in single format.
-public protocol PluginError: Swift.Error { }
+public extension OwnID.CoreSDK {
+    enum FlowType: String {
+        case idCollect = "IdCollect"
+        case fidoRegister = "FIDORegister"
+        case fidoLogin = "FIDOLogin"
+        case otp = "OTP"
+        case webApp = "WebApp"
+        
+        var source: String {
+            switch self {
+            case .idCollect:
+                return "IdCollectStep"
+            case .otp:
+                return "OTPAuthStep"
+            case .webApp:
+                return "WebAppStep"
+            default:
+                return ""
+            }
+        }
+    }
+}
+
+extension OwnID.CoreSDK {
+    enum ErrorMessage {
+        static let SDKConfigurationError = "No OwnID instance available. Check if OwnID instance created"
+        static let redirectParameterFromURLCancelledOpeningSDK = "In redirection URL \"redirect=false\" has been found and opening of SDK cancelled. This is most likely due to app has been opened in screensets mode."
+        static let notValidRedirectionURLOrNotMatchingFromConfiguration = "Error returning value from browser"
+        static let noServerConfig = "No server configuration available"
+        static let noLocalConfig = "No local configuration available"
+        static let dataIsMissing = "Data is missing"
+        static let payloadMissing = "Payload missing"
+        static let emptyResponseData = "Response data is empty"
+        static let requestError = "Error while performing action"
+        static let webFrameError = "Requests from subframes are not supported"
+        
+        static func webSchemeURLError(urlString: String) -> String {
+            return "WebAuthn not permitted for current URL: \(urlString)"
+        }
+        
+        static func encodingError(description: String) -> String {
+            return "Encoding Failed \(description)"
+        }
+        
+        static func decodingError(description: String) -> String {
+            return "Decoding Failed \(description)"
+        }
+    }
+}
 
 public extension OwnID.CoreSDK {
     enum Error: Swift.Error {
-        case unsecuredHttpPassed
-        case redirectParameterFromURLCancelledOpeningSDK
-        case notValidRedirectionURLOrNotMatchingFromConfiguration
-        case emailIsInvalid
-        case tokenDataIsMissing
-        case contextIsMissing
-        case loadJWTTokenFailed(underlying: Swift.Error)
-        case flowCancelled
-        case payloadMissing(underlying: String?)
+        case flowCancelled(flow: FlowType)
+        case integrationError(underlying: Swift.Error)
+        case userError(errorModel: UserErrorModel)
+    }
+    
+    struct UserErrorModel: Equatable {
+        public let code: ErrorTypeCode
+        public let message: String
+        public let userMessage: String
+    
+        public init(code: String?, message: String?, userMessage: String?) {
+            self.code = ErrorTypeCode(rawValue: code ?? "") ?? .unknown
+            self.message = message ?? ""
+            self.userMessage = userMessage ?? ""
+        }
         
-        case initRequestNetworkFailed(underlying: URLError)
-        case initRequestBodyEncodeFailed(underlying: Swift.Error)
-        case initRequestResponseDecodeFailed(underlying: Swift.Error)
-        case initRequestResponseIsEmpty
+        public init(message: String) {
+            self.message = message
+            self.code = .unknown
+            self.userMessage = OwnID.CoreSDK.TranslationsSDK.TranslationKey.stepsError.localized()
+        }
         
-        case statusRequestNetworkFailed(underlying: URLError)
-        case statusRequestBodyEncodeFailed(underlying: Swift.Error)
-        case statusRequestResponseDecodeFailed(underlying: Swift.Error)
-        case statusRequestResponseIsEmpty
-        case statusRequestFail(underlying: Swift.Error)
-        
-        case statusRequestTypeIsMissing
-        case statusRequestResponseContextMismatch
-        case serverError(serverError: ServerError)
-        case plugin(error: PluginError)
+        var isGeneralError: Bool {
+            code == .unknown || code == .userAlreadyExists || code == .flowIsFinished
+        }
+    }
+    
+    enum ErrorTypeCode: String {
+        case accountNotFound = "AccountNotFound"
+        case requiresBiometricInput = "RequiresBiometricInput"
+        case accountIsBlocked = "AccountIsBlocked"
+        case userAlreadyExists = "UserAlreadyExists"
+        case userNotFound = "UserNotFound"
+        case wrongCodeLimitReached = "WrongCodeLimitReached"
+        case flowIsFinished = "FlowIsFinished"
+        case invalidCode = "WrongCodeEntered"
+        case sendCodeLimitReached = "SendCodeLimitReached"
+        case unknown
     }
 }
 
 extension OwnID.CoreSDK.Error: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .unsecuredHttpPassed:
-            return "Link uses HTTP. Only HTTPS supported"
-            
-        case .notValidRedirectionURLOrNotMatchingFromConfiguration:
-            return "Error returning value from browser"
-            
-        case .emailIsInvalid:
-            return "The email address is badly formatted"
-            
-        case .initRequestBodyEncodeFailed,
-             .initRequestResponseDecodeFailed,
-             .initRequestResponseIsEmpty,
-             .statusRequestBodyEncodeFailed,
-             .statusRequestResponseDecodeFailed,
-             .statusRequestResponseIsEmpty,
-             .statusRequestFail,
-             .statusRequestResponseContextMismatch,
-             .tokenDataIsMissing,
-             .statusRequestTypeIsMissing:
-            return "Error while performing request"
-            
-        case .initRequestNetworkFailed(let underlying),
-                .statusRequestNetworkFailed(let underlying):
-            return underlying.localizedDescription
+        case .flowCancelled(let flow):
+            return "User canceled OwnID flow \(flow)"
 
-        case .plugin(error: let error):
+        case .integrationError(let error):
             return error.localizedDescription
             
-        case .loadJWTTokenFailed(let underlying):
-            return underlying.localizedDescription
-            
-        case .serverError(let underlying):
-            return underlying.error
-            
-        case .contextIsMissing:
-            return "Context is missing"
-            
-        case .flowCancelled:
-            return "Flow cancelled"
-            
-        case let .payloadMissing(underlying):
-            return "Payload missing \(String(describing: underlying))"
-            
-        case .redirectParameterFromURLCancelledOpeningSDK:
-            return "In redirection URL \"redirect=false\" has been found and opening of SDK cancelled. This is most likely due to app has been opened in screensets mode."
+        case .userError(let model):
+            return model.userMessage
+        }
+    }
+}
+
+extension OwnID.CoreSDK.Error: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        switch self {
+        case .flowCancelled,
+                .integrationError,
+                .userError:
+            return errorDescription ?? ""
         }
     }
 }

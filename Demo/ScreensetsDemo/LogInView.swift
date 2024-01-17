@@ -1,6 +1,5 @@
 import SwiftUI
 import Gigya
-import AccountView
 
 struct LogInView: View {
     @ObservedObject var viewModel = LogInViewModel()

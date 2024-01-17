@@ -1,29 +1,37 @@
 ![OwnIDSDK](Docs/logo.svg)
- 
 ## OwnID iOS SDK
-The [OwnID](https://ownid.com/) iOS SDK is a client library written in Swift that provides a passwordless login alternative for your iOS application by using cryptographic keys to replace the traditional password. Integrating the SDK with your app adds a Skip Password option to its registration and login screens.
+ 
+The [OwnID](https://ownid.com/) iOS SDK is a client library written in Swift that provides a passwordless login alternative for your iOS application by using [Passkeys](https://www.passkeys.com/) to replace the traditional password. Integrating the SDK with your app allows the user to perform Registration and Login flows in a native iOS application.
 
-The OwnID iOS SDK consists of a **Core** module along with modules that are specific to an identity platform like Firebase. The Core module provides core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with a browser, handling a redirect URI, and checking and returning results to the iOS application. The following modules extend the Core module for a specific identify management system:
+The OwnID iOS SDK consists of a **[Core](Docs/sdk-core-doc.md)** module along with modules that are specific to an identity platform like Gigya. The Core module provides core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with an iOS, and checking and returning results to the iOS application. The following modules extend the Core module for a specific identify management system:
 
-- **[OwnID Gigya-iOS SDK](Docs/sdk-gigya-doc.md)** - Extends **Core** functionality by providing integration with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk).
+- **[OwnID Gigya iOS SDK](Docs/sdk-gigya-doc.md)** - Extends Core SDK functionality by providing integration with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk).
 
-- **[OwnID Gigya-Screen-Sets iOS SDK](Docs/sdk-gigya-screens-doc.md)** - For apps that use Gigya Screen-Sets authentication.
+The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 14 and above.
 
-- **[OwnID Redirect iOS SDK](Docs/sdk-gigya-screens-doc.md)** - Help iOS app that use WebView or CustomTab to redirect back from browser to native app.
+## Other Identity Platforms
 
-The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 13 and above.
+You can use OwnID Core iOS SDK to gain all of the benefits of OwnID with custom identity platform. Check **[OwnID Core iOS SDK - Custom Integration](Docs/sdk-core-doc.md)** for detailed steps.
 
-# Demo Apps
+## WebView Integration
+
+You can use OwnID iOS SDK WebView Bridge to seamlessly integrate the native capabilities of the OwnID iOS SDK into the OwnID WebSDK. Check **[OwnID iOS SDK WebView Bridge](Docs/sdk-webbridge-doc.md)** for detailed steps.
+
+## Demo applications
 This repository contains OwnID Demo application sources for different types of integrations:
 - Gigya Integration Demo
-- Scrensets Demo
-- UIKitInjection Demo 
+- Gigya Screen Sets Integration Demo
+- Custom Integration Demo
+- Gigya UIKit Injection Demo
 
 You can run these demo apps on a physical device or a simulator.
 
-## Data Privacy
-The OwnID SDK does not store any data on the user's iOS device.
+## Supported Languages
+The OwnID SDK has built-in support for multiple languages. The SDK loads translations in runtime and selects the best language available. The list of currently supported languages can be found [here](https://i18n.prod.ownid.com/langs.json).
 
+The SDK will also make the RTL adjustments if needed. If the user's mobile device uses a language that is not supported, the SDK displays the UI in English.
+
+## Data Safety
 The OwnID SDK collects data and information about events inside the SDK using Log Data. This Log Data does not include any personal data that can be used to identify the user such as username, email, and password. It does include general information like the device Internet Protocol (“IP”) address, device model, operating system version, time and date of events, and other statistics.
 
 Log Data is sent to the OwnID server using an encrypted process so it can be used to collect OwnID service statistics and improve service quality. OwnID does not share Log Data with any third party services.

@@ -1,7 +1,6 @@
 import SwiftUI
 import OwnIDCoreSDK
 import OwnIDGigyaSDK
-import AccountView
 
 struct RegisterView: View {
     @ObservedObject private var viewModel = RegisterViewModel()
@@ -60,6 +59,6 @@ private extension RegisterView {
     }
     
     func skipPasswordView() -> some View {
-        OwnID.GigyaSDK.createRegisterView(viewModel: viewModel.ownIDViewModel, email: $viewModel.email)
+        OwnID.GigyaSDK.createRegisterView(viewModel: viewModel.ownIDViewModel)
     }
 }

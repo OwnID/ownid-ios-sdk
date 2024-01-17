@@ -3,25 +3,23 @@ import Foundation
 import Gigya
 
 public extension OwnID.GigyaSDK {
-    enum Error: PluginError {
-        case gigyaSDKError(error: NetworkError, dataDictionary: [String: Any]?)
-        case badIdTokenFormat
-        case UIDIsMissing
-        case idTokenNotFound
-        case emailIsNotValid
-        case passwordIsNotValid
-        case mainSDKCancelled
-        case cannotInitSession
-        case cannotParseRegistrationMetadataParameter
-        case cannotParseSession
+    enum ErrorMessage {
+        static let cannotInitSession = "Cannot create session"
+        static let cannotParseRegistrationMetadataParameter = "Registration parameters passed are invalid"
+        static let cannotParseSession = "Parsing error"
+        static let accountNeedsVerification = "Needs account verification"
+    }
+    
+    enum IntegrationError: Swift.Error {
+        case gigyaSDKError(gigyaError: NetworkError, dataDictionary: [String: Any]?)
     }
 }
 
-extension OwnID.GigyaSDK.Error: LocalizedError {
+extension OwnID.GigyaSDK.IntegrationError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .gigyaSDKError(let error, _):
-            switch error {
+        case .gigyaSDKError(let gigyaError, _):
+            switch gigyaError {
             case .gigyaError(let data):
                 return data.errorMessage
             case .providerError(let data):
@@ -31,26 +29,8 @@ extension OwnID.GigyaSDK.Error: LocalizedError {
             case .jsonParsingError(let error):
                 return error.localizedDescription
             default:
-                return error.localizedDescription
+                return gigyaError.localizedDescription
             }
-        case .badIdTokenFormat:
-            return "Wrong id token format"
-        case .emailIsNotValid:
-            return "Email is not valid"
-        case .passwordIsNotValid:
-            return "Password is not valid"
-        case .mainSDKCancelled:
-            return "Cancelled"
-        case .UIDIsMissing:
-            return "UID is missing in account"
-        case .idTokenNotFound:
-            return "ID token is missing"
-        case .cannotInitSession:
-            return "Cannot create session"
-        case .cannotParseRegistrationMetadataParameter:
-            return "Registration parameters passed are invalid"
-        case .cannotParseSession:
-            return "Parsing error"
         }
     }
 }
