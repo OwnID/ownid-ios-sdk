@@ -85,7 +85,7 @@ extension OwnID.UISDK.OneTimePassword {
             self.store = store
             self.codeLength = codeLength
             self.restartURL = restartURL
-            self.viewModel = ViewModel(codeLength: codeLength, store: store, context: context, operationType: operationType)
+            self.viewModel = ViewModel(codeLength: codeLength, store: store, context: context, operationType: operationType, loginId: loginId)
             self.verificationType = verificationType
             self.operationType = operationType
             self.context = context
@@ -107,7 +107,7 @@ extension OwnID.UISDK.OneTimePassword {
         private func resendView() -> some View {
             if store.value.isDisplayingDidNotGetCode && !store.value.isLoading && store.value.error == nil {
                 Button {
-                    store.send(.resendCode)
+                    store.send(.resendCode(operationType: operationType))
                 } label: {
                     Text(localizedKey: .otpResend(operationType: operationType.rawValue, verificationType: verificationType.rawValue))
                         .font(.system(size: 14))
@@ -120,7 +120,7 @@ extension OwnID.UISDK.OneTimePassword {
         private func notYouView() -> some View {
             ZStack {
                 Button {
-                    store.send(.emailIsNotRecieved(flowFinished: store.value.isFlowFinished))
+                    store.send(.emailIsNotRecieved(operationType: operationType, flowFinished: store.value.isFlowFinished))
                 } label: {
                     Text(localizedKey: .otpNotYou(operationType: operationType.rawValue, verificationType: verificationType.rawValue))
                         .font(.system(size: 14))
@@ -220,7 +220,7 @@ extension OwnID.UISDK.OneTimePassword {
         
         private func dismiss() {
             OwnID.UISDK.PopupManager.dismissPopup()
-            store.send(.cancel)
+            store.send(.cancel(operationType: operationType))
         }
         
         @ViewBuilder

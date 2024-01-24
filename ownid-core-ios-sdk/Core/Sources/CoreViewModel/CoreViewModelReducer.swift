@@ -118,22 +118,22 @@ extension OwnID.CoreSDK.CoreViewModel {
             switch action {
             case .viewLoaded:
                 break
-            case .resendCode:
+            case .resendCode(let operationType):
                 let otpStep = state.otpStep
-                return otpStep?.resend(state: &state) ?? []
+                return otpStep?.resend(state: &state, operationType: operationType) ?? []
                 
             case .codeEntered(let code, let operationType):
                 let otpStep = state.otpStep
                 return otpStep?.sendCode(code: code, operationType: operationType, state: &state) ?? []
 
-            case .cancel:
-                let stopStep = StopStep(flow: .otp)
+            case .cancel(let operationType):
+                let stopStep = StopStep(flow: .otp(flowType: operationType.metricName))
                 return stopStep.run(state: &state)
             case .notYouCancel:
                 break
-            case .emailIsNotRecieved(let flowFinished):
+            case .emailIsNotRecieved(let operationType, let flowFinished):
                 let otpStep = state.otpStep
-                return otpStep?.restart(state: &state, isFlowFinished: flowFinished) ?? []
+                return otpStep?.restart(state: &state, operationType: operationType, isFlowFinished: flowFinished) ?? []
                 
             case .error:
                 break
@@ -163,8 +163,8 @@ extension OwnID.CoreSDK.CoreViewModel {
             case .error:
                 return []
             }
-        case .notYouCancel:
-            let stopStep = StopStep(flow: .otp)
+        case .notYouCancel(let operationType):
+            let stopStep = StopStep(flow: .otp(flowType: operationType.metricName))
             return stopStep.run(state: &state)
         }
     }

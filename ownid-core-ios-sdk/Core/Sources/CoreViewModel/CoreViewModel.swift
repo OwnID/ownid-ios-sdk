@@ -68,8 +68,8 @@ extension OwnID.CoreSDK {
                         }
                     case .sameStep:
                         return .stopLoading
-                    case .notYouCancel:
-                        return .notYouCancel
+                    case .notYouCancel(let operationType):
+                        return .notYouCancel(operationType: operationType)
                     case .success:
                         return .success
                     default:
@@ -188,7 +188,22 @@ extension OwnID.CoreSDK {
                         if !error.isOnUI {
                             flowsFinished()
                             resultPublisher.send(completion: .failure(error))
+                        } else {
+                            let category: EventCategory
+                            switch store.value.type {
+                            case .login:
+                                category = .login
+                            case .register:
+                                category = .registration
+                            }
+                            
+                            OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error,
+                                                                               category: category,
+                                                                               context: OwnID.CoreSDK.logger.context,
+                                                                               errorMessage: error.error.localizedDescription,
+                                                                               errorCode: error.errorCode))
                         }
+                        
                     case .stopRequestLoaded(let flow):
                         internalStatesChange.append(String(describing: action))
                         flowsFinished()

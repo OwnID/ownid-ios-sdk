@@ -14,7 +14,7 @@ extension OwnID.CoreSDK {
             isBiometricsAvailable = true
         case .opticID:
             //TODO: check on apple vision pro
-            isBiometricsAvailable = false
+            break
         @unknown default:
             print("please update biometrics types")
         }

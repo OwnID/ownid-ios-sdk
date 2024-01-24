@@ -2,23 +2,23 @@ import Foundation
 import AuthenticationServices
 
 public extension OwnID.CoreSDK {
-    enum FlowType: String {
-        case idCollect = "IdCollect"
-        case fidoRegister = "FIDORegister"
-        case fidoLogin = "FIDOLogin"
-        case otp = "OTP"
-        case webApp = "WebApp"
+    enum FlowType {
+        case idCollect
+        case fidoRegister
+        case fidoLogin
+        case otp(flowType: String)
+        case webApp
         
-        var source: String {
+        var source: String? {
             switch self {
             case .idCollect:
-                return "IdCollectStep"
-            case .otp:
-                return "OTPAuthStep"
+                return "LoginId Completion"
+            case .otp(let flowType):
+                return flowType
             case .webApp:
-                return "WebAppStep"
+                return "Web App"
             default:
-                return ""
+                return nil
             }
         }
     }

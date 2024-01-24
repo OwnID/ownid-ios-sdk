@@ -8,6 +8,10 @@ extension OwnID.CoreSDK.CoreViewModel {
     }
 
     class IdCollectStep: BaseStep {
+        private enum Constants {
+            static let metricName = "LoginId Completion"
+        }
+        
         private let step: Step
         
         init(step: Step) {
@@ -31,11 +35,11 @@ extension OwnID.CoreSDK.CoreViewModel {
             })
 
             let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
-            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .screenShow(screen: String(describing: Self.self)),
+            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .screenShow(screen: Constants.metricName),
                                                                category: eventCategory,
                                                                context: state.context,
                                                                loginId: state.loginId,
-                                                               source: String(describing: Self.self)))
+                                                               source: Constants.metricName))
             
             return []
         }
@@ -50,11 +54,11 @@ extension OwnID.CoreSDK.CoreViewModel {
             }
             
             let context = state.context
-            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .loginId,
+            OwnID.CoreSDK.eventService.sendMetric(.clickMetric(action: .clickContinue,
                                                                category: .login,
                                                                context: context,
-                                                               loginId: state.loginId,
-                                                               source: String(describing: Self.self)))
+                                                               loginId: loginId,
+                                                               source: Constants.metricName))
 
             let requestBody = IdCollectRequestBody(loginId: loginId, supportsFido2: OwnID.CoreSDK.isPasskeysSupported)
             state.loginId = loginId

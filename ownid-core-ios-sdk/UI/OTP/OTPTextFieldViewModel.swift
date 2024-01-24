@@ -16,10 +16,12 @@ extension OwnID.UISDK.OneTimePassword {
              store: Store<OwnID.UISDK.OneTimePassword.ViewState, OwnID.UISDK.OneTimePassword.Action>,
              context: OwnID.CoreSDK.Context?,
              operationType: OwnID.UISDK.OneTimePassword.OperationType,
+             loginId: String,
              eventService: EventProtocol = OwnID.CoreSDK.eventService) {
             self.codeLength = codeLength
             self.store = store
             self.context = context
+            self.loginId = loginId
             self.operationType = operationType
             self.eventService = eventService
             storage = Array(repeating: "", count: codeLength + 1)
@@ -33,6 +35,7 @@ extension OwnID.UISDK.OneTimePassword {
         let eventService: EventProtocol
         let operationType: OwnID.UISDK.OneTimePassword.OperationType
         
+        private let loginId: String
         private let store: Store<OwnID.UISDK.OneTimePassword.ViewState, OwnID.UISDK.OneTimePassword.Action>
         private var storage: [String]
         
@@ -170,7 +173,9 @@ private extension OwnID.UISDK.OneTimePassword.ViewModel {
         let eventCategory: OwnID.CoreSDK.EventCategory = store.value.type == .login ? .login : .registration
         eventService.sendMetric(.trackMetric(action: .userPastedCode,
                                              category: eventCategory,
-                                             context: context))
+                                             context: context,
+                                             loginId: loginId,
+                                             source: operationType.metricName))
         codeWasPasted = true
         nextUpdateAction = .updatingFromPasteboard
         let fieldValue = actualValue

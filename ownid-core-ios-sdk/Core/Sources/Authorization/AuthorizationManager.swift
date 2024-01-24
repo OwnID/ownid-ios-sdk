@@ -161,7 +161,7 @@ extension OwnID.CoreSDK {
             if registrationRequest.responds(to: Selector("setExcludedCredentials:")) {
                 registrationRequest.excludedCredentials = creds
             } else {
-                OwnID.CoreSDK.logger.log(level: .warning, message: "setExcludedCredentials isn't available", force: true, Self.self)
+                OwnID.CoreSDK.logger.log(level: .warning, message: "setExcludedCredentials isn't available", Self.self)
             }
             
             let authController = ASAuthorizationController(authorizationRequests: [registrationRequest])
@@ -225,8 +225,8 @@ extension OwnID.CoreSDK {
         func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Swift.Error) {
             defer {
                 OwnID.CoreSDK.logger.log(level: .warning,
-                                         message: "Fido error \(error.localizedDescription)",
-                                         exception: (error as NSError).domain,
+                                         message: "Fido error",
+                                         errorMessage: error.localizedDescription,
                                          Self.self)
                 currentAuthController?.cancel()
                 controller.cancel()

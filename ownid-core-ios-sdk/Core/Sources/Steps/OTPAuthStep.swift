@@ -43,8 +43,9 @@ extension OwnID.CoreSDK.CoreViewModel {
             let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
             OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .screenShow(screen: operationType.metricName),
                                                                category: eventCategory,
+                                                               context: state.context,
                                                                loginId: state.loginId,
-                                                               source: String(describing: Self.self)))
+                                                               source: operationType.metricName))
             
             return []
         }
@@ -64,7 +65,9 @@ extension OwnID.CoreSDK.CoreViewModel {
             return [effect]
         }
         
-        func restart(state: inout OwnID.CoreSDK.CoreViewModel.State, isFlowFinished: Bool) -> [Effect<Action>] {
+        func restart(state: inout OwnID.CoreSDK.CoreViewModel.State,
+                     operationType: OwnID.UISDK.OneTimePassword.OperationType,
+                     isFlowFinished: Bool) -> [Effect<Action>] {
             guard let otpData = step.otpData, let restartUrl = URL(string: otpData.restartUrl) else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
                 return errorEffect(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
@@ -78,7 +81,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                category: eventCategory,
                                                                context: context,
                                                                loginId: state.loginId,
-                                                               source: String(describing: Self.self)))
+                                                               source: operationType.metricName))
             
             if let enableRegistrationFromLogin = state.configuration?.enableRegistrationFromLogin, enableRegistrationFromLogin {
                 guard !isFlowFinished else {
@@ -99,11 +102,11 @@ extension OwnID.CoreSDK.CoreViewModel {
                     .eraseToEffect()
                 return [effect]
             } else {
-                return [Just(Action.notYouCancel).eraseToEffect()]
+                return [Just(Action.notYouCancel(operationType: operationType)).eraseToEffect()]
             }
         }
         
-        func resend(state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<Action>] {
+        func resend(state: inout OwnID.CoreSDK.CoreViewModel.State, operationType: OwnID.UISDK.OneTimePassword.OperationType) -> [Effect<Action>] {
             guard let otpData = step.otpData, let resendUrl = URL(string: otpData.resendUrl) else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
                 return errorEffect(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
@@ -117,7 +120,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                category: eventCategory,
                                                                context: context,
                                                                loginId: state.loginId,
-                                                               source: String(describing: Self.self)))
+                                                               source: operationType.metricName))
             
             let effect = state.session.perform(url: resendUrl,
                                                method: .post,
@@ -172,16 +175,21 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                            category: eventCategory,
                                                                            context: context,
                                                                            loginId: loginId,
-                                                                           source: String(describing: Self.self)))
+                                                                           source: operationType.metricName))
                     } else if let error = response.error {
                         let model = OwnID.CoreSDK.UserErrorModel(code: error.errorCode, message: error.message, userMessage: error.userMessage)
                         if model.code == .invalidCode {
-                            OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .wrongOTP(name: operationType.metricName),
+                            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .wrongOTP(name: operationType.metricName),
                                                                                category: eventCategory,
                                                                                context: context,
                                                                                loginId: loginId,
-                                                                               errorMessage: error.userMessage,
-                                                                               source: String(describing: Self.self)))
+                                                                               source: operationType.metricName))
+                        } else {
+                            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .correctOTP(name: operationType.metricName),
+                                                                               category: eventCategory,
+                                                                               context: context,
+                                                                               loginId: loginId,
+                                                                               source: operationType.metricName))
                         }
                     }
 

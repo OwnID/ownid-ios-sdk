@@ -44,10 +44,6 @@ extension OwnID.FlowsSDK.RegisterView.ViewModel {
 
 public extension OwnID.FlowsSDK.RegisterView {
     final class ViewModel: ObservableObject {
-        private enum Constants {
-            static let sourceName = "OwnIdRegisterViewModel"
-        }
-        
         @Published private(set) var state = State.initial
         
         /// Checks loginId if it is valid for tooltip display. On each change of loginId, it
@@ -111,10 +107,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                 OwnID.CoreSDK.shared.currentMetricInformation = currentMetadata
             }
             eventService.sendMetric(.trackMetric(action: .loaded,
-                                                 category: .registration,
-                                                 context: registrationData.payload?.context,
-                                                 loginId: loginId,
-                                                 source: Constants.sourceName))
+                                                 category: .registration))
         }
         
         public func register(registerParameters: RegisterParameters = EmptyRegisterParameters()) {
@@ -130,20 +123,19 @@ public extension OwnID.FlowsSDK.RegisterView {
                     if case .failure(let error) = completion {
                         handle(error)
                         let errorMessage = error.error.localizedDescription
-                        eventService.sendMetric(.errorMetric(action: .error(message: errorMessage),
+                        eventService.sendMetric(.errorMetric(action: .error,
                                                              category: .registration,
                                                              context: payload.context,
                                                              loginId: loginId,
                                                              errorMessage: errorMessage,
-                                                             source: Constants.sourceName))
+                                                             errorCode: error.errorCode))
                     }
                 } receiveValue: { [unowned self] registrationResult in
                     eventService.sendMetric(.trackMetric(action: .registered,
                                                          category: .registration,
                                                          context: payload.context,
                                                          loginId: loginId,
-                                                         authType: registrationResult.authType,
-                                                         source: Constants.sourceName))
+                                                         authType: registrationResult.authType))
                     if let loginId = payload.loginId {
                         OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
                     }
@@ -179,8 +171,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                 eventService.sendMetric(.clickMetric(action: .undo,
                                                      category: .registration,
                                                      context: registrationData.payload?.context,
-                                                     loginId: loginId,
-                                                     source: Constants.sourceName))
+                                                     loginId: loginId))
                 resetToInitialState()
                 resultPublisher.send(.success(.resetTapped))
                 return
@@ -210,10 +201,11 @@ public extension OwnID.FlowsSDK.RegisterView {
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
                         handle(error)
-                        OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error(message: error.localizedDescription),
+                        OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error,
                                                                            category: .registration,
                                                                            context: OwnID.CoreSDK.logger.context,
-                                                                           errorMessage: error.localizedDescription))
+                                                                           errorMessage: error.localizedDescription,
+                                                                           errorCode: error.errorCode))
                     }
                 } receiveValue: { [unowned self] event in
                     switch event {
@@ -252,11 +244,15 @@ public extension OwnID.FlowsSDK.RegisterView {
             buttonEventPublisher
                 .sink { _ in
                 } receiveValue: { [unowned self] _ in
+                    let configuration = OwnID.CoreSDK.shared.store.value.getOptionalConfiguration(for: sdkConfigurationName)
+                    var validLoginIdFormat: Bool?
+                    if let loginIdSettings = configuration?.loginIdSettings {
+                        validLoginIdFormat = OwnID.CoreSDK.LoginId(value: loginId, settings: loginIdSettings).isValid
+                    }
                     eventService.sendMetric(.clickMetric(action: .click,
                                                          category: .registration,
-                                                         context: registrationData.payload?.context,
                                                          hasLoginId: !loginId.isEmpty,
-                                                         source: Constants.sourceName))
+                                                         validLoginIdFormat: validLoginIdFormat))
                     skipPasswordTapped(loginId: loginId)
                 }
                 .store(in: &bag)
@@ -273,20 +269,19 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
                 if case .failure(let error) = completion {
                     handle(error)
                     let errorMessage = error.error.localizedDescription
-                    eventService.sendMetric(.errorMetric(action: .error(message: errorMessage),
+                    eventService.sendMetric(.errorMetric(action: .error,
                                                          category: .registration,
                                                          context: payload.context,
                                                          loginId: loginId,
                                                          errorMessage: errorMessage,
-                                                         source: Constants.sourceName))
+                                                         errorCode: error.errorCode))
                 }
             } receiveValue: { [unowned self] registerResult in
                 eventService.sendMetric(.trackMetric(action: .loggedIn,
-                                                     category: .login,
+                                                     category: .registration,
                                                      context: payload.context,
                                                      loginId: loginId,
-                                                     authType: payload.authType,
-                                                     source: Constants.sourceName))
+                                                     authType: payload.authType))
                 state = .ownidCreated
                 resultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registerResult.operationResult, authType: registerResult.authType)))
                 resetDataAndState(isResettingToInitialState: false)

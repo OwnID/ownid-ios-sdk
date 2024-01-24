@@ -42,10 +42,6 @@ extension OwnID.CoreSDK.CoreViewModel {
             OwnID.CoreSDK.logger.log(level: .information,
                                      message: "isFidoPossible \(OwnID.CoreSDK.isPasskeysSupported)",
                                      Self.self)
-            let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
-            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .fidoSupports(isFidoSupported: OwnID.CoreSDK.isPasskeysSupported),
-                                                               category: eventCategory,
-                                                               loginId: state.loginId))
             
             let requestBody = InitRequestBody(sessionChallenge: sessionChallenge,
                                               type: state.type,

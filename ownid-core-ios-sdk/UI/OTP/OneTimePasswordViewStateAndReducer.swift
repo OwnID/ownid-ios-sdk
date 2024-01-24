@@ -20,10 +20,10 @@ extension OwnID.UISDK.OneTimePassword {
         case viewLoaded
         case codeEnteringStarted
         case codeEntered(code: String, operationType: OwnID.UISDK.OneTimePassword.OperationType)
-        case cancel
-        case notYouCancel
-        case emailIsNotRecieved(flowFinished: Bool)
-        case resendCode
+        case cancel(operationType: OwnID.UISDK.OneTimePassword.OperationType)
+        case notYouCancel(operationType: OwnID.UISDK.OneTimePassword.OperationType)
+        case emailIsNotRecieved(operationType: OwnID.UISDK.OneTimePassword.OperationType, flowFinished: Bool)
+        case resendCode(operationType: OwnID.UISDK.OneTimePassword.OperationType)
         case displayDidNotGetCode
         case error(OwnID.CoreSDK.UserErrorModel, flowFinished: Bool)
         case success

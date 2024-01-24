@@ -25,15 +25,14 @@ public extension OwnID.CoreSDK {
         case fidoNotFinished
         case fidoFinished
         case fidoFailed
-        case loginId
+        case clickContinue
         case wrongOTP(name: String)
         case correctOTP(name: String)
         case resendOTP
         case notYou
         case screenShow(screen: String)
-        case fidoSupports(isFidoSupported: Bool)
         case userPastedCode
-        case error(message: String)
+        case error
                 
         var actionValue: String {
             switch self {
@@ -57,24 +56,22 @@ public extension OwnID.CoreSDK {
                 return "FIDO: Execution Completed Successfully"
             case .fidoFailed:
                 return "FIDO: Failed, trying to register new one"
-            case .loginId:
-                return "User entered Login ID"
+            case .clickContinue:
+                return "Clicked Continue"
             case .wrongOTP(let name):
                 return "[\(name)] - Entered Wrong Verification Code"
             case .correctOTP(let name):
                 return "[\(name)] - Entered Correct Verification Code"
             case .resendOTP:
-                return "User select: Resend"
+                return "Clicked Resend"
             case .notYou:
                 return "Clicked Not You"
             case .screenShow(let screen):
                 return "Viewed \(screen)"
-            case .fidoSupports(let isFidoSupported):
-                return "Passkey Supported: \(isFidoSupported)"
             case .userPastedCode:
                 return "User Pasted Verification Code"
-            case .error(let message):
-                return "Sending error to app \(message)"
+            case .error:
+                return "Viewed Error"
             }
         }
         
@@ -87,13 +84,12 @@ public extension OwnID.CoreSDK {
                     .fidoNotFinished,
                     .fidoFinished,
                     .fidoFailed,
-                    .loginId,
+                    .clickContinue,
                     .wrongOTP,
                     .correctOTP,
                     .resendOTP,
                     .notYou,
                     .screenShow,
-                    .fidoSupports,
                     .userPastedCode,
                     .error:
                 return false
@@ -115,7 +111,7 @@ public extension OwnID.CoreSDK {
     }
     
     struct Metric: LogMetricProtocol {
-        public var context: String
+        public var context: String?
         public var component = LoggerConstants.component
         let category: EventCategory
         let type: EventType
@@ -123,31 +119,35 @@ public extension OwnID.CoreSDK {
         public var metadata: Metadata?
         let loginId: String?
         let errorMessage: String?
+        let errorCode: String?
         let source: String?
+        let applicationOrigin = Bundle.main.bundleIdentifier
         public var userAgent = UserAgentManager.shared.SDKUserAgent
         public var version = UserAgentManager.shared.userFacingSDKVersion
         public var sourceTimestamp = String(Int((Date().timeIntervalSince1970 * 1000.0).rounded()))
         
-        init(context: String? = "",
+        init(context: String? = nil,
              category: EventCategory,
              type: EventType,
              action: String?,
              metadata: Metadata? = nil,
              loginId: String? = nil,
              errorMessage: String? = nil,
+             errorCode: String? = nil,
              source: String? = nil) {
-            self.context = context ?? ""
+            self.context = context
             self.category = category
             self.type = type
             self.action = action
             self.metadata = metadata
             self.loginId = loginId
             self.errorMessage = errorMessage
+            self.errorCode = errorCode
             self.source = source
         }
         
         private static func metricloginId(_ loginId: String?) -> String? {
-            if let loginId {
+            if let loginId, !loginId.isEmpty {
                 return SHA256.hash(data: Data((loginId).utf8)).data.toBase64URL()
             }
             return nil
@@ -155,11 +155,11 @@ public extension OwnID.CoreSDK {
         
         public static func trackMetric(action: AnalyticActionType,
                                        category: EventCategory,
-                                       context: String? = "",
+                                       context: String? = nil,
                                        loginId: String? = nil,
                                        authType: String? = nil,
                                        source: String? = nil) -> Metric {
-            Metric(context: context ?? "",
+            Metric(context: context,
                    category: category,
                    type: .track,
                    action: action.actionValue,
@@ -170,32 +170,35 @@ public extension OwnID.CoreSDK {
         
         public static func clickMetric(action: AnalyticActionType,
                                        category: EventCategory,
-                                       context: String? = "",
+                                       context: String? = nil,
                                        loginId: String? = nil,
                                        hasLoginId: Bool? = nil,
-                                       source: String? = nil) -> Metric {
-            Metric(context: context ?? "",
+                                       source: String? = nil,
+                                       validLoginIdFormat: Bool? = nil) -> Metric {
+            Metric(context: context,
                    category: category,
                    type: .click,
                    action: action.actionValue,
-                   metadata: Metadata.metadata(actionType: action, hasLoginId: hasLoginId),
+                   metadata: Metadata.metadata(actionType: action, hasLoginId: hasLoginId, validLoginIdFormat: validLoginIdFormat),
                    loginId: metricloginId(loginId),
                    source: source)
         }
         
         public static func errorMetric(action: AnalyticActionType,
                                        category: EventCategory,
-                                       context: String? = "",
+                                       context: String? = nil,
                                        loginId: String? = nil,
                                        errorMessage: String?,
+                                       errorCode: String? = nil,
                                        source: String? = nil) -> Metric {
-            Metric(context: context ?? "",
+            Metric(context: context,
                    category: category,
                    type: .error,
                    action: action.actionValue,
                    metadata: Metadata.metadata(actionType: action),
                    loginId: metricloginId(loginId),
                    errorMessage: errorMessage,
+                   errorCode: errorCode,
                    source: source)
         }
     }

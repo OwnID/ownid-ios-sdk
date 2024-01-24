@@ -29,6 +29,6 @@ extension OwnID.CoreSDK.CoreViewModel {
         case codeResent
         case stopRequestLoaded(flow: OwnID.CoreSDK.FlowType)
         case sameStep
-        case notYouCancel
+        case notYouCancel(operationType: OwnID.UISDK.OneTimePassword.OperationType)
     }
 }

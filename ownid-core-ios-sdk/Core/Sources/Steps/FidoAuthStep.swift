@@ -54,8 +54,7 @@ extension OwnID.CoreSDK.CoreViewModel {
             OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .fidoRun,
                                                                category: eventCategory,
                                                                context: state.context,
-                                                               loginId: state.loginId,
-                                                               source: String(describing: Self.self)))
+                                                               loginId: state.loginId))
             if #available(iOS 16, *),
                let domain = step.fidoData?.rpId {
                 let authManager = state.createAccountManagerClosure(state.authManagerStore, domain, state.context, url)
@@ -69,8 +68,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                             OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .fidoFailed,
                                                                                category: eventCategory,
                                                                                context: state.context,
-                                                                               loginId: state.loginId,
-                                                                               source: String(describing: Self.self)))
+                                                                               loginId: state.loginId))
                             authManager.signUpWith(userName: state.loginId, credsIds: credsIds)
                         } else {
                             authManager.signIn(credsIds: credsIds)
@@ -101,8 +99,7 @@ extension OwnID.CoreSDK.CoreViewModel {
             OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .fidoFinished,
                                                                category: eventCategory,
                                                                context: context,
-                                                               loginId: state.loginId,
-                                                               source: String(describing: Self.self)))
+                                                               loginId: state.loginId))
             
             let requestBody = AuthRequestBody(type: type,
                                               fido2Payload: fido2Payload)
@@ -129,7 +126,7 @@ extension OwnID.CoreSDK.CoreViewModel {
             }
             
             let fidoError: OwnID.CoreSDK.CoreViewModel.FidoErrorRequestBody.Error
-            
+            let errorMessage: String
             switch error {
             case .authorizationManagerAuthError(let error), .authorizationManagerGeneralError(let error):
                 let error = error as NSError
@@ -137,17 +134,20 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                                    type: error.domain,
                                                                                    code: error.code,
                                                                                    message: error.localizedDescription)
+                errorMessage = error.localizedDescription
             case .authorizationManagerCredintialsNotFoundOrCanlelledByUser(let error):
                 let error = error as NSError
                 fidoError = OwnID.CoreSDK.CoreViewModel.FidoErrorRequestBody.Error(name: error.domain,
                                                                                    type: error.domain,
                                                                                    code: error.code,
                                                                                    message: error.localizedDescription)
+                errorMessage = error.localizedDescription
             default:
                 fidoError = OwnID.CoreSDK.CoreViewModel.FidoErrorRequestBody.Error(name: error.errorDescription,
                                                                                    type: error.errorDescription,
                                                                                    code: 0,
                                                                                    message: error.errorDescription)
+                errorMessage = error.errorDescription
             }
             
             let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
@@ -156,8 +156,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                category: eventCategory,
                                                                context: context,
                                                                loginId: state.loginId,
-                                                               errorMessage: error.localizedDescription,
-                                                               source: String(describing: Self.self)))
+                                                               errorMessage: errorMessage))
             
             let requestBody = FidoErrorRequestBody(type: type,
                                                    error: fidoError)

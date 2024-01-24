@@ -33,10 +33,6 @@ extension OwnID.FlowsSDK.LoginView.ViewModel.State {
 
 public extension OwnID.FlowsSDK.LoginView {
     final class ViewModel: ObservableObject {
-        private enum Constants {
-            static let sourceName = "OwnIdLoginViewModel"
-        }
-        
         @Published private(set) var state = State.initial
         @Published public var shouldShowTooltip = true
         
@@ -74,10 +70,7 @@ public extension OwnID.FlowsSDK.LoginView {
                 OwnID.CoreSDK.shared.currentMetricInformation = currentMetadata
             }
             eventService.sendMetric(.trackMetric(action: .loaded,
-                                                 category: .login,
-                                                 context: payload?.context,
-                                                 loginId: loginId,
-                                                 source: Constants.sourceName))
+                                                 category: .login))
         }
         
         public func updateLoginIdPublisher(_ loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
@@ -132,10 +125,11 @@ public extension OwnID.FlowsSDK.LoginView {
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
                         handle(error)
-                        OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error(message: error.localizedDescription),
+                        OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error,
                                                                            category: .login,
                                                                            context: OwnID.CoreSDK.logger.context,
-                                                                           errorMessage: error.localizedDescription))
+                                                                           errorMessage: error.localizedDescription,
+                                                                           errorCode: error.errorCode))
                     }
                 } receiveValue: { [unowned self] event in
                     switch event {
@@ -162,11 +156,15 @@ public extension OwnID.FlowsSDK.LoginView {
                 .sink { _ in
                 } receiveValue: { [unowned self] event in
                     if state == .initial {
+                        let configuration = OwnID.CoreSDK.shared.store.value.getOptionalConfiguration(for: sdkConfigurationName)
+                        var validLoginIdFormat: Bool?
+                        if let loginIdSettings = configuration?.loginIdSettings {
+                            validLoginIdFormat = OwnID.CoreSDK.LoginId(value: loginId, settings: loginIdSettings).isValid
+                        }
                         eventService.sendMetric(.clickMetric(action: .click,
                                                              category: .login,
-                                                             context: payload?.context,
                                                              hasLoginId: !loginId.isEmpty,
-                                                             source: Constants.sourceName))
+                                                             validLoginIdFormat: validLoginIdFormat))
                     }
                     skipPasswordTapped(loginId: loginId)
                 }
@@ -184,19 +182,18 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                 if case .failure(let error) = completion {
                     handle(error)
                     let errorMessage = error.error.localizedDescription
-                    eventService.sendMetric(.errorMetric(action: .error(message: errorMessage),
+                    eventService.sendMetric(.errorMetric(action: .error,
                                                          category: .login,
                                                          context: payload.context,
                                                          errorMessage: errorMessage,
-                                                         source: Constants.sourceName))
+                                                         errorCode: error.errorCode))
                 }
             } receiveValue: { [unowned self] loginResult in
                 eventService.sendMetric(.trackMetric(action: .loggedIn,
                                                      category: .login,
                                                      context: payload.context,
                                                      loginId: loginId,
-                                                     authType: payload.authType,
-                                                     source: Constants.sourceName))
+                                                     authType: payload.authType))
                 if let loginId = payload.loginId {
                     OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
                 }

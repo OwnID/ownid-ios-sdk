@@ -2,13 +2,13 @@ import Foundation
 
 public extension OwnID.CoreSDK {
     class LogItem: LogMetricProtocol {
-        public var context: String
+        public var context: String?
         public var component = LoggerConstants.component
         var requestPath = ""
         let level: LogLevel
         let codeInitiator: String?
         var message: String
-        let exception: String?
+        var errorMessage: String?
         public var metadata: Metadata?
         public var userAgent = UserAgentManager.shared.SDKUserAgent
         public var version = UserAgentManager.shared.userFacingSDKVersion
@@ -18,13 +18,13 @@ public extension OwnID.CoreSDK {
              level: LogLevel,
              codeInitiator: String? = nil,
              message: String,
-             exception: String? = nil,
+             errorMessage: String? = nil,
              metadata: Metadata? = nil) {
             self.context = context
             self.level = level
             self.codeInitiator = codeInitiator
             self.message = message
-            self.exception = exception
+            self.errorMessage = errorMessage
             self.metadata = metadata
         }
     }
@@ -33,7 +33,7 @@ public extension OwnID.CoreSDK {
 extension OwnID.CoreSDK.LogItem: CustomDebugStringConvertible {
     public var debugDescription: String {
         """
-        context: \(context)
+        context: \(context ?? "")
         message: \(message)
         level: \(level.priority)
         codeInitiator: \(codeInitiator ?? "")

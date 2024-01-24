@@ -22,22 +22,48 @@ public extension OwnID.CoreSDK.CoreErrorLogWrapper {
                            isOnUI: Bool = false,
                            flowFinished: Bool = true,
                            type: T.Type = T.self) -> OwnID.CoreSDK.CoreErrorLogWrapper {
-        let message: String
+        let errorWrapper = OwnID.CoreSDK.CoreErrorLogWrapper(error: error, isOnUI: isOnUI, flowFinished: flowFinished)
+        
         switch error {
         case .userError(let errorModel):
-            guard errorModel.code != .invalidCode else {
-                return OwnID.CoreSDK.CoreErrorLogWrapper(error: error, isOnUI: isOnUI, flowFinished: flowFinished)
+            if errorModel.code == .unknown {
+                OwnID.CoreSDK.logger.log(level: .error,
+                                         function: function,
+                                         file: file,
+                                         message: errorWrapper.errorMessage,
+                                         type)
             }
-            message = errorModel.message
         default:
-            message = error.localizedDescription
+            OwnID.CoreSDK.logger.log(level: .error,
+                                     function: function,
+                                     file: file,
+                                     message: errorWrapper.errorMessage,
+                                     type)
         }
         
-        OwnID.CoreSDK.logger.log(level: .error,
-                                 function: function,
-                                 file: file,
-                                 message: message,
-                                 type)
-        return OwnID.CoreSDK.CoreErrorLogWrapper(error: error, isOnUI: isOnUI, flowFinished: flowFinished)
+        return errorWrapper
+    }
+    
+    var errorMessage: String {
+        switch error {
+        case .userError(let errorModel):
+            errorModel.message
+        default:
+            error.localizedDescription
+        }
+    }
+    
+    var errorCode: String? {
+        switch error {
+        case .userError(let errorModel):
+            switch errorModel.code {
+            case .unknown:
+                return nil
+            default:
+                return errorModel.code.rawValue
+            }
+        default:
+            return nil
+        }
     }
 }

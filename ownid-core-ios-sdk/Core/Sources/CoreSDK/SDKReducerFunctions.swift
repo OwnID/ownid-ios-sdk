@@ -65,8 +65,13 @@ extension OwnID.CoreSDK {
                         OwnID.CoreSDK.logger.updateLogLevel(logLevel: .warning)
                         OwnID.CoreSDK.logger.log(level: .warning, message: "Server configuration is not set", force: true, Self.self)
                     }
-                    if let bundleId = serverConfiguration.platformSettings?.bundleId, bundleId != Bundle.main.bundleIdentifier {
-                        OwnID.CoreSDK.logger.log(level: .warning, message: "Bunle Id of configuration does not match project bunleId", Self.self)
+                    if serverConfiguration.platformSettings?.bundleId != Bundle.main.bundleIdentifier {
+                        let bundleID = serverConfiguration.platformSettings?.bundleId ?? "empty"
+                        let appBundleID = Bundle.main.bundleIdentifier ?? "empty"
+                        OwnID.CoreSDK.logger.log(level: .warning,
+                                                 message: "Incorrect Passkeys Configuration",
+                                                 errorMessage: "Bundle ID mismatch. Expecting \(appBundleID) but it's \(bundleID)",
+                                                 Self.self)
                     }
                     
                     var local = config
@@ -78,6 +83,7 @@ extension OwnID.CoreSDK {
                     local.enableRegistrationFromLogin = serverConfiguration.enableRegistrationFromLogin
                     local.phoneCodes = serverConfiguration.phoneCodes
                     local.origins = Set(serverConfiguration.origins ?? [])
+                    local.displayName = serverConfiguration.displayName
                     return SDKAction.save(configurationLoadingEvent: .loaded(local), userFacingSDK: userFacingSDK)
                 }
                 .catch { _ in

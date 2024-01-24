@@ -12,8 +12,7 @@ extension OwnID.GigyaSDK {
                                                                        category: .registration,
                                                                        context: context,
                                                                        loginId: loginId,
-                                                                       authType: authType,
-                                                                       source: String(describing: Self.self)))
+                                                                       authType: authType))
                 }
                 
             default:
@@ -27,8 +26,7 @@ extension OwnID.GigyaSDK {
                                                                    category: .login,
                                                                    context: context,
                                                                    loginId: loginId,
-                                                                   authType: authType,
-                                                                   source: String(describing: Self.self)))
+                                                                   authType: authType))
             }
         }
         

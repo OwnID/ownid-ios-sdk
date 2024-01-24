@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol LoggerProtocol {
-    func log(priority: Int, codeInitiator: String, message: String, exception: String?)
+    func log(priority: Int, codeInitiator: String, message: String, errorMessage: String?)
 }
 
 public extension OwnID.CoreSDK {
@@ -16,9 +16,9 @@ public extension OwnID.CoreSDK {
             tag = customTag
         }
         
-        public func log(priority: Int, codeInitiator: String, message: String, exception: String?) {
+        public func log(priority: Int, codeInitiator: String, message: String, errorMessage: String?) {
             if isEnabled {
-                logger.log(priority: priority, codeInitiator: codeInitiator, message: message, exception: exception)
+                logger.log(priority: priority, codeInitiator: codeInitiator, message: message, errorMessage: errorMessage)
             }
         }
     }
@@ -49,14 +49,14 @@ public extension OwnID.CoreSDK {
                            function: String = #function,
                            file: String = #file,
                            message: String = "",
-                           exception: String? = nil,
+                           errorMessage: String? = nil,
                            force: Bool = false,
                            _: T.Type = T.self) {
             let message = "\(message) \(function) \((file as NSString).lastPathComponent)"
             if force {
-                logger.forceLog(level: level, codeInitiator: String(describing: T.self), message: message, exception: exception)
+                logger.forceLog(level: level, codeInitiator: String(describing: T.self), message: message, errorMessage: errorMessage)
             } else {
-                logger.log(level: level, codeInitiator: String(describing: T.self), message: message, exception: exception)
+                logger.log(level: level, codeInitiator: String(describing: T.self), message: message, errorMessage: errorMessage)
             }
         }
         
@@ -95,12 +95,12 @@ extension OwnID.CoreSDK {
             sdkNotConfiguredLogs.removeAll()
         }
         
-        func log(level: LogLevel, codeInitiator: String, message: String, exception: String?) {
+        func log(level: LogLevel, codeInitiator: String, message: String, errorMessage: String?) {
             var entry = LogItem(context: context ?? "",
                                 level: level,
                                 codeInitiator: codeInitiator,
                                 message: message,
-                                exception: exception)
+                                errorMessage: errorMessage)
             entry = setupLog(entry)
             
             if !OwnID.CoreSDK.shared.isSDKConfigured {
@@ -110,12 +110,12 @@ extension OwnID.CoreSDK {
             }
         }
         
-        func forceLog(level: LogLevel, codeInitiator: String, message: String, exception: String?) {
+        func forceLog(level: LogLevel, codeInitiator: String, message: String, errorMessage: String?) {
             var entry = LogItem(context: context ?? "",
                                 level: level,
                                 codeInitiator: codeInitiator,
                                 message: message,
-                                exception: exception)
+                                errorMessage: errorMessage)
             entry = setupLog(entry)
             
             sendToLoggers(entry)
@@ -127,7 +127,6 @@ extension OwnID.CoreSDK {
         
         private func setupLog(_ entry: LogItem) -> LogItem {
             let entry = entry
-            print(LoggerConstants.instanceID.uuidString)
             entry.metadata = Metadata(correlationId: LoggerConstants.instanceID.uuidString,
                                       stackTrace: nil,
                                       sessionRequestSequenceNumber: String(sessionRequestSequenceNumber),
@@ -145,7 +144,7 @@ extension OwnID.CoreSDK {
             logger.log(priority: entry.level.priority,
                        codeInitiator: entry.codeInitiator ?? "",
                        message: entry.message,
-                       exception: entry.exception)
+                       errorMessage: entry.errorMessage)
             
             if entry.level.shouldLog(for: logLevel.priority) {
                 OwnID.CoreSDK.eventService.log(entry)

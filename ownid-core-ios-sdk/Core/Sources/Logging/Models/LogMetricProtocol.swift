@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol LogMetricProtocol: Encodable {
-    var context: String { get set }
+    var context: String? { get set }
     var component: String { get set }
     var metadata: OwnID.CoreSDK.Metadata? { get set }
     var userAgent: String { get set }
