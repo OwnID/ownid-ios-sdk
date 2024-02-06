@@ -10,6 +10,7 @@ public extension OwnID.CoreSDK.Init {
         let sessionChallenge: OwnID.CoreSDK.SessionChallenge
         let type: OwnID.CoreSDK.RequestType
         let data: String?
+        let loginType: OwnID.CoreSDK.LoginType?
 //        let originUrl = "https://demo.dev.ownid.com"
     }
 }
@@ -29,12 +30,14 @@ extension OwnID.CoreSDK.Init {
         let provider: APIProvider
         let sessionChallenge: OwnID.CoreSDK.SessionChallenge
         let token: OwnID.CoreSDK.JWTToken?
+        let loginType: OwnID.CoreSDK.LoginType?
         let webLanguages: OwnID.CoreSDK.Languages
         
         internal init(type: OwnID.CoreSDK.RequestType,
                       url: OwnID.CoreSDK.ServerURL,
                       sessionChallenge: OwnID.CoreSDK.SessionChallenge,
                       token: OwnID.CoreSDK.JWTToken?,
+                      loginType: OwnID.CoreSDK.LoginType?,
                       webLanguages: OwnID.CoreSDK.Languages,
                       provider: APIProvider = URLSession.shared) {
             self.type = type
@@ -42,13 +45,15 @@ extension OwnID.CoreSDK.Init {
             self.sessionChallenge = sessionChallenge
             self.provider = provider
             self.token = token
+            self.loginType = loginType
             self.webLanguages = webLanguages
         }
         
         func perform() -> AnyPublisher<Response, OwnID.CoreSDK.Error> {
             Just(RequestBody(sessionChallenge: sessionChallenge,
                              type: type,
-                             data: token?.jwtString))
+                             data: token?.jwtString,
+                            loginType: loginType))
                 .setFailureType(to: Error.self)
                 .eraseToAnyPublisher()
                 .encode(encoder: JSONEncoder())

@@ -58,6 +58,7 @@ extension OwnID.CoreSDK {
         let email: OwnID.CoreSDK.Email?
         let token: OwnID.CoreSDK.JWTToken?
         let type: OwnID.CoreSDK.RequestType
+        let loginType: OwnID.CoreSDK.LoginType?
         let browserViewModelInitializer: ((Store<OwnID.CoreSDK.BrowserOpenerViewModel.State, OwnID.CoreSDK.BrowserOpenerViewModel.Action>, URL) -> BrowserOpener)
         var browserViewModelStore: Store<BrowserOpenerViewModel.State, BrowserOpenerViewModel.Action>!
         var browserViewModel: BrowserOpener?
@@ -74,7 +75,7 @@ extension OwnID.CoreSDK {
             if let email = state.email, !email.rawValue.isEmpty, !email.isValid {
                 return errorEffect(.emailIsInvalid)
             }
-            return [sendInitialRequest(type: state.type, token: state.token, session: state.session)]
+            return [sendInitialRequest(type: state.type, token: state.token, loginType: state.loginType, session: state.session)]
             
         case let .initialRequestLoaded(response):
             guard let context = response.context else { return errorEffect(.contextIsMissing) }
@@ -145,8 +146,9 @@ extension OwnID.CoreSDK {
     
     static func sendInitialRequest(type: OwnID.CoreSDK.RequestType,
                                    token: OwnID.CoreSDK.JWTToken?,
+                                   loginType: OwnID.CoreSDK.LoginType?,
                                    session: APISessionProtocol) -> Effect<ViewModelAction> {
-        session.performInitRequest(type: type, token: token)
+        session.performInitRequest(type: type, token: token, loginType: loginType)
             .receive(on: DispatchQueue.main)
             .map { ViewModelAction.initialRequestLoaded(response: $0) }
             .catch { Just(ViewModelAction.error($0)) }
@@ -171,6 +173,7 @@ extension OwnID.CoreSDK {
         
         init(type: OwnID.CoreSDK.RequestType,
              email: OwnID.CoreSDK.Email?,
+             loginType: OwnID.CoreSDK.LoginType? = nil,
              token: OwnID.CoreSDK.JWTToken?,
              session: APISessionProtocol,
              sdkConfigurationName: String,
@@ -180,6 +183,7 @@ extension OwnID.CoreSDK {
                                                             email: email,
                                                             token: token,
                                                             type: type,
+                                                            loginType: loginType,
                                                             browserViewModelInitializer: browserViewModelInitializer)
             let store = Store(
                 initialValue: initialState,

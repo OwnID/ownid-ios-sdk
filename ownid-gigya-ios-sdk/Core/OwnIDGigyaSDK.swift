@@ -84,12 +84,14 @@ public extension OwnID {
         ///   - webLanguages: Languages for web view. List of well-formed [IETF BCP 47 language tag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) .
         /// - Returns: View model for log in
         public static func loginViewModel<T: GigyaAccountProtocol>(instance: GigyaCore<T>,
+                                                                   loginType: OwnID.CoreSDK.LoginType = .standard,
                                                                    webLanguages: OwnID.CoreSDK.Languages = .init(rawValue: Locale.preferredLanguages),
                                                                    sdkName: String = sdkName) -> OwnID.FlowsSDK.LoginView.ViewModel {
             let performer = LoginPerformer(instance: instance,
                                            sdkConfigurationName: sdkName)
             return OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: performer,
                                                       sdkConfigurationName: sdkName,
+                                                      loginType: loginType,
                                                       webLanguages: webLanguages)
         }
         

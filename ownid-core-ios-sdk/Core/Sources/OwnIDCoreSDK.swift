@@ -105,11 +105,13 @@ public extension OwnID {
         ///   - webLanguages: Languages for web view. List of well-formed [IETF BCP 47 language tag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) .
         /// - Returns: View that is presented in sheet
         public func createCoreViewModelForLogIn(email: Email? = .none,
+                                                loginType: LoginType,
                                                 sdkConfigurationName: String,
                                                 webLanguages: OwnID.CoreSDK.Languages) -> CoreViewModel {
             let session = apiSession(configurationName: sdkConfigurationName, webLanguages: webLanguages)
             let viewModel = CoreViewModel(type: .login,
                                           email: email,
+                                          loginType: loginType,
                                           token: .none,
                                           session: session,
                                           sdkConfigurationName: sdkConfigurationName)

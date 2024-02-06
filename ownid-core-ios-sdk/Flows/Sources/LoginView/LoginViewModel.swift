@@ -19,6 +19,7 @@ public extension OwnID.FlowsSDK.LoginView {
         private let resultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.LoginEvent, OwnID.CoreSDK.Error>, Never>()
         private let loginPerformer: LoginPerformer
         private var payload: OwnID.CoreSDK.Payload?
+        private let loginType: OwnID.CoreSDK.LoginType
         var coreViewModel: OwnID.CoreSDK.CoreViewModel!
         
         let sdkConfigurationName: String
@@ -31,10 +32,12 @@ public extension OwnID.FlowsSDK.LoginView {
         
         public init(loginPerformer: LoginPerformer,
                     sdkConfigurationName: String,
+                    loginType: OwnID.CoreSDK.LoginType = .standard,
                     webLanguages: OwnID.CoreSDK.Languages) {
             OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: "OwnID Widget is Loaded", context: payload?.context))
             self.sdkConfigurationName = sdkConfigurationName
             self.loginPerformer = loginPerformer
+            self.loginType = loginType
             self.webLanguages = webLanguages
         }
         
@@ -55,8 +58,9 @@ public extension OwnID.FlowsSDK.LoginView {
             DispatchQueue.main.async { [self] in
                 let email = OwnID.CoreSDK.Email(rawValue: usersEmail)
                 let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(email: email,
-                                                                                 sdkConfigurationName: sdkConfigurationName,
-                                                                                 webLanguages: webLanguages)
+                                                                                     loginType: loginType,
+                                                                                     sdkConfigurationName: sdkConfigurationName,
+                                                                                     webLanguages: webLanguages)
                 self.coreViewModel = coreViewModel
                 subscribe(to: coreViewModel.eventPublisher)
                 state = .coreVM

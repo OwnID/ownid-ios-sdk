@@ -4,7 +4,8 @@ import Combine
 
 public protocol APISessionProtocol {
     func performInitRequest(type: OwnID.CoreSDK.RequestType,
-                            token: OwnID.CoreSDK.JWTToken?) -> AnyPublisher<OwnID.CoreSDK.Init.Response, OwnID.CoreSDK.Error>
+                            token: OwnID.CoreSDK.JWTToken?,
+                            loginType: OwnID.CoreSDK.LoginType?) -> AnyPublisher<OwnID.CoreSDK.Init.Response, OwnID.CoreSDK.Error>
     func performStatusRequest() -> AnyPublisher<OwnID.CoreSDK.Payload, OwnID.CoreSDK.Error>
 }
 
@@ -35,11 +36,13 @@ public extension OwnID.CoreSDK {
 
 extension OwnID.CoreSDK.APISession {
     public func performInitRequest(type: OwnID.CoreSDK.RequestType,
-                                   token: OwnID.CoreSDK.JWTToken?) -> AnyPublisher<OwnID.CoreSDK.Init.Response, OwnID.CoreSDK.Error> {
+                                   token: OwnID.CoreSDK.JWTToken?,
+                                   loginType: OwnID.CoreSDK.LoginType?) -> AnyPublisher<OwnID.CoreSDK.Init.Response, OwnID.CoreSDK.Error> {
         OwnID.CoreSDK.Init.Request(type: type,
                                    url: serverURL,
                                    sessionChallenge: sessionChallenge,
                                    token: token,
+                                   loginType: loginType,
                                    webLanguages: webLanguages)
             .perform()
             .map { [unowned self] response in
