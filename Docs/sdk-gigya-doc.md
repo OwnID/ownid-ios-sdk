@@ -21,6 +21,7 @@ The OwnID Gigya iOS SDK integrates with Email/Password-based [Gigya Authenticati
 * [Implement the Login Screen](#implement-the-login-screen)
   + [Customize View Model](#customize-view-model-1)
   + [Add OwnID View](#add-ownid-view)
+  + [Social Login and Account linking](#social-login-and-account-linking)
 * [Tooltip](#tooltip)
 * [Errors](#errors)
 * [Advanced Configuration](#advanced-configuration)
@@ -288,6 +289,16 @@ var body: some View {
 ```
 
 By default, tooltip popup will appear every time login view is shown.
+
+### Social Login and Account Linking
+
+If you use Gigya [Social Login](https://sap.github.io/gigya-swift-sdk/GigyaSwift/#social-login) feature then you need to handle [Account linking interruption](https://sap.github.io/gigya-swift-sdk/GigyaSwift/#interruptions-handling---account-linking-example) case. To let OwnID do account linking add the parameter `loginType` with value `.linkSocialAccount` to your login view model instance.
+
+```swift
+let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(),
+                                                  loginIdPublisher: loginIdPublisher,
+                                                  loginType: .linkSocialAccount)
+```
 
 ## Tooltip
 

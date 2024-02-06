@@ -87,9 +87,11 @@ public extension OwnID {
         }
         
         func createCoreViewModelForLogIn(loginId: String,
+                                         loginType: LoginType,
                                          sdkConfigurationName: String) -> CoreViewModel {
             let viewModel = CoreViewModel(type: .login,
                                           loginId: loginId,
+                                          loginType: loginType,
                                           supportedLanguages: store.value.supportedLanguages,
                                           sdkConfigurationName: sdkConfigurationName,
                                           clientConfiguration: store.value.getOptionalConfiguration(for: sdkConfigurationName))

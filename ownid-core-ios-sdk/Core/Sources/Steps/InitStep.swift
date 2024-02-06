@@ -8,6 +8,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         let type: OwnID.CoreSDK.RequestType
         let loginId: String?
         let supportsFido2: Bool
+        var loginType: OwnID.CoreSDK.LoginType?
         var qr = false
         var passkeyAutofill = false
     }
@@ -46,7 +47,8 @@ extension OwnID.CoreSDK.CoreViewModel {
             let requestBody = InitRequestBody(sessionChallenge: sessionChallenge,
                                               type: state.type,
                                               loginId: (state.loginId.isBlank || state.shouldIgnoreLoginIdOnInit) ? nil : state.loginId,
-                                              supportsFido2: OwnID.CoreSDK.isPasskeysSupported)
+                                              supportsFido2: OwnID.CoreSDK.isPasskeysSupported,
+                                              loginType: state.loginType)
             state.shouldIgnoreLoginIdOnInit = false
             return [sendInitialRequest(requestBody: requestBody, session: session, configuration: configuration)]
         }

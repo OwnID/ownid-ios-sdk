@@ -41,6 +41,11 @@ public extension OwnID.CoreSDK {
         case registrationInfo
         case session
     }
+    
+    enum LoginType: String, Codable {
+        case standard
+        case linkSocialAccount
+    }
 }
 
 public protocol StringToken {

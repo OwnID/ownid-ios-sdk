@@ -11,6 +11,7 @@ extension OwnID.CoreSDK {
         
         init(type: OwnID.CoreSDK.RequestType,
              loginId: String,
+             loginType: OwnID.CoreSDK.LoginType? = nil,
              supportedLanguages: OwnID.CoreSDK.Languages,
              sdkConfigurationName: String,
              clientConfiguration: LocalConfiguration?,
@@ -26,6 +27,7 @@ extension OwnID.CoreSDK {
                                      sdkConfigurationName: sdkConfigurationName,
                                      loginId: loginId,
                                      type: type,
+                                     loginType: loginType,
                                      supportedLanguages: supportedLanguages)
             let store = Store(
                 initialValue: initialState,

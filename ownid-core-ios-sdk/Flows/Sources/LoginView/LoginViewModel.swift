@@ -42,6 +42,7 @@ public extension OwnID.FlowsSDK.LoginView {
         private let loginPerformer: LoginPerformer
         private var payload: OwnID.CoreSDK.Payload?
         private var loginId = ""
+        private let loginType: OwnID.CoreSDK.LoginType
         var coreViewModel: OwnID.CoreSDK.CoreViewModel!
         var currentMetadata: OwnID.CoreSDK.CurrentMetricInformation?
         let eventService: EventProtocol
@@ -55,9 +56,11 @@ public extension OwnID.FlowsSDK.LoginView {
         public init(loginPerformer: LoginPerformer,
                     sdkConfigurationName: String,
                     loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher,
+                    loginType: OwnID.CoreSDK.LoginType = .standard,
                     eventService: EventProtocol = OwnID.CoreSDK.eventService) {
             self.sdkConfigurationName = sdkConfigurationName
             self.loginPerformer = loginPerformer
+            self.loginType = loginType
             self.eventService = eventService
             updateLoginIdPublisher(loginIdPublisher)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
@@ -98,7 +101,9 @@ public extension OwnID.FlowsSDK.LoginView {
             switch state {
             case .initial:
                 DispatchQueue.main.async { [self] in
-                    let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(loginId: loginId, sdkConfigurationName: sdkConfigurationName)
+                    let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(loginId: loginId, 
+                                                                                         loginType: loginType,
+                                                                                         sdkConfigurationName: sdkConfigurationName)
                     self.coreViewModel = coreViewModel
                     subscribe(to: coreViewModel.eventPublisher)
                     state = .coreVM

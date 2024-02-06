@@ -5,7 +5,7 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.0.1"
+    static let version = "3.0.2"
 }
 
 public extension OwnID {
@@ -72,11 +72,13 @@ public extension OwnID {
         ///   - instance: Instance of Gigya SDK (with custom schema if needed)
         public static func loginViewModel<T: GigyaAccountProtocol>(instance: GigyaCore<T>,
                                                                    loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher,
+                                                                   loginType: OwnID.CoreSDK.LoginType = .standard,
                                                                    sdkConfigurationName: String = sdkName) -> OwnID.FlowsSDK.LoginView.ViewModel {
             let performer = LoginPerformer(instance: instance)
             return OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: performer,
                                                       sdkConfigurationName: sdkConfigurationName,
-                                                      loginIdPublisher: loginIdPublisher)
+                                                      loginIdPublisher: loginIdPublisher,
+                                                      loginType: loginType)
         }
         
         public static func createLoginView(viewModel: OwnID.FlowsSDK.LoginView.ViewModel,

@@ -10,6 +10,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         let sdkConfigurationName: String
         var loginId: String
         let type: OwnID.CoreSDK.RequestType
+        let loginType: OwnID.CoreSDK.LoginType?
         let supportedLanguages: OwnID.CoreSDK.Languages
         
         var browserViewModelStore: Store<OwnID.CoreSDK.BrowserOpenerViewModel.State, OwnID.CoreSDK.BrowserOpenerViewModel.Action>!
