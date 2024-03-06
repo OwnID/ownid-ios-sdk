@@ -1,9 +1,9 @@
 PODS:
   - Gigya (1.5.9)
-  - ownid-core-ios-sdk (3.0.2)
-  - ownid-gigya-ios-sdk (3.0.2):
+  - ownid-core-ios-sdk (3.1.0)
+  - ownid-gigya-ios-sdk (3.1.0):
     - Gigya (>= 1.5.8)
-    - ownid-core-ios-sdk (= 3.0.2)
+    - ownid-core-ios-sdk (= 3.1.0)
 
 DEPENDENCIES:
   - ownid-core-ios-sdk
@@ -17,8 +17,8 @@ SPEC REPOS:
 
 SPEC CHECKSUMS:
   Gigya: 92f007a229826c6b9fff685168432f32e5b71dbb
-  ownid-core-ios-sdk: 37410a6604137ab31522329450b1e10f157de603
-  ownid-gigya-ios-sdk: ce7041349d14ae39d838ab11674140655cb6db2c
+  ownid-core-ios-sdk: e474d0a88d113d3c66f1e50c978dfe62832f38db
+  ownid-gigya-ios-sdk: 9e04eb17d52fcdf004e33b51f87b85680a830183
 
 PODFILE CHECKSUM: e18e091af1510e0e27c4cc79d06a993343e8a3de
 
