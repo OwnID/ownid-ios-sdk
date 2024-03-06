@@ -27,7 +27,8 @@ extension OwnID.CoreSDK.CoreViewModel {
             let fidoStep = FidoAuthStep(step: step)
             state.fidoStep = fidoStep
             return fidoStep.run(state: &state)
-        case .error:
+        case .error(let wrapper):
+            wrapper.log()
             return []
         case .sendStatusRequest:
             state.browserViewModel = .none
@@ -58,11 +59,6 @@ extension OwnID.CoreSDK.CoreViewModel {
             return []
         case .codeResent:
             return []
-            
-        case .authManagerRequestFail:
-            let stopStep = StopStep(flow: .fidoLogin)
-            return stopStep.run(state: &state)
-            
         case .webApp(let step):
             let webAppStep = WebAppStep(step: step)
             return webAppStep.run(state: &state)

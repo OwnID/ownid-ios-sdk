@@ -119,3 +119,30 @@ extension OwnID.CoreSDK.Error: CustomDebugStringConvertible {
         }
     }
 }
+
+extension OwnID.CoreSDK.Error {
+    var metricErrorCode: String? {
+        switch self {
+        case .userError(let errorModel):
+            switch errorModel.code {
+            case .unknown:
+                return nil
+            default:
+                return errorModel.code.rawValue
+            }
+        default:
+            return nil
+        }
+    }
+    
+    var errorMessage: String {
+        switch self {
+        case .userError(let errorModel):
+            errorModel.message
+        case .integrationError(let error):
+            error.localizedDescription
+        default:
+            localizedDescription
+        }
+    }
+}

@@ -123,7 +123,7 @@ public extension OwnID.CoreSDK {
         let source: String?
         let applicationOrigin = Bundle.main.bundleIdentifier
         public var userAgent = UserAgentManager.shared.SDKUserAgent
-        public var version = UserAgentManager.shared.userFacingSDKVersion
+        public var version = UserAgentManager.shared.version
         public var sourceTimestamp = String(Int((Date().timeIntervalSince1970 * 1000.0).rounded()))
         
         init(context: String? = nil,

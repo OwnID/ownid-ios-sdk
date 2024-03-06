@@ -13,6 +13,18 @@ public extension OwnID.GigyaSDK {
     enum IntegrationError: Swift.Error {
         case gigyaSDKError(gigyaError: NetworkError, dataDictionary: [String: Any]?)
     }
+    
+    static func gigyaErrorMessage(_ error: NetworkError) -> String {
+        switch error {
+        case .gigyaError(let data):
+            data.errorMessage ?? error.localizedDescription
+        case .providerError(let data):
+            data
+        default:
+            error.localizedDescription
+            
+        }
+    }
 }
 
 extension OwnID.GigyaSDK.IntegrationError: LocalizedError {

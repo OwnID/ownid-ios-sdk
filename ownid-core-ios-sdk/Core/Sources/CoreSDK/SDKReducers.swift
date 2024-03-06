@@ -10,18 +10,23 @@ extension OwnID.CoreSDK {
                             underlyingSDKs,
                             isTestingEnvironment,
                             environment,
+                            enableLogging,
                             supportedLanguages):
             state.supportedLanguages = supportedLanguages
-            OwnID.CoreSDK.logger.log(level: .information, message: "Configuration created", Self.self)
+            OwnID.CoreSDK.logger.log(level: .information, message: "Configuration created", type: Self.self)
 
             return [createConfiguration(appID: appID,
                                         redirectionURL: redirectionURL,
                                         userFacingSDK: userFacingSDK,
                                         underlyingSDKs: underlyingSDKs,
                                         isTestingEnvironment: isTestingEnvironment,
-                                        environment: environment)]
+                                        environment: environment,
+                                        enableLogging: enableLogging)]
             
         case let .configurationCreated(configuration, userFacingSDK, underlyingSDKs, isTestingEnvironment):
+            if let enableLogging = configuration.enableLogging {
+                OwnID.CoreSDK.logger.isEnabled = enableLogging
+            }
             state.configurationRequestData = OwnID.CoreSDK.SDKState.ConfigurationRequestData(config: configuration,
                                                                                              userFacingSDK: userFacingSDK,
                                                                                              isLoading: false)
@@ -58,7 +63,7 @@ extension OwnID.CoreSDK {
             return [Just(.configureFrom(plistUrl: url, userFacingSDK: userFacingSDK, underlyingSDKs: underlyingSDKs, supportedLanguages: supportedLanguages)).eraseToEffect()]
             
         case let .configureFrom(plistUrl, userFacingSDK, underlyingSDKs, supportedLanguages):
-            OwnID.CoreSDK.logger.log(level: .information, message: "Configuration created from plist", Self.self)
+            OwnID.CoreSDK.logger.log(level: .information, message: "Configuration created from plist", type: Self.self)
             
             state.supportedLanguages = supportedLanguages
             return [getDataFrom(plistUrl: plistUrl,
@@ -66,11 +71,11 @@ extension OwnID.CoreSDK {
                                 underlyingSDKs: underlyingSDKs,
                                 isTestingEnvironment: false)]
             
-        case .save(let configurationLoadingEvent, let userFacingSDK):
+        case .save(let configurationLoadingEvent, _):
             switch configurationLoadingEvent {
             case .loaded(let config):
                 state.configurationRequestData = .none
-                state.configurations[userFacingSDK?.name ?? ""] = config
+                state.configuration = config
                 state.configurationLoadingEventPublisher.send(configurationLoadingEvent)
                 return [
                     translationsDownloaderSDKConfigured(with: state.supportedLanguages),

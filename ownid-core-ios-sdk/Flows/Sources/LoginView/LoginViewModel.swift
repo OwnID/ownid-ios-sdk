@@ -38,8 +38,9 @@ public extension OwnID.FlowsSDK.LoginView {
         
         private var bag = Set<AnyCancellable>()
         private var coreViewModelBag = Set<AnyCancellable>()
-        private let resultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.LoginEvent, OwnID.CoreSDK.Error>, Never>()
-        private let loginPerformer: LoginPerformer
+        private let integrationResultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.LoginEvent, OwnID.CoreSDK.Error>, Never>()
+        private let flowResultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.LoginFlowEvent, OwnID.CoreSDK.Error>, Never>()
+        private let loginPerformer: LoginPerformer?
         private var payload: OwnID.CoreSDK.Payload?
         private var loginId = ""
         private let loginType: OwnID.CoreSDK.LoginType
@@ -47,18 +48,27 @@ public extension OwnID.FlowsSDK.LoginView {
         var currentMetadata: OwnID.CoreSDK.CurrentMetricInformation?
         let eventService: EventProtocol
         
-        let sdkConfigurationName: String
-        
-        public var eventPublisher: OwnID.LoginPublisher {
-            resultPublisher.eraseToAnyPublisher()
+        var hasIntegration: Bool {
+            loginPerformer != nil
         }
         
-        public init(loginPerformer: LoginPerformer,
-                    sdkConfigurationName: String,
+        @available(*, deprecated, renamed: "integrationEventPublisher")
+        public var eventPublisher: OwnID.LoginPublisher {
+            integrationResultPublisher.eraseToAnyPublisher()
+        }
+        
+        public var integrationEventPublisher: OwnID.LoginPublisher {
+            integrationResultPublisher.eraseToAnyPublisher()
+        }
+        
+        public var flowEventPublisher: OwnID.LoginFlowPublisher {
+            flowResultPublisher.eraseToAnyPublisher()
+        }
+        
+        public init(loginPerformer: LoginPerformer? = nil,
                     loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher,
                     loginType: OwnID.CoreSDK.LoginType = .standard,
                     eventService: EventProtocol = OwnID.CoreSDK.eventService) {
-            self.sdkConfigurationName = sdkConfigurationName
             self.loginPerformer = loginPerformer
             self.loginType = loginType
             self.eventService = eventService
@@ -102,8 +112,7 @@ public extension OwnID.FlowsSDK.LoginView {
             case .initial:
                 DispatchQueue.main.async { [self] in
                     let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(loginId: loginId, 
-                                                                                         loginType: loginType,
-                                                                                         sdkConfigurationName: sdkConfigurationName)
+                                                                                         loginType: loginType)
                     self.coreViewModel = coreViewModel
                     subscribe(to: coreViewModel.eventPublisher)
                     state = .coreVM
@@ -134,7 +143,7 @@ public extension OwnID.FlowsSDK.LoginView {
                                                                            category: .login,
                                                                            context: OwnID.CoreSDK.logger.context,
                                                                            errorMessage: error.localizedDescription,
-                                                                           errorCode: error.errorCode))
+                                                                           errorCode: error.metricErrorCode))
                     }
                 } receiveValue: { [unowned self] event in
                     switch event {
@@ -143,11 +152,11 @@ public extension OwnID.FlowsSDK.LoginView {
                         
                     case .cancelled(let flow):
                         let error = OwnID.CoreSDK.Error.flowCancelled(flow: flow)
-                        OwnID.CoreSDK.logger.log(level: .warning, message: error.localizedDescription, Self.self)
-                        handle(OwnID.CoreSDK.CoreErrorLogWrapper(error: error))
+                        OwnID.CoreSDK.logger.log(level: .warning, message: error.localizedDescription, type: Self.self)
+                        handle(error)
 
                     case .loading:
-                        resultPublisher.send(.success(.loading))
+                        hasIntegration ? integrationResultPublisher.send(.success(.loading)) : flowResultPublisher.send(.success(.loading))
                     }
                 }
                 .store(in: &coreViewModelBag)
@@ -161,7 +170,7 @@ public extension OwnID.FlowsSDK.LoginView {
                 .sink { _ in
                 } receiveValue: { [unowned self] event in
                     if state == .initial {
-                        let configuration = OwnID.CoreSDK.shared.store.value.getOptionalConfiguration(for: sdkConfigurationName)
+                        let configuration = OwnID.CoreSDK.shared.store.value.configuration
                         var validLoginIdFormat: Bool?
                         if let loginIdSettings = configuration?.loginIdSettings {
                             validLoginIdFormat = OwnID.CoreSDK.LoginId(value: loginId, settings: loginIdSettings).isValid
@@ -181,35 +190,52 @@ public extension OwnID.FlowsSDK.LoginView {
 private extension OwnID.FlowsSDK.LoginView.ViewModel {
     func process(payload: OwnID.CoreSDK.Payload) {
         self.payload = payload
-        let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)
-        loginPerformerPublisher
-            .sink { [unowned self] completion in
-                if case .failure(let error) = completion {
-                    handle(error)
-                    let errorMessage = error.error.localizedDescription
-                    eventService.sendMetric(.errorMetric(action: .error,
+        
+        if let loginPerformer {
+            let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)
+            loginPerformerPublisher
+                .sink { [unowned self] completion in
+                    if case .failure(let error) = completion {
+                        handle(error)
+                        let errorMessage = error.localizedDescription
+                        eventService.sendMetric(.errorMetric(action: .error,
+                                                             category: .login,
+                                                             context: payload.context,
+                                                             errorMessage: errorMessage,
+                                                             errorCode: error.metricErrorCode))
+                    }
+                } receiveValue: { [unowned self] loginResult in
+                    eventService.sendMetric(.trackMetric(action: .loggedIn,
                                                          category: .login,
                                                          context: payload.context,
-                                                         errorMessage: errorMessage,
-                                                         errorCode: error.errorCode))
+                                                         loginId: loginId,
+                                                         authType: payload.authType))
+                    if let loginId = payload.loginId {
+                        OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                    }
+                    integrationResultPublisher.send(.success(.loggedIn(loginResult: loginResult.operationResult, authType: loginResult.authType)))
+                    resetDataAndState(isResettingToInitialState: false)
                 }
-            } receiveValue: { [unowned self] loginResult in
-                eventService.sendMetric(.trackMetric(action: .loggedIn,
-                                                     category: .login,
-                                                     context: payload.context,
-                                                     loginId: loginId,
-                                                     authType: payload.authType))
-                if let loginId = payload.loginId {
-                    OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
-                }
-                resultPublisher.send(.success(.loggedIn(loginResult: loginResult.operationResult, authType: loginResult.authType)))
-                resetDataAndState(isResettingToInitialState: false)
+                .store(in: &bag)
+        } else {
+            OwnID.CoreSDK.logger.log(level: .debug, message: "Login without integration response", type: Self.self)
+            
+            eventService.sendMetric(.trackMetric(action: .loggedIn,
+                                                 category: .login,
+                                                 context: payload.context,
+                                                 loginId: loginId,
+                                                 authType: payload.authType))
+            if let loginId = payload.loginId {
+                OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
             }
-            .store(in: &bag)
+            flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
+            resetDataAndState(isResettingToInitialState: false)
+        }
     }
     
-    func handle(_ error: OwnID.CoreSDK.CoreErrorLogWrapper) {
+    func handle(_ error: OwnID.CoreSDK.Error) {
         resetToInitialState()
-        resultPublisher.send(.failure(error.error))
+        
+        hasIntegration ? integrationResultPublisher.send(.failure(error)) : flowResultPublisher.send(.failure(error))
     }
 }

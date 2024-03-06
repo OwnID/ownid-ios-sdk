@@ -21,7 +21,7 @@ final class ViewController: UIViewController {
         
         let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: emailPublisher.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
-        subscribe(to: ownIDViewModel.eventPublisher)
+        subscribe(to: ownIDViewModel.integrationEventPublisher)
         activityIndicator.isHidden = true
         emailTextField.addTarget(self, action: #selector(ViewController.textFieldDidChange(_:)), for: .editingChanged)
         addChild(ownIdButton)

@@ -2,7 +2,7 @@ import Combine
 
 extension OwnID.CoreSDK.CoreViewModel {
     
-    typealias EventPublisher = AnyPublisher<Event, OwnID.CoreSDK.CoreErrorLogWrapper>
+    typealias EventPublisher = AnyPublisher<Event, OwnID.CoreSDK.Error>
     
     enum Event {
         case loading

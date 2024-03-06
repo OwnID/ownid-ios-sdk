@@ -12,18 +12,17 @@ extension OwnID.CoreSDK.CoreViewModel {
         override func run(state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<OwnID.CoreSDK.CoreViewModel.Action>] {
             guard let urlString = step.webAppData?.url else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                return errorEffect(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self))
+                return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
             
             guard let loginIdSettings = state.configuration?.loginIdSettings else {
                 let message = OwnID.CoreSDK.ErrorMessage.noLocalConfig
-                return errorEffect(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self))
+                return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
             
             let viewModel = createBrowserVM(for: state.context,
                                             browserURL: urlString,
                                             loginId: OwnID.CoreSDK.LoginId(value: state.loginId, settings: loginIdSettings),
-                                            sdkConfigurationName: state.sdkConfigurationName,
                                             store: state.browserViewModelStore,
                                             redirectionURLString: state.configuration?.redirectionURL,
                                             creationClosure: state.createBrowserOpenerClosure)
@@ -34,7 +33,6 @@ extension OwnID.CoreSDK.CoreViewModel {
         private func createBrowserVM(for context: String,
                                      browserURL: String,
                                      loginId: OwnID.CoreSDK.LoginId?,
-                                     sdkConfigurationName: String,
                                      store: Store<OwnID.CoreSDK.BrowserOpenerViewModel.State, OwnID.CoreSDK.BrowserOpenerViewModel.Action>,
                                      redirectionURLString: OwnID.CoreSDK.RedirectionURLString?,
                                      creationClosure: OwnID.CoreSDK.BrowserOpener.CreationClosure) -> OwnID.CoreSDK.BrowserOpener {

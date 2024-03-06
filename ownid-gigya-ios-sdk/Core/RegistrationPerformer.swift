@@ -8,7 +8,7 @@ public extension OwnID.GigyaSDK {
 }
 
 extension OwnID.GigyaSDK.Registration {
-    public typealias PublisherType = AnyPublisher<OwnID.RegisterResult, OwnID.CoreSDK.CoreErrorLogWrapper>
+    public typealias PublisherType = AnyPublisher<OwnID.RegisterResult, OwnID.CoreSDK.Error>
     
     public struct Parameters: RegisterParameters {
         public init(parameters: [String: Any]) {
@@ -21,13 +21,11 @@ extension OwnID.GigyaSDK.Registration {
 
 extension OwnID.GigyaSDK.Registration {
     final class Performer<T: GigyaAccountProtocol>: RegistrationPerformer {
-        init(instance: GigyaCore<T>, sdkConfigurationName: String) {
+        init(instance: GigyaCore<T>) {
             self.instance = instance
-            self.sdkConfigurationName = sdkConfigurationName
         }
         
         let instance: GigyaCore<T>
-        let sdkConfigurationName: String
         
         func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> PublisherType {
             OwnID.GigyaSDK.Registration.register(instance: instance,
@@ -41,9 +39,10 @@ extension OwnID.GigyaSDK.Registration {
     static func register<T: GigyaAccountProtocol>(instance: GigyaCore<T>,
                                                   configuration: OwnID.FlowsSDK.RegistrationConfiguration,
                                                   parameters: RegisterParameters) -> PublisherType {
-        Future<OwnID.RegisterResult, OwnID.CoreSDK.CoreErrorLogWrapper> { promise in
-            func handle(error: OwnID.CoreSDK.Error) {
-                promise(.failure(.coreLog(error: error, type: Self.self)))
+        Future<OwnID.RegisterResult, OwnID.CoreSDK.Error> { promise in
+            func handle(error: OwnID.CoreSDK.Error, customErrorMessage: String? = nil) {
+                OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log(customErrorMessage: customErrorMessage)
+                promise(.failure(error))
             }
             
             let gigyaParameters = parameters as? OwnID.GigyaSDK.Registration.Parameters ?? OwnID.GigyaSDK.Registration.Parameters(parameters: [:])
@@ -55,8 +54,11 @@ extension OwnID.GigyaSDK.Registration {
                 return
             }
             
+            let data = Data((configuration.payload.data ?? "").utf8)
+            let dataJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            
             var registerParams = gigyaParameters.parameters
-            let ownIDParameters = [dataField: configuration.payload.data]
+            let ownIDParameters = [dataField: dataJson]
             registerParams["data"] = ownIDParameters
             
             if var language = configuration.payload.requestLanguage {
@@ -72,8 +74,8 @@ extension OwnID.GigyaSDK.Registration {
                 case .success(let account):
                     let UID = account.UID ?? ""
                     OwnID.CoreSDK.logger.log(level: .debug,
-                                                    message: "UID \(UID.logValue)",
-                                                    Self.self)
+                                             message: "UID \(UID.logValue)",
+                                             type: Self.self)
                     promise(.success(OwnID.RegisterResult(operationResult: VoidOperationResult(),
                                                           authType: configuration.payload.authType)))
                     

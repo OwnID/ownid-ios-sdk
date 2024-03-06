@@ -21,7 +21,7 @@ public extension OwnID.CoreSDK {
         var authType: String?
         var hasLoginId: Bool?
         var validLoginIdFormat: Bool?
-        let applicationName = OwnID.CoreSDK.shared.store.value.firstConfiguration?.displayName
+        let applicationName = OwnID.CoreSDK.shared.store.value.configuration?.displayName
         var isUserVerifyingPlatformAuthenticatorAvailable = ProcessInfo().isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 16,
                                                                                                                           minorVersion: 0,
                                                                                                                           patchVersion: 0))

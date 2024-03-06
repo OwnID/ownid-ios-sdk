@@ -9,10 +9,14 @@ extension OwnID.CoreSDK.LocalConfiguration {
 
 extension OwnID.CoreSDK {
     struct LocalConfiguration: Decodable {
-        init(appID: OwnID.CoreSDK.AppID, redirectionURL: OwnID.CoreSDK.RedirectionURLString?, environment: String?) throws {
+        init(appID: OwnID.CoreSDK.AppID, 
+             redirectionURL: OwnID.CoreSDK.RedirectionURLString?,
+             environment: String?,
+             enableLogging: Bool?) throws {
             self.environment = environment
             self.appID = appID
             self.redirectionURL = redirectionURL
+            self.enableLogging = enableLogging
             try buildURLFrom(appID, environment)
         }
         
@@ -23,6 +27,7 @@ extension OwnID.CoreSDK {
             self.appID = appID
             self.environment = env
             self.redirectionURL = try container.decodeIfPresent(String.self, forKey: .redirectionURL)
+            self.enableLogging = try container.decodeIfPresent(Bool.self, forKey: .enableLogging)
             
             try buildURLFrom(appID, env)
         }
@@ -38,12 +43,14 @@ extension OwnID.CoreSDK {
             case appID = "OwnIDAppID"
             case redirectionURL = "OwnIDRedirectionURL"
             case env = "OwnIDEnv"
+            case enableLogging = "EnableLogging"
         }
         
         private(set) var ownIDServerConfigurationURL: ServerURL = ServerURL(string: "ownid.com")!
         var redirectionURL: RedirectionURLString?
         let appID: OwnID.CoreSDK.AppID
         let environment: String?
+        let enableLogging: Bool?
         var serverURL: ServerURL!
         var passkeysAutofillEnabled: Bool!
         var supportedLocales: [String]?

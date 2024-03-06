@@ -15,7 +15,7 @@ extension OwnID.CoreSDK.CoreViewModel {
             let context = state.context
             
             OwnID.CoreSDK.logger.updateContext(context: nil)
-            OwnID.CoreSDK.logger.log(level: .information, message: "Cancel Flow", Self.self)
+            OwnID.CoreSDK.logger.log(level: .information, message: "Cancel Flow", type: Self.self)
             OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .cancel,
                                                                category: state.type == .login ? .login : .registration,
                                                                context: context,
@@ -28,7 +28,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                with: EmptyBody.self)
                 .receive(on: DispatchQueue.main)
                 .handleEvents(receiveOutput: { response in
-                    OwnID.CoreSDK.logger.log(level: .debug, message: "Stop Request Finished", Self.self)
+                    OwnID.CoreSDK.logger.log(level: .debug, message: "Stop Request Finished", type: Self.self)
                 })
                 .map { _ in Action.stopRequestLoaded(flow: self.flow) }
                 .catch { _ in Just(Action.stopRequestLoaded(flow: self.flow)) }

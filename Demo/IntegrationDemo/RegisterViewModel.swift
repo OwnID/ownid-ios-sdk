@@ -18,10 +18,9 @@ final class RegisterViewModel: ObservableObject {
     init() {
         let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: Registration(),
                                                                    loginPerformer: Login(),
-                                                                   sdkConfigurationName: IntegrationDemoApp.clientName,
                                                                    loginIdPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
-        subscribe(to: ownIDViewModel.eventPublisher)
+        subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {

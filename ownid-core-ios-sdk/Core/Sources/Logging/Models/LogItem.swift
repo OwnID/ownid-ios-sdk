@@ -11,7 +11,7 @@ public extension OwnID.CoreSDK {
         var errorMessage: String?
         public var metadata: Metadata?
         public var userAgent = UserAgentManager.shared.SDKUserAgent
-        public var version = UserAgentManager.shared.userFacingSDKVersion
+        public var version = UserAgentManager.shared.version
         public var sourceTimestamp = String(Int((Date().timeIntervalSince1970 * 1000.0).rounded()))
         
         init(context: String = "",

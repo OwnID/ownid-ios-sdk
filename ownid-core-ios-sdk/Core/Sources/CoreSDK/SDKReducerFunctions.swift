@@ -23,6 +23,7 @@ extension OwnID.CoreSDK {
                                          underlyingSDKs: [],
                                          isTestingEnvironment: true,
                                          environment: .none,
+                                         enableLogging: true,
                                          supportedLanguages: .init(rawValue: Locale.preferredLanguages))
         return Just(action).eraseToEffect()
     }
@@ -32,10 +33,12 @@ extension OwnID.CoreSDK {
                                     userFacingSDK: SDKInformation,
                                     underlyingSDKs: [SDKInformation],
                                     isTestingEnvironment: Bool,
-                                    environment: String?) -> Effect<SDKAction> {
+                                    environment: String?,
+                                    enableLogging: Bool?) -> Effect<SDKAction> {
         let config = try! OwnID.CoreSDK.LocalConfiguration(appID: appID,
                                                            redirectionURL: redirectionURL,
-                                                           environment: environment)
+                                                           environment: environment,
+                                                           enableLogging: enableLogging)
         return Just(.configurationCreated(configuration: config,
                                           userFacingSDK: userFacingSDK,
                                           underlyingSDKs: underlyingSDKs,
@@ -48,7 +51,7 @@ extension OwnID.CoreSDK {
                                     isTestingEnvironment: Bool) -> Effect<SDKAction> {
         .fireAndForget {
             OwnID.CoreSDK.UserAgentManager.shared.registerUserFacingSDKName(userFacingSDK, underlyingSDKs: underlyingSDKs)
-            OwnID.CoreSDK.logger.log(level: .debug, OwnID.CoreSDK.self)
+            OwnID.CoreSDK.logger.log(level: .debug, type: OwnID.CoreSDK.self)
         }
     }
     
@@ -60,18 +63,18 @@ extension OwnID.CoreSDK {
                 .map { serverConfiguration in
                     if let logLevel = serverConfiguration.logLevel {
                         OwnID.CoreSDK.logger.updateLogLevel(logLevel: logLevel)
-                        OwnID.CoreSDK.logger.log(level: .information, message: "Log level set to \(logLevel)", Self.self)
+                        OwnID.CoreSDK.logger.log(level: .information, message: "Log level set to \(logLevel)", type: Self.self)
                     } else {
                         OwnID.CoreSDK.logger.updateLogLevel(logLevel: .warning)
-                        OwnID.CoreSDK.logger.log(level: .warning, message: "Server configuration is not set", force: true, Self.self)
+                        OwnID.CoreSDK.logger.log(level: .warning, message: "Server configuration is not set", force: true, type: Self.self)
                     }
                     if serverConfiguration.platformSettings?.bundleId != Bundle.main.bundleIdentifier {
-                        let bundleID = serverConfiguration.platformSettings?.bundleId ?? "empty"
+                        let serverBundleID = serverConfiguration.platformSettings?.bundleId ?? "empty"
                         let appBundleID = Bundle.main.bundleIdentifier ?? "empty"
                         OwnID.CoreSDK.logger.log(level: .warning,
                                                  message: "Incorrect Passkeys Configuration",
-                                                 errorMessage: "Bundle ID mismatch. Expecting \(appBundleID) but it's \(bundleID)",
-                                                 Self.self)
+                                                 errorMessage: "Bundle ID mismatch. Expecting \(serverBundleID) but it's \(appBundleID)",
+                                                 type: Self.self)
                     }
                     
                     var local = config
@@ -88,7 +91,7 @@ extension OwnID.CoreSDK {
                 }
                 .catch { _ in
                     OwnID.CoreSDK.logger.updateLogLevel(logLevel: .warning)
-                    OwnID.CoreSDK.logger.log(level: .warning, message: "Server configuration is not set", force: true, Self.self)
+                    OwnID.CoreSDK.logger.log(level: .warning, message: "Server configuration is not set", force: true, type: Self.self)
                     let message = OwnID.CoreSDK.ErrorMessage.noServerConfig
                     return Just(SDKAction.save(configurationLoadingEvent: .error(.userError(errorModel: UserErrorModel(message: message))),
                                                userFacingSDK: userFacingSDK))
@@ -100,7 +103,7 @@ extension OwnID.CoreSDK {
     static func translationsDownloaderSDKConfigured(with supportedLanguages: OwnID.CoreSDK.Languages) -> Effect<SDKAction> {
         .fireAndForget {
             OwnID.CoreSDK.shared.translationsModule.SDKConfigured(supportedLanguages: supportedLanguages)
-            OwnID.CoreSDK.logger.log(level: .debug, OwnID.CoreSDK.self)
+            OwnID.CoreSDK.logger.log(level: .debug, type: OwnID.CoreSDK.self)
         }
     }
     

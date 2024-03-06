@@ -7,7 +7,6 @@ extension OwnID.CoreSDK.CoreViewModel {
         let createAccountManagerClosure: OwnID.CoreSDK.AccountManager.CreationClosure
         let createBrowserOpenerClosure: OwnID.CoreSDK.BrowserOpener.CreationClosure
         
-        let sdkConfigurationName: String
         var loginId: String
         let type: OwnID.CoreSDK.RequestType
         let loginType: OwnID.CoreSDK.LoginType?

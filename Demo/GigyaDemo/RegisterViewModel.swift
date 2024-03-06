@@ -19,7 +19,7 @@ final class RegisterViewModel: ObservableObject {
     init() {
         let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
-        subscribe(to: ownIDViewModel.eventPublisher)
+        subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {

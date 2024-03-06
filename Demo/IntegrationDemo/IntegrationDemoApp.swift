@@ -2,8 +2,8 @@ import SwiftUI
 import OwnIDCoreSDK
 
 extension IntegrationDemoApp {
-    static let clientName = "CustomIntegrationDemoApp"
-    static let version = "3.0.0"
+    static let clientName = "Integration"
+    static let version = "3.1.0"
 }
 
 @main

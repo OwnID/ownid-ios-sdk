@@ -1,69 +1,53 @@
 import Foundation
 
 public extension OwnID.CoreSDK {
-    struct CoreErrorLogWrapper: Swift.Error {
-        public init(error: OwnID.CoreSDK.Error, isOnUI: Bool = false, flowFinished: Bool = true) {
+    struct ErrorWrapper {
+        public init(error: OwnID.CoreSDK.Error,
+                    isOnUI: Bool = false,
+                    flowFinished: Bool = true,
+                    function: String = #function,
+                    file: String = #file,
+                    type: Any.Type) {
             self.error = error
             self.isOnUI = isOnUI
             self.flowFinished = flowFinished
+            self.function = function
+            self.file = file
+            self.type = type
         }
         
-        public let error: OwnID.CoreSDK.Error
-        public let isOnUI: Bool
-        public let flowFinished: Bool
-    }
-}
-
-public extension OwnID.CoreSDK.CoreErrorLogWrapper {
-    @discardableResult
-    static func coreLog<T>(error: OwnID.CoreSDK.Error,
-                           function: String = #function,
-                           file: String = #file,
-                           isOnUI: Bool = false,
-                           flowFinished: Bool = true,
-                           type: T.Type = T.self) -> OwnID.CoreSDK.CoreErrorLogWrapper {
-        let errorWrapper = OwnID.CoreSDK.CoreErrorLogWrapper(error: error, isOnUI: isOnUI, flowFinished: flowFinished)
+        let error: OwnID.CoreSDK.Error
+        let isOnUI: Bool
+        let flowFinished: Bool
+        let function: String
+        let file: String
+        let type: Any.Type
         
-        switch error {
-        case .userError(let errorModel):
-            if errorModel.code == .unknown {
+        
+        public func log(customErrorMessage: String? = nil) {
+            let message: String
+            if let customErrorMessage {
+                message = customErrorMessage
+            } else {
+                message = error.errorMessage
+            }
+            
+            switch error {
+            case .userError(let errorModel):
+                if errorModel.code == .unknown {
+                    OwnID.CoreSDK.logger.log(level: .error,
+                                             function: function,
+                                             file: file,
+                                             message: message,
+                                             type: type)
+                }
+            default:
                 OwnID.CoreSDK.logger.log(level: .error,
                                          function: function,
                                          file: file,
-                                         message: errorWrapper.errorMessage,
-                                         type)
+                                         message: message,
+                                         type: type)
             }
-        default:
-            OwnID.CoreSDK.logger.log(level: .error,
-                                     function: function,
-                                     file: file,
-                                     message: errorWrapper.errorMessage,
-                                     type)
-        }
-        
-        return errorWrapper
-    }
-    
-    var errorMessage: String {
-        switch error {
-        case .userError(let errorModel):
-            errorModel.message
-        default:
-            error.localizedDescription
-        }
-    }
-    
-    var errorCode: String? {
-        switch error {
-        case .userError(let errorModel):
-            switch errorModel.code {
-            case .unknown:
-                return nil
-            default:
-                return errorModel.code.rawValue
-            }
-        default:
-            return nil
         }
     }
 }

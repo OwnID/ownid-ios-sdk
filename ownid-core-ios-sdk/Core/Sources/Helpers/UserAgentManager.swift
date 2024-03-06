@@ -15,26 +15,35 @@ public extension OwnID.CoreSDK {
         private let modelName = UIDevice.modelName
         
         func registerUserFacingSDKName(_ userFacingSDK: SDKInformation, underlyingSDKs: [SDKInformation]) {
-            var allUnderlyingSDKs: [SDKInformation] = [(OwnID.CoreSDK.sdkName, OwnID.CoreSDK.version)]
+            var allUnderlyingSDKs: [SDKInformation] = [OwnID.CoreSDK.info()]
             allUnderlyingSDKs.append(contentsOf: underlyingSDKs)
-            self.underlyingSDKs = allUnderlyingSDKs.map { $0.name }
             SDKUserAgent = userAgent(for: userFacingSDK, underlyingSDKs: allUnderlyingSDKs)
+            version = version(for: userFacingSDK, underlyingSDKs: allUnderlyingSDKs)
         }
         
-        var userFacingSDKVersion: String { version }
         private var systemVersion: String { UIDevice.current.systemVersion }
         
-        public lazy var underlyingSDKs = [OwnID.CoreSDK.sdkName]
         public lazy var SDKUserAgent = userAgent(for: (OwnID.CoreSDK.sdkName, OwnID.CoreSDK.version), underlyingSDKs: [])
+        lazy var version: String = version(for: (OwnID.CoreSDK.sdkName, OwnID.CoreSDK.version), underlyingSDKs: [])
+        
+        private func version(for userFacingSDK: SDKInformation, underlyingSDKs: [SDKInformation]) -> String {
+            let userFacingSDKName = sdkAgentName(sdkName: userFacingSDK.name, version: userFacingSDK.verison)
+            let underlyingSDKsNames = underlyingSDKNames(underlyingSDKs: underlyingSDKs)
+            return "\(userFacingSDKName) \(underlyingSDKsNames)"
+        }
         
         private func userAgent(for userFacingSDK: SDKInformation, underlyingSDKs: [SDKInformation]) -> String {
-            let underlyingSDKsNames = underlyingSDKNames(underlyingSDKs: underlyingSDKs)
             let userFacingSDKName = sdkAgentName(sdkName: userFacingSDK.name, version: userFacingSDK.verison)
+            let underlyingSDKsNames = underlyingSDKNames(underlyingSDKs: underlyingSDKs)
             return "\(userFacingSDKName) (iOS; iOS \(systemVersion); \(modelName)) \(underlyingSDKsNames) \(Bundle.main.bundleIdentifier!)"
         }
         
         private func sdkAgentName(sdkName: String, version: String) -> String {
-            "OwnID-\(sdkName)/\(version)"
+            if !sdkName.hasPrefix("OwnID") {
+                "OwnID\(sdkName)/\(version)"
+            } else {
+                "\(sdkName)/\(version)"
+            }
         }
         
         private func underlyingSDKNames(underlyingSDKs: [SDKInformation]) -> String {

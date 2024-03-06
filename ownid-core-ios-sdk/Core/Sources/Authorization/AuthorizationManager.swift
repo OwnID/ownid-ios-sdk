@@ -127,24 +127,6 @@ extension OwnID.CoreSDK {
         }
         
         @available(iOS 16.0, *)
-        func beginAutoFillAssistedPasskeySignIn() {
-            if true {
-                print("For now autofill is not supported right here, we need some other way to enable this as we need new challenge for this")
-                return
-            }
-            currentAuthController?.cancel()
-            
-            let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
-            let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challengeData)
-            
-            let authController = ASAuthorizationController(authorizationRequests: [assertionRequest])
-            authController.delegate = self
-            authController.presentationContextProvider = self
-            authController.performAutoFillAssistedRequests()
-            currentAuthController = authController
-        }
-        
-        @available(iOS 16.0, *)
         func signUpWith(userName: String, credsIds: [String]) {
             currentAuthController?.cancel()
             let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
@@ -161,7 +143,7 @@ extension OwnID.CoreSDK {
             if registrationRequest.responds(to: Selector("setExcludedCredentials:")) {
                 registrationRequest.excludedCredentials = creds
             } else {
-                OwnID.CoreSDK.logger.log(level: .warning, message: "setExcludedCredentials isn't available", Self.self)
+                OwnID.CoreSDK.logger.log(level: .warning, message: "setExcludedCredentials isn't available", type: Self.self)
             }
             
             let authController = ASAuthorizationController(authorizationRequests: [registrationRequest])
@@ -227,7 +209,7 @@ extension OwnID.CoreSDK {
                 OwnID.CoreSDK.logger.log(level: .warning,
                                          message: "Fido error",
                                          errorMessage: error.localizedDescription,
-                                         Self.self)
+                                         type: Self.self)
                 currentAuthController?.cancel()
                 controller.cancel()
             }

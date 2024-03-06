@@ -17,8 +17,8 @@ extension OwnID.CoreSDK.CoreViewModel.Action: CustomDebugStringConvertible {
             return "webApp"
         case .fido2Authorize:
             return "fido2Authorize"
-        case .error(let error):
-            return "error \(error.localizedDescription)"
+        case .error(let wrapper):
+            return "error \(wrapper.error.localizedDescription)"
         case .sendStatusRequest:
             return "sendStatusRequest"
         case .statusRequestLoaded:
@@ -40,8 +40,6 @@ extension OwnID.CoreSDK.CoreViewModel.Action: CustomDebugStringConvertible {
         case .addErrorToInternalStates(let error):
             let message = "addErrorToInternalStates " + error.localizedDescription + " " + error.debugDescription
             return message
-        case .authManagerRequestFail(let error, _):
-            return "authManagerRequestFail \(error.error.localizedDescription)"
         case .oneTimePasswordView:
             return "oneTimePasswordView"
         case .idCollectView:

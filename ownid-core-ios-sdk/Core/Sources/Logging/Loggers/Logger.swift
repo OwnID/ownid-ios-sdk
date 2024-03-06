@@ -6,7 +6,7 @@ public protocol LoggerProtocol {
 
 public extension OwnID.CoreSDK {
     class Logger {
-        public var isEnabled = true
+        public var isEnabled = false
         
         private var tag: String = "OwnID-SDK"
         private var logger: LoggerProtocol = OSLogger()
@@ -30,7 +30,7 @@ public extension OwnID.CoreSDK {
         static let shared = InternalLogger()
         private init() { }
         
-        public var isEnabled = true {
+        public var isEnabled = false {
             didSet {
                 logger.updateIsEnabled(isEnabled: isEnabled)
             }
@@ -45,18 +45,18 @@ public extension OwnID.CoreSDK {
             self.logger.setLogger(logger, customTag: customTag)
         }
         
-        public func log<T>(level: LogLevel,
-                           function: String = #function,
-                           file: String = #file,
-                           message: String = "",
-                           errorMessage: String? = nil,
-                           force: Bool = false,
-                           _: T.Type = T.self) {
+        public func log(level: LogLevel,
+                 function: String = #function,
+                 file: String = #file,
+                 message: String = "",
+                 errorMessage: String? = nil,
+                 force: Bool = false,
+                 type: Any.Type = Any.self) {
             let message = "\(message) \(function) \((file as NSString).lastPathComponent)"
             if force {
-                logger.forceLog(level: level, codeInitiator: String(describing: T.self), message: message, errorMessage: errorMessage)
+                logger.forceLog(level: level, codeInitiator: String(describing: type.self), message: message, errorMessage: errorMessage)
             } else {
-                logger.log(level: level, codeInitiator: String(describing: T.self), message: message, errorMessage: errorMessage)
+                logger.log(level: level, codeInitiator: String(describing: type.self), message: message, errorMessage: errorMessage)
             }
         }
         

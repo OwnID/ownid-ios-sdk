@@ -4,7 +4,7 @@ import Combine
 /// OwnID class represents core part of SDK. It performs initialization and creates views. It reads OwnIDConfiguration from disk, parses it and loads to memory for later usage. It is a singleton, so the URL returned from outside can be linked to corresponding flow.
 public extension OwnID {    
     final class CoreSDK {
-        public var serverConfigurationURL: ServerURL? { store.value.firstConfiguration?.ownIDServerConfigurationURL }
+        public var serverConfigurationURL: ServerURL? { store.value.configuration?.ownIDServerConfigurationURL }
         
         public static let shared = CoreSDK()
         public let translationsModule = TranslationsSDK.Manager()
@@ -13,7 +13,7 @@ public extension OwnID {
         
         @ObservedObject var store: Store<SDKState, SDKAction>
         
-        private let urlPublisher = PassthroughSubject<Void, OwnID.CoreSDK.CoreErrorLogWrapper>()
+        private let urlPublisher = PassthroughSubject<Void, OwnID.CoreSDK.Error>()
         private let configurationLoadingEventPublisher = PassthroughSubject<ConfigurationLoadingEvent, Never>()
         
         private init() {
@@ -24,7 +24,7 @@ public extension OwnID {
             self.store = store
         }
         
-        public var isSDKConfigured: Bool { !store.value.configurations.isEmpty }
+        public var isSDKConfigured: Bool { store.value.configuration != nil }
         
         public static var logger = InternalLogger.shared
         public static var eventService: EventService { EventService.shared }
@@ -34,7 +34,7 @@ public extension OwnID {
         public func requestConfiguration() { store.send(.fetchServerConfiguration) }
         
         public func configure(userFacingSDK: SDKInformation,
-                              underlyingSDKs: [SDKInformation],
+                              underlyingSDKs: [SDKInformation] = [],
                               supportedLanguages: OwnID.CoreSDK.Languages) {
             store.send(.configureFromDefaultConfiguration(userFacingSDK: userFacingSDK,
                                                           underlyingSDKs: underlyingSDKs,
@@ -52,8 +52,9 @@ public extension OwnID {
         public func configure(appID: OwnID.CoreSDK.AppID,
                               redirectionURL: RedirectionURLString? = nil,
                               userFacingSDK: SDKInformation,
-                              underlyingSDKs: [SDKInformation],
+                              underlyingSDKs: [SDKInformation] = [],
                               environment: String? = nil,
+                              enableLogging: Bool? = nil,
                               supportedLanguages: OwnID.CoreSDK.Languages) {
             store.send(.configure(appID: appID,
                                   redirectionURL: redirectionURL,
@@ -61,12 +62,13 @@ public extension OwnID {
                                   underlyingSDKs: underlyingSDKs,
                                   isTestingEnvironment: false,
                                   environment: environment,
+                                  enableLogging: enableLogging,
                                   supportedLanguages: supportedLanguages))
         }
         
         public func configureFor(plistUrl: URL,
                                  userFacingSDK: SDKInformation,
-                                 underlyingSDKs: [SDKInformation],
+                                 underlyingSDKs: [SDKInformation] = [],
                                  supportedLanguages: OwnID.CoreSDK.Languages) {
             store.send(.configureFrom(plistUrl: plistUrl,
                                       userFacingSDK: userFacingSDK,
@@ -74,27 +76,23 @@ public extension OwnID {
                                       supportedLanguages: supportedLanguages))
         }
         
-        func createCoreViewModelForRegister(loginId: String,
-                                            sdkConfigurationName: String) -> CoreViewModel {
+        func createCoreViewModelForRegister(loginId: String) -> CoreViewModel {
             let viewModel = CoreViewModel(type: .register,
                                           loginId: loginId,
                                           supportedLanguages: store.value.supportedLanguages,
-                                          sdkConfigurationName: sdkConfigurationName,
-                                          clientConfiguration: store.value.getOptionalConfiguration(for: sdkConfigurationName))
+                                          clientConfiguration: store.value.configuration)
             viewModel.subscribeToURL(publisher: urlPublisher.eraseToAnyPublisher())
             viewModel.subscribeToConfiguration(publisher: configurationLoadingEventPublisher.eraseToAnyPublisher())
             return viewModel
         }
         
         func createCoreViewModelForLogIn(loginId: String,
-                                         loginType: LoginType,
-                                         sdkConfigurationName: String) -> CoreViewModel {
+                                         loginType: LoginType) -> CoreViewModel {
             let viewModel = CoreViewModel(type: .login,
                                           loginId: loginId,
                                           loginType: loginType,
                                           supportedLanguages: store.value.supportedLanguages,
-                                          sdkConfigurationName: sdkConfigurationName,
-                                          clientConfiguration: store.value.getOptionalConfiguration(for: sdkConfigurationName))
+                                          clientConfiguration: store.value.configuration)
             viewModel.subscribeToURL(publisher: urlPublisher.eraseToAnyPublisher())
             viewModel.subscribeToConfiguration(publisher: configurationLoadingEventPublisher.eraseToAnyPublisher())
             return viewModel
@@ -102,24 +100,23 @@ public extension OwnID {
         
         /// Used to handle the redirects from browser after webapp is finished
         /// - Parameter url: URL returned from webapp after it has finished
-        /// - Parameter sdkConfigurationName: Used to get proper data from configs in case of multiple SDKs
-        public func handle(url: URL, sdkConfigurationName: String) {
-            OwnID.CoreSDK.logger.log(level: .debug, message: "\(url.absoluteString)", Self.self)
+        public func handle(url: URL) {
+            OwnID.CoreSDK.logger.log(level: .debug, message: "\(url.absoluteString)", type: Self.self)
             let redirectParamKey = "redirect"
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
             let redirectParameterValue = components?.first(where: { $0.name == redirectParamKey })?.value
             if redirectParameterValue == "false" {
                 let message = OwnID.CoreSDK.ErrorMessage.redirectParameterFromURLCancelledOpeningSDK
-                urlPublisher.send(completion: .failure(.coreLog(error: .userError(errorModel: UserErrorModel(message: message)), type: Self.self)))
+                urlPublisher.send(completion: .failure(.userError(errorModel: UserErrorModel(message: message))))
                 return
             }
             
-            guard let redirection = store.value.getOptionalConfiguration(for: sdkConfigurationName),
+            guard let redirection = store.value.configuration,
                   let redirectionUrl = redirection.redirectionURL?.lowercased(),
                   url.absoluteString.lowercased().starts(with: redirectionUrl)
             else {
                 let message = OwnID.CoreSDK.ErrorMessage.notValidRedirectionURLOrNotMatchingFromConfiguration
-                urlPublisher.send(completion: .failure(.coreLog(error: .userError(errorModel: UserErrorModel(message: message)), type: Self.self)))
+                urlPublisher.send(completion: .failure(.userError(errorModel: UserErrorModel(message: message))))
                 return
             }
             urlPublisher.send(())

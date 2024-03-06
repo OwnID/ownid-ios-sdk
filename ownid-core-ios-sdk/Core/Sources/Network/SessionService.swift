@@ -53,11 +53,7 @@ extension OwnID.CoreSDK {
                                       queue: OperationQueue = OperationQueue()) -> AnyPublisher<[String: Any], Error> {
             performRequest(url: url, method: method, body: body, headers: headers, queue: queue)
                 .tryMap { [self] response -> [String: Any] in
-                    guard !response.data.isEmpty else {
-                        let message = ErrorMessage.emptyResponseData
-                        throw OwnID.CoreSDK.Error.userError(errorModel: UserErrorModel(message: message))
-                    }
-                    let json = try JSONSerialization.jsonObject(with: response.data, options: []) as? [String : Any]
+                    let json = try JSONSerialization.jsonObject(with: response.data) as? [String : Any]
                     self.printResponse(data: response.data)
                     return json ?? [:]
                 }
@@ -101,7 +97,7 @@ extension OwnID.CoreSDK {
         }
         
         private func printResponse(data: Data) {
-            let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String : Any]
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String : Any]
             
             var bodyFields = ""
             json?.forEach({ key, value in

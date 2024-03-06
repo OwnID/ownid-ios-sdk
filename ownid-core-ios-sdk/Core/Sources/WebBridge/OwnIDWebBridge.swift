@@ -37,7 +37,7 @@ extension OwnID.CoreSDK {
             contentController.removeScriptMessageHandler(forName: JSEventHandler)
             contentController.add(self, name: JSEventHandler)
             
-            let allOrigins = OwnID.CoreSDK.shared.store.value.firstConfiguration?.origins.union(allowedOriginRules)
+            let allOrigins = OwnID.CoreSDK.shared.store.value.configuration?.origins.union(allowedOriginRules)
                 .compactMap { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { $0 != "*" }
                 .compactMap { URL(string: $0) }
@@ -78,13 +78,13 @@ extension OwnID.CoreSDK {
         public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             guard let messageBody = message.body as? [String: Any] else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                CoreErrorLogWrapper.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
+                ErrorWrapper(error: .userError(errorModel: UserErrorModel(message: message)), type: Self.self).log()
                 return
             }
             
             guard let data = messageBody["data"] as? [String: Any], let method = messageBody["method"] as? String else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                CoreErrorLogWrapper.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
+                ErrorWrapper(error: .userError(errorModel: UserErrorModel(message: message)), type: Self.self).log()
                 return
             }
             
@@ -93,7 +93,7 @@ extension OwnID.CoreSDK {
                 guard let jsonData = try? JSONSerialization.data(withJSONObject: data, options: .prettyPrinted),
                       let JSDataModel = try? JSONDecoder().decode(JSDataModel.self, from: jsonData) else {
                     let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                    CoreErrorLogWrapper.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
+                    ErrorWrapper(error: .userError(errorModel: UserErrorModel(message: message)), type: Self.self).log()
                     return
                 }
                 
@@ -118,7 +118,7 @@ extension OwnID.CoreSDK {
         private func invokeCallback(callbackPath: String, and result: String) {
             let JS = "\(callbackPath)(\(result));"
             
-            OwnID.CoreSDK.logger.log(level: .information, message: "InvokeCallback \(JS)", Self.self)
+            OwnID.CoreSDK.logger.log(level: .information, message: "InvokeCallback \(JS)", type: Self.self)
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }

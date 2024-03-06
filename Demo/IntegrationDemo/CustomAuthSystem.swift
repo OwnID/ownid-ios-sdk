@@ -18,13 +18,12 @@ final class CustomAuthSystem {
                     let message = "Response data is empty"
                     let error = OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
                                         
-                    return Fail(error: OwnID.CoreSDK.CoreErrorLogWrapper(error: OwnID.CoreSDK.Error.integrationError(underlying: error))).eraseToAnyPublisher()
+                    return Fail(error: .integrationError(underlying: error)).eraseToAnyPublisher()
                 }
                 let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String : Any]
                 if let errors = json?["errors"] as? [String], let errorMessage = errors.first {
                     let error = IntegrationError.registrationDataError(message: errorMessage)
-                    return Fail(error: OwnID.CoreSDK.CoreErrorLogWrapper(error: OwnID.CoreSDK.Error.integrationError(underlying: error)))
-                        .eraseToAnyPublisher()
+                    return Fail(error: .integrationError(underlying: error)).eraseToAnyPublisher()
                 } else {
                     return Self.login(ownIdData: ownIdData, password: password, email: email)
                         .map { loginResult -> OwnID.RegisterResult in
@@ -38,7 +37,7 @@ final class CustomAuthSystem {
             .eraseToAnyPublisher()
     }
     
-    private static func urlSessionRequest(for payloadDict: [String: Any]) -> AnyPublisher<URLSession.DataTaskPublisher.Output, OwnID.CoreSDK.CoreErrorLogWrapper> {
+    private static func urlSessionRequest(for payloadDict: [String: Any]) -> AnyPublisher<URLSession.DataTaskPublisher.Output, OwnID.CoreSDK.Error> {
         return Just(payloadDict)
             .setFailureType(to: OwnID.CoreSDK.Error.self)
             .eraseToAnyPublisher()
@@ -57,16 +56,17 @@ final class CustomAuthSystem {
                     .mapError { OwnID.CoreSDK.Error.integrationError(underlying: $0) }
                     .eraseToAnyPublisher()
             }
-            .mapError { OwnID.CoreSDK.CoreErrorLogWrapper(error: .integrationError(underlying: $0)) }
+            .mapError { .integrationError(underlying: $0) }
             .eraseToAnyPublisher()
     }
     
-    static func login(ownIdData: Any?,
+    static func login(ownIdData: String?,
                       password: String? = .none,
                       email: String) -> OwnID.LoginResultPublisher {
-        if let ownIdData = ownIdData as? [String: String], let token = ownIdData["token"] {
+        let data = Data((ownIdData ?? "").utf8)
+        if let dataJson = try? JSONSerialization.jsonObject(with: data) as? [String: String], let token = dataJson["token"] {
             return Just(OwnID.LoginResult(operationResult: token))
-                .setFailureType(to: OwnID.CoreSDK.CoreErrorLogWrapper.self)
+                .setFailureType(to: OwnID.CoreSDK.Error.self)
                 .eraseToAnyPublisher()
         }
         let payloadDict = ["email": email, "password": password]
@@ -92,7 +92,7 @@ final class CustomAuthSystem {
             .mapError { OwnID.CoreSDK.Error.integrationError(underlying: $0) }
             .map { OwnID.LoginResult(operationResult: $0.token) }
             .receive(on: DispatchQueue.main)
-            .mapError { OwnID.CoreSDK.CoreErrorLogWrapper(error: .integrationError(underlying: $0)) }
+            .mapError { .integrationError(underlying: $0) }
             .eraseToAnyPublisher()
     }
     

@@ -27,7 +27,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                body: requestBody)
                 .receive(on: DispatchQueue.main)
                 .handleEvents(receiveOutput: { response in
-                    OwnID.CoreSDK.logger.log(level: .debug, message: "Final Request Finished", Self.self)
+                    OwnID.CoreSDK.logger.log(level: .debug, message: "Final Request Finished", type: Self.self)
                 })
                 .tryMap { response in
                     let context = response[Constants.contextKey] as? String ?? ""
@@ -38,18 +38,25 @@ extension OwnID.CoreSDK.CoreViewModel {
                     }
                     
                     if let serverError = responsePayload[Constants.errorKey] as? String {
-                        throw OwnID.CoreSDK.CoreErrorLogWrapper.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: serverError)),
-                                                                        type: Self.self)
+                        throw OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: serverError))
                     }
+                    
+                    let ownIdData: String?
+                    if let data = responsePayload[Constants.dataKey] as? [String: Any] {
+                        let jsonData = try JSONSerialization.data(withJSONObject: data)
+                        ownIdData = String(data: jsonData, encoding: .utf8)
+                    } else {
+                        ownIdData = responsePayload[Constants.dataKey] as? String
+                    }
+                    
                     let loginId = responsePayload[Constants.loginIdKey] as? String ?? ""
-                    let data = responsePayload[Constants.dataKey]
                     let metadata = responsePayload[Constants.metadataKey]
                     let stringType = responsePayload[Constants.typeKey] as? String ?? ""
                     var authTypeValue: String?
                     if let flowInfo = response[Constants.flowInfo] as? [String: Any], let authType = flowInfo[Constants.authType] as? String {
                         authTypeValue = authType
                     }
-                    let payload = OwnID.CoreSDK.Payload(data: data,
+                    let payload = OwnID.CoreSDK.Payload(data: ownIdData,
                                                         metadata: metadata,
                                                         context: context,
                                                         loginId: loginId,
@@ -66,7 +73,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                 })
                 .map { Action.statusRequestLoaded(response: $0) }
                 .catch({ error in
-                    return Just(Action.error(.coreLog(error: error, type: Self.self)))
+                    return Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self)))
                 })
                 .eraseToEffect()
             return [action]

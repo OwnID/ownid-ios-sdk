@@ -12,7 +12,7 @@ final class Login: LoginPerformer {
 final class Registration: RegistrationPerformer {
     func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> OwnID.RegistrationResultPublisher {
         let ownIdData = configuration.payload.data
-        return CustomAuthSystem.register(ownIdData: ownIdData as? String,
+        return CustomAuthSystem.register(ownIdData: ownIdData,
                                          password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
                                          email: configuration.loginId,
                                          name: (parameters as? RegistrationParameters)?.firstName ?? "no name")

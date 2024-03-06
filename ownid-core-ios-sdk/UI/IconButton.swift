@@ -51,7 +51,7 @@ private extension OwnID.UISDK.IconButton {
                 tooltipOnTopOfButtonView()
                     .zIndex(1)
             } else {
-                legacyToolip()
+                legacyTooltip()
                     .zIndex(1)
             }
         } else {
@@ -120,7 +120,7 @@ private extension OwnID.UISDK.IconButton {
     }
     
     @ViewBuilder
-    func legacyToolip() -> some View {
+    func legacyTooltip() -> some View {
         let tooltipConfig = visualConfig.tooltipVisualLookConfig
         let constant = OwnID.UISDK.ATConstant(axisMode: OwnID.UISDK.ATAxisMode.mode(configPosition: tooltipConfig.tooltipPosition),
                                               border: OwnID.UISDK.ATBorderConstant(color: tooltipConfig.borderColor),

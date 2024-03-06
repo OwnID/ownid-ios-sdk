@@ -151,7 +151,7 @@ extension OwnID.CoreSDK {
         private func handleErrorResult(fidoError: CoreViewModel.FidoErrorRequestBody.Error) -> String {
             defer {
                 let message = fidoError.message
-                CoreErrorLogWrapper.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
+                ErrorWrapper(error: .userError(errorModel: UserErrorModel(message: message)), type: Self.self).log()
             }
 
             let JSError = JSError(error: fidoError)

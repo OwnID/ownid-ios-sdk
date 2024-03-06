@@ -85,7 +85,8 @@ extension OwnID.CoreSDK.TranslationsSDK {
                         }
                     }
                 } catch {
-                    print(error)
+                    let error = OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: error.localizedDescription))
+                    OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log()
                 }
             }
             
@@ -100,8 +101,9 @@ private extension OwnID.CoreSDK.TranslationsSDK.RuntimeLocalizableSaver {
             do {
                 try fileManager.createDirectory(atPath: rootFolderPath, withIntermediateDirectories: true)
             } catch let error {
-                throw OwnID.CoreSDK.CoreErrorLogWrapper.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: error.localizedDescription)),
-                                                                type: Self.self)
+                let error = OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: error.localizedDescription))
+                OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log()
+                throw error
             }
         }
     }
@@ -115,6 +117,6 @@ private extension OwnID.CoreSDK.TranslationsSDK.RuntimeLocalizableSaver {
         fileManager.createFile(atPath: filePath, contents: jsonData)
         
         let message = "Wrote bundle strings to languageKey \(languageKey)"
-        OwnID.CoreSDK.logger.log(level: .debug, message: message, OwnID.CoreSDK.TranslationsSDK.RuntimeLocalizableSaver.self)
+        OwnID.CoreSDK.logger.log(level: .debug, message: message, type: OwnID.CoreSDK.TranslationsSDK.RuntimeLocalizableSaver.self)
     }
 }

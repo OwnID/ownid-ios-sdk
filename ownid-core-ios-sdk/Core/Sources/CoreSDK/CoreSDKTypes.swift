@@ -1,20 +1,22 @@
 public extension OwnID.CoreSDK {
-    static let sdkName = String(describing: OwnID.CoreSDK.self)
-    static let version = "3.0.2"
+    static let sdkName = "Core"
+    static let version = "3.1.0"
     static let APIVersion = "1"
+    
+    static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }
 }
 
 public extension OwnID.CoreSDK {
     var environment: String? {
-        store.value.firstConfiguration?.environment
+        store.value.configuration?.environment
     }
     
     var metricsURL: ServerURL? {
-        store.value.firstConfiguration?.metricsURL
+        store.value.configuration?.metricsURL
     }
     
     var supportedLocales: [String]? {
-        store.value.firstConfiguration?.supportedLocales
+        store.value.configuration?.supportedLocales
     }
 }
 

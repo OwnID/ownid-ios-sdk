@@ -26,24 +26,36 @@ extension OwnID.CoreSDK.CoreViewModel {
             }
         }
         
-        func errorEffect(_ error: OwnID.CoreSDK.CoreErrorLogWrapper) -> [Effect<Action>] {
-            [Just(.error(error)).eraseToEffect()]
+        func errorEffect(_ error: OwnID.CoreSDK.Error,
+                         isOnUI: Bool = false,
+                         flowFinished: Bool = true,
+                         function: String = #function,
+                         file: String = #file,
+                         type: Any.Type = Any.self) -> [Effect<Action>] {
+            [Just(.error(OwnID.CoreSDK.ErrorWrapper(error: error,
+                                                    isOnUI: isOnUI,
+                                                    flowFinished: flowFinished,
+                                                    function: function,
+                                                    file: file,
+                                                    type: type))).eraseToEffect()]
         }
         
         func handleResponse(response: StepResponse, isOnUI: Bool) -> Action {
             if let step = response.step {
                 return nextStepAction(step)
-            } else if let error = response.error {
-                let model = OwnID.CoreSDK.UserErrorModel(code: error.errorCode, message: error.message, userMessage: error.userMessage)
-                return .error(.coreLog(error: .userError(errorModel: model),
-                                       isOnUI: isOnUI,
-                                       flowFinished: error.flowFinished ?? true,
-                                       type: Self.self))
+            } else if let errorData = response.error {
+                let model = OwnID.CoreSDK.UserErrorModel(code: errorData.errorCode,
+                                                         message: errorData.message,
+                                                         userMessage: errorData.userMessage)
+                return .error(OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: model),
+                                                         isOnUI: isOnUI,
+                                                         flowFinished: errorData.flowFinished ?? true,
+                                                         type: Self.self))
             }
             let message = OwnID.CoreSDK.ErrorMessage.requestError
-            return .error(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
-                                   isOnUI: isOnUI,
-                                   type: Self.self))
+            return .error(OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
+                                                     isOnUI: isOnUI,
+                                                     type: Self.self))
         }
     }
 }

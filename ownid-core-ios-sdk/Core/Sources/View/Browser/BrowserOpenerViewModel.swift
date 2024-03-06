@@ -29,7 +29,9 @@ extension OwnID.CoreSDK.BrowserOpener {
 }
 
 extension OwnID.CoreSDK.BrowserOpenerViewModel {
-    typealias State = (String)
+    struct State {
+    }
+    
     enum Action {
         case viewCancelled
     }
@@ -52,21 +54,20 @@ extension OwnID.CoreSDK {
         
         private func startAuthSession(url: URL, redirectionURL: RedirectionURLString) {
             if let schemeURL = URL(string: redirectionURL) {
-                let configName = store.value
                 let session = ASWebAuthenticationSession(url: url, callbackURLScheme: .none)
                 { [weak self] _, error in
                     if let errorAuth = error as? ASWebAuthenticationSessionError,
                        case .canceledLogin = errorAuth.code {
                         self?.store.send(.viewCancelled)
                     } else {
-                        OwnID.CoreSDK.logger.log(level: .debug, message: "Session finish", Self.self)
-                        OwnID.CoreSDK.shared.handle(url: schemeURL, sdkConfigurationName: configName)
+                        OwnID.CoreSDK.logger.log(level: .debug, message: "Session finish", type: Self.self)
+                        OwnID.CoreSDK.shared.handle(url: schemeURL)
                     }
                 }
                 cancellableSession = session
                 session.presentationContextProvider = authSessionContext
                 session.start()
-                OwnID.CoreSDK.logger.log(level: .debug, message: "Session start", Self.self)
+                OwnID.CoreSDK.logger.log(level: .debug, message: "Session start", type: Self.self)
             } else {
                 store.send(.viewCancelled)
             }

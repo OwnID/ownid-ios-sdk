@@ -176,7 +176,7 @@ extension OwnID.CoreSDK.TranslationsSDK {
             notificationCenterCancellable = NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)
                 .sink { [weak self] notification in
                     let message = "Recieve notification about language change \(notification)"
-                    OwnID.CoreSDK.logger.log(level: .debug, message: message, OwnID.CoreSDK.TranslationsSDK.Downloader.self)
+                    OwnID.CoreSDK.logger.log(level: .debug, message: message, type: OwnID.CoreSDK.TranslationsSDK.Downloader.self)
                     if let supportedLanguages = self?.supportedLanguages, supportedLanguages.shouldChangeLanguageOnSystemLanguageChange {
                         self?.initializeLanguagesIfNeeded(supportedLanguages: supportedLanguages, shouldNotify: true)
                     }
@@ -219,14 +219,16 @@ extension OwnID.CoreSDK.TranslationsSDK {
                         self.requestsTagsInProgress.removeAll()
                         break
                     case .failure(let error):
-                        OwnID.CoreSDK.logger.log(level: .error, message: error.localizedDescription, OwnID.CoreSDK.TranslationsSDK.Manager.self)
+                        OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: error.localizedDescription)),
+                                                   type: OwnID.CoreSDK.TranslationsSDK.Manager.self)
+                        .log()
                     }
                 } receiveValue: {
                     if shouldNotify {
                         self.translationsChange.send(())
                     }
                     let message = "Translations downloaded and saved"
-                    OwnID.CoreSDK.logger.log(level: .debug, message: message, OwnID.CoreSDK.TranslationsSDK.Manager.self)
+                    OwnID.CoreSDK.logger.log(level: .debug, message: message, type: OwnID.CoreSDK.TranslationsSDK.Manager.self)
                 }
         }
     }

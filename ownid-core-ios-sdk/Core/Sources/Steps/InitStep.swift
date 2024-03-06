@@ -27,7 +27,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         override func run(state: inout State) -> [Effect<Action>] {
             guard let configuration = state.configuration else {
                 let message = OwnID.CoreSDK.ErrorMessage.noLocalConfig
-                return errorEffect(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self))
+                return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
             
             let locales = OwnID.CoreSDK.TranslationsSDK.LanguageMapper.matchSystemLanguage(to: OwnID.CoreSDK.shared.supportedLocales ?? [],
@@ -42,7 +42,7 @@ extension OwnID.CoreSDK.CoreViewModel {
 
             OwnID.CoreSDK.logger.log(level: .information,
                                      message: "isFidoPossible \(OwnID.CoreSDK.isPasskeysSupported)",
-                                     Self.self)
+                                     type: Self.self)
             
             let requestBody = InitRequestBody(sessionChallenge: sessionChallenge,
                                               type: state.type,
@@ -63,17 +63,17 @@ extension OwnID.CoreSDK.CoreViewModel {
             .receive(on: DispatchQueue.main)
             .handleEvents(receiveOutput: { response in
                 OwnID.CoreSDK.logger.updateContext(context: response.context)
-                OwnID.CoreSDK.logger.log(level: .debug, message: "Init Request Finished", Self.self)
+                OwnID.CoreSDK.logger.log(level: .debug, message: "Init Request Finished", type: Self.self)
             })
             .map({ response in
                 if let error = response.error {
                     let model = OwnID.CoreSDK.UserErrorModel(code: error.errorCode, message: error.message, userMessage: error.userMessage)
-                    return .error(.coreLog(error: .userError(errorModel: model), type: Self.self))
+                    return .error(OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: model), type: Self.self))
                 } else {
                     return .initialRequestLoaded(response: response)
                 }
             })
-            .catch { Just(Action.error(.coreLog(error: $0, type: Self.self))) }
+            .catch { Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0, type: Self.self))) }
             .eraseToEffect()
         }
         

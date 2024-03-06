@@ -9,7 +9,7 @@ extension OwnID.CoreSDK.TranslationsSDK.Downloader {
 
 extension OwnID.CoreSDK.TranslationsSDK {
     final class Downloader {
-        typealias DownloaderPublisher = AnyPublisher<(systemLanguage: String, languageJson: [String: Any]), OwnID.CoreSDK.CoreErrorLogWrapper>
+        typealias DownloaderPublisher = AnyPublisher<(systemLanguage: String, languageJson: [String: Any]), OwnID.CoreSDK.Error>
         
         private let session: URLSession
         
@@ -21,13 +21,13 @@ extension OwnID.CoreSDK.TranslationsSDK {
         
         func downloadTranslations(supportedLanguages: OwnID.CoreSDK.Languages) -> DownloaderPublisher {
             Just(OwnID.CoreSDK.shared.supportedLocales ?? [])
-                .setFailureType(to: OwnID.CoreSDK.CoreErrorLogWrapper.self)
+                .setFailureType(to: OwnID.CoreSDK.Error.self)
                 .eraseToAnyPublisher()
                 .map { serverLanguages in LanguageMapper.matchSystemLanguage(to: serverLanguages, userDefinedLanguages: supportedLanguages.rawValue) }
                 .eraseToAnyPublisher()
                 .flatMap { currentUserLanguages -> DownloaderPublisher in
                     let message = "Mapped user language to the server languages. serverLanguage: \(currentUserLanguages.serverLanguage), systemLanguage: \(currentUserLanguages.systemLanguage)"
-                    OwnID.CoreSDK.logger.log(level: .debug, message: message, OwnID.CoreSDK.TranslationsSDK.Downloader.self)
+                    OwnID.CoreSDK.logger.log(level: .debug, message: message, type: OwnID.CoreSDK.TranslationsSDK.Downloader.self)
                     return self.downloadCurrentLocalizationFile(for: currentUserLanguages.serverLanguage, correspondingSystemLanguage: currentUserLanguages.systemLanguage)
                         .eraseToAnyPublisher()
                 }
@@ -58,8 +58,7 @@ private extension OwnID.CoreSDK.TranslationsSDK.Downloader {
             }
             .map { (correspondingSystemLanguage, $0) }
             .mapError {
-                OwnID.CoreSDK.CoreErrorLogWrapper.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: $0.localizedDescription)),
-                                                          type: Self.self)
+                OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: $0.localizedDescription))
             }
             .eraseToAnyPublisher()
     }

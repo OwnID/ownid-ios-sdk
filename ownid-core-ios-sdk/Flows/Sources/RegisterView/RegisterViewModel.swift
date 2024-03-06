@@ -54,27 +54,37 @@ public extension OwnID.FlowsSDK.RegisterView {
         
         private var bag = Set<AnyCancellable>()
         private var coreViewModelBag = Set<AnyCancellable>()
-        private let resultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.RegistrationEvent, OwnID.CoreSDK.Error>, Never>()
-        private let registrationPerformer: RegistrationPerformer
+        private let integrationResultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.RegistrationEvent, OwnID.CoreSDK.Error>, Never>()
+        private let flowResultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.RegistrationFlowEvent, OwnID.CoreSDK.Error>, Never>()
+        private let registrationPerformer: RegistrationPerformer?
         private var registrationData = RegistrationData()
-        private let loginPerformer: LoginPerformer
+        private let loginPerformer: LoginPerformer?
         private var loginId = ""
         var coreViewModel: OwnID.CoreSDK.CoreViewModel!
         var currentMetadata: OwnID.CoreSDK.CurrentMetricInformation?
         let eventService: EventProtocol
         
-        let sdkConfigurationName: String
-        
-        public var eventPublisher: OwnID.RegistrationPublisher {
-            resultPublisher.eraseToAnyPublisher()
+        var hasIntegration: Bool {
+            registrationPerformer != nil
         }
         
-        public init(registrationPerformer: RegistrationPerformer,
-                    loginPerformer: LoginPerformer,
-                    sdkConfigurationName: String,
+        @available(*, deprecated, renamed: "integrationEventPublisher")
+        public var eventPublisher: OwnID.RegistrationPublisher {
+            integrationResultPublisher.eraseToAnyPublisher()
+        }
+        
+        public var integrationEventPublisher: OwnID.RegistrationPublisher {
+            integrationResultPublisher.eraseToAnyPublisher()
+        }
+        
+        public var flowEventPublisher: OwnID.RegistrationFlowPublisher {
+            flowResultPublisher.eraseToAnyPublisher()
+        }
+        
+        public init(registrationPerformer: RegistrationPerformer? = nil,
+                    loginPerformer: LoginPerformer? = nil,
                     loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher,
                     eventService: EventProtocol = OwnID.CoreSDK.eventService) {
-            self.sdkConfigurationName = sdkConfigurationName
             self.registrationPerformer = registrationPerformer
             self.loginPerformer = loginPerformer
             self.eventService = eventService
@@ -93,7 +103,7 @@ public extension OwnID.FlowsSDK.RegisterView {
         }
         
         private func shouldShowTooltipDefault(loginId: String?) -> Bool {
-            let configuration = OwnID.CoreSDK.shared.store.value.getOptionalConfiguration(for: sdkConfigurationName)
+            let configuration = OwnID.CoreSDK.shared.store.value.configuration
             guard let loginId,
                   let loginIdSettings = configuration?.loginIdSettings else {
                 return false
@@ -113,36 +123,54 @@ public extension OwnID.FlowsSDK.RegisterView {
         public func register(registerParameters: RegisterParameters = EmptyRegisterParameters()) {
             guard let payload = registrationData.payload else {
                 let message = OwnID.CoreSDK.ErrorMessage.payloadMissing
-                handle(.coreLog(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self))
+                let error = OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
+                OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log()
+                handle(error)
                 return
             }
             let config = OwnID.FlowsSDK.RegistrationConfiguration(payload: payload,
                                                                   loginId: loginId)
-            registrationPerformer.register(configuration: config, parameters: registerParameters)
-                .sink { [unowned self] completion in
-                    if case .failure(let error) = completion {
-                        handle(error)
-                        let errorMessage = error.error.localizedDescription
-                        eventService.sendMetric(.errorMetric(action: .error,
+            if let registrationPerformer {
+                registrationPerformer.register(configuration: config, parameters: registerParameters)
+                    .sink { [unowned self] completion in
+                        if case .failure(let error) = completion {
+                            handle(error)
+                            let errorMessage = error.localizedDescription
+                            eventService.sendMetric(.errorMetric(action: .error,
+                                                                 category: .registration,
+                                                                 context: payload.context,
+                                                                 loginId: loginId,
+                                                                 errorMessage: errorMessage,
+                                                                 errorCode: error.metricErrorCode))
+                        }
+                    } receiveValue: { [unowned self] registrationResult in
+                        eventService.sendMetric(.trackMetric(action: .registered,
                                                              category: .registration,
                                                              context: payload.context,
                                                              loginId: loginId,
-                                                             errorMessage: errorMessage,
-                                                             errorCode: error.errorCode))
+                                                             authType: registrationResult.authType))
+                        if let loginId = payload.loginId {
+                            OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                        }
+                        integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registrationResult.operationResult, authType: registrationResult.authType)))
+                        resetDataAndState()
                     }
-                } receiveValue: { [unowned self] registrationResult in
-                    eventService.sendMetric(.trackMetric(action: .registered,
-                                                         category: .registration,
-                                                         context: payload.context,
-                                                         loginId: loginId,
-                                                         authType: registrationResult.authType))
-                    if let loginId = payload.loginId {
-                        OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
-                    }
-                    resultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registrationResult.operationResult, authType: registrationResult.authType)))
-                    resetDataAndState()
-                }
-                .store(in: &bag)
+                    .store(in: &bag)
+            }
+        }
+        
+        private func registerWithoutIntegration(payload: OwnID.CoreSDK.Payload) {
+            OwnID.CoreSDK.logger.log(level: .debug, message: "Registration without integration response", type: Self.self)
+            
+            eventService.sendMetric(.trackMetric(action: .registered,
+                                                 category: .registration,
+                                                 context: payload.context,
+                                                 loginId: loginId,
+                                                 authType: payload.authType))
+            if let loginId = payload.loginId {
+                OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+            }
+            flowResultPublisher.send(.success(.response(loginId: payload.loginId ?? "", payload: payload, authType: payload.authType)))
         }
         
         /// Reset visual state and any possible data from web flow
@@ -173,15 +201,20 @@ public extension OwnID.FlowsSDK.RegisterView {
                                                      context: registrationData.payload?.context,
                                                      loginId: loginId))
                 resetToInitialState()
-                resultPublisher.send(.success(.resetTapped))
+                hasIntegration ? integrationResultPublisher.send(.success(.resetTapped)) : flowResultPublisher.send(.success(.resetTapped))
                 return
             }
-            if registrationData.payload != nil, registrationData.payload?.loginId == loginId {
+            if let payload = registrationData.payload, registrationData.payload?.loginId == loginId {
                 state = .ownidCreated
-                resultPublisher.send(.success(.readyToRegister(loginId: loginId, authType: registrationData.payload?.authType)))
+                
+                if hasIntegration {
+                    integrationResultPublisher.send(.success(.readyToRegister(loginId: loginId, authType: registrationData.payload?.authType)))
+                } else {
+                    flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
+                }
                 return
             }
-            let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForRegister(loginId: loginId, sdkConfigurationName: sdkConfigurationName)
+            let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForRegister(loginId: loginId)
             self.coreViewModel = coreViewModel
             subscribe(to: coreViewModel.eventPublisher, persistingLoginId: loginId)
             state = .coreVM
@@ -205,12 +238,12 @@ public extension OwnID.FlowsSDK.RegisterView {
                                                                            category: .registration,
                                                                            context: OwnID.CoreSDK.logger.context,
                                                                            errorMessage: error.localizedDescription,
-                                                                           errorCode: error.errorCode))
+                                                                           errorCode: error.metricErrorCode))
                     }
                 } receiveValue: { [unowned self] event in
                     switch event {
                     case .success(let payload):
-                        OwnID.CoreSDK.logger.log(level: .debug, Self.self)
+                        OwnID.CoreSDK.logger.log(level: .debug, type: Self.self)
                         switch payload.responseType {
                         case .registrationInfo:
                             self.registrationData.payload = payload
@@ -219,7 +252,11 @@ public extension OwnID.FlowsSDK.RegisterView {
                                 registrationData.persistedLoginId = loginId
                                 self.loginId = loginId
                             }
-                            resultPublisher.send(.success(.readyToRegister(loginId: registrationData.payload?.loginId, authType: registrationData.payload?.authType)))
+                            if hasIntegration {
+                                integrationResultPublisher.send(.success(.readyToRegister(loginId: payload.loginId, authType: payload.authType)))
+                            } else {
+                                registerWithoutIntegration(payload: payload)
+                            }
                             
                         case .session:
                             processLogin(payload: payload)
@@ -227,11 +264,11 @@ public extension OwnID.FlowsSDK.RegisterView {
                         
                     case .cancelled(let flow):
                         let error = OwnID.CoreSDK.Error.flowCancelled(flow: flow)
-                        OwnID.CoreSDK.logger.log(level: .warning, message: error.localizedDescription, Self.self)
-                        handle(OwnID.CoreSDK.CoreErrorLogWrapper(error: error))
+                        OwnID.CoreSDK.logger.log(level: .warning, message: error.localizedDescription, type: Self.self)
+                        handle(error)
                         
                     case .loading:
-                        resultPublisher.send(.success(.loading))
+                        hasIntegration ? integrationResultPublisher.send(.success(.loading)) : flowResultPublisher.send(.success(.loading))
                     }
                 }
                 .store(in: &coreViewModelBag)
@@ -244,7 +281,7 @@ public extension OwnID.FlowsSDK.RegisterView {
             buttonEventPublisher
                 .sink { _ in
                 } receiveValue: { [unowned self] _ in
-                    let configuration = OwnID.CoreSDK.shared.store.value.getOptionalConfiguration(for: sdkConfigurationName)
+                    let configuration = OwnID.CoreSDK.shared.store.value.configuration
                     var validLoginIdFormat: Bool?
                     if let loginIdSettings = configuration?.loginIdSettings {
                         validLoginIdFormat = OwnID.CoreSDK.LoginId(value: loginId, settings: loginIdSettings).isValid
@@ -263,34 +300,48 @@ public extension OwnID.FlowsSDK.RegisterView {
 private extension OwnID.FlowsSDK.RegisterView.ViewModel {
     
     func processLogin(payload: OwnID.CoreSDK.Payload) {
-        let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)
-        loginPerformerPublisher
-            .sink { [unowned self] completion in
-                if case .failure(let error) = completion {
-                    handle(error)
-                    let errorMessage = error.error.localizedDescription
-                    eventService.sendMetric(.errorMetric(action: .error,
+        if let loginPerformer {
+            let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)
+            loginPerformerPublisher
+                .sink { [unowned self] completion in
+                    if case .failure(let error) = completion {
+                        handle(error)
+                        let errorMessage = error.localizedDescription
+                        eventService.sendMetric(.errorMetric(action: .error,
+                                                             category: .registration,
+                                                             context: payload.context,
+                                                             loginId: loginId,
+                                                             errorMessage: errorMessage,
+                                                             errorCode: error.metricErrorCode))
+                    }
+                } receiveValue: { [unowned self] registerResult in
+                    eventService.sendMetric(.trackMetric(action: .loggedIn,
                                                          category: .registration,
                                                          context: payload.context,
                                                          loginId: loginId,
-                                                         errorMessage: errorMessage,
-                                                         errorCode: error.errorCode))
+                                                         authType: payload.authType))
+                    state = .ownidCreated
+                    integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registerResult.operationResult, authType: registerResult.authType)))
+                    resetDataAndState(isResettingToInitialState: false)
                 }
-            } receiveValue: { [unowned self] registerResult in
-                eventService.sendMetric(.trackMetric(action: .loggedIn,
-                                                     category: .registration,
-                                                     context: payload.context,
-                                                     loginId: loginId,
-                                                     authType: payload.authType))
-                state = .ownidCreated
-                resultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registerResult.operationResult, authType: registerResult.authType)))
-                resetDataAndState(isResettingToInitialState: false)
-            }
-            .store(in: &bag)
+                .store(in: &bag)
+        } else {
+            OwnID.CoreSDK.logger.log(level: .debug, message: "Login without integration response", type: Self.self)
+            
+            eventService.sendMetric(.trackMetric(action: .loggedIn,
+                                                 category: .registration,
+                                                 context: payload.context,
+                                                 loginId: loginId,
+                                                 authType: payload.authType))
+            state = .ownidCreated
+            flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
+            resetDataAndState(isResettingToInitialState: false)
+        }
     }
     
-    func handle(_ error: OwnID.CoreSDK.CoreErrorLogWrapper) {
+    func handle(_ error: OwnID.CoreSDK.Error) {
         resetToInitialState()
-        resultPublisher.send(.failure(error.error))
+        
+        hasIntegration ? integrationResultPublisher.send(.failure(error)) : flowResultPublisher.send(.failure(error))
     }
 }

@@ -251,13 +251,6 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		16E3574C290BE3090059B5A2 /* AccountView */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = AccountView;
-			sourceTree = "<group>";
-		};
 		16FBF258290A8E0800148C8C = {
 			isa = PBXGroup;
 			children = (
@@ -265,7 +258,6 @@
 				161C475B290AE94F0014D737 /* ScreensetsDemo */,
 				CEB907CC2B4D969200C8966B /* IntegrationDemo */,
 				1662AD61291048DB0071894C /* UIKitInjectionDemo */,
-				16E3574C290BE3090059B5A2 /* AccountView */,
 				16FBF262290A8E0800148C8C /* Products */,
 				77BD2AA4EFD7B47DA3B95320 /* Pods */,
 				7A6A6773024F1B6B06BF2D6D /* Frameworks */,
