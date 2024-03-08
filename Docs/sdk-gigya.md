@@ -232,7 +232,7 @@ Inserting the OwnID view into your View layer results in the Skip Password optio
 
 It is recommended to set height of button the same as text field and disable text field when OwnID is enabled.
 
-[Complete example](../Demo/GigyaDemo/RegisterView.swift)
+[Complete example](../Demo/GigyaDemo/LogInView.swift)
 ```swift
 //Put LoginView inside your main view, preferably below password field
 var body: some View {

@@ -223,7 +223,7 @@ Inserting the OwnID view into your View layer results in the Skip Password optio
 
 It is recommended to set height of button the same as text field and disable text field when OwnID is enabled.
 
-[Complete example](../Demo/IntegrationDemo/LoginView.swift)
+[Complete example](../Demo/IntegrationDemo/LogInView.swift)
 ```swift
 //Put LoginView inside your main view, preferably below password field
 var body: some View {
@@ -241,7 +241,7 @@ For additional OwnIDButton UI customization see [Button Appearance](#button-appe
 ### Customize View Model
 The OwnID view that inserts the Skip Password UI is bound to an instance of the OwnID view model. Before modifying your View layer, create an instance of this view model, `OwnID.FlowsSDK.RegisterView.ViewModel`, within your ViewModel layer with `CustomLogin` you created earlier:
 
-[Complete example](../Demo/IntegrationDemo/LoginViewModel.swift)
+[Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
     // MARK: OwnID
@@ -254,7 +254,7 @@ final class MyLogInViewModel: ObservableObject {
 
 After creating this OwnID view model, you should listen to integration events from the OwnID Event Publisher, which allows your app to know what actions to take based on the user's interaction with the Skip Password option. Simply add the following to subscribe to the OwnID Event Publisher and respond to integration events.
 
-[Complete example](../Demo/IntegrationDemo/LoginViewModel.swift)
+[Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
     // MARK: OwnID

@@ -13,7 +13,7 @@ The OwnID iOS SDK offers multiple configuration options:
 
 ## Before You Begin
 
-The configuration options listed here are part of OwnID Code iOS SDK. Check [documentation](/..README.md) to be sure that it's available to the type of integration you use.
+The configuration options listed here are part of OwnID Code iOS SDK. Check [documentation](../README.md) to be sure that it's available to the type of integration you use.
 
 ## Logging Events
 

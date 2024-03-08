@@ -214,11 +214,11 @@ final class MyLogInViewModel: ObservableObject {
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginIdPublisher: loginIdPublisher)
 
        init() {
-       subscribe(to: ownIDViewModel.eventPublisher)
+        subscribe(to: ownIDViewModel.flowEventPublisher)
        }
 
-     func subscribe(to eventsPublisher: OwnID.LoginPublisher) {
-       integrationEventPublisher
+     func subscribe(to eventsPublisher: OwnID.LoginFlowPublisher) {
+        flowEventPublisher
            .sink { [unowned self] event in
                switch event {
                case .success(let event):
