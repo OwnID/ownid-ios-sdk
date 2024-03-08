@@ -261,9 +261,9 @@ final class MyLogInViewModel: ObservableObject {
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
                                                             loginIdPublisher: loginIdPublisher)
 
- 	  init() {
-       subscribe(to: ownIDViewModel.integrationEventPublisher)
-   	}
+     init() {
+        subscribe(to: ownIDViewModel.integrationEventPublisher)
+   	 }
 
      func subscribe(to integrationEventPublisher: OwnID.LoginPublisher) {
        integrationEventPublisher

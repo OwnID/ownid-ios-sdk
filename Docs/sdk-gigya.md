@@ -174,11 +174,11 @@ final class MyRegisterViewModel: ObservableObject {
     }
 
     init() {
-     subscribe(to: ownIDViewModel.eventPublisher)
+     subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 
-     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {
-       eventsPublisher
+     func subscribe(to integrationEventPublisher: OwnID.RegistrationPublisher) {
+        integrationEventPublisher
            .receive(on: DispatchQueue.main)
            .sink { [unowned self] event in
                switch event {
@@ -275,11 +275,11 @@ final class MyLogInViewModel: ObservableObject {
     }
 
      init() {
-       subscribe(to: ownIDViewModel.eventPublisher)
+       subscribe(to: ownIDViewModel.integrationEventPublisher)
      }
 
-     func subscribe(to eventsPublisher: OwnID.LoginPublisher) {
-       eventsPublisher
+     func subscribe(to integrationEventPublisher: OwnID.LoginPublisher) {
+        integrationEventPublisher
            .receive(on: DispatchQueue.main)
            .sink { [unowned self] event in
                switch event {
