@@ -1,28 +1,42 @@
 ![OwnIDSDK](Docs/logo.svg)
 ## OwnID iOS SDK
  
-The [OwnID](https://ownid.com/) iOS SDK is a client library written in Swift that provides a passwordless login alternative for your iOS application by using [Passkeys](https://www.passkeys.com/) to replace the traditional password. Integrating the SDK with your app allows the user to perform Registration and Login flows in a native iOS application.
+The [OwnID](https://ownid.com/) iOS SDK is a client library offering a secure and passwordless login alternative for your iOS applications. It leverages [Passkeys](https://www.passkeys.com/) to replace conventional passwords, fostering enhanced authentication methods. This SDK empowers users to seamlessly execute Registration and Login flows within their native iOS applications.
 
-The OwnID iOS SDK consists of a **[Core](Docs/sdk-core-doc.md)** module along with modules that are specific to an identity platform like Gigya. The Core module provides core functionality like setting up an OwnID configuration, performing network calls to the OwnID server, interacting with an iOS, and checking and returning results to the iOS application. The following modules extend the Core module for a specific identify management system:
+### Key components of the OwnID iOS SDK:
 
-- **[OwnID Gigya iOS SDK](Docs/sdk-gigya-doc.md)** - Extends Core SDK functionality by providing integration with Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk).
+- **OwnID Core** - Facilitates fundamental functionality such as SDK configuration, UI widgets, interaction with iOS, and the return of OwnID flow results to the iOS application.
 
-The OwnID iOS SDK supports Swift >= 5.1, and works with iOS 14 and above.
+- **OwnID Integration Component** - An optional extension of the Core SDK, designed for seamless integration with identity platforms on the native side. When present, it executes the actual registration and login processes into the identity platform.
 
-## Other Identity Platforms
 
-You can use OwnID Core iOS SDK to gain all of the benefits of OwnID with custom identity platform. Check **[OwnID Core iOS SDK - Custom Integration](Docs/sdk-core-doc.md)** for detailed steps.
+### To integrate OwnID with your identity platform, you have three pathways:
 
-## WebView Integration
+- **[Direct Integration](Docs/sdk-direct-integration.md)** - Handle OwnID Response data directly without using the Integration component.
 
-You can use OwnID iOS SDK WebView Bridge to seamlessly integrate the native capabilities of the OwnID iOS SDK into the OwnID WebSDK. Check **[OwnID iOS SDK WebView Bridge](Docs/sdk-webbridge-doc.md)** for detailed steps.
+- **[Custom Integration](Docs/sdk-custom-integration.md)** - Develop your OwnID Integration component tailored to your identity platform.
 
-## Demo applications
-This repository contains OwnID Demo application sources for different types of integrations:
-- Gigya Integration Demo
-- Gigya Screen Sets Integration Demo
-- Custom Integration Demo
-- Gigya UIKit Injection Demo
+- **Prebuilt Integration** - Utilize the existing OwnID SDK with a prebuilt Integration component. Options include:
+
+   - **[OwnID Gigya](Docs/sdk-gigya.md)** - Expands Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk). It also includes the [OwnID WebView Bridge extension](Docs/sdk-gigya.md#add-ownid-webview-bridge), enabling native Passkeys functionality for Gigya Web Screen-Sets with OwnID Web SDK.
+
+### Advanced Configuration
+
+Explore advanced configuration options in OwnID Core Android SDK by referring to the [Advanced Configuration](Docs/sdk-advanced-configuration.md) documentation.
+
+## Demo Applications
+
+This repository hosts various OwnID Demo applications, each showcasing integration scenarios:
+
+- **Direct Handling of OwnID Response**: `DirectDemo` target.
+
+- **Custom Integration**: `IntegrationDemo` target.
+
+- **Gigya Integration Demos**:
+   - `GigyaDemo` target provides an example of Gigya integration using SwiftUI.
+   - `UIKitInjectionDemo` target provides an example of Gigya integration using UIKit.
+
+- **Gigya Web Screen-Sets with WebView Bridge Demo**: `ScreensetsDemo` target.
 
 You can run these demo apps on a physical device or a simulator.
 
@@ -42,7 +56,7 @@ We'd love to hear from you! If you have any questions or suggestions, feel free 
 ## License
 
 ```
-Copyright 2023 OwnID INC.
+Copyright 2024 OwnID INC.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

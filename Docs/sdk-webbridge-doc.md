@@ -19,7 +19,7 @@ Additionally, make sure you have integrated the [OwnID Web SDK is added into Web
 ## Adding WebView Bridge
 You have two primary options for integrating the OwnID WebView Bridge into your application:
 - Utilize pre-built integration-specific OwnID WebView Bridge provided by the OwnID SDKs:
-  + [OwnID Gigya iOS SDK](sdk-gigya-doc.md#add-ownid-webview-bridge) for seamless integration with Gigya Screen-Sets.
+  + [OwnID Gigya iOS SDK](sdk-gigya.md#add-ownid-webview-bridge) for seamless integration with Gigya Screen-Sets.
 - Use manual integration of the OwnID WebView Bridge tailored to your identity management system.
 
 ## Manual integration of the OwnID WebView Bridge
