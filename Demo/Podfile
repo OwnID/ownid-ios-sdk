@@ -16,3 +16,7 @@ end
 target 'IntegrationDemo' do
   pod 'ownid-core-ios-sdk'
 end
+
+target 'DirectDemo' do
+  pod 'ownid-core-ios-sdk'
+end

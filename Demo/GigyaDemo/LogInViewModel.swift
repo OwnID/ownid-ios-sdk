@@ -21,6 +21,7 @@ final class LogInViewModel: ObservableObject {
     
     func subscribe(to eventsPublisher: OwnID.LoginPublisher) {
         eventsPublisher
+            .receive(on: DispatchQueue.main)
             .sink { [unowned self] event in
                 switch event {
                 case .success(let event):

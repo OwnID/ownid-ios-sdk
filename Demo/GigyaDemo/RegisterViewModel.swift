@@ -24,6 +24,7 @@ final class RegisterViewModel: ObservableObject {
     
     func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {
         eventsPublisher
+            .receive(on: DispatchQueue.main)
             .sink { [unowned self] event in
                 switch event {
                 case .success(let event):

@@ -30,8 +30,20 @@
 		16E35760290C074C0059B5A2 /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */; };
 		16E35761290C074C0059B5A2 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */; };
 		16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575D290C074C0059B5A2 /* RegisterView.swift */; };
+		7FA502B6B07AD91D8A4376B3 /* Pods_DirectDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBDF2EE9C8DF640E4FF41F4 /* Pods_DirectDemo.framework */; };
 		A5321182682B6CDF826869DA /* Pods_UIKitInjectionDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57C735FC6C41DA2125762B5F /* Pods_UIKitInjectionDemo.framework */; };
 		BA5852DB03A0F7A3FA41728D /* Pods_ScreensetsDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1D58353FA3894B92CDB1672 /* Pods_ScreensetsDemo.framework */; };
+		CE1DC0932B9F296000CF321D /* DirectDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0922B9F296000CF321D /* DirectDemoApp.swift */; };
+		CE1DC0972B9F296300CF321D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE1DC0962B9F296300CF321D /* Assets.xcassets */; };
+		CE1DC09A2B9F296300CF321D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE1DC0992B9F296300CF321D /* Preview Assets.xcassets */; };
+		CE1DC09F2B9F421C00CF321D /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC09E2B9F421C00CF321D /* LoginAndRegisterView.swift */; };
+		CE1DC0A12B9F424D00CF321D /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A02B9F424D00CF321D /* LogInView.swift */; };
+		CE1DC0A32B9F425800CF321D /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A22B9F425800CF321D /* LogInViewModel.swift */; };
+		CE1DC0A52B9F426F00CF321D /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A42B9F426F00CF321D /* RegisterView.swift */; };
+		CE1DC0A72B9F427D00CF321D /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A62B9F427D00CF321D /* RegisterViewModel.swift */; };
+		CE1DC0A92B9F428D00CF321D /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A82B9F428D00CF321D /* AccountView.swift */; };
+		CE1DC0AB2B9F4C5F00CF321D /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = CE1DC0AA2B9F4C5F00CF321D /* OwnIDConfiguration.plist */; };
+		CE1DC0AE2B9F4CE600CF321D /* AuthSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0AD2B9F4CE600CF321D /* AuthSystem.swift */; };
 		CE7879512B1746DC00FA098D /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35752290BE3180059B5A2 /* AccountView.swift */; };
 		CEB907CE2B4D969300C8966B /* IntegrationDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB907CD2B4D969300C8966B /* IntegrationDemoApp.swift */; };
 		CEB907D22B4D969500C8966B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CEB907D12B4D969500C8966B /* Assets.xcassets */; };
@@ -112,10 +124,26 @@
 		57BC0F8BA51DB6BF9B17A610 /* Pods-GigyaDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GigyaDemo.debug.xcconfig"; path = "Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		57C735FC6C41DA2125762B5F /* Pods_UIKitInjectionDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_UIKitInjectionDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		61EE6B6AA3FED99C11B993E1 /* Pods_GigyaDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GigyaDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FBDF2EE9C8DF640E4FF41F4 /* Pods_DirectDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DirectDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		80911C66B3A604783EE2A5DC /* Pods-ScreensetsDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.release.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.release.xcconfig"; sourceTree = "<group>"; };
 		8126AE550F9C3ACD478BC246 /* Pods-IntegrationDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IntegrationDemo.debug.xcconfig"; path = "Target Support Files/Pods-IntegrationDemo/Pods-IntegrationDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		82E7F9390CB1FE8C5C5FE14B /* Pods-DirectDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DirectDemo.debug.xcconfig"; path = "Target Support Files/Pods-DirectDemo/Pods-DirectDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		85A36729CB8BE4E8A7344080 /* Pods-GigyaDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GigyaDemo.release.xcconfig"; path = "Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo.release.xcconfig"; sourceTree = "<group>"; };
+		983E392344AAB311702B3BDE /* Pods-DirectDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DirectDemo.release.xcconfig"; path = "Target Support Files/Pods-DirectDemo/Pods-DirectDemo.release.xcconfig"; sourceTree = "<group>"; };
 		AC0DB5E650A1FE23B34D5B40 /* Pods_IntegrationDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IntegrationDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE1DC0902B9F296000CF321D /* DirectDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DirectDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE1DC0922B9F296000CF321D /* DirectDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectDemoApp.swift; sourceTree = "<group>"; };
+		CE1DC0962B9F296300CF321D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CE1DC0992B9F296300CF321D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		CE1DC09E2B9F421C00CF321D /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
+		CE1DC0A02B9F424D00CF321D /* LogInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
+		CE1DC0A22B9F425800CF321D /* LogInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
+		CE1DC0A42B9F426F00CF321D /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		CE1DC0A62B9F427D00CF321D /* RegisterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
+		CE1DC0A82B9F428D00CF321D /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		CE1DC0AA2B9F4C5F00CF321D /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
+		CE1DC0AC2B9F4C8100CF321D /* DirectDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DirectDemo.entitlements; sourceTree = "<group>"; };
+		CE1DC0AD2B9F4CE600CF321D /* AuthSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSystem.swift; sourceTree = "<group>"; };
 		CE78794F2B172CD900FA098D /* GigyaDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GigyaDemo.entitlements; sourceTree = "<group>"; };
 		CE7879532B178F2700FA098D /* UIKitInjectionDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = UIKitInjectionDemo.entitlements; sourceTree = "<group>"; };
 		CEB907CB2B4D969200C8966B /* IntegrationDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -159,6 +187,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				D85632A5688B37CF6B6FC1CA /* Pods_GigyaDemo.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE1DC08D2B9F296000CF321D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7FA502B6B07AD91D8A4376B3 /* Pods_DirectDemo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,6 +293,7 @@
 				16E2D82A290B019D00AF28E4 /* GigyaDemo */,
 				161C475B290AE94F0014D737 /* ScreensetsDemo */,
 				CEB907CC2B4D969200C8966B /* IntegrationDemo */,
+				CE1DC0912B9F296000CF321D /* DirectDemo */,
 				1662AD61291048DB0071894C /* UIKitInjectionDemo */,
 				16FBF262290A8E0800148C8C /* Products */,
 				77BD2AA4EFD7B47DA3B95320 /* Pods */,
@@ -271,6 +308,7 @@
 				16E2D829290B019D00AF28E4 /* GigyaDemo.app */,
 				1662AD60291048DB0071894C /* UIKitInjectionDemo.app */,
 				CEB907CB2B4D969200C8966B /* IntegrationDemo.app */,
+				CE1DC0902B9F296000CF321D /* DirectDemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -286,6 +324,8 @@
 				80911C66B3A604783EE2A5DC /* Pods-ScreensetsDemo.release.xcconfig */,
 				523AEC3D513B4C151FC3044E /* Pods-UIKitInjectionDemo.debug.xcconfig */,
 				024B20E32AC8C86E4353CF1D /* Pods-UIKitInjectionDemo.release.xcconfig */,
+				82E7F9390CB1FE8C5C5FE14B /* Pods-DirectDemo.debug.xcconfig */,
+				983E392344AAB311702B3BDE /* Pods-DirectDemo.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -297,8 +337,36 @@
 				AC0DB5E650A1FE23B34D5B40 /* Pods_IntegrationDemo.framework */,
 				D1D58353FA3894B92CDB1672 /* Pods_ScreensetsDemo.framework */,
 				57C735FC6C41DA2125762B5F /* Pods_UIKitInjectionDemo.framework */,
+				6FBDF2EE9C8DF640E4FF41F4 /* Pods_DirectDemo.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CE1DC0912B9F296000CF321D /* DirectDemo */ = {
+			isa = PBXGroup;
+			children = (
+				CE1DC0AC2B9F4C8100CF321D /* DirectDemo.entitlements */,
+				CE1DC0AA2B9F4C5F00CF321D /* OwnIDConfiguration.plist */,
+				CE1DC0922B9F296000CF321D /* DirectDemoApp.swift */,
+				CE1DC09E2B9F421C00CF321D /* LoginAndRegisterView.swift */,
+				CE1DC0A02B9F424D00CF321D /* LogInView.swift */,
+				CE1DC0A22B9F425800CF321D /* LogInViewModel.swift */,
+				CE1DC0A42B9F426F00CF321D /* RegisterView.swift */,
+				CE1DC0A62B9F427D00CF321D /* RegisterViewModel.swift */,
+				CE1DC0A82B9F428D00CF321D /* AccountView.swift */,
+				CE1DC0AD2B9F4CE600CF321D /* AuthSystem.swift */,
+				CE1DC0962B9F296300CF321D /* Assets.xcassets */,
+				CE1DC0982B9F296300CF321D /* Preview Content */,
+			);
+			path = DirectDemo;
+			sourceTree = "<group>";
+		};
+		CE1DC0982B9F296300CF321D /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				CE1DC0992B9F296300CF321D /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 		CEB907CC2B4D969200C8966B /* IntegrationDemo */ = {
@@ -391,6 +459,25 @@
 			productReference = 16E2D829290B019D00AF28E4 /* GigyaDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CE1DC08F2B9F296000CF321D /* DirectDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE1DC09D2B9F296300CF321D /* Build configuration list for PBXNativeTarget "DirectDemo" */;
+			buildPhases = (
+				EB1DC7EB0528A203834F81B4 /* [CP] Check Pods Manifest.lock */,
+				CE1DC08C2B9F296000CF321D /* Sources */,
+				CE1DC08D2B9F296000CF321D /* Frameworks */,
+				CE1DC08E2B9F296000CF321D /* Resources */,
+				D3A7B88B0796D5BDCAF12851 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DirectDemo;
+			productName = DirectDemo;
+			productReference = CE1DC0902B9F296000CF321D /* DirectDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
 		CEB907CA2B4D969200C8966B /* IntegrationDemo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CEB907D82B4D969600C8966B /* Build configuration list for PBXNativeTarget "IntegrationDemo" */;
@@ -417,7 +504,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 1520;
 				LastUpgradeCheck = 1400;
 				TargetAttributes = {
 					161C4759290AE94F0014D737 = {
@@ -428,6 +515,9 @@
 					};
 					16E2D828290B019D00AF28E4 = {
 						CreatedOnToolsVersion = 14.0.1;
+					};
+					CE1DC08F2B9F296000CF321D = {
+						CreatedOnToolsVersion = 15.2;
 					};
 					CEB907CA2B4D969200C8966B = {
 						CreatedOnToolsVersion = 15.0;
@@ -451,6 +541,7 @@
 				16E2D828290B019D00AF28E4 /* GigyaDemo */,
 				1662AD5F291048DB0071894C /* UIKitInjectionDemo */,
 				CEB907CA2B4D969200C8966B /* IntegrationDemo */,
+				CE1DC08F2B9F296000CF321D /* DirectDemo */,
 			);
 		};
 /* End PBXProject section */
@@ -484,6 +575,16 @@
 				16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */,
 				16E2D830290B019D00AF28E4 /* Assets.xcassets in Resources */,
 				16C89BF6290F8DCA00F5FE09 /* OwnIDConfiguration.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE1DC08E2B9F296000CF321D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE1DC09A2B9F296300CF321D /* Preview Assets.xcassets in Resources */,
+				CE1DC0972B9F296300CF321D /* Assets.xcassets in Resources */,
+				CE1DC0AB2B9F4C5F00CF321D /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,6 +740,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		D3A7B88B0796D5BDCAF12851 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		E7423F2D9466C84FA88604A1 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -654,6 +772,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EB1DC7EB0528A203834F81B4 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-DirectDemo-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -691,6 +831,21 @@
 				CE7879512B1746DC00FA098D /* AccountView.swift in Sources */,
 				16E3575F290C074C0059B5A2 /* LogInViewModel.swift in Sources */,
 				16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE1DC08C2B9F296000CF321D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE1DC0A32B9F425800CF321D /* LogInViewModel.swift in Sources */,
+				CE1DC0A72B9F427D00CF321D /* RegisterViewModel.swift in Sources */,
+				CE1DC0AE2B9F4CE600CF321D /* AuthSystem.swift in Sources */,
+				CE1DC0A52B9F426F00CF321D /* RegisterView.swift in Sources */,
+				CE1DC0A12B9F424D00CF321D /* LogInView.swift in Sources */,
+				CE1DC0A92B9F428D00CF321D /* AccountView.swift in Sources */,
+				CE1DC0932B9F296000CF321D /* DirectDemoApp.swift in Sources */,
+				CE1DC09F2B9F421C00CF321D /* LoginAndRegisterView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -751,6 +906,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -787,6 +943,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -821,6 +978,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -855,6 +1013,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1060,6 +1219,79 @@
 			};
 			name = Release;
 		};
+		CE1DC09B2B9F296300CF321D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 82E7F9390CB1FE8C5C5FE14B /* Pods-DirectDemo.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DirectDemo/DirectDemo.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"DirectDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.custom;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CE1DC09C2B9F296300CF321D /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 983E392344AAB311702B3BDE /* Pods-DirectDemo.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DirectDemo/DirectDemo.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"DirectDemo/Preview Content\"";
+				DEVELOPMENT_TEAM = 3NNN3W36ZJ;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.custom;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		CEB907D62B4D969500C8966B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8126AE550F9C3ACD478BC246 /* Pods-IntegrationDemo.debug.xcconfig */;
@@ -1081,7 +1313,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1122,7 +1354,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1176,6 +1408,15 @@
 			buildConfigurations = (
 				16FBF26D290A8E0900148C8C /* Debug */,
 				16FBF26E290A8E0900148C8C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE1DC09D2B9F296300CF321D /* Build configuration list for PBXNativeTarget "DirectDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE1DC09B2B9F296300CF321D /* Debug */,
+				CE1DC09C2B9F296300CF321D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
