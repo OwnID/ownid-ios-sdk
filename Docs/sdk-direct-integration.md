@@ -64,9 +64,9 @@ When the application starts, the OwnID SDK automatically reads `OwnIDConfigurati
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>OwnIDAppID</key>
-  <!--Replace with your App Id-->
-  <string>gephu342dnff2v</string>
+    <key>OwnIDAppID</key>
+    <!--Replace with your App Id-->
+    <string>gephu342dnff2v</string>
 </dict>
 </plist>
 ```
@@ -118,7 +118,6 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(loginIdPublisher: loginIdPublisher)
 }
 ```
@@ -129,40 +128,39 @@ After creating this OwnID view model, your View Model layer should listen to flo
 
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(loginIdPublisher: loginIdPublisher)
 
     init() {
-     subscribe(to: ownIDViewModel.flowEventPublisher)
+        subscribe(to: ownIDViewModel.flowEventPublisher)
     }
 
-     func subscribe(to flowEventPublisher: OwnID.RegistrationFlowPublisher) {
-       flowEventPublisher
-           .sink { [unowned self] event in
-               switch event {
-               case .success(let event):
-                   switch event {
+    func subscribe(to flowEventPublisher: OwnID.RegistrationFlowPublisher) {
+        flowEventPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] event in
+                switch event {
+                case .success(let event):
+                    switch event {
                     // Event when user successfully finishes OwnID registration flow
-                   case .response(let loginId, let payload, let authType):
-
-                    // 1. Update your submit button to perform registration with OwnID data from this event
-                    // 2. Collect any addition registration data from user
-                    // 3. On submit button click register user with your identity platform and 
-                    //    set OwnId Data (payload.data) to user profile
+                    case .response(let loginId, let payload, let authType):
+                        // 1. Update your submit button to perform registration with OwnID data from this event
+                        // 2. Collect any addition registration data from user
+                        // 3. On submit button click register user with your identity platform and 
+                        //    set OwnId Data (payload.data) to user profile
                      
-                   case .loading:
-                     // Display loading indicator according to your designs
+                    case .loading:
+                        // Display loading indicator according to your designs
 
                     case .resetTapped:
-                     // Update submit button on tap action to run registration without OwnID data. 
-                   }
+                        // Update submit button on tap action to run registration without OwnID data. 
+                    }
 
-               case .failure(let error):
-                // Handle OwnID.CoreSDK.Error here
-               }
-           }
-           .store(in: &bag)
-   }
+                case .failure(let error):
+                    // Handle OwnID.CoreSDK.Error here
+                }
+            }
+            .store(in: &bag)
+    }
 }
 ```
 > [!IMPORTANT]
@@ -183,8 +181,7 @@ It is recommended to set height of button the same as text field and disable tex
 ```swift
 //Put LoginView inside your main view, preferably below password field
 var body: some View {
-  OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel)
-  //...
+    OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel)
 }
 ```
 
@@ -199,7 +196,6 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginIdPublisher: loginIdPublisher)
 }
 ```
@@ -210,31 +206,31 @@ After creating this OwnID view model, you should listen to integration events fr
 
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginIdPublisher: loginIdPublisher)
 
-     init() {
+    init() {
         subscribe(to: ownIDViewModel.flowEventPublisher)
-     }
+    }
 
-     func subscribe(to eventsPublisher: OwnID.LoginFlowPublisher) {
+    func subscribe(to eventsPublisher: OwnID.LoginFlowPublisher) {
         flowEventPublisher
-           .sink { [unowned self] event in
-               switch event {
-               case .success(let event):
-                   switch event {
-                   case .response(let loginId, let payload, let authType):
-                     // Login user with your identity platform using OwnId Data from this event (payload.data)
-                   case .loading:
-                     // Display loading indicator according to your designs
-                   }
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] event in
+                switch event {
+                case .success(let event):
+                    switch event {
+                    case .response(let loginId, let payload, let authType):
+                        // Login user with your identity platform using OwnId Data from this event (payload.data)
+                    case .loading:
+                        // Display loading indicator according to your designs
+                    }
 
-               case .failure(let error):
-                 // Handle OwnID.CoreSDK.Error here
-               }
-           }
-           .store(in: &bag)
-   }
+                case .failure(let error):
+                    // Handle OwnID.CoreSDK.Error here
+                }
+            }
+            .store(in: &bag)
+    }
 }
 ```
 
@@ -275,14 +271,13 @@ Here are these errors:
 ```swift
 switch error {
 case flowCancelled(let flow):
-     print("flowCancelled")
+    print("flowCancelled")
      
  case userError(let errorModel):
-     print("userError")
+    print("userError")
      
  case integrationError(underlying: Swift.Error):
-     print("integrationError")
- }
+    print("integrationError")
 }
 ```
 

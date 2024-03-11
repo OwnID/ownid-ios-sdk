@@ -66,9 +66,9 @@ When the application starts, the OwnID SDK automatically reads `OwnIDConfigurati
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>OwnIDAppID</key>
-  <!--Replace with your App Id-->
-  <string>gephu342dnff2v</string>
+    <key>OwnIDAppID</key>
+    <!--Replace with your App Id-->
+    <string>gephu342dnff2v</string>
 </dict>
 </plist>
 ```
@@ -151,7 +151,6 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 [Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
                                                                loginPerformer: CustomLogin(),
                                                                loginIdPublisher: loginIdPublisher)
@@ -165,47 +164,47 @@ After creating this OwnID view model, your View Model layer should listen to int
 [Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
                                                                loginPerformer: CustomLogin(),
                                                                loginIdPublisher: loginIdPublisher)
 
     init() {
-     subscribe(to: ownIDViewModel.integrationEventPublisher)
+        subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 
-     func subscribe(to integrationEventPublisher: OwnID.RegistrationPublisher) {
-       integrationEventPublisher
-           .sink { [unowned self] event in
-               switch event {
-               case .success(let event):
-                   switch event {
+    func subscribe(to integrationEventPublisher: OwnID.RegistrationPublisher) {
+        integrationEventPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] event in
+                switch event {
+                case .success(let event):
+                    switch event {
                     // Event when user successfully finishes OwnID registration flow
-                   case .readyToRegister:
-                     // Call register(:) function and 
-                     // pass the custom user's parameters if needed
+                    case .readyToRegister:
+                        // Call register(:) function and 
+                        // pass the custom user's parameters if needed
 
-                     ownIDViewModel.register(registerParameters: parameters)
+                        ownIDViewModel.register(registerParameters: parameters)
 
-                   // Event when OwnID creates
-                   // account in your system
-                   // and logs in user
-                   case .userRegisteredAndLoggedIn:
-                     // User is registered and logged in with OwnID
+                    // Event when OwnID creates
+                    // account in your system
+                    // and logs in user
+                    case .userRegisteredAndLoggedIn:
+                        // User is registered and logged in with OwnID
                      
-                   case .loading:
-                     // Display loading indicator according to your designs
+                    case .loading:
+                        // Display loading indicator according to your designs
 
-                   case .resetTapped:
-                     // Event when user select "Undo" option in ready-to-register state
-                   }
+                    case .resetTapped:
+                        // Event when user select "Undo" option in ready-to-register state
+                    }
 
-               case .failure(let error):
-                // Handle OwnID.CoreSDK.Error here
-               }
-           }
-           .store(in: &bag)
-   }
+                case .failure(let error):
+                    // Handle OwnID.CoreSDK.Error here
+                }
+            }
+            .store(in: &bag)
+    }
 }
 ```
 > [!IMPORTANT]
@@ -227,8 +226,7 @@ It is recommended to set height of button the same as text field and disable tex
 ```swift
 //Put LoginView inside your main view, preferably below password field
 var body: some View {
-  OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel)
-  //...
+    OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel)
 }
 ```
 
@@ -244,7 +242,6 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 [Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
                                                             loginIdPublisher: loginIdPublisher)
 }
@@ -257,7 +254,6 @@ After creating this OwnID view model, you should listen to integration events fr
 [Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
                                                             loginIdPublisher: loginIdPublisher)
 
@@ -265,27 +261,28 @@ final class MyLogInViewModel: ObservableObject {
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 
-     func subscribe(to integrationEventPublisher: OwnID.LoginPublisher) {
-       integrationEventPublisher
-           .sink { [unowned self] event in
-               switch event {
-               case .success(let event):
-                   switch event {
-                   // Event when user who previously set up OwnID
-                   // logs in with Skip Password
-                   case .loggedIn:
-                     // User is logged in with OwnID
+    func subscribe(to integrationEventPublisher: OwnID.LoginPublisher) {
+        integrationEventPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] event in
+                switch event {
+                case .success(let event):
+                    switch event {
+                    // Event when user who previously set up OwnID
+                    // logs in with Skip Password
+                    case .loggedIn:
+                        // User is logged in with OwnID
 
-                   case .loading:
-                     // Display loading indicator according to your designs
-                   }
+                    case .loading:
+                        // Display loading indicator according to your designs
+                    }
 
-               case .failure(let error):
-                 // Handle OwnID.CoreSDK.Error here
-               }
-           }
-           .store(in: &bag)
-   }
+                case .failure(let error):
+                    // Handle OwnID.CoreSDK.Error here
+                }
+            }
+            .store(in: &bag)
+    }
 }
 ```
 
@@ -326,14 +323,13 @@ Here are these errors:
 ```swift
 switch error {
 case flowCancelled(let flow):
-     print("flowCancelled")
+    print("flowCancelled")
      
  case userError(let errorModel):
-     print("userError")
+    print("userError")
      
  case integrationError(underlying: Swift.Error):
-     print("integrationError")
- }
+    print("integrationError")
 }
 ```
 

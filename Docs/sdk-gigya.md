@@ -70,9 +70,9 @@ When the application starts, the OwnID SDK automatically reads `OwnIDConfigurati
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-        <key>OwnIDAppID</key>
-        <!--Replace with your App Id-->
-        <string>gephu342dnff2v</string>
+    <key>OwnIDAppID</key>
+    <!--Replace with your App Id-->
+    <string>gephu342dnff2v</string>
 </dict>
 </plist>
 ```
@@ -106,9 +106,8 @@ If you did not follow the recommendation for creating the `OwnIDConfiguration.pl
  If you're running Gigya with Screen-Sets and want to utilize the [OwnID iOS SDK WebView Bridge](sdk-webbridge-doc.md), then add `OwnID.GigyaSDK.configureWebBridge()`:
 
  See [complete example](../Demo/ScreensetsDemo/DemoApp.swift)
-
- ```swift
- struct DemoApp: App {
+```swift
+struct DemoApp: App {
     init() {
         OwnID.GigyaSDK.configure(appID: "gephu342dnff2v")
         OwnID.GigyaSDK.configureWebBridge()
@@ -153,7 +152,6 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 [Complete example](../Demo/GigyaDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: /* Your Instance Of Gigya */, loginIdPublisher: loginIdPublisher)
 }
 ```
@@ -165,55 +163,54 @@ After creating this OwnID view model, your View Model layer should listen to eve
 [Complete example](../Demo/GigyaDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    // MARK: OwnID
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
     
     func createViewModel(loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
-      let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
-      self.ownIDViewModel = ownIDViewModel
+        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
+        self.ownIDViewModel = ownIDViewModel
     }
 
     init() {
-     subscribe(to: ownIDViewModel.integrationEventPublisher)
+        subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 
-     func subscribe(to integrationEventPublisher: OwnID.RegistrationPublisher) {
+    func subscribe(to integrationEventPublisher: OwnID.RegistrationPublisher) {
         integrationEventPublisher
-           .receive(on: DispatchQueue.main)
-           .sink { [unowned self] event in
-               switch event {
-               case .success(let event):
-                   switch event {
-                   // Event when user successfully finishes OwnID registration flow
-                   case .readyToRegister:
-                     // To pass additional parameters,
-                     // such as first name, use
-                     // the same approach as in Gigya
-                     let nameValue = "{ \"firstName\": \"\(firstName)\" }"
-                     let paramsDict = ["profile": nameValue]
-                     let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
-                     ownIDViewModel.register(registerParameters: params)
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] event in
+                switch event {
+                case .success(let event):
+                    switch event {
+                    // Event when user successfully finishes OwnID registration flow
+                    case .readyToRegister:
+                        // To pass additional parameters,
+                        // such as first name, use
+                        // the same approach as in Gigya
+                        let nameValue = "{ \"firstName\": \"\(firstName)\" }"
+                        let paramsDict = ["profile": nameValue]
+                        let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
+                        ownIDViewModel.register(registerParameters: params)
 
-                   // Event when OwnID creates Gigya
-                   // account and logs in user
-                   case .userRegisteredAndLoggedIn:
-                     // User is registered and logged in with OwnID
+                    // Event when OwnID creates Gigya
+                    // account and logs in user
+                    case .userRegisteredAndLoggedIn:
+                        // User is registered and logged in with OwnID
 
-                   case .loading:
-                     // Button displays customizable loader
+                    case .loading:
+                        // Button displays customizable loader
                      
-                   case .resetTapped:
-                     // Event when user select "Undo" option in ready-to-register state
+                    case .resetTapped:
+                        // Event when user select "Undo" option in ready-to-register state
                    }
 
-               case .failure(let error):
-                // Handle OwnID.CoreSDK.Error here
-                // For an example of handling an interruption,
-                // see Errors section of this doc
-               }
-           }
-           .store(in: &bag)
-   }
+                case .failure(let error):
+                    // Handle OwnID.CoreSDK.Error here
+                    // For an example of handling an interruption,
+                    // see Errors section of this doc
+                }
+            }
+            .store(in: &bag)
+    }
 }
 ```
 
@@ -236,9 +233,7 @@ It is recommended to set height of button the same as text field and disable tex
 ```swift
 //Put LoginView inside your main view, preferably below password field
 var body: some View {
-  //...
-  OwnID.GigyaSDK.createLoginView(viewModel: viewModel.ownIDViewModel)
-  //...
+    OwnID.GigyaSDK.createLoginView(viewModel: viewModel.ownIDViewModel)
 }
 ```
 
@@ -254,7 +249,6 @@ You need to create an instance of the view model, `OwnID.LoginView.ViewModel`, t
 [Complete example](../Demo/GigyaDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    // MARK: OwnID
     let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: /* Your Instance Of Gigya */, loginIdPublisher: loginIdPublisher)
 }
 ```
@@ -266,40 +260,39 @@ After creating this OwnID view model, your View Model layer should listen to eve
 [Complete example](../Demo/GigyaDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    // MARK: OwnID
     var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
     func createViewModel(loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
-      let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
-      self.ownIDViewModel = ownIDViewModel
+        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
+        self.ownIDViewModel = ownIDViewModel
     }
 
-     init() {
-       subscribe(to: ownIDViewModel.integrationEventPublisher)
-     }
+    init() {
+        subscribe(to: ownIDViewModel.integrationEventPublisher)
+    }
 
-     func subscribe(to integrationEventPublisher: OwnID.LoginPublisher) {
+    func subscribe(to integrationEventPublisher: OwnID.LoginPublisher) {
         integrationEventPublisher
-           .receive(on: DispatchQueue.main)
-           .sink { [unowned self] event in
-               switch event {
-               case .success(let event):
-                   switch event {
-                   // Event when user who previously set up OwnID
-                   // logs in with Skip Password
-                   case .loggedIn:
-                     // User is logged in with OwnID
+            .receive(on: DispatchQueue.main)
+            .sink { [unowned self] event in
+                switch event {
+                case .success(let event):
+                    switch event {
+                    // Event when user who previously set up OwnID
+                    // logs in with Skip Password
+                    case .loggedIn:
+                        // User is logged in with OwnID
                      
-                   case .loading:
-                     // Display loading indicator according to your designs
-                   }
+                    case .loading:
+                        // Display loading indicator according to your designs
+                    }
 
-               case .failure(let error):
-                 // Handle OwnID.CoreSDK.Error here
-               }
-           }
-           .store(in: &bag)
-   }
+                case .failure(let error):
+                    // Handle OwnID.CoreSDK.Error here
+                }
+            }
+            .store(in: &bag)
+    }
 }
 ```
 
@@ -309,8 +302,8 @@ If you use Gigya [Social Login](https://sap.github.io/gigya-swift-sdk/GigyaSwift
 
 ```swift
 let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(),
-                                                  loginIdPublisher: loginIdPublisher,
-                                                  loginType: .linkSocialAccount)
+                                                   loginIdPublisher: loginIdPublisher,
+                                                   loginType: .linkSocialAccount)
 ```
 
 ## Tooltip
@@ -350,14 +343,13 @@ Here are these errors:
 ```swift
 switch error {
 case flowCancelled(let flow):
-     print("flowCancelled")
+    print("flowCancelled")
      
  case userError(let errorModel):
-     print("userError")
+    print("userError")
      
  case integrationError(underlying: Swift.Error):
-     print("integrationError")
- }
+    print("integrationError")
 }
 ```
 

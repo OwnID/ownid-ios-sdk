@@ -58,10 +58,10 @@ By default, the OwnID uses production environment for `appId` specified in confi
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-        <key>OwnIDAppID</key>
-        <string>...</string>
-        <key>OwnIDEnv</key>
-        <string>uat</string>   
+    <key>OwnIDAppID</key>
+    <string>...</string>
+    <key>OwnIDEnv</key>
+    <string>uat</string>   
 </dict>
 </plist>
 ```
@@ -98,10 +98,10 @@ The redirection URI determines where the user lands once they are done using the
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-        <key>OwnIDAppID</key>
-        <string>...</string>
-        <key>OwnIDRedirectionURL</key>
-        <string>com.myapp.demo://myhost</string>
+    <key>OwnIDAppID</key>
+    <string>...</string>
+    <key>OwnIDRedirectionURL</key>
+    <string>com.myapp.demo://myhost</string>
 </dict>
 </plist>
 ```
