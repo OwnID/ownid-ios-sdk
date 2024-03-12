@@ -6,6 +6,7 @@ To get more information about the OwnID iOS SDK, please refer to the [OwnID iOS 
 
 ## Table of contents
 * [Before You Begin](#before-you-begin)
+* [Enable Passkey Authentication](#enable-passkey-authentication)
 * [Adding WebView Bridge](#adding-webview-bridge)
 * [Manual integration of the OwnID WebView Bridge](#manual-integration-of-the-ownid-webview-bridge)
 
@@ -15,6 +16,14 @@ To get more information about the OwnID iOS SDK, please refer to the [OwnID iOS 
 Before incorporating OwnID iOS SDK WebView Bridge into your iOS application, ensure that you have already incorporated the OwnID iOS SDK. You can find step-by-step instructions in the [OwnID iOS SDK](../README.md) documentation.
 
 Additionally, make sure you have integrated the [OwnID Web SDK is added into WebView](https://docs.ownid.com).
+
+## Enable Passkey Authentication
+
+The OwnID SDK uses [Passkeys](https://www.passkeys.com) to authenticate users. 
+
+> [!IMPORTANT]
+>
+> To enable passkey support for your iOS app, associate your app with a website that your app owns using Associated Domains by following this guide: [Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
 
 ## Adding WebView Bridge
 You have two primary options for integrating the OwnID WebView Bridge into your application:
