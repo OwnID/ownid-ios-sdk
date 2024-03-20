@@ -43,7 +43,21 @@ extension OwnID.GigyaSDK.Registration {
                                                   parameters: RegisterParameters) -> PublisherType {
         Future<OwnID.RegisterResult, OwnID.CoreSDK.Error> { promise in
             func handle(error: OwnID.GigyaSDK.Error) {
-                OwnID.CoreSDK.logger.logGigya(.errorEntry(message: "error: \(error)", Self.self))
+                switch error {
+                case .gigyaSDKError(let error, _):
+                    switch error {
+                    case .gigyaError(let data):
+                        let allowedActionsErrorCodes = [206001, 206002, 206006, 403102, 403101]
+                        let gigyaError = data.errorCode
+                        if !allowedActionsErrorCodes.contains(gigyaError) {
+                            OwnID.CoreSDK.logger.logGigya(.errorEntry(context: nil, message: "error: \(error)", Self.self))
+                        }
+                    default:
+                        OwnID.CoreSDK.logger.logGigya(.errorEntry(context: nil, message: "error: \(error)", Self.self))
+                    }
+                default:
+                    OwnID.CoreSDK.logger.logGigya(.errorEntry(context: nil, message: "error: \(error)", Self.self))
+                }
                 promise(.failure(.plugin(error: error)))
             }
             

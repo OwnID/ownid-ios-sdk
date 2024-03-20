@@ -62,16 +62,16 @@ public extension OwnID.FlowsSDK.RegisterView {
         public func register(with email: String,
                              registerParameters: RegisterParameters = EmptyRegisterParameters()) {
             if email.isEmpty {
-                handle(.plugin(error: OwnID.FlowsSDK.RegisterError.emailIsMissing))
+                handle(.plugin(error: OwnID.FlowsSDK.RegisterError.emailIsMissing), context: registrationData.payload?.context)
                 return
             }
-            guard let payload = registrationData.payload else { handle(.payloadMissing(underlying: .none)); return }
+            guard let payload = registrationData.payload else { handle(.payloadMissing(underlying: .none), context: nil); return }
             let config = OwnID.FlowsSDK.RegistrationConfiguration(payload: payload,
                                                                   email: OwnID.CoreSDK.Email(rawValue: email))
             registrationPerformer.register(configuration: config, parameters: registerParameters)
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
-                        handle(error)
+                        handle(error, context: payload.context)
                     }
                 } receiveValue: { [unowned self] registrationResult in
                     OwnID.CoreSDK.logger.logAnalytic(.registerTrackMetric(action: "User is Registered", context: payload.context))
@@ -96,7 +96,7 @@ public extension OwnID.FlowsSDK.RegisterView {
         
         func skipPasswordTapped(usersEmail: String) {
             if case .ownidCreated = state {
-                OwnID.CoreSDK.logger.logAnalytic(.registerClickMetric(action: "Clicked Skip Password Undo", context: registrationData.payload?.context))
+                OwnID.CoreSDK.logger.logAnalytic(.registerClickMetric(action: "Clicked Undo", context: registrationData.payload?.context))
                 resetState()
                 resultPublisher.send(.success(.resetTapped))
                 return
@@ -126,7 +126,7 @@ public extension OwnID.FlowsSDK.RegisterView {
             eventsPublisher
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
-                        handle(error)
+                        handle(error, context: registrationData.payload?.context)
                     }
                 } receiveValue: { [unowned self] event in
                     switch event {
@@ -146,7 +146,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                         }
                         
                     case .cancelled:
-                        handle(.flowCancelled)
+                        handle(.flowCancelled, context: registrationData.payload?.context)
                         
                     case .loading:
                         resultPublisher.send(.success(.loading))
@@ -176,7 +176,7 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
         loginPerformerPublisher
             .sink { [unowned self] completion in
                 if case .failure(let error) = completion {
-                    handle(error)
+                    handle(error, context: payload.context)
                 }
             } receiveValue: { [unowned self] registerResult in
                 OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: "User is Logged in", context: payload.context, authType: payload.authType))
@@ -187,8 +187,18 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
             .store(in: &bag)
     }
     
-    func handle(_ error: OwnID.CoreSDK.Error) {
-        OwnID.CoreSDK.logger.logFlow(.errorEntry(message: "\(error.localizedDescription)", Self.self))
+    func handle(_ error: OwnID.CoreSDK.Error, context: OwnID.CoreSDK.Context?) {
+        switch error {
+        case .flowCancelled:
+            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: "User canceled OwnID flow", context: context))
+        case .serverError(let serverError):
+            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: serverError.error, context: context))
+        case .plugin(let error):
+            OwnID.CoreSDK.logger.logCore(.entry(level: .warning, message: error.localizedDescription, Self.self))
+            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: error.localizedDescription, context: context))
+        default:
+            break
+        }
         resultPublisher.send(.failure(error))
     }
 }

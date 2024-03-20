@@ -3,7 +3,8 @@ import Foundation
 public protocol LoggerProtocol {
     func add(_ logger: ExtensionLoggerProtocol)
     func remove(_ logger: ExtensionLoggerProtocol)
-    func log(_ entry: OwnID.CoreSDK.StandardMetricLogEntry)
+    func log(_ entry: OwnID.CoreSDK.StandardMetricLogEntry, isMetric: Bool)
+    var isEnabled: Bool { get set }
 }
 
 public extension String {
@@ -30,9 +31,19 @@ extension OwnID.CoreSDK {
         static let shared = Logger()
         private init() { }
         private var sessionRequestSequenceNumber = 0
-        var logLevel: LogLevel = .information
+        var logLevel: LogLevel = .warning
+        private var sdkNotConfiguredLogs = [StandardMetricLogEntry]()
+        private var isSDKConfigured = false
+        
+        public var isEnabled = false
         
         private var extendedLoggers = [ExtensionLoggerProtocol]()
+        
+        func sdkConfigured() {
+            isSDKConfigured = true
+            sdkNotConfiguredLogs.forEach { sendLog($0) }
+            sdkNotConfiguredLogs.removeAll()
+        }
         
         func add(_ logger: ExtensionLoggerProtocol) {
             extendedLoggers.append(logger)
@@ -44,10 +55,34 @@ extension OwnID.CoreSDK {
             }
         }
         
-        func log(_ entry: StandardMetricLogEntry) {
-            if let level = entry.level, logLevel.rawValue > level.rawValue {
+        func log(_ entry: StandardMetricLogEntry, isMetric: Bool) {
+            if isMetric {
+                sendMetric(entry)
+            } else {
+                if !isSDKConfigured {
+                    sdkNotConfiguredLogs.append(entry)
+                } else {
+                    sendLog(entry)
+                }
+            }
+        }
+        
+        private func sendMetric(_ entry: StandardMetricLogEntry) {
+            entry.metadata[LoggerValues.correlationIDKey] = LoggerValues.instanceID.uuidString
+            entry.metadata["sessionRequestSequenceNumber"] = String(sessionRequestSequenceNumber)
+            entry.version = UserAgentManager.shared.userFacingSDKVersion
+            entry.userAgent = UserAgentManager.shared.SDKUserAgent
+            sessionRequestSequenceNumber += 1
+            extendedLoggers.forEach { logger in
+                logger.log(entry)
+            }
+        }
+        
+        private func sendLog(_ entry: StandardMetricLogEntry) {
+            guard let level = entry.level, logLevel.rawValue <= level.rawValue, isEnabled else {
                 return
             }
+            
             entry.metadata[LoggerValues.correlationIDKey] = LoggerValues.instanceID.uuidString
             entry.metadata["sessionRequestSequenceNumber"] = String(sessionRequestSequenceNumber)
             entry.version = UserAgentManager.shared.userFacingSDKVersion

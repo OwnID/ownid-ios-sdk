@@ -77,7 +77,7 @@ public extension OwnID.FlowsSDK.LoginView {
             eventsPublisher
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
-                        handle(error)
+                        handle(error, context: payload?.context)
                     }
                 } receiveValue: { [unowned self] event in
                     switch event {
@@ -85,7 +85,7 @@ public extension OwnID.FlowsSDK.LoginView {
                         process(payload: payload)
                         
                     case .cancelled:
-                        handle(.flowCancelled)
+                        handle(.flowCancelled, context: payload?.context)
                         
                     case .loading:
                         resultPublisher.send(.success(.loading))
@@ -116,7 +116,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
         loginPerformerPublisher
             .sink { [unowned self] completion in
                 if case .failure(let error) = completion {
-                    handle(error)
+                    handle(error, context: payload.context)
                 }
             } receiveValue: { [unowned self] loginResult in
                 OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: "User is Logged in", context: payload.context, authType: payload.authType))
@@ -127,8 +127,19 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
             .store(in: &bag)
     }
     
-    func handle(_ error: OwnID.CoreSDK.Error) {
-        OwnID.CoreSDK.logger.logFlow(.errorEntry(message: "\(error.localizedDescription)", Self.self))
+    func handle(_ error: OwnID.CoreSDK.Error, context: OwnID.CoreSDK.Context?) {
+        switch error {
+        case .flowCancelled:
+            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: "User canceled OwnID flow", context: context))
+        case .serverError(let serverError):
+            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: serverError.error, context: context))
+        case .plugin(let error):
+            OwnID.CoreSDK.logger.logCore(.entry(level: .warning, message: error.localizedDescription, Self.self))
+            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: error.localizedDescription, context: context))
+        default:
+            break
+        }
+        
         resetDataAndState()
         resultPublisher.send(.failure(error))
     }

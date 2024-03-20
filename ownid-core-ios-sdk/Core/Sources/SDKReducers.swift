@@ -108,13 +108,14 @@ extension OwnID.CoreSDK {
         guard numberOfConfigurations == 1 else { return .fireAndForget { } }
         let url = serverURL.appendingPathComponent("client-config")
         let effect = Deferred { URLSession.shared.dataTaskPublisher(for: url)
-                .map { data, _ in  return data }
+                .map { data, _ in return data }
                 .eraseToAnyPublisher()
                 .decode(type: ClientConfiguration.self, decoder: JSONDecoder())
                 .eraseToAnyPublisher()
-                .replaceError(with: ClientConfiguration(logLevel: 4, passkeys: false, rpId: .none, passkeysAutofill: false))
+                .replaceError(with: ClientConfiguration(logLevel: 3, passkeys: 0, rpId: .none, passkeysAutofill: false))
                 .flatMap { serverLogLevel -> Empty<SDKAction, Never> in
-                    Logger.shared.logLevel = LogLevel(rawValue: serverLogLevel.logLevel) ?? .error
+                    Logger.shared.logLevel = LogLevel(rawValue: serverLogLevel.logLevel) ?? .warning
+                    Logger.shared.sdkConfigured()
                     return Empty(completeImmediately: true)
                 }
                 .eraseToAnyPublisher()

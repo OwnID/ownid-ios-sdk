@@ -111,9 +111,11 @@ extension OwnID.CoreSDK.Status {
                     return payload
                 }
                 .eraseToAnyPublisher()
-                .mapError { initError in
-                    OwnID.CoreSDK.logger.logCore(.errorEntry(message: "\(initError.localizedDescription)", Self.self))
-                    guard let error = initError as? OwnID.CoreSDK.Error else { return OwnID.CoreSDK.Error.statusRequestFail(underlying: initError) }
+                .mapError { statusError in
+                    if let error = statusError as? OwnID.CoreSDK.Error, case let .serverError(serverError) = error { } else {
+                        OwnID.CoreSDK.logger.logCore(.errorEntry(message: "\(statusError.localizedDescription)", Self.self))
+                    }
+                    guard let error = statusError as? OwnID.CoreSDK.Error else { return OwnID.CoreSDK.Error.statusRequestFail(underlying: statusError) }
                     return error
                 }
                 .eraseToAnyPublisher()
