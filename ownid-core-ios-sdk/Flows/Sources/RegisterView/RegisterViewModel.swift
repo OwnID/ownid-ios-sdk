@@ -71,6 +71,7 @@ public extension OwnID.FlowsSDK.RegisterView {
             registrationPerformer.register(configuration: config, parameters: registerParameters)
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
+                        OwnID.CoreSDK.logger.logAnalytic(.registerTrackMetric(action: "User is Registered", context: payload.context))
                         handle(error, context: payload.context)
                     }
                 } receiveValue: { [unowned self] registrationResult in
@@ -194,8 +195,7 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
         case .serverError(let serverError):
             OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: serverError.error, context: context))
         case .plugin(let error):
-            OwnID.CoreSDK.logger.logCore(.entry(level: .warning, message: error.localizedDescription, Self.self))
-            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: error.localizedDescription, context: context))
+            OwnID.CoreSDK.logger.logCore(.entry(level: .warning, message: "Registration: \(error.localizedDescription)" , Self.self))
         default:
             break
         }

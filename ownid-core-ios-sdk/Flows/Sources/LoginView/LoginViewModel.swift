@@ -116,6 +116,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
         loginPerformerPublisher
             .sink { [unowned self] completion in
                 if case .failure(let error) = completion {
+                    OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: "User is Logged in", context: payload.context, authType: payload.authType))
                     handle(error, context: payload.context)
                 }
             } receiveValue: { [unowned self] loginResult in
@@ -134,8 +135,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
         case .serverError(let serverError):
             OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: serverError.error, context: context))
         case .plugin(let error):
-            OwnID.CoreSDK.logger.logCore(.entry(level: .warning, message: error.localizedDescription, Self.self))
-            OwnID.CoreSDK.logger.logAnalytic(.loginTrackMetric(action: error.localizedDescription, context: context))
+            OwnID.CoreSDK.logger.logCore(.entry(level: .warning, message: "Login: \(error.localizedDescription)", Self.self))
         default:
             break
         }

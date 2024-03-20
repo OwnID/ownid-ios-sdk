@@ -23,7 +23,7 @@ extension OwnID.GigyaSDK.Error: LocalizedError {
         case .gigyaSDKError(let error, _):
             switch error {
             case .gigyaError(let data):
-                return data.errorMessage
+                return "[\(data.errorCode)] \(data.errorMessage ?? "")" 
             case .providerError(let data):
                 return data
             case .networkError(let error):

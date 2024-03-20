@@ -112,7 +112,7 @@ extension OwnID.CoreSDK.Status {
                 }
                 .eraseToAnyPublisher()
                 .mapError { statusError in
-                    if let error = statusError as? OwnID.CoreSDK.Error, case let .serverError(serverError) = error { } else {
+                    if let error = statusError as? OwnID.CoreSDK.Error, case let .serverError(_) = error { } else {
                         OwnID.CoreSDK.logger.logCore(.errorEntry(message: "\(statusError.localizedDescription)", Self.self))
                     }
                     guard let error = statusError as? OwnID.CoreSDK.Error else { return OwnID.CoreSDK.Error.statusRequestFail(underlying: statusError) }
