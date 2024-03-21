@@ -12,11 +12,3 @@ end
 target 'GigyaDemo' do
   pod 'ownid-gigya-ios-sdk'
 end
-
-target 'CustomIntegrationDemo' do
-  pod 'ownid-core-ios-sdk'
-end
-
-target 'CustomIntegrationCustomViewDemo' do
-  pod 'ownid-core-ios-sdk'
-end
