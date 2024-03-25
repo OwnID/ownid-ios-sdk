@@ -4,7 +4,6 @@ public protocol LoggerProtocol {
     func add(_ logger: ExtensionLoggerProtocol)
     func remove(_ logger: ExtensionLoggerProtocol)
     func log(_ entry: OwnID.CoreSDK.StandardMetricLogEntry, isMetric: Bool)
-    var isEnabled: Bool { get set }
 }
 
 public extension String {
@@ -34,8 +33,6 @@ extension OwnID.CoreSDK {
         var logLevel: LogLevel = .warning
         private var sdkNotConfiguredLogs = [StandardMetricLogEntry]()
         private var isSDKConfigured = false
-        
-        public var isEnabled = false
         
         private var extendedLoggers = [ExtensionLoggerProtocol]()
         
@@ -79,7 +76,7 @@ extension OwnID.CoreSDK {
         }
         
         private func sendLog(_ entry: StandardMetricLogEntry) {
-            guard let level = entry.level, logLevel.rawValue <= level.rawValue, isEnabled else {
+            guard let level = entry.level, logLevel.rawValue <= level.rawValue else {
                 return
             }
             
