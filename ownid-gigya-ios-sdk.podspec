@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'ownid-gigya-ios-sdk'
-  s.version          = '2.2.2'
+  s.version          = '2.2.3'
   s.summary          = 'ownid-gigya-ios-sdk'
 
   s.description      = <<-DESC
@@ -17,6 +17,6 @@ Pod::Spec.new do |s|
   s.swift_version = '5.1.1'
 
   s.source_files = 'ownid-gigya-ios-sdk/**/*'
-  s.dependency 'ownid-core-ios-sdk', '2.2.2'
+  s.dependency 'ownid-core-ios-sdk', '2.2.3'
   s.dependency 'Gigya'
 end
