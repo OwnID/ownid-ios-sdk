@@ -18,7 +18,7 @@ public extension OwnID.CoreSDK {
         public init(action: String,
                     type: EventType,
                     category: EventCategory,
-                    context: String,
+                    context: String?,
                     metadata: [String : String?] = [String : String]()) {
             super.init(context: context, message: "", codeInitiator: "\(Self.self)", sdkName: OwnID.CoreSDK.sdkName, version: OwnID.CoreSDK.UserAgentManager.shared.userFacingSDKVersion,
                        metadata: metadata)
@@ -35,40 +35,40 @@ public extension OwnID.CoreSDK.MetricLogEntry {
     }
     
     static func registerTrackMetric(action: String,
-                                    context: String? = "no_context",
+                                    context: String?,
                                     authType: String? = .none) -> OwnID.CoreSDK.MetricLogEntry {
         let metric = OwnID.CoreSDK.MetricLogEntry.init(action: action,
                                                        type: .track,
                                                        category: .registration,
-                                                       context: context ?? "no_context",
+                                                       context: context,
                                                        metadata: authTypeKey(authType: authType))
         return metric
     }
     
-    static func registerClickMetric(action: String, context: String? = "no_context") -> OwnID.CoreSDK.MetricLogEntry {
-        let metric = OwnID.CoreSDK.MetricLogEntry.init(action: action, type: .click, category: .registration, context: context ?? "no_context")
+    static func registerClickMetric(action: String, context: String?) -> OwnID.CoreSDK.MetricLogEntry {
+        let metric = OwnID.CoreSDK.MetricLogEntry.init(action: action, type: .click, category: .registration, context: context)
         return metric
     }
     
     static func loginTrackMetric(action: String,
-                                 context: String? = "no_context",
+                                 context: String?,
                                  authType: String? = .none) -> OwnID.CoreSDK.MetricLogEntry {
         let metric = OwnID.CoreSDK.MetricLogEntry.init(action: action,
                                                        type: .track,
                                                        category: .login,
-                                                       context: context ?? "no_context",
+                                                       context: context,
                                                        metadata: authTypeKey(authType: authType))
         return metric
     }
     
-    static func loginClickMetric(action: String, context: String? = "no_context") -> OwnID.CoreSDK.MetricLogEntry {
-        let metric = OwnID.CoreSDK.MetricLogEntry.init(action: action, type: .click, category: .login, context: context ?? "no_context")
+    static func loginClickMetric(action: String, context: String?) -> OwnID.CoreSDK.MetricLogEntry {
+        let metric = OwnID.CoreSDK.MetricLogEntry.init(action: action, type: .click, category: .login, context: context)
         return metric
     }
 }
 
 extension LoggerProtocol {
     public func logAnalytic(_ entry: OwnID.CoreSDK.MetricLogEntry) {
-        self.log(entry)
+        self.log(entry, isMetric: true)
     }
 }

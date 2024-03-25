@@ -82,11 +82,11 @@ extension OwnID.CoreSDK.Init {
                 .eraseToAnyPublisher()
                 .decode(type: Response.self, decoder: JSONDecoder())
                 .map { decoded in
-                    OwnID.CoreSDK.logger.logCore(.entry(context: decoded.context ?? "no_context", message: "Finished request", Self.self))
+                    OwnID.CoreSDK.logger.logCore(.entry(context: decoded.context, message: "Finished request", Self.self))
                     return decoded
                 }
                 .mapError { initError in
-                    OwnID.CoreSDK.logger.logCore(.errorEntry(message: "\(initError.localizedDescription)", Self.self))
+                    OwnID.CoreSDK.logger.logCore(.errorEntry(context: nil, message: "\(initError.localizedDescription)", Self.self))
                     guard let error = initError as? OwnID.CoreSDK.Error else { return OwnID.CoreSDK.Error.initRequestResponseDecodeFailed(underlying: initError) }
                     return error
                 }

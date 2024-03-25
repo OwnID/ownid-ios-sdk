@@ -3,7 +3,7 @@ import Combine
 
 public extension OwnID.CoreSDK {
     static let sdkName = String(describing: OwnID.CoreSDK.self)
-    static let version = "1.0.1"
+    static let version = "2.2.3"
     static let APIVersion = "1"
 }
 
@@ -46,9 +46,7 @@ public extension OwnID {
         }
         
 #warning("Move logger here? Make it as part of SDK instance instead of it own instance and have everything in single place?")
-        public static var logger: LoggerProtocol {
-            Logger.shared
-        }
+        public static var logger: LoggerProtocol = Logger.shared
         
         public func configureForTests() {
             store.send(.configureForTests)

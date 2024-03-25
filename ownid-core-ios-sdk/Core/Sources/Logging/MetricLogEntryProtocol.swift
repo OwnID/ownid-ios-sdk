@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol MetricLogEntryProtocol: Encodable {
-    var context: String { get set }
+    var context: String? { get set }
     
     var appURL: String? { get set }
     
@@ -24,7 +24,7 @@ public protocol MetricLogEntryProtocol: Encodable {
 
 extension OwnID.CoreSDK {
     open class StandardMetricLogEntry: MetricLogEntryProtocol {
-        public init(context: String,
+        public init(context: String? = nil,
                     requestPath: String? = nil,
                     level: OwnID.CoreSDK.LogLevel? = .none,
                     message: String,
@@ -42,7 +42,7 @@ extension OwnID.CoreSDK {
         
         public var appURL: String? = OwnID.CoreSDK.shared.serverURL(for: OwnID.CoreSDK.shared.configurationName).deletingLastPathComponent().host
         
-        public var context: String
+        public var context: String?
         
         public var component = LoggerValues.component
         
@@ -67,5 +67,7 @@ extension OwnID.CoreSDK {
         public var action: String?
         
         public var category: EventCategory?
+        
+        let applicationOrigin = Bundle.main.bundleIdentifier
     }
 }

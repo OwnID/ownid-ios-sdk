@@ -2,7 +2,7 @@ import Foundation
 
 extension OwnID.FlowsSDK {
     public class FlowLogEntry: OwnID.CoreSDK.StandardMetricLogEntry {
-        internal init(context: String,
+        internal init(context: String? = nil,
                       requestPath: String? = .none,
                       logLevel: OwnID.CoreSDK.LogLevel = .information,
                       message: String,
@@ -19,17 +19,22 @@ extension OwnID.FlowsSDK {
 }
 
 public extension OwnID.FlowsSDK.FlowLogEntry {
-    static func entry<T>(function: String = #function, file: String = #file, context: String = "no_context", message: String = "", _ : T.Type = T.self) -> OwnID.FlowsSDK.FlowLogEntry {
-        OwnID.FlowsSDK.FlowLogEntry(context: context, message: "\(message) \(function) \(file)", codeInitiator: String(describing: T.self))
+    static func entry<T>(function: String = #function, file: String = #file, context: String? = nil, message: String = "", _ : T.Type = T.self) -> OwnID.FlowsSDK.FlowLogEntry {
+        OwnID.FlowsSDK.FlowLogEntry(context: context,
+                                    message: "\(message) \(function) \((file as NSString).lastPathComponent)",
+                                    codeInitiator: String(describing: T.self))
     }
     
-    static func errorEntry<T>(function: String = #function, file: String = #file, context: String = "no_context", message: String = "", _ : T.Type = T.self) -> OwnID.FlowsSDK.FlowLogEntry {
-        OwnID.FlowsSDK.FlowLogEntry(context: context, logLevel: .error, message: "\(message) \(function) \(file)", codeInitiator: String(describing: T.self))
+    static func errorEntry<T>(function: String = #function, file: String = #file, context: String? = nil, message: String = "", _ : T.Type = T.self) -> OwnID.FlowsSDK.FlowLogEntry {
+        OwnID.FlowsSDK.FlowLogEntry(context: context, 
+                                    logLevel: .error,
+                                    message: "\(message) \(function) \((file as NSString).lastPathComponent)",
+                                    codeInitiator: String(describing: T.self))
     }
 }
 
 extension LoggerProtocol {
     func logFlow(_ entry: OwnID.FlowsSDK.FlowLogEntry) {
-        self.log(entry)
+        self.log(entry, isMetric: false)
     }
 }

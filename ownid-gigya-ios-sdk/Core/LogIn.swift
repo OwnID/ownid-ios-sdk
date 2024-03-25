@@ -68,7 +68,21 @@ extension OwnID.GigyaSDK {
         static func logIn<T: GigyaAccountProtocol>(instance: GigyaCore<T>, payload: OwnID.CoreSDK.Payload) -> EventPublisher {
             Future<OwnID.LoginResult, OwnID.CoreSDK.Error> { promise in
                 func handle(error: OwnID.GigyaSDK.Error) {
-                    OwnID.CoreSDK.logger.logGigya(.errorEntry(message: "error: \(error)", Self.self))
+                    switch error {
+                    case .gigyaSDKError(let error, _):
+                        switch error {
+                        case .gigyaError(let data):
+                            let allowedActionsErrorCodes = [206001, 206002, 206006, 403102, 403101]
+                            let gigyaError = data.errorCode
+                            if !allowedActionsErrorCodes.contains(gigyaError) {
+                                OwnID.CoreSDK.logger.logGigya(.errorEntry(context: nil, message: "error: \(error)", Self.self))
+                            }
+                        default:
+                            OwnID.CoreSDK.logger.logGigya(.errorEntry(context: nil, message: "error: \(error)", Self.self))
+                        }
+                    default:
+                        OwnID.CoreSDK.logger.logGigya(.errorEntry(context: nil, message: "error: \(error)", Self.self))
+                    }
                     promise(.failure(.plugin(error: error)))
                 }
                 guard let data = payload.dataContainer as? [String: Any] else { handle(error: .cannotParseSession); return }
@@ -93,7 +107,7 @@ extension OwnID.GigyaSDK {
                     instance.getAccount { result in
                         switch result {
                         case .success(let account):
-                            OwnID.CoreSDK.logger.logGigya(.entry(message: "account \(String(describing: account.UID))", Self.self))
+                            OwnID.CoreSDK.logger.logGigya(.entry(context: nil, message: "account \(String(describing: account.UID))", Self.self))
                             promise(.success(OwnID.LoginResult(operationResult: VoidOperationResult(), authType: payload.authType)))
                             
                         case .failure(let error):
