@@ -15,7 +15,15 @@ extension OwnID.CoreSDK {
         let action: JSAction
         let callbackPath: String
         let params: String?
-    }    
+        let metadata: JSMetadata?
+    }
+    
+    struct JSMetadata: Decodable {
+        var category: EventCategory?
+        let context: String?
+        let siteUrl: String?
+        let widgetId: String?
+    }
     
     public class OwnIDWebBridge: NSObject, WKScriptMessageHandler {
         private let JSEventHandler = "__ownidNativeBridgeHandler"
@@ -60,9 +68,9 @@ extension OwnID.CoreSDK {
             let JSInterface =  """
                 window.__ownidNativeBridge = {
                     getNamespaces: function getNamespaces() { return '{\"\(feature)\": \(actions)}'; },
-                    invokeNative: function invokeNative(namespace, action, callbackPath, params) {
+                    invokeNative: function invokeNative(namespace, action, callbackPath, params, metadata) {
                         try {
-                            window.webkit.messageHandlers.\(JSEventHandler).postMessage({method: 'invokeNative', data: { namespace, action, callbackPath, params }});
+                            window.webkit.messageHandlers.\(JSEventHandler).postMessage({method: 'invokeNative', data: { namespace, action, callbackPath, params, metadata }});
                         } catch (error) {
                             console.error(error);
                             setTimeout(function errorHandler() {
@@ -106,7 +114,8 @@ extension OwnID.CoreSDK {
                                                               isMainFrame: message.frameInfo.isMainFrame)
                     namespace?.invoke(bridgeContext: bridgeContext,
                                       action: JSDataModel.action,
-                                      params: JSDataModel.params ?? "") { [weak self] result in
+                                      params: JSDataModel.params ?? "",
+                                      metadata: JSDataModel.metadata) { [weak self] result in
                         self?.invokeCallback(callbackPath: JSDataModel.callbackPath, and: result)
                     }
                 }

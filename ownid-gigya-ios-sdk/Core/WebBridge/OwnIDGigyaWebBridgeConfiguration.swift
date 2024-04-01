@@ -1,8 +1,8 @@
 import Gigya
 
 extension OwnID.GigyaSDK {
-    public static func configureWebBridge() {
-        Gigya.getContainer().register(service: GigyaWebBridge<GigyaAccount>.self) { resolver in
+    public static func configureWebBridge<T: GigyaAccountProtocol>(accountType: T.Type = GigyaAccount.self) {
+        Gigya.getContainer().register(service: GigyaWebBridge<T>.self) { resolver in
             let config = resolver.resolve(GigyaConfig.self)
             let persistenceService = resolver.resolve(PersistenceService.self)
             let sessionService = resolver.resolve(SessionServiceProtocol.self)

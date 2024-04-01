@@ -90,6 +90,7 @@ public extension OwnID.CoreSDK {
         case flowIsFinished = "FlowIsFinished"
         case invalidCode = "WrongCodeEntered"
         case sendCodeLimitReached = "SendCodeLimitReached"
+        case flowCanceled = "FlowCanceled"
         case unknown
     }
 }
@@ -130,6 +131,8 @@ extension OwnID.CoreSDK.Error {
             default:
                 return errorModel.code.rawValue
             }
+        case .flowCancelled:
+            return OwnID.CoreSDK.ErrorTypeCode.flowCanceled.rawValue
         default:
             return nil
         }

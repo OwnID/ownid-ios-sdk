@@ -4,18 +4,18 @@ extension OwnID.UISDK {
     struct OrView: View {
         @State private var isTranslationChanged = false
         let textSize: CGFloat
-        let lineHeight: CGFloat
+        let fontFamily: String?
         let textColor: Color
         
-        init(textSize: CGFloat, lineHeight: CGFloat, textColor: Color) {
+        init(textSize: CGFloat, fontFamily: String?, textColor: Color) {
             self.textSize = textSize
-            self.lineHeight = lineHeight
+            self.fontFamily = fontFamily
             self.textColor = textColor
         }
         
         var body: some View {
             Text(localizedKey: .or)
-                .fontWithLineHeight(font: .systemFont(ofSize: textSize), lineHeight: lineHeight)
+                .font(font)
                 .foregroundColor(textColor)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -23,6 +23,14 @@ extension OwnID.UISDK {
                     isTranslationChanged.toggle()
                 }
                 .overlay(Text("\(String(isTranslationChanged))").foregroundColor(.clear), alignment: .bottom)
+        }
+        
+        private var font: Font {
+            if let fontFamily {
+                .custom(fontFamily, size: textSize)
+            } else {
+                .system(size: textSize)
+            }
         }
     }
 }

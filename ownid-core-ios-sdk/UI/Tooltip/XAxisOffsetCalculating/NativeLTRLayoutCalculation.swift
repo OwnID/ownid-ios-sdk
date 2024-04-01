@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension OwnID.UISDK {
-    struct NativeLTRLayoutCalculation: XAxisOffsetCalculating {
+    struct LTRLayoutCalculation: XAxisOffsetCalculating {
         func calculateXAxisOffset(viewBounds: CGRect, screenBounds: CGRect) -> CGFloat {
             var XOffset = 0.0
             if viewBounds.maxX >= screenBounds.maxX {

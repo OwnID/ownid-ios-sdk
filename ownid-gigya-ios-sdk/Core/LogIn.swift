@@ -85,17 +85,28 @@ extension OwnID.GigyaSDK {
                 
                 if let errorString = dataJson[Constants.errorKey] as? String,
                    let errorData = errorString.data(using: .utf8),
-                   let errorMetadata = try? JSONDecoder().decode(GigyaResponseModel.self, from: errorData) {
-                    ErrorMapper<T>.mapLoginError(errorCode: errorMetadata.errorCode,
-                                                 context: payload.context,
-                                                 loginId: payload.loginId,
-                                                 authType: payload.authType)
-                    let gigyaError = NetworkError.gigyaError(data: errorMetadata)
-                    let json = try? JSONSerialization.jsonObject(with: errorData, options: []) as? [String: Any]
-                    let error = IntegrationError.gigyaSDKError(gigyaError: gigyaError, dataDictionary: json)
-                    handle(error: .integrationError(underlying: error))
-                    return
+                   let errorMetadata = try? JSONDecoder().decode(ErrorMetadata.self, from: errorData) {
+                    let statusCode = ApiStatusCode(rawValue: errorMetadata.statusCode ?? 0) ?? .unknown
+                    let gigyaErrorModel = GigyaResponseModel(statusCode: statusCode,
+                                                             errorCode: errorMetadata.errorCode ?? 0,
+                                                             callId: errorMetadata.callID ?? "",
+                                                             errorMessage: errorMetadata.errorMessage,
+                                                             sessionInfo: nil,
+                                                             requestData: errorData)
+                    let gigyaError = NetworkError.gigyaError(data: gigyaErrorModel)
+                    let code = gigyaErrorModel.errorCode
+                    if OwnID.GigyaSDK.ErrorMapper.allowedActionsErrorCodes.contains(code) {
+                        let message = "Login: [\(code)] \(gigyaErrorModel.errorMessage ?? "")"
+                        OwnID.CoreSDK.logger.log(level: .warning, message: message, type: Self.self)
+                        promise(.failure(.integrationError(underlying: gigyaError)))
+                        return
+                    } else {
+                        handle(error: .integrationError(underlying: gigyaError),
+                               customErrorMessage: OwnID.GigyaSDK.gigyaErrorMessage(gigyaError))
+                        return
+                    }
                 }
+                
                 guard let sessionData = dataJson[Constants.sessionInfoKey] as? [String: Any],
                       let jsonData = try? JSONSerialization.data(withJSONObject: sessionData),
                       let sessionInfo = try? JSONDecoder().decode(SessionInfo.self, from: jsonData) else {

@@ -33,12 +33,45 @@ public extension OwnID {
         
         public func requestConfiguration() { store.send(.fetchServerConfiguration) }
         
-        public func configure(userFacingSDK: SDKInformation,
-                              underlyingSDKs: [SDKInformation] = [],
-                              supportedLanguages: OwnID.CoreSDK.Languages) {
-            store.send(.configureFromDefaultConfiguration(userFacingSDK: userFacingSDK,
-                                                          underlyingSDKs: underlyingSDKs,
-                                                          supportedLanguages: supportedLanguages))
+        public static func configure(userFacingSDK: SDKInformation,
+                                     underlyingSDKs: [SDKInformation] = [],
+                                     supportedLanguages: [String] = Locale.preferredLanguages) {
+            if shared.store.value.configurationRequestData == nil {
+                shared.store.send(.configureFromDefaultConfiguration(userFacingSDK: userFacingSDK,
+                                                                     underlyingSDKs: underlyingSDKs,
+                                                                     supportedLanguages: .init(rawValue: supportedLanguages)))
+            }
+        }
+        
+        public static func configure(appID: OwnID.CoreSDK.AppID,
+                                     redirectionURL: RedirectionURLString? = nil,
+                                     userFacingSDK: SDKInformation,
+                                     underlyingSDKs: [SDKInformation] = [],
+                                     environment: String? = nil,
+                                     enableLogging: Bool? = nil,
+                                     supportedLanguages: [String] = Locale.preferredLanguages) {
+            if shared.store.value.configurationRequestData == nil {
+                shared.store.send(.configure(appID: appID,
+                                             redirectionURL: redirectionURL,
+                                             userFacingSDK: userFacingSDK,
+                                             underlyingSDKs: underlyingSDKs,
+                                             isTestingEnvironment: false,
+                                             environment: environment,
+                                             enableLogging: enableLogging,
+                                             supportedLanguages: .init(rawValue: supportedLanguages)))
+            }
+        }
+        
+        public static func configure(plistUrl: URL,
+                                     userFacingSDK: SDKInformation,
+                                     underlyingSDKs: [SDKInformation] = [],
+                                     supportedLanguages: [String] = Locale.preferredLanguages) {
+            if shared.store.value.configurationRequestData == nil {
+                shared.store.send(.configureFrom(plistUrl: plistUrl,
+                                                 userFacingSDK: userFacingSDK,
+                                                 underlyingSDKs: underlyingSDKs,
+                                                 supportedLanguages: .init(rawValue: supportedLanguages)))
+            }
         }
         
         func subscribeForURL(coreViewModel: CoreViewModel) {
@@ -47,33 +80,6 @@ public extension OwnID {
         
         public static func setSupportedLanguages(_ supportedLanguages: [String]) {
             shared.store.send(.updateSupportedLanguages(supportedLanguages: Languages(rawValue: supportedLanguages)))
-        }
-        
-        public func configure(appID: OwnID.CoreSDK.AppID,
-                              redirectionURL: RedirectionURLString? = nil,
-                              userFacingSDK: SDKInformation,
-                              underlyingSDKs: [SDKInformation] = [],
-                              environment: String? = nil,
-                              enableLogging: Bool? = nil,
-                              supportedLanguages: OwnID.CoreSDK.Languages) {
-            store.send(.configure(appID: appID,
-                                  redirectionURL: redirectionURL,
-                                  userFacingSDK: userFacingSDK,
-                                  underlyingSDKs: underlyingSDKs,
-                                  isTestingEnvironment: false,
-                                  environment: environment,
-                                  enableLogging: enableLogging,
-                                  supportedLanguages: supportedLanguages))
-        }
-        
-        public func configureFor(plistUrl: URL,
-                                 userFacingSDK: SDKInformation,
-                                 underlyingSDKs: [SDKInformation] = [],
-                                 supportedLanguages: OwnID.CoreSDK.Languages) {
-            store.send(.configureFrom(plistUrl: plistUrl,
-                                      userFacingSDK: userFacingSDK,
-                                      underlyingSDKs: underlyingSDKs,
-                                      supportedLanguages: supportedLanguages))
         }
         
         func createCoreViewModelForRegister(loginId: String) -> CoreViewModel {

@@ -13,17 +13,17 @@ public extension OwnID.UISDK {
     }
     
     struct LoaderViewConfig: Equatable {
-        public init(color: Color = OwnID.Colors.spinnerColor,
-                    backgroundColor: Color = OwnID.Colors.spinnerBackgroundColor,
-                    isEnabled: Bool = true) {
-            self.color = color
-            self.backgroundColor = backgroundColor
+        public init(isEnabled: Bool = true,
+                    spinnerColor: Color = OwnID.Colors.spinnerColor,
+                    circleColor: Color = OwnID.Colors.spinnerBackgroundColor) {
             self.isEnabled = isEnabled
+            self.spinnerColor = spinnerColor
+            self.circleColor = circleColor
         }
         
-        public var color: Color
-        public var backgroundColor: Color
         public var isEnabled: Bool
+        public var spinnerColor: Color
+        public var circleColor: Color
     }
     
     enum WidgetType: Equatable {
@@ -32,32 +32,29 @@ public extension OwnID.UISDK {
     }
     
     struct AuthButtonViewConfig: Equatable {
-        public init(textSize: CGFloat = 14.0,
-                    height: CGFloat = 44.0,
-                    loaderHeight: CGFloat = 30.0,
-                    lineHeight: CGFloat = 30.0,
+        public init(height: CGFloat = 44.0,
+                    textSize: CGFloat = 14.0,
+                    fontFamily: String? = nil,
                     textColor: Color = .white,
-                    iconColor: Color = .white,
                     backgroundColor: Color = OwnID.Colors.blue,
-                    loaderViewConfig: LoaderViewConfig = LoaderViewConfig(color: OwnID.Colors.authButtonSpinnerColor,
-                                                                          backgroundColor: OwnID.Colors.authButtonSpinnerBackgroundColor)) {
-            self.textSize = textSize
-            self.lineHeight = lineHeight
-            self.textColor = textColor
-            self.iconColor = iconColor
-            self.backgroundColor = backgroundColor
+                    loaderHeight: CGFloat = 30.0,
+                    loaderViewConfig: LoaderViewConfig = LoaderViewConfig(spinnerColor: OwnID.Colors.authButtonSpinnerColor,
+                                                                          circleColor: OwnID.Colors.authButtonSpinnerBackgroundColor)) {
             self.height = height
+            self.textSize = textSize
+            self.fontFamily = fontFamily
+            self.textColor = textColor
+            self.backgroundColor = backgroundColor
             self.loaderHeight = loaderHeight
             self.loaderViewConfig = loaderViewConfig
         }
         
-        public var iconColor: Color
-        public var textSize: CGFloat
         public var height: CGFloat
-        public var loaderHeight: CGFloat
-        public var lineHeight: CGFloat
+        public var textSize: CGFloat
+        public var fontFamily: String?
         public var textColor: Color
         public var backgroundColor: Color
+        public var loaderHeight: CGFloat
         public var loaderViewConfig: LoaderViewConfig
     }
     
@@ -69,68 +66,68 @@ public extension OwnID.UISDK {
     struct OrViewConfig: Equatable {
         public init(isEnabled: Bool = true,
                     textSize: CGFloat = 16.0,
-                    lineHeight: CGFloat = 24.0,
+                    fontFamily: String? = nil,
                     textColor: Color = OwnID.Colors.textGrey) {
             self.isEnabled = isEnabled
             self.textSize = textSize
-            self.lineHeight = lineHeight
+            self.fontFamily = fontFamily
             self.textColor = textColor
         }
         
         public var isEnabled: Bool
         public var textSize: CGFloat
-        public var lineHeight: CGFloat
+        public var fontFamily: String?
         public var textColor: Color
     }
     
-    struct ButtonViewConfig: Equatable {
-        public init(iconColor: Color = OwnID.Colors.biometricsButtonImageColor,
-                    iconHeight: CGFloat = 28.0,
-                    backgroundColor: Color = OwnID.Colors.biometricsButtonBackground,
+    struct IconButtonViewConfig: Equatable {
+        public init(widgetPosition: WidgetPosition = .leading,
+                    height: CGFloat = 44.0,
+                    iconColor: Color = OwnID.Colors.biometricsButtonImageColor,
                     borderColor: Color = OwnID.Colors.biometricsButtonBorder,
-                    widgetType: WidgetType = .iconButton) {
+                    backgroundColor: Color = OwnID.Colors.biometricsButtonBackground,
+                    orViewConfig: OrViewConfig = OrViewConfig(),
+                    loaderViewConfig: LoaderViewConfig = LoaderViewConfig(),
+                    tooltipConfig: TooltipConfig = TooltipConfig()) {
+            self.widgetPosition = widgetPosition
+            self.height = height
             self.iconColor = iconColor
-            self.iconHeight = iconHeight
-            self.backgroundColor = backgroundColor
             self.borderColor = borderColor
-            self.widgetType = widgetType
+            self.backgroundColor = backgroundColor
+            self.orViewConfig = orViewConfig
+            self.loaderViewConfig = loaderViewConfig
+            self.tooltipConfig = tooltipConfig
         }
         
+        public var widgetPosition: WidgetPosition
+        public var height: CGFloat
         public var iconColor: Color
-        public var iconHeight: CGFloat
-        public var backgroundColor: Color
         public var borderColor: Color
-        public var widgetType: WidgetType
+        public var backgroundColor: Color
+        public var orViewConfig: OrViewConfig
+        public var loaderViewConfig: LoaderViewConfig
+        public var tooltipConfig: TooltipConfig
     }
     
     struct VisualLookConfig: Equatable {
-        public init(buttonViewConfig: ButtonViewConfig = ButtonViewConfig(),
-                    orViewConfig: OrViewConfig = OrViewConfig(),
-                    tooltipVisualLookConfig: TooltipVisualLookConfig = TooltipVisualLookConfig(),
-                    widgetPosition: WidgetPosition = .leading,
-                    loaderViewConfig: LoaderViewConfig = LoaderViewConfig(),
+        public init(widgetType: WidgetType = .iconButton,
+                    iconButtonConfig: IconButtonViewConfig = IconButtonViewConfig(),
                     authButtonConfig: AuthButtonViewConfig = AuthButtonViewConfig()) {
-            self.buttonViewConfig = buttonViewConfig
+            self.widgetType = widgetType
+            self.iconButtonConfig = iconButtonConfig
             self.authButtonConfig = authButtonConfig
-            self.orViewConfig = orViewConfig
-            self.tooltipVisualLookConfig = tooltipVisualLookConfig
-            self.widgetPosition = widgetPosition
-            self.loaderViewConfig = loaderViewConfig
         }
         
-        public var buttonViewConfig: ButtonViewConfig
+        public var widgetType: WidgetType
+        public var iconButtonConfig: IconButtonViewConfig
         public var authButtonConfig: AuthButtonViewConfig
-        public var orViewConfig: OrViewConfig
-        public var tooltipVisualLookConfig: TooltipVisualLookConfig
-        public var widgetPosition: WidgetPosition
-        public var loaderViewConfig: LoaderViewConfig
     }
 }
 
 extension OwnID.UISDK.VisualLookConfig {
     func convertToCurrentMetric() -> OwnID.CoreSDK.CurrentMetricInformation {
         var current = OwnID.CoreSDK.CurrentMetricInformation()
-        switch self.widgetPosition {
+        switch iconButtonConfig.widgetPosition {
         case .leading:
             current.widgetPositionType = .start
             
@@ -138,7 +135,7 @@ extension OwnID.UISDK.VisualLookConfig {
             current.widgetPositionType = .end
         }
         
-        switch self.buttonViewConfig.widgetType {
+        switch widgetType {
         case .iconButton:
             current.widgetType = .faceid
         case .authButton:

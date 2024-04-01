@@ -81,14 +81,14 @@ import OwnIDCoreSDK
 ```
 
 ## Initialize the SDK
-The OwnID SDK must be initialized properly using the `configure(userFacingSDK:supportedLanguages:)` function, preferably in the main entry point of your app (in the `@main` `App` struct). For example, enter:
+The OwnID SDK must be initialized properly using the `configure(userFacingSDK:)` function, preferably in the main entry point of your app (in the `@main` `App` struct). For example, enter:
 
 ```swift
 @main
 struct ExampleApp: App {
     init() {
         let info: OwnID.CoreSDK.SDKInformation = (..., ...) //add you info here
-        OwnID.CoreSDK.shared.configure(userFacingSDK: info, supportedLanguages: .init(rawValue: Locale.preferredLanguages))
+        OwnID.CoreSDK.configure(userFacingSDK: info)
     }
 }
 ```
@@ -174,20 +174,38 @@ The process of implementing your Login screen is very similar to the one used to
 Like the Registration screen, you add Skip Password to your application's Login screen by including an OwnID view. In this case, it is `OwnID.LoginView`. This OwnID view has its own view model, `OwnID.LoginView.ViewModel`.
 
 ### Add OwnID View
-Inserting the OwnID view into your View layer results in the Skip Password option appearing in your app. When the user selects Skip Password, the SDK opens a sheet to interact with the user. It is recommended that you place the OwnID view, `OwnID.LoginView`, immediately after the password text field. The code that creates this view accepts the OwnID view model as its argument. It is suggested that you pass user's email binding for properly creating accounts.
 
-It is recommended to set height of button the same as text field and disable text field when OwnID is enabled.
+Similar to the Registration screen, add the passwordless authentication to your application's Login screen by including one of OwnID button variants:
 
-```swift
-//Put LoginView inside your main view, preferably below password field
-var body: some View {
-    OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel)
-}
-```
+1. Side-by-side button: The `iconButton` that is located on the side of the password input field.
+2. Password replacing button: The `authButton` that replaces password input field.
 
-![how it looks like](skip_button_design.png) ![how it looks like](skip_button_design_dark.png)
+You can use any of this buttons based on your requirements.
 
-By default, tooltip popup will appear every time login view is shown.
+1. Side-by-side button
+
+    Inserting the OwnID view into your View layer results in the Skip Password option appearing in your app. When the user selects Skip Password, the SDK opens a sheet to interact with the user. It is recommended that you place the OwnID view, `OwnID.LoginView`, immediately after the password text field. The code that creates this view accepts the OwnID view model as its argument. It is suggested that you pass user's email binding for properly creating accounts.
+
+    It is recommended to set height of button the same as text field and disable text field when OwnID is enabled.
+
+    ```swift
+    //Put LoginView inside your main view, preferably below password field
+    var body: some View {
+        OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel)
+    }
+    ```
+
+    ![how it looks like](skip_button_design.png) ![how it looks like](skip_button_design_dark.png)
+    
+2. Password replacing button
+
+    Add the following code to set up authButton:
+    ```swift
+    var body: some View {
+        OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: .init(widgetType: .authButton))
+    }
+
+![how it looks like](auth_button_design.png) ![how it looks like](auth_button_design_dark.png)
 
 For additional OwnIDButton UI customization see [Button Appearance](#button-appearance).
 
@@ -212,7 +230,7 @@ final class MyLogInViewModel: ObservableObject {
         subscribe(to: ownIDViewModel.flowEventPublisher)
     }
 
-    func subscribe(to eventsPublisher: OwnID.LoginFlowPublisher) {
+    func subscribe(to eventPublisher: OwnID.LoginFlowPublisher) {
         flowEventPublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] event in
@@ -240,16 +258,12 @@ The OwnID SDK's `OwnIDButton` by default shows a Tooltip with text "Sign In with
 
 ![OwnID Tooltip UI Example](tooltip_example.png) ![OwnID Tooltip Dark UI Example](tooltip_example_dark.png)
 
-On Registration you can setup the logic of tooltip appearing. By default it appears if the `loginID` text input is valid. Here how you can customize it 
+By default, tooltip is disabled
+
+`OwnIDButton` view has parameters to specify tooltip - enable/disable, set background color, border color, font family, text color, text size and tooltip position `top`/`bottom`/`leading`/`trailing` (default `bottom`). You can change them by setting values in view attributes:
 
 ```swift
-ownIDViewModel.shouldShowTooltipLogic = false
-```
-
-`OwnIDButton` view has parameters to specify tooltip background color, border color, text color, text size, shadowColor and tooltip position `top`/`bottom`/`leading`/`trailing` (default `bottom`). You can change them by setting values in view attributes:
-
-```swift
-OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: OwnID.UISDK.VisualLookConfig(tooltipVisualLookConfig: OwnID.UISDK.TooltipVisualLookConfig(backgroundColor: .gray, borderColor: .black, textColor: .white, textSize: 20, tooltipPosition: .top)))
+OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: .init(iconButtonConfig: OwnID.UISDK.IconButtonViewConfig(tooltipConfig: OwnID.UISDK.TooltipConfig(isEnabled: true, tooltipPosition: .top, textSize: 20, textColor: .red, borderColor: .black, backgroundColor: .gray))))
 ```
 
 By default the tooltip has `zIndex(1)` to be above all other view. But if the OwnID View is inside some Stack and the tooltip is covered by another view it's recommended to set `zIndex(1)` for this stack
@@ -290,30 +304,30 @@ Where:
 ## Alternative Syntax for Configure Function
 If you followed the recommendation to add `OwnIDConfiguration.plist` to your project, calling `configure()` without any arguments is enough to initialize the SDK. If you did not follow this recommendation, you can still initialize the SDK with one of the following calls. Remember that these calls should be made within your app's `@main` `App` struct.
 
-* `OwnID.CoreSDK.shared.configure(plistUrl: URL, userFacingSDK: SDKInformation, supportedLanguages: Languages)` explicitly provides the path to the OwnID configuration file, where `plist` is the path to the file.
-* `OwnID.CoreSDK.shared.configure(appID: String, userFacingSDK: SDKInformation, supportedLanguages: Languages)` explicitly defines the configuration options rather than using a PLIST file. The app id is unique to your OwnID application, and can be obtained in the [OwnID Console](https://console.ownid.com). Additionally, you can use optional parameters and call `OwnID.CoreSDK.shared.configure(appID: config.OwnIDAppID, redirectionURL: config.OwnIDRedirectionURL, userFacingSDK: info, environment: config.OwnIDEnv, enableLogging: config.enableLogging, supportedLanguages: ["he"])`. For more information about `redirectionURL`, `environment`, `enableLogging` and `supportedLanguages` parameters, see [Advanced Configuration](sdk-advanced-configuration.md).
+* `OwnID.CoreSDK.configure(plistUrl: URL, userFacingSDK: SDKInformation)` explicitly provides the path to the OwnID configuration file, where `plist` is the path to the file.
+* `OwnID.CoreSDK.configure(appID: String, userFacingSDK: SDKInformation)` explicitly defines the configuration options rather than using a PLIST file. The app id is unique to your OwnID application, and can be obtained in the [OwnID Console](https://console.ownid.com). Additionally, you can use optional parameters and call `OwnID.CoreSDK.configure(appID: config.OwnIDAppID, redirectionURL: config.OwnIDRedirectionURL, userFacingSDK: info, environment: config.OwnIDEnv, enableLogging: config.enableLogging, supportedLanguages: ["he"])`. For more information about `redirectionURL`, `environment`, `enableLogging` and `supportedLanguages` parameters, see [Advanced Configuration](sdk-advanced-configuration.md).
 
 ## Button Appearance
 It is possible to set button visual settings by passing `OwnID.UISDK.VisualLookConfig`. Additionally, you can override default behaviour of tooltip appearing or other settings in `OwnID.UISDK.TooltipVisualLookConfig`.
 By passing `widgetPosition`, `or` text view will change it's position accordingly. It is possible to modify look & behaviour of loader by modifying default settings of `loaderViewConfig` parameter.
 
 ```swift
-let buttonViewConfig = OwnID.UISDK.ButtonViewConfig(iconColor: .red,
-                                                    iconHeight: 30,
+let orConfig = OwnID.UISDK.OrViewConfig(textSize: 20, textColor: .red)
+let loaderConfig = OwnID.UISDK.LoaderViewConfig(spinnerColor: .red, circleColor: .green)
+let tooltipConfig = OwnID.UISDK.TooltipConfig(tooltipPosition: .top,
+                                              textSize: 30,
+                                              textColor: .red,
+                                              borderColor: .pink,
+                                              backgroundColor: .blue)
+let buttonConfig = OwnID.UISDK.IconButtonViewConfig(widgetPosition: .trailing,
+                                                    height: 40,
+                                                    iconColor: .red,
+                                                    borderColor: .red,
                                                     backgroundColor: .white,
-                                                    borderColor: .red)
-let orViewConfig = OwnID.UISDK.OrViewConfig(textSize: 20, textColor: .red)
-let tooltipVisualLookConfig = OwnID.UISDK.TooltipVisualLookConfig(backgroundColor: .red,
-                                                                  borderColor: .pink,
-                                                                  textColor: .red, textSize: 30,
-                                                                  shadowColor: .pink,
-                                                                  tooltipPosition: .top)
-let loaderViewConfig = OwnID.UISDK.LoaderViewConfig(color: .red, backgroundColor: .white)
-let config = OwnID.UISDK.VisualLookConfig(buttonViewConfig: buttonViewConfig,
-                                          orViewConfig: orViewConfig,
-                                          tooltipVisualLookConfig: tooltipVisualLookConfig,
-                                          widgetPosition: .trailing,
-                                          loaderViewConfig: loaderViewConfig)
+                                                    orViewConfig: orConfig,
+                                                    loaderViewConfig: loaderConfig,
+                                                    tooltipConfig: tooltipConfig)
+let config = OwnID.UISDK.VisualLookConfig(iconButtonConfig: buttonConfig)
 
 OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: config)
 ```
@@ -321,12 +335,14 @@ OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: config)
 if you want to change the `OwnIDButton` from side-by-side button to Password replacing button, use `widgetType = .authButton`
 
 ```swift
-let buttonViewConfig = OwnID.UISDK.ButtonViewConfig(widgetType: .authButton)
-let authButtonViewConfig = OwnID.UISDK.AuthButtonViewConfig(textSize: 20, 
-                                                            height: 50,
-                                                            textColor: .gray,
-                                                            backgroundColor: .red)
-let config = OwnID.UISDK.VisualLookConfig(authButtonConfig: authButtonViewConfig)
+let loaderConfig = OwnID.UISDK.LoaderViewConfig(spinnerColor: .red, circleColor: .green)
+let authButtonConfig = OwnID.UISDK.AuthButtonViewConfig(height: 50,
+                                                        textSize: 20,
+                                                        textColor: .red,
+                                                        backgroundColor: .blue,
+                                                        loaderHeight: 20,
+                                                        loaderViewConfig: loaderConfig)
+let config = OwnID.UISDK.VisualLookConfig(widgetType: .authButton, authButtonConfig: authButtonConfig)
 
 OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: config)
 ```

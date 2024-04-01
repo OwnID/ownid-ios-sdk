@@ -21,6 +21,9 @@ public extension OwnID.CoreSDK {
         var authType: String?
         var hasLoginId: Bool?
         var validLoginIdFormat: Bool?
+        var loginType: LoginType?
+        var webViewOrigin: String?
+        var widgetId: String?
         let applicationName = OwnID.CoreSDK.shared.store.value.configuration?.displayName
         var isUserVerifyingPlatformAuthenticatorAvailable = ProcessInfo().isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 16,
                                                                                                                           minorVersion: 0,
@@ -29,11 +32,18 @@ public extension OwnID.CoreSDK {
         static func metadata(authType: String? = nil,
                              actionType: AnalyticActionType,
                              hasLoginId: Bool? = nil,
-                             validLoginIdFormat: Bool? = nil) -> Metadata {
+                             loginType: LoginType? = nil,
+                             validLoginIdFormat: Bool? = nil,
+                             webViewOrigin: String? = nil,
+                             widgetId: String? = nil) -> Metadata {
             var metadata = Metadata()
             metadata.correlationId = LoggerConstants.instanceID.uuidString
+            metadata.loginType = loginType
             if let hasLoginId {
                 metadata.hasLoginId = hasLoginId
+            }
+            if let loginType {
+                metadata.loginType = loginType
             }
             if let authType {
                 metadata.authType = authType
@@ -45,6 +55,12 @@ public extension OwnID.CoreSDK {
             }
             if let validLoginIdFormat {
                 metadata.validLoginIdFormat = validLoginIdFormat
+            }
+            if let webViewOrigin {
+                metadata.webViewOrigin = webViewOrigin
+            }
+            if let widgetId {
+                metadata.widgetId = widgetId
             }
             return metadata
         }

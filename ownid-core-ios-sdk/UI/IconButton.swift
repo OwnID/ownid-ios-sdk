@@ -7,7 +7,7 @@ extension OwnID.UISDK {
         let actionHandler: (() -> Void)
         let authType: AuthType
         
-        @Binding var isTooltipPresented: Bool
+        @Binding var shouldShowTooltip: Bool
         @Binding var isLoading: Bool
         @Binding var buttonState: ButtonState
         
@@ -16,7 +16,7 @@ extension OwnID.UISDK {
         
         var body: some View {
             HStack(spacing: 8) {
-                switch visualConfig.widgetPosition {
+                switch visualConfig.iconButtonConfig.widgetPosition {
                 case .trailing:
                     orView()
                     buttonAndTooltipView()
@@ -37,16 +37,16 @@ private extension OwnID.UISDK.IconButton {
     
     @ViewBuilder
     func orView() -> some View {
-        if visualConfig.orViewConfig.isEnabled {
-            OwnID.UISDK.OrView(textSize: visualConfig.orViewConfig.textSize,
-                               lineHeight: visualConfig.orViewConfig.lineHeight,
-                               textColor: visualConfig.orViewConfig.textColor)
+        if visualConfig.iconButtonConfig.orViewConfig.isEnabled {
+            OwnID.UISDK.OrView(textSize: visualConfig.iconButtonConfig.orViewConfig.textSize,
+                               fontFamily: visualConfig.iconButtonConfig.orViewConfig.fontFamily,
+                               textColor: visualConfig.iconButtonConfig.orViewConfig.textColor)
         }
     }
     
     @ViewBuilder
     func buttonAndTooltipView() -> some View {
-        if isTooltipPresented, buttonState.isTooltipShown, !isLoading {
+        if visualConfig.iconButtonConfig.tooltipConfig.isEnabled, shouldShowTooltip, buttonState.isTooltipShown, !isLoading {
             if #available(iOS 16.0, *) {
                 tooltipOnTopOfButtonView()
                     .zIndex(1)
@@ -63,8 +63,8 @@ private extension OwnID.UISDK.IconButton {
         let image = Image(Constants.imageName, bundle: .resourceBundle)
             .resizable()
             .renderingMode(.template)
-            .frame(width: visualConfig.buttonViewConfig.iconHeight, height: visualConfig.buttonViewConfig.iconHeight)
-            .foregroundColor(visualConfig.buttonViewConfig.iconColor)
+            .foregroundColor(visualConfig.iconButtonConfig.iconColor)
+            .frame(width: visualConfig.iconButtonConfig.height - 16, height: visualConfig.iconButtonConfig.height - 16)
         return image
     }
     
@@ -74,10 +74,10 @@ private extension OwnID.UISDK.IconButton {
             variantImage()
                 .layoutPriority(1)
                 .opacity(isLoading ? 0 : 1)
-            if visualConfig.loaderViewConfig.isEnabled {
-                OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.loaderViewConfig.color,
-                                              spinnerBackgroundColor: visualConfig.loaderViewConfig.backgroundColor,
-                                              viewBackgroundColor: visualConfig.buttonViewConfig.backgroundColor)
+            if visualConfig.iconButtonConfig.loaderViewConfig.isEnabled {
+                OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.iconButtonConfig.loaderViewConfig.spinnerColor,
+                                              circleColor: visualConfig.iconButtonConfig.loaderViewConfig.circleColor,
+                                              viewBackgroundColor: visualConfig.iconButtonConfig.backgroundColor)
                 .opacity(isLoading ? 1 : 0)
             }
         }
@@ -86,28 +86,30 @@ private extension OwnID.UISDK.IconButton {
     @ViewBuilder
     func imageView() -> some View {
         OwnID.UISDK.BorderAndHighlightButton(viewState: $buttonState,
-                                             buttonViewConfig: visualConfig.buttonViewConfig,
+                                             buttonViewConfig: visualConfig.iconButtonConfig,
                                              action: actionHandler,
                                              content: buttonContents())
+        .frame(width: visualConfig.iconButtonConfig.height, height: visualConfig.iconButtonConfig.height)
         .layoutPriority(1)
     }
     
     @ViewBuilder
     func tooltipOnTopOfButtonView() -> some View {
         if #available(iOS 16.0, *) {
-            OwnID.UISDK.TooltipContainerLayout(tooltipPosition: visualConfig.tooltipVisualLookConfig.tooltipPosition) {
-                OwnID.UISDK.TooltipTextAndArrowLayout(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig, isRTL: direction == .rightToLeft) {
+            OwnID.UISDK.TooltipContainerLayout(tooltipPosition: visualConfig.iconButtonConfig.tooltipConfig.tooltipPosition) {
+                OwnID.UISDK.TooltipTextAndArrowLayout(tooltipConfig: visualConfig.iconButtonConfig.tooltipConfig,
+                                                      isRTL: direction == .rightToLeft) {
                     OwnID.UISDK.RectangleWithTextView(authType: authType,
-                                                      tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig)
+                                                      tooltipConfig: visualConfig.iconButtonConfig.tooltipConfig)
                         .popupTextContainerType(.text)
-                    OwnID.UISDK.BeakView(tooltipVisualLookConfig: visualConfig.tooltipVisualLookConfig)
-                        .rotationEffect(.degrees(visualConfig.tooltipVisualLookConfig.tooltipPosition.beakViewRotationAngle))
+                    OwnID.UISDK.BeakView(tooltipConfig: visualConfig.iconButtonConfig.tooltipConfig)
+                        .rotationEffect(.degrees(visualConfig.iconButtonConfig.tooltipConfig.tooltipPosition.beakViewRotationAngle))
                         .popupTextContainerType(.beak)
                 }
                 .compositingGroup()
-                .shadow(color: colorScheme == .dark ? .clear : visualConfig.tooltipVisualLookConfig.shadowColor.opacity(0.05), radius: 5, y: 4)
+                .shadow(color: colorScheme == .dark ? .clear : .black.opacity(0.05), radius: 5, y: 4)
                 .popupContainerType(.textAndArrowContainer)
-                Button(action: { isTooltipPresented = false }) {
+                Button(action: { shouldShowTooltip = false }) {
                     Text("")
                         .foregroundColor(.clear)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -121,22 +123,31 @@ private extension OwnID.UISDK.IconButton {
     
     @ViewBuilder
     func legacyTooltip() -> some View {
-        let tooltipConfig = visualConfig.tooltipVisualLookConfig
+        let tooltipConfig = visualConfig.iconButtonConfig.tooltipConfig
         let constant = OwnID.UISDK.ATConstant(axisMode: OwnID.UISDK.ATAxisMode.mode(configPosition: tooltipConfig.tooltipPosition),
                                               border: OwnID.UISDK.ATBorderConstant(color: tooltipConfig.borderColor),
-                                              shadow: OwnID.UISDK.ATShadowConstant(color: tooltipConfig.shadowColor.opacity(0.05)))
+                                              shadow: OwnID.UISDK.ATShadowConstant(color: .black.opacity(0.05)))
         ZStack {
             Text(" ")
-                .frame(width: visualConfig.buttonViewConfig.iconHeight, height: visualConfig.buttonViewConfig.iconHeight)
-                .axisToolTip(isPresented: $isTooltipPresented, constant: constant) {
-                    visualConfig.tooltipVisualLookConfig.backgroundColor
+                .frame(width: visualConfig.iconButtonConfig.height, height: visualConfig.iconButtonConfig.height)
+                .axisToolTip(isPresented: $shouldShowTooltip, constant: constant) {
+                    visualConfig.iconButtonConfig.tooltipConfig.backgroundColor
                 } foreground: {
                     Text(localizedKey: .tooltip(type: authType.rawValue))
                         .foregroundColor(tooltipConfig.textColor)
-                        .fontWithLineHeight(font: .systemFont(ofSize: tooltipConfig.textSize), lineHeight: tooltipConfig.lineHeight)
+                        .font(tooltipFont)
                         .padding()
                 }
             imageView()
+        }
+    }
+    
+    private var tooltipFont: Font {
+        let tooltipConfig = visualConfig.iconButtonConfig.tooltipConfig
+        if let fontFamily = tooltipConfig.fontFamily {
+            return .custom(fontFamily, size: tooltipConfig.textSize)
+        } else {
+            return .system(size: tooltipConfig.textSize)
         }
     }
 }

@@ -3,7 +3,7 @@ import SwiftUI
 extension OwnID.UISDK {
     @available(iOS 16, *)
     struct TooltipTextAndArrowLayout: Layout {
-        let tooltipVisualLookConfig: TooltipVisualLookConfig
+        let tooltipConfig: TooltipConfig
         let isRTL: Bool
         
         @available(iOS 16.0, *)
@@ -36,7 +36,7 @@ extension OwnID.UISDK {
         @available(iOS 16.0, *)
         private func placeText(_ textSubview: LayoutSubviews.Element, _ beakSize: CGSize, _ bounds: CGRect) {
             let textSize = textSubview.sizeThatFits(.unspecified)
-            switch tooltipVisualLookConfig.tooltipPosition {
+            switch tooltipConfig.tooltipPosition {
             case .top,
                     .bottom:
                 let textX = calculateTextXPosition(viewBounds: bounds)
@@ -57,7 +57,7 @@ extension OwnID.UISDK {
         
         @available(iOS 16.0, *)
         private func placeBeak(_ beakSubview: LayoutSubviews.Element, _ beakSize: CGSize, _ bounds: CGRect) {
-            switch tooltipVisualLookConfig.tooltipPosition {
+            switch tooltipConfig.tooltipPosition {
             case .top:
                 let x = bounds.minX - (beakSize.width / 2) // puts beak top pin directly in the center of the start point
                 let y = bounds.maxY
@@ -84,14 +84,9 @@ extension OwnID.UISDK {
         private func calculateTextXPosition(viewBounds: CGRect) -> CGFloat {
             let layoutCalculation: XAxisOffsetCalculating
             if isRTL {
-                layoutCalculation = RTLLayoutCalculation(shouldIncludeDefaultOffset: tooltipVisualLookConfig.isNativePlatform)
+                layoutCalculation = RTLLayoutCalculation()
             } else {
-                if tooltipVisualLookConfig.isNativePlatform {
-                    layoutCalculation = NativeLTRLayoutCalculation()
-                } else {
-                    let isBottomPosition = tooltipVisualLookConfig.tooltipPosition == .bottom
-                    layoutCalculation = ReactNativeLTRLayoutCalculation(isBottomPosition: isBottomPosition)
-                }
+                layoutCalculation = LTRLayoutCalculation()
             }
             return layoutCalculation.calculateXAxisOffset(viewBounds: viewBounds)
         }

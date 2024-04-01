@@ -3,7 +3,7 @@ import SwiftUI
 extension OwnID.UISDK {
     struct SpinnerLoaderView: View {
         let spinnerColor: Color
-        let spinnerBackgroundColor: Color
+        let circleColor: Color
         let viewBackgroundColor: Color
         
         private let lineStyle = StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round)
@@ -55,7 +55,7 @@ extension OwnID.UISDK {
         private func backgroundCircle() -> some View {
             Circle()
                 .stroke(style: lineStyle)
-                .foregroundColor(spinnerBackgroundColor)
+                .foregroundColor(circleColor)
         }
     }
 }

@@ -70,9 +70,9 @@ By default, the OwnID uses production environment for `appId` specified in confi
 
 By default, SDK uses language TAGs list (well-formed [IETF BCP 47 language tag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language)) based on the device locales set by the user in system. You can override this behavior and set the OwnID SDK language TAGs list manually. There are two ways to do so:
 
-Provide list of supported languages of `OwnID.CoreSDK.Languages` as `supportedLanguages` parameter.
+Optionally provide list of supported languages as `supportedLanguages` parameter.
 ```swift
-OwnID.CoreSDK.shared.configure(userFacingSDK: DemoApp.info(), supportedLanguages: .init(rawValue: ["he"]))
+OwnID.CoreSDK.configure(userFacingSDK: DemoApp.info(), supportedLanguages: ["he"])
 ``` 
 
 Set language TAGs list directly:
@@ -83,8 +83,9 @@ OwnID.CoreSDK.setSupportedLanguages(["he"])
 > [!NOTE]
 > In case both methods are utilized, the SDK follows this priority:
 > 
-> 1. The list from the `setSupportedLanguages` takes precedence if it's not empty.
-> 2. Then, the list from the `supportedLanguages` value in `configure` method is used.
+> 1. The list from the `setSupportedLanguages` takes precedence if it's set.
+> 2. Then, the list from the `supportedLanguages` value in `configure` function is used if it's set'.
+> 3. Finally, the list from device locales is employed.
 
 ## Redirection URI Alternatives
 

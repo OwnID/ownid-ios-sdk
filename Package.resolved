@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SAP/gigya-swift-sdk.git",
       "state" : {
-        "revision" : "526390738c4e158d8d247150712d31b06d1e023f",
-        "version" : "1.5.8"
+        "revision" : "6e994796fa0615323cec4bba3849ec1f5bdf009a",
+        "version" : "1.6.0"
       }
     }
   ],

@@ -19,7 +19,7 @@ extension OwnID.UISDK {
     /// Represents the call to action button. It also displays the state when the OwnID is activated
     struct BorderAndHighlightButton: View {
         
-        var buttonViewConfig: ButtonViewConfig
+        var buttonViewConfig: IconButtonViewConfig
         
         private let highlightedSpace = EdgeInsets(top: 6, leading: 7, bottom: 6, trailing: 7)
         private let defaultSpace = EdgeInsets(top: 7, leading: 8, bottom: 7, trailing: 8)
@@ -30,7 +30,7 @@ extension OwnID.UISDK {
         private let action: () -> Void
         
         init(viewState: Binding<ButtonState>,
-             buttonViewConfig: ButtonViewConfig,
+             buttonViewConfig: IconButtonViewConfig,
              action: @escaping () -> Void,
              content: @autoclosure @escaping () -> any View) {
             self._viewState = viewState

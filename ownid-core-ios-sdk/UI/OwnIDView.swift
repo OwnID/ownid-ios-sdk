@@ -10,7 +10,7 @@ public extension OwnID.UISDK {
         private let visualConfig: VisualLookConfig
         
         private let coordinateSpaceName = String(describing: OwnID.UISDK.BorderAndHighlightButton.self)
-        @Binding private var isTooltipPresented: Bool
+        @Binding private var shouldShowTooltip: Bool
         @Binding private var isLoading: Bool
         @Binding private var buttonState: ButtonState
         
@@ -32,7 +32,7 @@ public extension OwnID.UISDK {
                     authType: AuthType,
                     shouldShowTooltip: Binding<Bool>,
                     isLoading: Binding<Bool>) {
-            _isTooltipPresented = shouldShowTooltip
+            _shouldShowTooltip = shouldShowTooltip
             _isLoading = isLoading
             _buttonState = viewState
             self.authType = authType
@@ -41,7 +41,7 @@ public extension OwnID.UISDK {
         }
         
         public var body: some View {
-            switch visualConfig.buttonViewConfig.widgetType {
+            switch visualConfig.widgetType {
             case .authButton:
                 AuthButton(visualConfig: visualConfig,
                            actionHandler: { resultPublisher.send(()) },
@@ -52,7 +52,7 @@ public extension OwnID.UISDK {
                 IconButton(visualConfig: visualConfig,
                            actionHandler: { resultPublisher.send(()) }, 
                            authType: authType,
-                           isTooltipPresented: $isTooltipPresented,
+                           shouldShowTooltip: $shouldShowTooltip,
                            isLoading: $isLoading,
                            buttonState: $buttonState)
                 .modifier(AccessibilityLabelModifier(accessibilityLabel: skipPassword))

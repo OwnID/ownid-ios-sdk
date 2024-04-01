@@ -83,7 +83,8 @@ public extension OwnID.FlowsSDK.LoginView {
                 OwnID.CoreSDK.shared.currentMetricInformation = currentMetadata
             }
             eventService.sendMetric(.trackMetric(action: .loaded,
-                                                 category: .login))
+                                                 category: .login,
+                                                 loginType: loginType))
         }
         
         public func updateLoginIdPublisher(_ loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
@@ -138,12 +139,7 @@ public extension OwnID.FlowsSDK.LoginView {
             eventsPublisher
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
-                        handle(error)
-                        OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .error,
-                                                                           category: .login,
-                                                                           context: OwnID.CoreSDK.logger.context,
-                                                                           errorMessage: error.localizedDescription,
-                                                                           errorCode: error.metricErrorCode))
+                        handle(error, context: OwnID.CoreSDK.logger.context)
                     }
                 } receiveValue: { [unowned self] event in
                     switch event {
@@ -152,8 +148,7 @@ public extension OwnID.FlowsSDK.LoginView {
                         
                     case .cancelled(let flow):
                         let error = OwnID.CoreSDK.Error.flowCancelled(flow: flow)
-                        OwnID.CoreSDK.logger.log(level: .warning, message: error.localizedDescription, type: Self.self)
-                        handle(error)
+                        handle(error, context: OwnID.CoreSDK.logger.context)
 
                     case .loading:
                         hasIntegration ? integrationResultPublisher.send(.success(.loading)) : flowResultPublisher.send(.success(.loading))
@@ -178,6 +173,7 @@ public extension OwnID.FlowsSDK.LoginView {
                         eventService.sendMetric(.clickMetric(action: .click,
                                                              category: .login,
                                                              hasLoginId: !loginId.isEmpty,
+                                                             loginType: loginType,
                                                              validLoginIdFormat: validLoginIdFormat))
                     }
                     skipPasswordTapped(loginId: loginId)
@@ -191,25 +187,21 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
     func process(payload: OwnID.CoreSDK.Payload) {
         self.payload = payload
         
+        eventService.sendMetric(.trackMetric(action: .loggedIn,
+                                             category: .login,
+                                             context: payload.context,
+                                             loginId: loginId,
+                                             loginType: loginType,
+                                             authType: payload.authType))
+        
         if let loginPerformer {
             let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)
             loginPerformerPublisher
                 .sink { [unowned self] completion in
                     if case .failure(let error) = completion {
-                        handle(error)
-                        let errorMessage = error.localizedDescription
-                        eventService.sendMetric(.errorMetric(action: .error,
-                                                             category: .login,
-                                                             context: payload.context,
-                                                             errorMessage: errorMessage,
-                                                             errorCode: error.metricErrorCode))
+                        handle(error, context: payload.context)
                     }
                 } receiveValue: { [unowned self] loginResult in
-                    eventService.sendMetric(.trackMetric(action: .loggedIn,
-                                                         category: .login,
-                                                         context: payload.context,
-                                                         loginId: loginId,
-                                                         authType: payload.authType))
                     if let loginId = payload.loginId {
                         OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
                     }
@@ -219,12 +211,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                 .store(in: &bag)
         } else {
             OwnID.CoreSDK.logger.log(level: .debug, message: "Login without integration response", type: Self.self)
-            
-            eventService.sendMetric(.trackMetric(action: .loggedIn,
-                                                 category: .login,
-                                                 context: payload.context,
-                                                 loginId: loginId,
-                                                 authType: payload.authType))
+                        
             if let loginId = payload.loginId {
                 OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
             }
@@ -233,7 +220,27 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
         }
     }
     
-    func handle(_ error: OwnID.CoreSDK.Error) {
+    func handle(_ error: OwnID.CoreSDK.Error, context: String?) {
+        switch error {
+        case .userError:
+            let errorMessage = error.localizedDescription
+            eventService.sendMetric(.errorMetric(action: .error,
+                                                 category: .login,
+                                                 context: context,
+                                                 loginType: loginType,
+                                                 errorMessage: errorMessage,
+                                                 errorCode: error.metricErrorCode))
+        case .integrationError:
+            break
+        case .flowCancelled:
+            eventService.sendMetric(.errorMetric(action: .cancelFlow,
+                                                 category: .login,
+                                                 context: context,
+                                                 loginId: loginId,
+                                                 errorMessage: OwnID.CoreSDK.AnalyticActionType.cancelFlow.actionValue,
+                                                 errorCode: error.metricErrorCode))
+        }
+        
         resetToInitialState()
         
         hasIntegration ? integrationResultPublisher.send(.failure(error)) : flowResultPublisher.send(.failure(error))

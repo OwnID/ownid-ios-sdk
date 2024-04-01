@@ -80,16 +80,22 @@ extension OwnID.GigyaSDK.Registration {
                                                           authType: configuration.payload.authType)))
                     
                 case .failure(let error):
-                    OwnID.GigyaSDK.ErrorMapper.mapRegistrationError(error: error,
-                                                                    context: configuration.payload.context,
-                                                                    loginId: configuration.loginId,
-                                                                    authType: configuration.payload.authType)
-                    var json: [String: Any]?
-                    if case let .gigyaError(data) = error.error {
-                        json = data.toDictionary()
+                    switch error.error {
+                    case .gigyaError(let data):
+                        let code = data.errorCode
+                        if OwnID.GigyaSDK.ErrorMapper.allowedActionsErrorCodes.contains(code) {
+                            let message = "Registration: [\(code)] \(data.errorMessage ?? "")"
+                            OwnID.CoreSDK.logger.log(level: .warning, message: message, type: Self.self)
+                            promise(.failure(.integrationError(underlying: error.error)))
+                        } else {
+                            handle(error: .integrationError(underlying: error.error),
+                                   customErrorMessage: OwnID.GigyaSDK.gigyaErrorMessage(error.error))
+                        }
+                        
+                    default:
+                        handle(error: .integrationError(underlying: error.error),
+                               customErrorMessage: OwnID.GigyaSDK.gigyaErrorMessage(error.error))
                     }
-                    let error = OwnID.GigyaSDK.IntegrationError.gigyaSDKError(gigyaError: error.error, dataDictionary: json)
-                    handle(error: .integrationError(underlying: error))
                 }
             }
         }

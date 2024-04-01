@@ -7,6 +7,7 @@ protocol WebNameSpace {
     func invoke(bridgeContext: OwnID.CoreSDK.OwnIDWebBridgeContext,
                 action: OwnID.CoreSDK.JSAction,
                 params: String,
+                metadata: OwnID.CoreSDK.JSMetadata?,
                 completion: @escaping (_ result: String) -> Void)
 }
 
@@ -39,6 +40,7 @@ extension OwnID.CoreSDK {
         func invoke(bridgeContext: OwnIDWebBridgeContext,
                     action: OwnID.CoreSDK.JSAction,
                     params: String,
+                    metadata: JSMetadata?,
                     completion: @escaping (_ result: String) -> Void) {
             let initialValue = AccountManager.State()
             switch action {
@@ -82,6 +84,13 @@ extension OwnID.CoreSDK {
                     completion(handleErrorResult(fidoError: fidoError()))
                     return
                 }
+                
+                OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .webBridge(type: action.rawValue),
+                                                                   category: metadata?.category ?? .general,
+                                                                   context: metadata?.context,
+                                                                   siteUrl: metadata?.siteUrl,
+                                                                   webViewOrigin: bridgeContext.sourceOrigin?.absoluteString,
+                                                                   widgetId: metadata?.widgetId))
                 
                 let store = Store(initialValue: initialValue, reducer: reducer(completion: completion))
                 
@@ -149,11 +158,6 @@ extension OwnID.CoreSDK {
         }
         
         private func handleErrorResult(fidoError: CoreViewModel.FidoErrorRequestBody.Error) -> String {
-            defer {
-                let message = fidoError.message
-                ErrorWrapper(error: .userError(errorModel: UserErrorModel(message: message)), type: Self.self).log()
-            }
-
             let JSError = JSError(error: fidoError)
             guard let jsonData = try? JSONEncoder().encode(JSError),
                   let result = String(data: jsonData, encoding: String.Encoding.utf8) else {

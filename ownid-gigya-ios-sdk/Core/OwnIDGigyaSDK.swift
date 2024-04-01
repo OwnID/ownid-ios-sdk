@@ -5,7 +5,7 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.1.0"
+    static let version = "3.2.0"
 }
 
 public extension OwnID {
@@ -17,15 +17,15 @@ public extension OwnID {
         
         /// Standard configuration, searches for default .plist file
         public static func configure(supportedLanguages: [String] = Locale.preferredLanguages) {
-            OwnID.CoreSDK.shared.configure(userFacingSDK: info(), supportedLanguages: .init(rawValue: supportedLanguages))
+            OwnID.CoreSDK.configure(userFacingSDK: info(), supportedLanguages: supportedLanguages)
         }
         
         /// Configures SDK from plist path URL
         public static func configure(plistUrl: URL,
                                      supportedLanguages: [String] = Locale.preferredLanguages) {
-            OwnID.CoreSDK.shared.configureFor(plistUrl: plistUrl,
-                                              userFacingSDK: info(),
-                                              supportedLanguages: .init(rawValue: supportedLanguages))
+            OwnID.CoreSDK.configure(plistUrl: plistUrl,
+                                    userFacingSDK: info(),
+                                    supportedLanguages: supportedLanguages)
         }
         
         public static func configure(appID: OwnID.CoreSDK.AppID,
@@ -33,12 +33,12 @@ public extension OwnID {
                                      environment: String? = nil,
                                      enableLogging: Bool? = nil,
                                      supportedLanguages: [String] = Locale.preferredLanguages) {
-            OwnID.CoreSDK.shared.configure(appID: appID,
-                                           redirectionURL: redirectionURL,
-                                           userFacingSDK: info(),
-                                           environment: environment,
-                                           enableLogging: enableLogging,
-                                           supportedLanguages: .init(rawValue: supportedLanguages))
+            OwnID.CoreSDK.configure(appID: appID,
+                                    redirectionURL: redirectionURL,
+                                    userFacingSDK: info(),
+                                    environment: environment,
+                                    enableLogging: enableLogging,
+                                    supportedLanguages: supportedLanguages)
         }
         
         /// Handles redirects from other flows back to the app

@@ -19,6 +19,10 @@ The [OwnID](https://ownid.com/) iOS SDK is a client library offering a secure an
 - **Prebuilt Integration** - Utilize the existing OwnID SDK with a prebuilt Integration component. Options include:
 
    - **[OwnID Gigya](Docs/sdk-gigya.md)** - Expands Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk). It also includes the [OwnID WebView Bridge extension](Docs/sdk-gigya.md#add-ownid-webview-bridge), enabling native Passkeys functionality for Gigya Web Screen-Sets with OwnID Web SDK.
+   
+### Additional Components:
+
+- **[OwnID WebView Bridge](docs/sdk-webbridge-doc.md)** - A Core SDK component that introduces native Passkeys functionality to the OwnID Web SDK when running within a webview.
 
 ### Advanced Configuration
 

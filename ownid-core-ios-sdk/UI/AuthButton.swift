@@ -44,18 +44,26 @@ private extension OwnID.UISDK.AuthButton {
     @ViewBuilder
     func contents() -> some View {
         ZStack {
-            if visualConfig.loaderViewConfig.isEnabled {
-                OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.authButtonConfig.loaderViewConfig.color,
-                                              spinnerBackgroundColor: visualConfig.authButtonConfig.loaderViewConfig.backgroundColor,
+            if visualConfig.authButtonConfig.loaderViewConfig.isEnabled {
+                OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.authButtonConfig.loaderViewConfig.spinnerColor,
+                                              circleColor: visualConfig.authButtonConfig.loaderViewConfig.circleColor,
                                               viewBackgroundColor: visualConfig.authButtonConfig.backgroundColor)
                 .frame(width: visualConfig.authButtonConfig.loaderHeight, height: visualConfig.authButtonConfig.loaderHeight)
                 .opacity(isLoading ? 1 : 0)
             }
             Text(localizedKey: translationKey)
-                .fontWithLineHeight(font: .systemFont(ofSize: visualConfig.authButtonConfig.textSize, weight: .medium), lineHeight: visualConfig.authButtonConfig.lineHeight)
+                .font(font)
                 .foregroundColor(visualConfig.authButtonConfig.textColor)
                 .opacity(isLoading ? 0 : 1)
         }
         .frame(maxWidth: .infinity)
+    }
+    
+    private var font: Font {
+        if let fontFamily = visualConfig.authButtonConfig.fontFamily {
+            .custom(fontFamily, size: visualConfig.authButtonConfig.textSize)
+        } else {
+            .system(size: visualConfig.authButtonConfig.textSize, weight: .medium)
+        }
     }
 }

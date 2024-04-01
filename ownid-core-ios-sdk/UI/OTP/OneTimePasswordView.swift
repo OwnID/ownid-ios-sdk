@@ -190,8 +190,8 @@ extension OwnID.UISDK.OneTimePassword {
                         }
                     ZStack {
                         if store.value.isLoading {
-                            OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.loaderViewConfig.color,
-                                                          spinnerBackgroundColor: visualConfig.loaderViewConfig.backgroundColor,
+                            OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.loaderViewConfig.spinnerColor,
+                                                          circleColor: visualConfig.loaderViewConfig.circleColor,
                                                           viewBackgroundColor: .clear)
                             .frame(width: 28, height: 28)
                         }

@@ -20,33 +20,30 @@ public extension OwnID.UISDK {
 }
 
 public extension OwnID.UISDK {
-    struct TooltipVisualLookConfig: Equatable {
-        public init(backgroundColor: Color = OwnID.Colors.biometricsButtonBackground,
-                    borderColor: Color = OwnID.Colors.biometricsButtonBorder,
-                    textColor: Color = OwnID.Colors.defaultBlackColor,
+    struct TooltipConfig: Equatable {
+        public init(isEnabled: Bool = false,
+                    tooltipPosition: OwnID.UISDK.TooltipPositionType = .bottom,
                     textSize: CGFloat = 16,
-                    lineHeight: CGFloat = 23,
-                    shadowColor: Color = OwnID.Colors.defaultBlackColor,
-                    isNativePlatform: Bool = true,
-                    tooltipPosition: OwnID.UISDK.TooltipPositionType = .bottom) {
-            self.backgroundColor = backgroundColor
-            self.borderColor = borderColor
-            self.textColor = textColor
-            self.textSize = textSize
-            self.lineHeight = lineHeight
-            self.shadowColor = shadowColor
-            self.isNativePlatform = isNativePlatform
+                    fontFamily: String? = nil,
+                    textColor: Color = OwnID.Colors.defaultBlackColor,
+                    borderColor: Color = OwnID.Colors.biometricsButtonBorder,
+                    backgroundColor: Color = OwnID.Colors.biometricsButtonBackground) {
+            self.isEnabled = isEnabled
             self.tooltipPosition = tooltipPosition
+            self.textSize = textSize
+            self.fontFamily = fontFamily
+            self.textColor = textColor
+            self.borderColor = borderColor
+            self.backgroundColor = backgroundColor
         }
         
-        public var backgroundColor: Color
-        public var borderColor: Color
-        public var textColor: Color
-        public var textSize: CGFloat
-        public var lineHeight: CGFloat
-        public var shadowColor: Color
-        public var isNativePlatform: Bool
+        public var isEnabled: Bool
         public var tooltipPosition: TooltipPositionType
+        public var textSize: CGFloat
+        public var fontFamily: String?
+        public var textColor: Color
+        public var borderColor: Color
+        public var backgroundColor: Color
     }
 }
 

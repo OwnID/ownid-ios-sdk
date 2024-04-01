@@ -26,9 +26,9 @@ public extension OwnID.FlowsSDK {
 private extension OwnID.FlowsSDK.RegisterView {
     func skipPasswordView() -> some View {
         var config = visualConfig
-        switch visualConfig.buttonViewConfig.widgetType {
+        switch visualConfig.widgetType {
         case .authButton:
-            config.buttonViewConfig.widgetType = .iconButton // auth button is only available for login
+            config.widgetType = .iconButton // auth button is only available for login
             
         case .iconButton:
             break
