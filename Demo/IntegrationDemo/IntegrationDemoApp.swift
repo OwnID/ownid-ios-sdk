@@ -9,9 +9,7 @@ extension IntegrationDemoApp {
 @main
 struct IntegrationDemoApp: App {
     init() {
-        OwnID.CoreSDK.shared.configure(userFacingSDK: IntegrationDemoApp.info(),
-                                       underlyingSDKs: [], 
-                                       supportedLanguages: .init(rawValue: Locale.preferredLanguages))
+        OwnID.CoreSDK.configure(userFacingSDK: IntegrationDemoApp.info())
     }
     
     var body: some Scene {

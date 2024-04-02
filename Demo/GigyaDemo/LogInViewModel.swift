@@ -46,17 +46,13 @@ final class LogInViewModel: ObservableObject {
                     
                 case .failure(let error):
                     switch error {
-                    case .integrationError(let gigyaIntegrationError):
-                        if let error = gigyaIntegrationError as? OwnID.GigyaSDK.IntegrationError {
+                    case .integrationError(let gigyaError):
+                        if let error = gigyaError as? NetworkError {
                             switch error {
-                            case .gigyaSDKError(let networkError, let dataDictionary):
-                                switch networkError {
-                                case .gigyaError(let model):
-                                    //handling the data
-                                    print(dataDictionary)
-                                    print(model.errorMessage)
-                                default: break
-                                }
+                            case .gigyaError(let model):
+                                //handling the error
+                                print(model.errorMessage ?? "")
+                            default: break
                             }
                         }
 

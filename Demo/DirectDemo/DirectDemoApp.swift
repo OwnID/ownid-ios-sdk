@@ -9,9 +9,7 @@ extension DirectDemoApp {
 @main
 struct DirectDemoApp: App {
     init() {
-        OwnID.CoreSDK.shared.configure(userFacingSDK: DirectDemoApp.info(),
-                                       underlyingSDKs: [],
-                                       supportedLanguages: .init(rawValue: Locale.preferredLanguages))
+        OwnID.CoreSDK.configure(userFacingSDK: DirectDemoApp.info())
     }
     
     var body: some Scene {
