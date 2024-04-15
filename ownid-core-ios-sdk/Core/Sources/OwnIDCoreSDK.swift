@@ -3,7 +3,7 @@ import Combine
 
 public extension OwnID.CoreSDK {
     static let sdkName = String(describing: OwnID.CoreSDK.self)
-    static let version = "2.2.3"
+    static let version = "2.2.4"
     static let APIVersion = "1"
 }
 

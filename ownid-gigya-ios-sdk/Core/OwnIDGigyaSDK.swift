@@ -5,7 +5,7 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "2.2.3"
+    static let version = "2.2.4"
 }
 
 public extension OwnID {
