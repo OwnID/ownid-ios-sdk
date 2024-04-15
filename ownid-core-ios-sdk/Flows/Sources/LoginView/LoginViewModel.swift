@@ -55,21 +55,23 @@ public extension OwnID.FlowsSDK.LoginView {
         }
         
         func skipPasswordTapped(usersEmail: String) {
-            DispatchQueue.main.async { [self] in
-                let email = OwnID.CoreSDK.Email(rawValue: usersEmail)
-                let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(email: email,
-                                                                                     loginType: loginType,
-                                                                                     sdkConfigurationName: sdkConfigurationName,
-                                                                                     webLanguages: webLanguages)
-                self.coreViewModel = coreViewModel
-                subscribe(to: coreViewModel.eventPublisher)
-                state = .coreVM
-                
-                /// On iOS 13, this `asyncAfter` is required to make sure that subscription created by the time events start to
-                /// be passed to publiser.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    coreViewModel.start()
-                }
+            if state == .coreVM {
+                return
+            }
+            
+            let email = OwnID.CoreSDK.Email(rawValue: usersEmail)
+            let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(email: email,
+                                                                                 loginType: loginType,
+                                                                                 sdkConfigurationName: sdkConfigurationName,
+                                                                                 webLanguages: webLanguages)
+            self.coreViewModel = coreViewModel
+            subscribe(to: coreViewModel.eventPublisher)
+            state = .coreVM
+            
+            /// On iOS 13, this `asyncAfter` is required to make sure that subscription created by the time events start to
+            /// be passed to publiser.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                coreViewModel.start()
             }
         }
         
@@ -141,6 +143,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
         }
         
         resetDataAndState()
+        
         resultPublisher.send(.failure(error))
     }
 }

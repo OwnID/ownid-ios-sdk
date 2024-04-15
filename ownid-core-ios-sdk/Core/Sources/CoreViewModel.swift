@@ -72,7 +72,7 @@ extension OwnID.CoreSDK {
     static func viewModelReducer(state: inout ViewModelState, action: ViewModelAction) -> [Effect<ViewModelAction>] {
         switch action {
         case .sendInitialRequest:
-            if let email = state.email, !email.rawValue.isEmpty, !email.isValid {
+            guard let email = state.email, !email.rawValue.isEmpty, email.isValid else {
                 return errorEffect(.emailIsInvalid)
             }
             return [sendInitialRequest(type: state.type, token: state.token, loginType: state.loginType, session: state.session)]
