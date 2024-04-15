@@ -96,6 +96,9 @@ public extension OwnID.FlowsSDK.RegisterView {
         }
         
         func skipPasswordTapped(usersEmail: String) {
+            if state == .coreVM {
+                return
+            }
             if case .ownidCreated = state {
                 OwnID.CoreSDK.logger.logAnalytic(.registerClickMetric(action: "Clicked Undo", context: registrationData.payload?.context))
                 resetState()
@@ -199,6 +202,9 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
         default:
             break
         }
+        
+        resetDataAndState()
+        
         resultPublisher.send(.failure(error))
     }
 }
