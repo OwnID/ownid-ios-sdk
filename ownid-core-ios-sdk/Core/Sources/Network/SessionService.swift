@@ -80,9 +80,13 @@ extension OwnID.CoreSDK {
                     return .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
                 }
                 .map { [self] body -> URLRequest in
-                    if let supportedLanguages {
-                        let headers = URLRequest.defaultHeaders(supportedLanguages: supportedLanguages)
-                        return URLRequest.request(url: url, method: method, body: body, headers: headers)
+                    if headers.isEmpty {
+                        if let supportedLanguages {
+                            let headers = URLRequest.defaultHeaders(supportedLanguages: supportedLanguages)
+                            return URLRequest.request(url: url, method: method, body: body, headers: headers)
+                        } else {
+                            return URLRequest.request(url: url, method: method, body: body, headers: headers)
+                        }
                     } else {
                         return URLRequest.request(url: url, method: method, body: body, headers: headers)
                     }

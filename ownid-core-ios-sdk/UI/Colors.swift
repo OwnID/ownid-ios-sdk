@@ -7,12 +7,8 @@ public extension OwnID {
             Color("blue", bundle: .resourceBundle)
         }
         
-        public static var darkBlue: Color {
-            Color("darkBlue", bundle: .resourceBundle)
-        }
-        
-        public static var linkDarkBlue: Color {
-            Color("linkDarkBlue", bundle: .resourceBundle)
+        public static var sliderBackground: Color {
+            Color("sliderBackground", bundle: .resourceBundle)
         }
         
         public static var textGrey: Color {
@@ -77,10 +73,6 @@ public extension OwnID {
         
         public static var otpTitleSelectedBorderColor: Color {
             Color("\(OwnID.UISDK.OneTimePassword.self)TitleSelectedBorderColor", bundle: .resourceBundle)
-        }
-        
-        public static var otpDidNotGetEmail: Color {
-            Color("\(OwnID.UISDK.OneTimePassword.self)didNotGetEmail", bundle: .resourceBundle)
         }
     }
 }

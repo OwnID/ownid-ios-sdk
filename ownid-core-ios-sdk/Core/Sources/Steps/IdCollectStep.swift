@@ -70,7 +70,10 @@ extension OwnID.CoreSDK.CoreViewModel {
                 .handleEvents(receiveOutput: { response in
                     OwnID.CoreSDK.logger.log(level: .debug, message: "Id Collect Request Finished", type: Self.self)
                 })
-                .map { [self] in handleResponse(response: $0, isOnUI: true) }
+                .map { [self] response in
+                    OwnID.UISDK.PopupManager.dismissPopup()
+                    return handleResponse(response: response, isOnUI: true)
+                }
                 .catch { Just(.error(OwnID.CoreSDK.ErrorWrapper(error: $0, isOnUI: true, type: Self.self))) }
                 .eraseToEffect()
             

@@ -13,16 +13,12 @@ extension OwnID.CoreSDK {
              loginId: String,
              loginType: OwnID.CoreSDK.LoginType? = nil,
              supportedLanguages: OwnID.CoreSDK.Languages,
-             clientConfiguration: LocalConfiguration?,
-             createAccountManagerClosure: @escaping AccountManager.CreationClosure = OwnID.CoreSDK.AccountManager.defaultAccountManager,
-             createBrowserOpenerClosure: @escaping BrowserOpener.CreationClosure = BrowserOpener.defaultOpener) {
+             clientConfiguration: LocalConfiguration?) {
             var loginId = loginId
             if loginId.isBlank, let savedLoginId = DefaultsLoginIdSaver.getLoginId(), !savedLoginId.isBlank, type == .login {
                 loginId = savedLoginId
             }
             let initialState = State(configuration: clientConfiguration,
-                                     createAccountManagerClosure: createAccountManagerClosure,
-                                     createBrowserOpenerClosure: createBrowserOpenerClosure,
                                      loginId: loginId,
                                      type: type,
                                      loginType: loginType,
@@ -80,7 +76,7 @@ extension OwnID.CoreSDK {
                 reducer: { OwnID.UISDK.OneTimePassword.viewModelReducer(state: &$0, action: $1) }
             )
             let browserStore = self.store.view(value: { _ in BrowserOpenerViewModel.State() } , action: { .browserVM($0) })
-            let authManagerStore = self.store.view(value: { _ in AccountManager.State() },
+            let authManagerStore = self.store.view(value: { _ in AuthManager.State() },
                                                    action: { .authManager($0) })
             self.store.send(.addToState(browserViewModelStore: browserStore,
                                         authStore: authManagerStore,

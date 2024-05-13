@@ -9,7 +9,6 @@ extension OwnID.UISDK {
                                   phoneCodes: [OwnID.CoreSDK.PhoneCode]) {
         if #available(iOS 15.0, *) {
             let view = OwnID.UISDK.IdCollect.IdCollectView(store: store,
-                                                           visualConfig: OwnID.UISDK.VisualLookConfig(),
                                                            loginId: loginId,
                                                            loginIdSettings: loginIdSettings,
                                                            phoneCodes: phoneCodes,
@@ -19,7 +18,6 @@ extension OwnID.UISDK {
             view.presentAsPopup()
         } else {
             let view = OwnID.UISDK.IdCollect.LegacyIdCollectView(store: store,
-                                                                 visualConfig: OwnID.UISDK.VisualLookConfig(),
                                                                  loginId: loginId,
                                                                  loginIdSettings: loginIdSettings,
                                                                  phoneCodes: phoneCodes,
@@ -55,7 +53,6 @@ extension OwnID.UISDK.IdCollect {
         private let loginIdPublisher = PassthroughSubject<String, Never>()
         private let phoneDialCodePublisher = PassthroughSubject<String, Never>()
         
-        private var visualConfig: OwnID.UISDK.VisualLookConfig
         private let closeClosure: () -> Void
         
         @ObservedObject var store: Store<ViewState, Action>
@@ -88,7 +85,6 @@ extension OwnID.UISDK.IdCollect {
         }
         
         init(store: Store<ViewState, Action>,
-             visualConfig: OwnID.UISDK.VisualLookConfig,
              loginId: String,
              loginIdSettings: OwnID.CoreSDK.LoginIdSettings,
              phoneCodes: [OwnID.CoreSDK.PhoneCode],
@@ -97,7 +93,6 @@ extension OwnID.UISDK.IdCollect {
             self.loginId = loginId
             self.loginIdSettings = loginIdSettings
             self.phoneCodes = phoneCodes
-            self.visualConfig = visualConfig
             self.closeClosure = closeClosure
             self.viewModel = ViewModel(store: store, loginId: loginId, loginIdSettings: loginIdSettings, phoneCodes: phoneCodes)
             
@@ -186,7 +181,7 @@ extension OwnID.UISDK.IdCollect {
         @ViewBuilder
         private func continueButton() -> some View {
             if !store.value.isFlowFinished {
-                OwnID.UISDK.AuthButton(visualConfig: visualConfig,
+                OwnID.UISDK.AuthButton(visualConfig: OwnID.UISDK.VisualLookConfig(),
                                        actionHandler: { viewModel.postLoginId() },
                                        isLoading: $viewModel.isLoading,
                                        buttonState: $viewModel.buttonState,

@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 /// OwnID class represents core part of SDK. It performs initialization and creates views. It reads OwnIDConfiguration from disk, parses it and loads to memory for later usage. It is a singleton, so the URL returned from outside can be linked to corresponding flow.
-public extension OwnID {    
+public extension OwnID {
     final class CoreSDK {
         public var serverConfigurationURL: ServerURL? { store.value.configuration?.ownIDServerConfigurationURL }
         
@@ -13,8 +13,10 @@ public extension OwnID {
         
         @ObservedObject var store: Store<SDKState, SDKAction>
         
+        private var enrollManager = EnrollManager(supportedLanguages: .init(rawValue: []))
         private let urlPublisher = PassthroughSubject<Void, OwnID.CoreSDK.Error>()
         private let configurationLoadingEventPublisher = PassthroughSubject<ConfigurationLoadingEvent, Never>()
+        private var supportedLanguages = [String]()
         
         private init() {
             let store = Store(
@@ -29,6 +31,10 @@ public extension OwnID {
         public static var logger = InternalLogger.shared
         public static var eventService: EventService { EventService.shared }
         
+        public static var enrollEventPublisher: OwnID.EnrollEventPublisher {
+            shared.enrollManager.eventPublisher
+        }
+        
         public func configureForTests() { store.send(.configureForTests) }
         
         public func requestConfiguration() { store.send(.fetchServerConfiguration) }
@@ -37,6 +43,7 @@ public extension OwnID {
                                      underlyingSDKs: [SDKInformation] = [],
                                      supportedLanguages: [String] = Locale.preferredLanguages) {
             if shared.store.value.configurationRequestData == nil {
+                shared.supportedLanguages = supportedLanguages
                 shared.store.send(.configureFromDefaultConfiguration(userFacingSDK: userFacingSDK,
                                                                      underlyingSDKs: underlyingSDKs,
                                                                      supportedLanguages: .init(rawValue: supportedLanguages)))
@@ -51,6 +58,7 @@ public extension OwnID {
                                      enableLogging: Bool? = nil,
                                      supportedLanguages: [String] = Locale.preferredLanguages) {
             if shared.store.value.configurationRequestData == nil {
+                shared.supportedLanguages = supportedLanguages
                 shared.store.send(.configure(appID: appID,
                                              redirectionURL: redirectionURL,
                                              userFacingSDK: userFacingSDK,
@@ -67,6 +75,7 @@ public extension OwnID {
                                      underlyingSDKs: [SDKInformation] = [],
                                      supportedLanguages: [String] = Locale.preferredLanguages) {
             if shared.store.value.configurationRequestData == nil {
+                shared.supportedLanguages = supportedLanguages
                 shared.store.send(.configureFrom(plistUrl: plistUrl,
                                                  userFacingSDK: userFacingSDK,
                                                  underlyingSDKs: underlyingSDKs,
@@ -79,7 +88,35 @@ public extension OwnID {
         }
         
         public static func setSupportedLanguages(_ supportedLanguages: [String]) {
+            shared.supportedLanguages = supportedLanguages
             shared.store.send(.updateSupportedLanguages(supportedLanguages: Languages(rawValue: supportedLanguages)))
+        }
+        
+        public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) {
+            let enrollManager = EnrollManager(supportedLanguages: .init(rawValue: shared.supportedLanguages))
+            shared.enrollManager = enrollManager
+            
+            let loginIdPublisher = Just(loginId).eraseToAnyPublisher()
+            let authTokenPublisher = Just(authToken).eraseToAnyPublisher()
+            let displayName = loginId
+            let displayNamePublisher = Just(displayName).eraseToAnyPublisher()
+            shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
+                                        authTokenPublisher: authTokenPublisher,
+                                        displayNamePublisher: displayNamePublisher,
+                                        force: force)
+        }
+        
+        public static func enrollCredential(loginIdPublisher: AnyPublisher<String, Never>,
+                                            authTokenPublisher: AnyPublisher<String, Never>,
+                                            force: Bool = false) {
+            let enrollManager = EnrollManager(supportedLanguages: .init(rawValue: shared.supportedLanguages))
+            shared.enrollManager = enrollManager
+            
+            let displayNamePublisher = loginIdPublisher
+            shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
+                                        authTokenPublisher: authTokenPublisher,
+                                        displayNamePublisher: displayNamePublisher,
+                                        force: force)
         }
         
         func createCoreViewModelForRegister(loginId: String) -> CoreViewModel {

@@ -60,3 +60,9 @@
 "steps.otp.verify.email.title-ios" = "Verify Your Email";
 "steps.otp.verify.sms.title-android" = "Verify your phone number";
 "steps.otp.verify.sms.title-ios" = "Verify Your Identity";
+
+"enrollCredential.title" = "Speed up your sign-in";
+"enrollCredential.description" = "Would you like to skip password next time?";
+"enrollCredential.cta-android" = "Continue";
+"enrollCredential.cta-ios" = "Use Face ID";
+"enrollCredential.skip" = "No, Thanks";

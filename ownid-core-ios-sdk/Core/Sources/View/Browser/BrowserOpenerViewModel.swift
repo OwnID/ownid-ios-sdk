@@ -3,31 +3,6 @@ import UIKit
 import Combine
 import AuthenticationServices
 
-extension OwnID.CoreSDK {
-    struct BrowserOpener {
-        let cancelClosure: () -> Void
-        
-        func cancel() {
-            cancelClosure()
-        }
-    }
-}
-
-extension OwnID.CoreSDK.BrowserOpener {
-    typealias CreationClosure = (_ store: Store<OwnID.CoreSDK.BrowserOpenerViewModel.State, OwnID.CoreSDK.BrowserOpenerViewModel.Action>,
-                                 _ url: URL,
-                                 _ redirectionURL: OwnID.CoreSDK.RedirectionURLString) -> Self
-    
-    static var defaultOpener: CreationClosure {
-        { store, url, redirectionURL in
-            let vm = OwnID.CoreSDK.BrowserOpenerViewModel(store: store, url: url, redirectionURL: redirectionURL)
-            return Self {
-                vm.cancel()
-            }
-        }
-    }
-}
-
 extension OwnID.CoreSDK.BrowserOpenerViewModel {
     struct State {
     }

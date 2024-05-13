@@ -37,7 +37,7 @@ public extension OwnID.UISDK {
                     fontFamily: String? = nil,
                     textColor: Color = .white,
                     backgroundColor: Color = OwnID.Colors.blue,
-                    loaderHeight: CGFloat = 30.0,
+                    loaderHeight: CGFloat = 24.0,
                     loaderViewConfig: LoaderViewConfig = LoaderViewConfig(spinnerColor: OwnID.Colors.authButtonSpinnerColor,
                                                                           circleColor: OwnID.Colors.authButtonSpinnerBackgroundColor)) {
             self.height = height

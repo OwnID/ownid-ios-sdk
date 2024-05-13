@@ -24,8 +24,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                             browserURL: urlString,
                                             loginId: OwnID.CoreSDK.LoginId(value: state.loginId, settings: loginIdSettings),
                                             store: state.browserViewModelStore,
-                                            redirectionURLString: state.configuration?.redirectionURL,
-                                            creationClosure: state.createBrowserOpenerClosure)
+                                            redirectionURLString: state.configuration?.redirectionURL)
             state.browserViewModel = viewModel
             return []
         }
@@ -34,8 +33,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                      browserURL: String,
                                      loginId: OwnID.CoreSDK.LoginId?,
                                      store: Store<OwnID.CoreSDK.BrowserOpenerViewModel.State, OwnID.CoreSDK.BrowserOpenerViewModel.Action>,
-                                     redirectionURLString: OwnID.CoreSDK.RedirectionURLString?,
-                                     creationClosure: OwnID.CoreSDK.BrowserOpener.CreationClosure) -> OwnID.CoreSDK.BrowserOpener {
+                                     redirectionURLString: OwnID.CoreSDK.RedirectionURLString?) -> OwnID.CoreSDK.BrowserOpenerViewModel {
             let redirectionEncoded = (redirectionURLString ?? "").addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
             let redirect = redirectionEncoded! + "?context=" + context
             let redirectParameter = "&redirectURI=" + redirect
@@ -50,7 +48,7 @@ extension OwnID.CoreSDK.CoreViewModel {
             }
             urlString.append(redirectParameter)
             let url = URL(string: urlString)!
-            let vm = creationClosure(store, url, redirectionURLString ?? "")
+            let vm = OwnID.CoreSDK.BrowserOpenerViewModel(store: store, url: url, redirectionURL: redirectionURLString ?? "")
             return vm
         }
     }

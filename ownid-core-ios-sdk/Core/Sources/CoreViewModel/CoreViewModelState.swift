@@ -3,20 +3,17 @@ import Foundation
 extension OwnID.CoreSDK.CoreViewModel {
     struct State {
         var configuration: OwnID.CoreSDK.LocalConfiguration?
-        
-        let createAccountManagerClosure: OwnID.CoreSDK.AccountManager.CreationClosure
-        let createBrowserOpenerClosure: OwnID.CoreSDK.BrowserOpener.CreationClosure
-        
+
         var loginId: String
         let type: OwnID.CoreSDK.RequestType
         let loginType: OwnID.CoreSDK.LoginType?
         let supportedLanguages: OwnID.CoreSDK.Languages
         
         var browserViewModelStore: Store<OwnID.CoreSDK.BrowserOpenerViewModel.State, OwnID.CoreSDK.BrowserOpenerViewModel.Action>!
-        var browserViewModel: OwnID.CoreSDK.BrowserOpener?
+        var browserViewModel: OwnID.CoreSDK.BrowserOpenerViewModel?
         
-        var authManagerStore: Store<OwnID.CoreSDK.AccountManager.State, OwnID.CoreSDK.AccountManager.Action>!
-        var authManager: OwnID.CoreSDK.AccountManager?
+        var authManagerStore: Store<OwnID.CoreSDK.AuthManager.State, OwnID.CoreSDK.AuthManager.Action>!
+        var authManager: OwnID.CoreSDK.AuthManager?
         
         var oneTimePasswordStore: Store<OwnID.UISDK.OneTimePassword.ViewState, OwnID.UISDK.OneTimePassword.Action>!
         
@@ -31,7 +28,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         var finalUrl: URL!
         var context: OwnID.CoreSDK.Context!
         
-        #warning("temporary desicion until move auth manager methods to FidoAuthStep class")
+        //TODO: temporary desicion until move auth manager methods to FidoAuthStep class")
         var fidoStep: FidoAuthStep!
         var otpStep: OTPAuthStep!
         var idCollectStep: IdCollectStep!

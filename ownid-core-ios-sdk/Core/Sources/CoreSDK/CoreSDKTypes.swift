@@ -1,6 +1,6 @@
 public extension OwnID.CoreSDK {
     static let sdkName = "Core"
-    static let version = "3.2.0"
+    static let version = "3.3.0"
     static let APIVersion = "1"
     
     static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }
@@ -9,6 +9,10 @@ public extension OwnID.CoreSDK {
 public extension OwnID.CoreSDK {
     var environment: String? {
         store.value.configuration?.environment
+    }
+    
+    var serverURL: ServerURL? {
+        store.value.configuration?.serverURL
     }
     
     var metricsURL: ServerURL? {

@@ -5,7 +5,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         case addErrorToInternalStates(OwnID.CoreSDK.Error) // this is needed for flows when error is thrown and flow does not immitiately goes to error. If auth manager throws error, we continue to next steps and log error to our states only
         
         case addToState(browserViewModelStore: Store<OwnID.CoreSDK.BrowserOpenerViewModel.State, OwnID.CoreSDK.BrowserOpenerViewModel.Action>,
-                        authStore: Store<OwnID.CoreSDK.AccountManager.State, OwnID.CoreSDK.AccountManager.Action>,
+                        authStore: Store<OwnID.CoreSDK.AuthManager.State, OwnID.CoreSDK.AuthManager.Action>,
                         oneTimePasswordStore: Store<OwnID.UISDK.OneTimePassword.ViewState, OwnID.UISDK.OneTimePassword.Action>,
                         idCollectViewStore: Store<OwnID.UISDK.IdCollect.ViewState, OwnID.UISDK.IdCollect.Action>)
         case addToStateConfig(config: OwnID.CoreSDK.LocalConfiguration)
@@ -24,7 +24,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         case browserVM(OwnID.CoreSDK.BrowserOpenerViewModel.Action)
         case idCollectView(OwnID.UISDK.IdCollect.Action)
         case oneTimePasswordView(OwnID.UISDK.OneTimePassword.Action)
-        case authManager(OwnID.CoreSDK.AccountManager.Action)
+        case authManager(OwnID.CoreSDK.AuthManager.Action)
         case codeResent
         case stopRequestLoaded(flow: OwnID.CoreSDK.FlowType)
         case sameStep

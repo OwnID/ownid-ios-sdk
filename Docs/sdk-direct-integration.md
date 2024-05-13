@@ -22,6 +22,7 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
   + [Add OwnID View](#add-ownid-view)
   + [Customize View Model](#customize-view-model-1)
 * [Tooltip](#tooltip)
+* [Credential enrollment](#credential-enrollment)
 * [Errors](#errors)
 * [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function)
 * [Button Appearance](#button-appearance)
@@ -81,13 +82,13 @@ import OwnIDCoreSDK
 ```
 
 ## Initialize the SDK
-The OwnID SDK must be initialized properly using the `configure(userFacingSDK:)` function, preferably in the main entry point of your app (in the `@main` `App` struct). For example, enter:
+The OwnID SDK must be initialized properly using the `configure(userFacingSDK:)` function, preferably in the main entry point of your app (in the `@main` `App` struct). Info is used in networks calls as part of `User Agent` string:
 
 ```swift
 @main
 struct ExampleApp: App {
     init() {
-        let info: OwnID.CoreSDK.SDKInformation = (..., ...) //add you info here
+        let info: OwnID.CoreSDK.SDKInformation = ("Integration", "3.x.x") //add you info here
         OwnID.CoreSDK.configure(userFacingSDK: info)
     }
 }
@@ -274,6 +275,39 @@ HStack {
     SecureField("password", text: $password)
 }
 .zIndex(1)
+```
+
+## Credential enrollment
+
+The credential enrollment feature allows users to enroll credentials outside of the login/registration flows. You can trigger credential enrollment on demand, such as after the user registers with a password.
+
+There are 2 options to start the credential enrollment:
+
+```swift
+OwnID.CoreSDK.enrollCredential(loginIdPublisher: loginIdPublisher(),
+                               authTokenPublisher: authTokenPublisher())
+```
+where `loginIdPublisher` is a publisher that emits user's login ID, `authTokenPublisher` is a publisher that emits user's authentication token. Both parameters should conform to the `AnyPublisher<String, Never>` type.
+
+```swift
+OwnID.CoreSDK.enrollCredential(loginId: String, authToken: String)
+```
+where `loginId` is a user's login ID, `authToken` is a user's authentication token.
+
+Optionally, to monitor the status of the last credential enrollment request, you can listen to enrollment events by subscribing to `enrollEventPublisher`:
+
+```swift
+OwnID.CoreSDK.enrollEventPublisher
+    .receive(on: DispatchQueue.main)
+    .sink { event in
+        switch event {
+        case .success:
+            ...
+        case .failure(let error):
+            ...
+        }
+    }
+    .store(in: &bag)
 ```
 
 ## Errors

@@ -37,3 +37,18 @@ extension Data {
         return result
     }
 }
+
+extension Data {
+    static func generateRandomBytes(count: Int = 32) -> Data {
+        var keyData = Data(count: count)
+        let result = keyData.withUnsafeMutableBytes {
+            SecRandomCopyBytes(kSecRandomDefault, count, $0.baseAddress!)
+        }
+        if result == errSecSuccess {
+            return keyData
+        } else {
+            print("Problem generating random bytes")
+            return Data()
+        }
+    }
+}

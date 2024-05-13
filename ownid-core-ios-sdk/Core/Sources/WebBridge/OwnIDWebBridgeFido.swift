@@ -27,7 +27,7 @@ extension OwnID.CoreSDK {
         var name = "FIDO"
         var actions = [JSAction.create, JSAction.get, JSAction.isAvailable]
         
-        private var authManager: AccountManager?
+        private var authManager: AuthManager?
         
         private func fidoError(message: String = OwnID.CoreSDK.ErrorMessage.dataIsMissing) -> CoreViewModel.FidoErrorRequestBody.Error {
             let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
@@ -42,7 +42,7 @@ extension OwnID.CoreSDK {
                     params: String,
                     metadata: JSMetadata?,
                     completion: @escaping (_ result: String) -> Void) {
-            let initialValue = AccountManager.State()
+            let initialValue = AuthManager.State()
             switch action {
             case .isAvailable:
                 completion("\(isPasskeysSupported)")
@@ -85,8 +85,22 @@ extension OwnID.CoreSDK {
                     return
                 }
                 
+                let category: EventCategory
+                switch metadata?.category ?? .general {
+                case .general:
+                    category = .general
+                case .register:
+                    category = .registration
+                case .login:
+                    category = .login
+                case .link:
+                    category = .link
+                case .recovery:
+                    category = .recovery
+                }
+                
                 OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .webBridge(type: action.rawValue),
-                                                                   category: metadata?.category ?? .general,
+                                                                   category: category,
                                                                    context: metadata?.context,
                                                                    siteUrl: metadata?.siteUrl,
                                                                    webViewOrigin: bridgeContext.sourceOrigin?.absoluteString,
@@ -94,35 +108,37 @@ extension OwnID.CoreSDK {
                 
                 let store = Store(initialValue: initialValue, reducer: reducer(completion: completion))
                 
-                authManager = AccountManager.defaultAccountManager(store, fidoData.rpId, context, "")
-                if action == .create {
-                    authManager?.signUpWith(userName: fidoData.userName, credsIds: fidoData.credsIds)
-                } else if action == .get {
-                    authManager?.signIn(credsIds: fidoData.credsIds)
+                authManager = AuthManager(store: store, domain: fidoData.rpId, challenge: context)
+                if #available(iOS 16.0, *) {
+                    if action == .create {
+                        authManager?.signUpWith(userName: fidoData.userName, credsIds: fidoData.credsIds)
+                    } else if action == .get {
+                        authManager?.signIn(credsIds: fidoData.credsIds)
+                    }
                 }
             }
         }
         
-        private func reducer(completion: @escaping (_ result: String) -> Void) -> (inout AccountManager.State, AccountManager.Action) -> [Effect<AccountManager.Action>] {
-            let reducer: (inout AccountManager.State, AccountManager.Action) -> [Effect<AccountManager.Action>] = { [weak self] state, action in
+        private func reducer(completion: @escaping (_ result: String) -> Void) -> (inout AuthManager.State, AuthManager.Action) -> [Effect<AuthManager.Action>] {
+            let reducer: (inout AuthManager.State, AuthManager.Action) -> [Effect<AuthManager.Action>] = { [weak self] state, action in
                 guard let sself = self else { return [] }
                 
                 switch action {
-                case .didFinishLogin(let fido2LoginPayload, _):
+                case .didFinishLogin(let fido2LoginPayload):
                     guard let jsonData = try? JSONEncoder().encode(fido2LoginPayload),
                           let result = String(data: jsonData, encoding: String.Encoding.utf8) else {
                         completion(sself.handleErrorResult(fidoError: sself.fidoError()))
                         return []
                     }
                     completion(result)
-                case .didFinishRegistration(fido2RegisterPayload: let fido2RegisterPayload, _):
+                case .didFinishRegistration(fido2RegisterPayload: let fido2RegisterPayload):
                     guard let jsonData = try? JSONEncoder().encode(fido2RegisterPayload),
                           let result = String(data: jsonData, encoding: String.Encoding.utf8) else {
                         completion(sself.handleErrorResult(fidoError: sself.fidoError()))
                         return []
                     }
                     completion(result)
-                case .error(let error, _, _):
+                case .error(let error, _):
                     completion(sself.handleErrorResult(fidoError: sself.error(error)))
                 }
                 return []
@@ -131,17 +147,17 @@ extension OwnID.CoreSDK {
             return reducer
         }
         
-        private func error(_ error: AccountManager.AuthManagerError) -> CoreViewModel.FidoErrorRequestBody.Error {
+        private func error(_ error: AuthManager.AuthManagerError) -> CoreViewModel.FidoErrorRequestBody.Error {
             let fidoError: CoreViewModel.FidoErrorRequestBody.Error
             
             switch error {
-            case .authorizationManagerAuthError(let error), .authorizationManagerGeneralError(let error):
+            case .authManagerAuthError(let error), .authManagerGeneralError(let error):
                 let error = error as NSError
                 fidoError = CoreViewModel.FidoErrorRequestBody.Error(name: error.domain,
                                                                      type: error.domain,
                                                                      code: 0,
                                                                      message: error.localizedDescription)
-            case .authorizationManagerCredintialsNotFoundOrCanlelledByUser(let error):
+            case .authManagerCredintialsNotFoundOrCanlelledByUser(let error):
                 let error = error as NSError
                 fidoError = CoreViewModel.FidoErrorRequestBody.Error(name: error.domain,
                                                                      type: error.domain,

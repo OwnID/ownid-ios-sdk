@@ -25,6 +25,11 @@ extension OwnID.CoreSDK.TranslationsSDK {
         case otpDescription(operationType: String, verificationType: String)
         case otpResend(operationType: String, verificationType: String)
         case otpNotYou(operationType: String, verificationType: String)
+        
+        case enrollTitle
+        case enrollDescription
+        case enrollContinue
+        case enrollSkip
 
         var defaultValue: String {
             switch self {
@@ -69,6 +74,14 @@ extension OwnID.CoreSDK.TranslationsSDK {
                 return "steps.otp.\(type).resend"
             case .otpNotYou:
                 return "steps.otp.not-you"
+            case .enrollTitle:
+                return "enrollCredential.title"
+            case .enrollDescription:
+                return "enrollCredential.description"
+            case .enrollContinue:
+                return "enrollCredential.cta-ios"
+            case .enrollSkip:
+                return "enrollCredential.skip"
             }
         }
         
@@ -112,6 +125,14 @@ extension OwnID.CoreSDK.TranslationsSDK {
                 return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "steps", "otp", verificationType, operationType, "resend")
             case .otpNotYou(let operationType, let verificationType):
                 return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "steps", "otp", verificationType, operationType, "not-you")
+            case .enrollTitle:
+                return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "enrollCredential", "title")
+            case .enrollDescription:
+                return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "enrollCredential", "description")
+            case .enrollContinue:
+                return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "enrollCredential", "cta")
+            case .enrollSkip:
+                return OwnID.CoreSDK.shared.translationsModule.localizedString(for: "enrollCredential", "skip")
             }
         }
 

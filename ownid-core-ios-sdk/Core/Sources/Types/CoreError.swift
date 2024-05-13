@@ -8,6 +8,7 @@ public extension OwnID.CoreSDK {
         case fidoLogin
         case otp(flowType: String)
         case webApp
+        case enroll
         
         var source: String? {
             switch self {
@@ -36,6 +37,8 @@ extension OwnID.CoreSDK {
         static let emptyResponseData = "Response data is empty"
         static let requestError = "Error while performing action"
         static let webFrameError = "Requests from subframes are not supported"
+        static let fidoUnavailable = "FIDO unavailable"
+        static let enrollmentSkipped = "Credential enrollment was skipped"
         
         static func webSchemeURLError(urlString: String) -> String {
             return "WebAuthn not permitted for current URL: \(urlString)"

@@ -19,10 +19,31 @@ extension OwnID.CoreSDK {
     }
     
     struct JSMetadata: Decodable {
-        var category: EventCategory?
+        var category: JSMetadataCategory?
         let context: String?
         let siteUrl: String?
         let widgetId: String?
+        
+        enum CodingKeys: CodingKey {
+            case category, context, siteUrl, widgetId
+        }
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            
+            self.category = try? container.decodeIfPresent(JSMetadataCategory.self, forKey: .category) ?? .general
+            self.context = try container.decodeIfPresent(String.self, forKey: .context)
+            self.siteUrl = try container.decodeIfPresent(String.self, forKey: .siteUrl)
+            self.widgetId = try container.decodeIfPresent(String.self, forKey: .widgetId)
+        }
+    }
+    
+    enum JSMetadataCategory: String, Decodable {
+        case register
+        case login
+        case link
+        case recovery
+        case general
     }
     
     public class OwnIDWebBridge: NSObject, WKScriptMessageHandler {

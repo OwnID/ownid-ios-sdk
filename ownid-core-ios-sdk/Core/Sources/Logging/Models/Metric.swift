@@ -17,6 +17,10 @@ public extension OwnID.CoreSDK {
         case general
     }
     
+    enum AnalyticFidoType {
+        case general, enroll
+    }
+    
     enum AnalyticActionType {
         case loggedIn
         case registered
@@ -25,9 +29,9 @@ public extension OwnID.CoreSDK {
         case undo
         case cancel
         case cancelFlow
-        case fidoRun
-        case fidoNotFinished
-        case fidoFinished
+        case fidoRun(type: AnalyticFidoType)
+        case fidoNotFinished(type: AnalyticFidoType)
+        case fidoFinished(type: AnalyticFidoType)
         case fidoFailed
         case clickContinue
         case wrongOTP(name: String)
@@ -38,8 +42,23 @@ public extension OwnID.CoreSDK {
         case userPastedCode
         case webBridge(type: String)
         case error
+        case notNow
+        case close
+        case enrollSkipped
+        case clickEnroll
+        case enrollCompleted
+        case enrollFailed
                 
         var actionValue: String {
+            func fidoActionPrefix(type: AnalyticFidoType) -> String {
+                switch type {
+                case .general:
+                    return ""
+                case .enroll:
+                    return "[Device Enrollment] - "
+                }
+            }
+            
             switch self {
             case .loggedIn:
                 return "User is Logged in"
@@ -55,12 +74,12 @@ public extension OwnID.CoreSDK {
                 return "Clicked Cancel"
             case .cancelFlow:
                 return "User canceled OwnID flow"
-            case .fidoRun:
-                return "FIDO: About To Execute"
-            case .fidoNotFinished:
-                return "FIDO: Execution Did Not Complete"
-            case .fidoFinished:
-                return "FIDO: Execution Completed Successfully"
+            case .fidoRun(let type):
+                return "\(fidoActionPrefix(type: type))FIDO: About To Execute"
+            case .fidoNotFinished(let type):
+                return "\(fidoActionPrefix(type: type))FIDO: Execution Did Not Complete"
+            case .fidoFinished(let type):
+                return "\(fidoActionPrefix(type: type))FIDO: Execution Completed Successfully"
             case .fidoFailed:
                 return "FIDO: Failed, trying to register new one"
             case .clickContinue:
@@ -81,6 +100,18 @@ public extension OwnID.CoreSDK {
                 return "WebViewBridge: received command [FIDO:\(type)]"
             case .error:
                 return "Viewed Error"
+            case .notNow:
+                return "Clicked Not Now"
+            case .close:
+                return "Clicked Close"
+            case .enrollSkipped:
+                return "Skipped Device Enrollment"
+            case .clickEnroll:
+                return "Clicked Enroll Device"
+            case .enrollCompleted:
+                return "Completed Device Enrollment"
+            case .enrollFailed:
+                return "Failed Device Enrollment"
             }
         }
         
@@ -102,7 +133,13 @@ public extension OwnID.CoreSDK {
                     .screenShow,
                     .userPastedCode,
                     .webBridge,
-                    .error:
+                    .error,
+                    .notNow,
+                    .close,
+                    .enrollSkipped,
+                    .clickEnroll,
+                    .enrollCompleted,
+                    .enrollFailed:
                 return false
             case .loaded, .click, .undo:
                 return true

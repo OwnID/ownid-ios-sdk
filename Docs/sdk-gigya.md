@@ -24,6 +24,7 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
   + [Customize View Model](#customize-view-model-1)
   + [Social Login and Account linking](#social-login-and-account-linking)
 * [Tooltip](#tooltip)
+* [Credential enrollment](#credential-enrollment)
 * [Errors](#errors)
 * [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function)
 * [Button Appearance](#button-appearance)
@@ -346,6 +347,39 @@ HStack {
     SecureField("password", text: $password)
 }
 .zIndex(1)
+```
+
+## Credential enrollment
+
+The credential enrollment feature allows users to enroll credentials outside of the login/registration flows. You can trigger credential enrollment on demand, such as after the user registers with a password.
+
+There are 2 options to start the credential enrollment:
+
+```swift
+OwnID.CoreSDK.enrollCredential(loginIdPublisher: loginIdPublisher(),
+                               authTokenPublisher: authTokenPublisher())
+```
+where `loginIdPublisher` is a publisher that emits user's login ID, `authTokenPublisher` is a publisher that emits user's authentication token. Both parameters should conform to the `AnyPublisher<String, Never>` type. Also, they have default implementations provided by the OwnID Gigya iOS SDK via `OwnID.GigyaSDK.defaultLoginIdPublisher(instance: ...)` and `OwnID.GigyaSDK.defaultAuthTokenPublisher(instance: ...)`, respectively.
+
+```swift
+OwnID.CoreSDK.enrollCredential(loginId: String, authToken: String)
+```
+where `loginId` is a user's login ID, `authToken` is a user's authentication token.
+
+Optionally, to monitor the status of the last credential enrollment request, you can listen to enrollment events by subscribing to `enrollEventPublisher`:
+
+```swift
+OwnID.CoreSDK.enrollEventPublisher
+    .receive(on: DispatchQueue.main)
+    .sink { event in
+        switch event {
+        case .success:
+            ...
+        case .failure(let error):
+            ...
+        }
+    }
+    .store(in: &bag)
 ```
 
 ## Errors

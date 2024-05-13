@@ -5,7 +5,7 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.2.0"
+    static let version = "3.3.0"
 }
 
 public extension OwnID {
@@ -39,6 +39,29 @@ public extension OwnID {
                                     environment: environment,
                                     enableLogging: enableLogging,
                                     supportedLanguages: supportedLanguages)
+        }
+        
+        public static func defaultLoginIdPublisher<T: GigyaAccountProtocol>(instance: GigyaCore<T>) -> AnyPublisher<String, Never> {
+            Future<String, Never> { promise in
+                instance.getAccount(true) { result in
+                    if case let .success(data) = result {
+                        promise(.success(data.profile?.email ?? ""))
+                    }
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        
+        public static func defaultAuthTokenPublisher<T: GigyaAccountProtocol>(instance: GigyaCore<T>) -> AnyPublisher<String, Never> {
+            Future<String, Never> { promise in
+                instance.send(api: "accounts.getJWT") { result in
+                    if case let .success(data) = result {
+                        let authToken = data["id_token"]?.value as? String ?? ""
+                        promise(.success(authToken))
+                    }
+                }
+            }
+            .eraseToAnyPublisher()
         }
         
         /// Handles redirects from other flows back to the app

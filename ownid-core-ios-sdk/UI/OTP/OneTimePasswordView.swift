@@ -12,7 +12,6 @@ extension OwnID.UISDK {
                             context: OwnID.CoreSDK.Context?) {
         let operationType: OwnID.UISDK.OneTimePassword.OperationType = type == .loginIDAuthorization ? .oneTimePasswordSignIn : .verification
         let view = OwnID.UISDK.OneTimePassword.OneTimePasswordView(store: store,
-                                                                   visualConfig: OwnID.UISDK.OTPViewConfig(),
                                                                    loginId: loginId,
                                                                    codeLength: otpLength,
                                                                    restartURL: restartUrl,
@@ -57,7 +56,6 @@ extension OwnID.UISDK.OneTimePassword {
         private let uuid = UUID().uuidString
         
         private let viewModel: ViewModel
-        private var visualConfig: OwnID.UISDK.OTPViewConfig
         @ObservedObject var store: Store<ViewState, Action>
         private let codeLength: Int
         private let operationType: OperationType
@@ -74,14 +72,12 @@ extension OwnID.UISDK.OneTimePassword {
         }
         
         init(store: Store<ViewState, Action>,
-             visualConfig: OwnID.UISDK.OTPViewConfig,
              loginId: String,
              codeLength: Int,
              restartURL: URL,
              operationType: OperationType = .oneTimePasswordSignIn,
              verificationType: OwnID.CoreSDK.Verification.VerificationType,
              context: OwnID.CoreSDK.Context?) {
-            self.visualConfig = visualConfig
             self.store = store
             self.codeLength = codeLength
             self.restartURL = restartURL
@@ -190,8 +186,8 @@ extension OwnID.UISDK.OneTimePassword {
                         }
                     ZStack {
                         if store.value.isLoading {
-                            OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.loaderViewConfig.spinnerColor,
-                                                          circleColor: visualConfig.loaderViewConfig.circleColor,
+                            OwnID.UISDK.SpinnerLoaderView(spinnerColor: OwnID.Colors.spinnerColor,
+                                                          circleColor: OwnID.Colors.spinnerBackgroundColor,
                                                           viewBackgroundColor: .clear)
                             .frame(width: 28, height: 28)
                         }

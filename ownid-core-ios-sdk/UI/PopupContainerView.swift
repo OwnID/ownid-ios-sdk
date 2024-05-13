@@ -93,7 +93,7 @@ extension OwnID.UISDK {
         static let animationResponse = 0.32
         static let animationDampingFraction = 1.0
         static let animationDuration = 0.32
-        static let backgroundOpacity = 0.05
+        static let backgroundOpacity = 0.5
     }
     
     struct SliderBackground: ViewModifier {
@@ -101,14 +101,27 @@ extension OwnID.UISDK {
 
         func body(content: Content) -> some View {
             if #available(iOS 15.0, *) {
-                content
-                    .background(colorScheme == .dark ? .regularMaterial : .thinMaterial)
-                    .containerShape(RoundedCorner(radius: PopupViewContants.contentCornerRadius, corners: [.topLeft, .topRight]))
+                if colorScheme == .dark {
+                    content
+                        .background(.regularMaterial)
+                        .containerShape(RoundedCorner(radius: PopupViewContants.contentCornerRadius, corners: [.topLeft, .topRight]))
+                } else {
+                    content
+                        .background(OwnID.Colors.sliderBackground)
+                        .containerShape(RoundedCorner(radius: PopupViewContants.contentCornerRadius, corners: [.topLeft, .topRight]))
+                }
             } else {
-                content
-                    .background(Blur(style: colorScheme == .dark ? .dark : .light)
-                        .cornerRadius(PopupViewContants.contentCornerRadius, corners: [.topLeft, .topRight])
-                        .ignoresSafeArea())
+                if colorScheme == .dark {
+                    content
+                        .background(Blur(style: .dark)
+                            .cornerRadius(PopupViewContants.contentCornerRadius, corners: [.topLeft, .topRight])
+                            .ignoresSafeArea())
+                } else {
+                    content
+                        .background(OwnID.Colors.sliderBackground
+                            .cornerRadius(PopupViewContants.contentCornerRadius, corners: [.topLeft, .topRight])
+                            .ignoresSafeArea())
+                }
             }
         }
     }
