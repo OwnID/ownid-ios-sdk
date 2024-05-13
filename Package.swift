@@ -19,7 +19,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/SAP/gigya-swift-sdk.git", from: "1.5.10")
+        .package(url: "https://github.com/SAP/gigya-swift-sdk.git", from: "1.6.0")
     ],
     targets: [
         .target(
