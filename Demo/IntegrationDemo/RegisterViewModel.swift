@@ -4,7 +4,7 @@ import Combine
 
 final class RegisterViewModel: ObservableObject {
     @Published var firstName = ""
-    @Published var email = ""
+    @Published var loginId = ""
     @Published var password = ""
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
@@ -18,7 +18,7 @@ final class RegisterViewModel: ObservableObject {
     init() {
         let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: Registration(),
                                                                    loginPerformer: Login(),
-                                                                   loginIdPublisher: $email.eraseToAnyPublisher())
+                                                                   loginIdPublisher: $loginId.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
@@ -30,22 +30,13 @@ final class RegisterViewModel: ObservableObject {
                 case .success(let event):
                     switch event {
                     case let .readyToRegister(usersEmailFromWebApp, _):
-                        if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, email.isEmpty {
-                            email = usersEmailFromWebApp
+                        if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, loginId.isEmpty {
+                            loginId = usersEmailFromWebApp
                         }
                         isOwnIDEnabled = true
                         
                     case .userRegisteredAndLoggedIn(let registrationResult, _):
-                        CustomAuthSystem.fetchUserData(previousResult: registrationResult)
-                            .sink { completionRegister in
-                                if case .failure(let error) = completionRegister {
-                                    self.errorMessage = error.localizedDescription
-                                }
-                            } receiveValue: { model in
-                                self.loggedInModel = AccountModel(name: model.name, email: model.email)
-                            }
-                            .store(in: &bag)
-                        
+                        fetchProfile(previousResult: registrationResult)
                     case .loading:
                         print("Loading state")
                         
@@ -76,7 +67,27 @@ final class RegisterViewModel: ObservableObject {
         if isOwnIDEnabled {
             ownIDViewModel.register(registerParameters: RegistrationParameters(firstName: firstName))
         } else {
-            // ignoring register with default login & password
+            CustomAuthSystem.register(ownIdData: nil, password: password, email: loginId, name: firstName)
+                .sink { completionRegister in
+                    if case .failure(let error) = completionRegister {
+                        self.errorMessage = error.localizedDescription
+                    }
+                } receiveValue: { result in
+                    self.fetchProfile(previousResult: result.operationResult)
+                }
+                .store(in: &bag)
         }
+    }
+    
+    private func fetchProfile(previousResult: OperationResult) {
+        CustomAuthSystem.fetchUserData(previousResult: previousResult)
+            .sink { completionRegister in
+                if case .failure(let error) = completionRegister {
+                    self.errorMessage = error.localizedDescription
+                }
+            } receiveValue: { model in
+                self.loggedInModel = AccountModel(name: model.name, email: model.email)
+            }
+            .store(in: &bag)
     }
 }

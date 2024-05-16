@@ -4,7 +4,7 @@ import Combine
 
 final class RegisterViewModel: ObservableObject {
     @Published var firstName = ""
-    @Published var email = ""
+    @Published var loginId = ""
     @Published var password = ""
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
@@ -18,7 +18,7 @@ final class RegisterViewModel: ObservableObject {
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
     
     init() {
-        let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(loginIdPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(loginIdPublisher: $loginId.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.flowEventPublisher)
     }
@@ -32,7 +32,7 @@ final class RegisterViewModel: ObservableObject {
                     switch event {
                     case .response(let loginId, let payload, let authType):
                         isOwnIDEnabled = true
-                        email = loginId
+                        self.loginId = loginId
                         ownIdData = payload.data
                     case .loading:
                         print("Loading state")
@@ -50,26 +50,22 @@ final class RegisterViewModel: ObservableObject {
     }
     
     func register() {
-        if isOwnIDEnabled {
-            AuthSystem.register(ownIdData: ownIdData, 
-                                password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
-                                email: email,
-                                name: firstName)
-            .sink { completionRegister in
-                if case .failure(let error) = completionRegister {
-                    self.errorMessage = error.localizedDescription
-                }
-            } receiveValue: { result in
-                self.fetchUserData(result: result.operationResult)
+        AuthSystem.register(ownIdData: isOwnIDEnabled ? ownIdData : nil,
+                            password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
+                            email: loginId,
+                            name: firstName)
+        .sink { completionRegister in
+            if case .failure(let error) = completionRegister {
+                self.errorMessage = error.localizedDescription
             }
-            .store(in: &bag)
-        } else {
-            // ignoring register with default login & password
+        } receiveValue: { result in
+            self.fetchProfile(previousResult: result.operationResult)
         }
+        .store(in: &bag)
     }
     
-    private func fetchUserData(result: OperationResult) {
-        AuthSystem.fetchUserData(previousResult: result)
+    private func fetchProfile(previousResult: OperationResult) {
+        AuthSystem.fetchUserData(previousResult: previousResult)
             .sink { completionRegister in
                 if case .failure(let error) = completionRegister {
                     self.errorMessage = error.localizedDescription

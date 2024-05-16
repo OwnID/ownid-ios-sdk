@@ -16,7 +16,7 @@ private extension RegisterView {
         VStack {
             fields()
                 .zIndex(1)
-            Button("Create Account", action: viewModel.register)
+            BlueButton(text: "Create Account", action: viewModel.register)
             Text(viewModel.errorMessage)
                 .font(.headline)
                 .foregroundColor(.red)
@@ -32,11 +32,13 @@ private extension RegisterView {
                 TextField("First name", text: $viewModel.firstName)
                     .textContentType(.givenName)
                     .keyboardType(.alphabet)
+                    .fieldStyle()
                     .padding(.bottom, 9)
-                TextField("Email", text: $viewModel.email)
+                TextField("Email", text: $viewModel.loginId)
                     .autocapitalization(.none)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
+                    .fieldStyle()
                     .padding(.bottom, 9)
                 passwordField()
             }
@@ -54,6 +56,7 @@ private extension RegisterView {
                 .textContentType(.password)
                 .keyboardType(.emailAddress)
                 .disabled(viewModel.isOwnIDEnabled)
+                .fieldStyle()
             }
     }
     

@@ -3,18 +3,21 @@ import OwnIDCoreSDK
 
 extension IntegrationDemoApp {
     static let clientName = "Integration"
-    static let version = "3.1.0"
+    static let version = "3.3.0"
 }
 
 @main
 struct IntegrationDemoApp: App {
+    @StateObject private var coordinator: AppCoordinator = AppCoordinator()
+    
     init() {
         OwnID.CoreSDK.configure(userFacingSDK: IntegrationDemoApp.info())
     }
     
     var body: some Scene {
         WindowGroup {
-            LoginAndRegisterView()
+            AppCoordinatorView()
+                .environmentObject(coordinator)
         }
     }
     

@@ -18,6 +18,7 @@ public struct AccountView: View {
     
     let model: AccountModel
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var coordinator: AppCoordinator
     
     public var body: some View {
         VStack {
@@ -36,6 +37,7 @@ public struct AccountView: View {
             }
             .padding(.bottom)
             Button("Close", action: {
+                coordinator.showLogInView()
                 presentationMode.wrappedValue.dismiss()
             })
         }

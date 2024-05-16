@@ -6,7 +6,7 @@ final class LogInViewModel: ObservableObject {
     // MARK: OwnID
     var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
-    @Published var email = ""
+    @Published var loginId = ""
     @Published var password = ""
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
@@ -14,7 +14,7 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
-        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $loginId.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
@@ -27,18 +27,7 @@ final class LogInViewModel: ObservableObject {
                 case .success(let event):
                     switch event {
                     case .loggedIn:
-                        Task.init {
-                            if let profile = try? await Gigya.sharedInstance().getAccount(true).profile {
-                                let email = profile.email ?? ""
-                                let name = profile.firstName ?? ""
-                                let model = AccountModel(name: name, email: email)
-                                await MainActor.run {
-                                    loggedInModel = model
-                                }
-                            } else {
-                                errorMessage = "Cannot find logged in profile"
-                            }
-                        }
+                        fetchProfile()
                         
                     case .loading:
                         print("Loading state")
@@ -64,5 +53,31 @@ final class LogInViewModel: ObservableObject {
                 }
             }
             .store(in: &bag)
+    }
+    
+    func logIn() {
+        Gigya.sharedInstance().login(loginId: loginId, password: password) { [weak self] result in
+            switch result {
+            case .success:
+                self?.fetchProfile()
+            case .failure(let error):
+                self?.errorMessage = error.error.localizedDescription
+            }
+        }
+    }
+    
+    private func fetchProfile() {
+        Task.init {
+            if let profile = try? await Gigya.sharedInstance().getAccount(true).profile {
+                let email = profile.email ?? ""
+                let name = profile.firstName ?? ""
+                let model = AccountModel(name: name, email: email)
+                await MainActor.run {
+                    loggedInModel = model
+                }
+            } else {
+                errorMessage = "Cannot find logged in profile"
+            }
+        }
     }
 }
