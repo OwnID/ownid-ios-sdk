@@ -7,7 +7,7 @@ struct GigyaDemoApp: App {
     @StateObject private var coordinator: AppCoordinator = AppCoordinator()
     
     init() {
-        Gigya.sharedInstance().initFor(apiKey: "3_hOdIVleWrXNvjArcZRwHJLiGA4e6Jrcwq7RfH5nL7ZUHyI_77z43_IQrJYxLbiq_", apiDomain: "us1.gigya.com")
+        Gigya.sharedInstance().initFor(apiKey: "3_O4QE0Kk7QstG4VGDPED5omrr8mgbTuf_Gim8V_Y19YDP75m_msuGtNGQz89X0KWP", apiDomain: "us1.gigya.com")
         OwnID.GigyaSDK.configure()
     }
     
