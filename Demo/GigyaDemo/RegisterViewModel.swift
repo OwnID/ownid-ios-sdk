@@ -5,7 +5,7 @@ import Gigya
 
 final class RegisterViewModel: ObservableObject {
     @Published var firstName = ""
-    @Published var email = ""
+    @Published var loginId = ""
     @Published var password = ""
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
@@ -17,7 +17,7 @@ final class RegisterViewModel: ObservableObject {
     var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
     
     init() {
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $loginId.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
@@ -30,24 +30,13 @@ final class RegisterViewModel: ObservableObject {
                 case .success(let event):
                     switch event {
                     case let .readyToRegister(usersEmailFromWebApp, _):
-                        if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, email.isEmpty {
-                            email = usersEmailFromWebApp
+                        if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, loginId.isEmpty {
+                            loginId = usersEmailFromWebApp
                         }
                         isOwnIDEnabled = true
                         
                     case .userRegisteredAndLoggedIn:
-                        Task.init {
-                            if let profile = try? await Gigya.sharedInstance().getAccount(true).profile {
-                                let email = profile.email ?? ""
-                                let name = profile.firstName ?? ""
-                                let model = AccountModel(name: name, email: email)
-                                await MainActor.run {
-                                    loggedInModel = model
-                                }
-                            } else {
-                                errorMessage = "Cannot find logged in profile"
-                            }
-                        }
+                        fetchProfile()
                         
                     case .loading:
                         print("Loading state")
@@ -78,13 +67,37 @@ final class RegisterViewModel: ObservableObject {
     }
     
     func register() {
+        let nameValue = "{ \"firstName\": \"\(firstName)\" }"
+        let paramsDict = ["profile": nameValue]
+        let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
+        
         if isOwnIDEnabled {
-            let nameValue = "{ \"firstName\": \"\(firstName)\" }"
-            let paramsDict = ["profile": nameValue]
-            let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
             ownIDViewModel.register(registerParameters: params)
         } else {
-            // ignoring register with default login & password
+            Gigya.sharedInstance().register(email: loginId, password: password, params: params.parameters) { [weak self] result in
+                switch result {
+                case .success:
+                    self?.fetchProfile()
+                    
+                case .failure(let error):
+                    self?.errorMessage = "Cannot find logged in profile"
+                }
+            }
+        }
+    }
+    
+    func fetchProfile() {
+        Task.init {
+            if let profile = try? await Gigya.sharedInstance().getAccount(true).profile {
+                let email = profile.email ?? ""
+                let name = profile.firstName ?? ""
+                let model = AccountModel(name: name, email: email)
+                await MainActor.run {
+                    loggedInModel = model
+                }
+            } else {
+                errorMessage = "Cannot find logged in profile"
+            }
         }
     }
 }

@@ -3,6 +3,8 @@ import Combine
 import OwnIDCoreSDK
 
 final class AuthSystem {
+    private static let baseURL = "..."
+    
     static func register(ownIdData: String?,
                          password: String,
                          email: String,
@@ -44,7 +46,7 @@ final class AuthSystem {
             .tryMap { try JSONSerialization.data(withJSONObject: $0) }
             .mapError { OwnID.CoreSDK.Error.integrationError(underlying: $0) }
             .map { payloadData -> URLRequest in
-                var request = URLRequest(url: URL(string: "https://node-mongo.custom.demo.dev.ownid.com/api/auth/register")!)
+                var request = URLRequest(url: URL(string: "\(baseURL)/register")!)
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.httpMethod = "POST"
                 request.httpBody = payloadData
@@ -75,7 +77,7 @@ final class AuthSystem {
             .eraseToAnyPublisher()
             .tryMap { try JSONSerialization.data(withJSONObject: $0) }
             .map { payloadData -> URLRequest in
-                var request = URLRequest(url: URL(string: "https://node-mongo.custom.demo.dev.ownid.com/api/auth/login")!)
+                var request = URLRequest(url: URL(string: "\(baseURL)/login")!)
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.httpMethod = "POST"
                 request.httpBody = payloadData
@@ -101,7 +103,7 @@ final class AuthSystem {
             .setFailureType(to: OwnID.CoreSDK.Error.self)
             .eraseToAnyPublisher()
             .map { previousResult -> URLRequest in
-                var request = URLRequest(url: URL(string: "https://node-mongo.custom.demo.dev.ownid.com/api/auth/profile")!)
+                var request = URLRequest(url: URL(string: "\(baseURL)/profile")!)
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.setValue("Bearer \(previousResult)", forHTTPHeaderField: "Authorization")
                 request.httpMethod = "GET"

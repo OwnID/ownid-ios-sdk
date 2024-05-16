@@ -27,7 +27,6 @@
 		16E2D833290B019D00AF28E4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D832290B019D00AF28E4 /* Preview Assets.xcassets */; };
 		16E3575E290C074C0059B5A2 /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35759290C074B0059B5A2 /* LogInView.swift */; };
 		16E3575F290C074C0059B5A2 /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575A290C074B0059B5A2 /* LogInViewModel.swift */; };
-		16E35760290C074C0059B5A2 /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */; };
 		16E35761290C074C0059B5A2 /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */; };
 		16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E3575D290C074C0059B5A2 /* RegisterView.swift */; };
 		7FA502B6B07AD91D8A4376B3 /* Pods_DirectDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBDF2EE9C8DF640E4FF41F4 /* Pods_DirectDemo.framework */; };
@@ -36,7 +35,6 @@
 		CE1DC0932B9F296000CF321D /* DirectDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0922B9F296000CF321D /* DirectDemoApp.swift */; };
 		CE1DC0972B9F296300CF321D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE1DC0962B9F296300CF321D /* Assets.xcassets */; };
 		CE1DC09A2B9F296300CF321D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE1DC0992B9F296300CF321D /* Preview Assets.xcassets */; };
-		CE1DC09F2B9F421C00CF321D /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC09E2B9F421C00CF321D /* LoginAndRegisterView.swift */; };
 		CE1DC0A12B9F424D00CF321D /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A02B9F424D00CF321D /* LogInView.swift */; };
 		CE1DC0A32B9F425800CF321D /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A22B9F425800CF321D /* LogInViewModel.swift */; };
 		CE1DC0A52B9F426F00CF321D /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A42B9F426F00CF321D /* RegisterView.swift */; };
@@ -44,11 +42,33 @@
 		CE1DC0A92B9F428D00CF321D /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0A82B9F428D00CF321D /* AccountView.swift */; };
 		CE1DC0AB2B9F4C5F00CF321D /* OwnIDConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = CE1DC0AA2B9F4C5F00CF321D /* OwnIDConfiguration.plist */; };
 		CE1DC0AE2B9F4CE600CF321D /* AuthSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1DC0AD2B9F4CE600CF321D /* AuthSystem.swift */; };
+		CE3686D72BF4E897007BF445 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686D62BF4E897007BF445 /* AppState.swift */; };
+		CE3686D92BF4E8AE007BF445 /* AppCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686D82BF4E8AE007BF445 /* AppCoordinatorView.swift */; };
+		CE3686DB2BF4E8BE007BF445 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */; };
+		CE3686DD2BF4E8FA007BF445 /* LoggedOutCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DC2BF4E8FA007BF445 /* LoggedOutCoordinatorView.swift */; };
+		CE3686DF2BF4E988007BF445 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DE2BF4E988007BF445 /* AppCoordinator.swift */; };
+		CE3686E52BF50DCC007BF445 /* BlueButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686E42BF50DCC007BF445 /* BlueButton.swift */; };
 		CE7879512B1746DC00FA098D /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E35752290BE3180059B5A2 /* AccountView.swift */; };
+		CEA108172BF5F31700AD90E4 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DE2BF4E988007BF445 /* AppCoordinator.swift */; };
+		CEA108182BF5F31800AD90E4 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DE2BF4E988007BF445 /* AppCoordinator.swift */; };
+		CEA108192BF5F31B00AD90E4 /* AppCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686D82BF4E8AE007BF445 /* AppCoordinatorView.swift */; };
+		CEA1081A2BF5F31B00AD90E4 /* AppCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686D82BF4E8AE007BF445 /* AppCoordinatorView.swift */; };
+		CEA1081B2BF5F31D00AD90E4 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686D62BF4E897007BF445 /* AppState.swift */; };
+		CEA1081C2BF5F31E00AD90E4 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686D62BF4E897007BF445 /* AppState.swift */; };
+		CEA1081D2BF5F32B00AD90E4 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */; };
+		CEA1081E2BF5F32B00AD90E4 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */; };
+		CEA1081F2BF5F33900AD90E4 /* LoggedOutCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DC2BF4E8FA007BF445 /* LoggedOutCoordinatorView.swift */; };
+		CEA108202BF5F33900AD90E4 /* LoggedOutCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DC2BF4E8FA007BF445 /* LoggedOutCoordinatorView.swift */; };
+		CEA108232BF5F82100AD90E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
+		CEA108242BF5F82200AD90E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
+		CEA108272BF5F89100AD90E4 /* FieldStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA108252BF5F88800AD90E4 /* FieldStyle.swift */; };
+		CEA108282BF5F89100AD90E4 /* FieldStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA108252BF5F88800AD90E4 /* FieldStyle.swift */; };
+		CEA108292BF5F98200AD90E4 /* FieldStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA108252BF5F88800AD90E4 /* FieldStyle.swift */; };
+		CEA1082A2BF5FB5E00AD90E4 /* BlueButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686E42BF50DCC007BF445 /* BlueButton.swift */; };
+		CEA1082B2BF5FB5F00AD90E4 /* BlueButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686E42BF50DCC007BF445 /* BlueButton.swift */; };
 		CEB907CE2B4D969300C8966B /* IntegrationDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB907CD2B4D969300C8966B /* IntegrationDemoApp.swift */; };
 		CEB907D22B4D969500C8966B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CEB907D12B4D969500C8966B /* Assets.xcassets */; };
 		CEB907D52B4D969500C8966B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CEB907D42B4D969500C8966B /* Preview Assets.xcassets */; };
-		CEB907DA2B4D9B9B00C8966B /* LoginAndRegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB907D92B4D9B9B00C8966B /* LoginAndRegisterView.swift */; };
 		CEB907DC2B4D9BC600C8966B /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB907DB2B4D9BC600C8966B /* LogInView.swift */; };
 		CEB907DE2B4D9BF000C8966B /* LogInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB907DD2B4D9BF000C8966B /* LogInViewModel.swift */; };
 		CEB907E02B4D9C0A00C8966B /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB907DF2B4D9C0A00C8966B /* RegisterView.swift */; };
@@ -115,7 +135,6 @@
 		16E35752290BE3180059B5A2 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
 		16E35759290C074B0059B5A2 /* LogInView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
 		16E3575A290C074B0059B5A2 /* LogInViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
-		16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
 		16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
 		16E3575D290C074C0059B5A2 /* RegisterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		16FCA8A0290B040E00CF6E82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -135,7 +154,6 @@
 		CE1DC0922B9F296000CF321D /* DirectDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectDemoApp.swift; sourceTree = "<group>"; };
 		CE1DC0962B9F296300CF321D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CE1DC0992B9F296300CF321D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		CE1DC09E2B9F421C00CF321D /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
 		CE1DC0A02B9F424D00CF321D /* LogInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
 		CE1DC0A22B9F425800CF321D /* LogInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
 		CE1DC0A42B9F426F00CF321D /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
@@ -144,13 +162,19 @@
 		CE1DC0AA2B9F4C5F00CF321D /* OwnIDConfiguration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = OwnIDConfiguration.plist; sourceTree = "<group>"; };
 		CE1DC0AC2B9F4C8100CF321D /* DirectDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DirectDemo.entitlements; sourceTree = "<group>"; };
 		CE1DC0AD2B9F4CE600CF321D /* AuthSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSystem.swift; sourceTree = "<group>"; };
+		CE3686D62BF4E897007BF445 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		CE3686D82BF4E8AE007BF445 /* AppCoordinatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinatorView.swift; sourceTree = "<group>"; };
+		CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
+		CE3686DC2BF4E8FA007BF445 /* LoggedOutCoordinatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutCoordinatorView.swift; sourceTree = "<group>"; };
+		CE3686DE2BF4E988007BF445 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		CE3686E42BF50DCC007BF445 /* BlueButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlueButton.swift; sourceTree = "<group>"; };
 		CE78794F2B172CD900FA098D /* GigyaDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GigyaDemo.entitlements; sourceTree = "<group>"; };
 		CE7879532B178F2700FA098D /* UIKitInjectionDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = UIKitInjectionDemo.entitlements; sourceTree = "<group>"; };
+		CEA108252BF5F88800AD90E4 /* FieldStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldStyle.swift; sourceTree = "<group>"; };
 		CEB907CB2B4D969200C8966B /* IntegrationDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEB907CD2B4D969300C8966B /* IntegrationDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationDemoApp.swift; sourceTree = "<group>"; };
 		CEB907D12B4D969500C8966B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CEB907D42B4D969500C8966B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		CEB907D92B4D9B9B00C8966B /* LoginAndRegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginAndRegisterView.swift; sourceTree = "<group>"; };
 		CEB907DB2B4D9BC600C8966B /* LogInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
 		CEB907DD2B4D9BF000C8966B /* LogInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInViewModel.swift; sourceTree = "<group>"; };
 		CEB907DF2B4D9C0A00C8966B /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
@@ -267,7 +291,6 @@
 				16FCA8A0290B040E00CF6E82 /* Info.plist */,
 				16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */,
 				16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */,
-				16E3575B290C074C0059B5A2 /* LoginAndRegisterView.swift */,
 				16E35759290C074B0059B5A2 /* LogInView.swift */,
 				16E3575A290C074B0059B5A2 /* LogInViewModel.swift */,
 				16E3575D290C074C0059B5A2 /* RegisterView.swift */,
@@ -290,6 +313,7 @@
 		16FBF258290A8E0800148C8C = {
 			isa = PBXGroup;
 			children = (
+				CEA108142BF5F2DB00AD90E4 /* Shared */,
 				16E2D82A290B019D00AF28E4 /* GigyaDemo */,
 				161C475B290AE94F0014D737 /* ScreensetsDemo */,
 				CEB907CC2B4D969200C8966B /* IntegrationDemo */,
@@ -348,7 +372,6 @@
 				CE1DC0AC2B9F4C8100CF321D /* DirectDemo.entitlements */,
 				CE1DC0AA2B9F4C5F00CF321D /* OwnIDConfiguration.plist */,
 				CE1DC0922B9F296000CF321D /* DirectDemoApp.swift */,
-				CE1DC09E2B9F421C00CF321D /* LoginAndRegisterView.swift */,
 				CE1DC0A02B9F424D00CF321D /* LogInView.swift */,
 				CE1DC0A22B9F425800CF321D /* LogInViewModel.swift */,
 				CE1DC0A42B9F426F00CF321D /* RegisterView.swift */,
@@ -369,13 +392,26 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		CEA108142BF5F2DB00AD90E4 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				CE3686DE2BF4E988007BF445 /* AppCoordinator.swift */,
+				CE3686D82BF4E8AE007BF445 /* AppCoordinatorView.swift */,
+				CE3686D62BF4E897007BF445 /* AppState.swift */,
+				CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */,
+				CE3686DC2BF4E8FA007BF445 /* LoggedOutCoordinatorView.swift */,
+				CE3686E42BF50DCC007BF445 /* BlueButton.swift */,
+				CEA108252BF5F88800AD90E4 /* FieldStyle.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		CEB907CC2B4D969200C8966B /* IntegrationDemo */ = {
 			isa = PBXGroup;
 			children = (
 				CEDD45692B4DAEE700C8ACF7 /* IntegrationDemo.entitlements */,
 				CEDD45662B4DA52400C8ACF7 /* OwnIDConfiguration.plist */,
 				CEB907CD2B4D969300C8966B /* IntegrationDemoApp.swift */,
-				CEB907D92B4D9B9B00C8966B /* LoginAndRegisterView.swift */,
 				CEB907DB2B4D9BC600C8966B /* LogInView.swift */,
 				CEB907DD2B4D9BF000C8966B /* LogInViewModel.swift */,
 				CEB907DF2B4D9C0A00C8966B /* RegisterView.swift */,
@@ -584,6 +620,7 @@
 			files = (
 				CE1DC09A2B9F296300CF321D /* Preview Assets.xcassets in Resources */,
 				CE1DC0972B9F296300CF321D /* Assets.xcassets in Resources */,
+				CEA108232BF5F82100AD90E4 /* Assets.xcassets in Resources */,
 				CE1DC0AB2B9F4C5F00CF321D /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -594,6 +631,7 @@
 			files = (
 				CEB907D52B4D969500C8966B /* Preview Assets.xcassets in Resources */,
 				CEB907D22B4D969500C8966B /* Assets.xcassets in Resources */,
+				CEA108242BF5F82200AD90E4 /* Assets.xcassets in Resources */,
 				CEDD45672B4DA52400C8ACF7 /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -824,12 +862,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE3686DF2BF4E988007BF445 /* AppCoordinator.swift in Sources */,
 				16E3575E290C074C0059B5A2 /* LogInView.swift in Sources */,
 				16E35761290C074C0059B5A2 /* RegisterViewModel.swift in Sources */,
-				16E35760290C074C0059B5A2 /* LoginAndRegisterView.swift in Sources */,
+				CE3686D92BF4E8AE007BF445 /* AppCoordinatorView.swift in Sources */,
+				CEA108292BF5F98200AD90E4 /* FieldStyle.swift in Sources */,
+				CE3686D72BF4E897007BF445 /* AppState.swift in Sources */,
+				CE3686DB2BF4E8BE007BF445 /* HeaderView.swift in Sources */,
 				16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */,
 				CE7879512B1746DC00FA098D /* AccountView.swift in Sources */,
 				16E3575F290C074C0059B5A2 /* LogInViewModel.swift in Sources */,
+				CE3686E52BF50DCC007BF445 /* BlueButton.swift in Sources */,
+				CE3686DD2BF4E8FA007BF445 /* LoggedOutCoordinatorView.swift in Sources */,
 				16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -839,13 +883,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				CE1DC0A32B9F425800CF321D /* LogInViewModel.swift in Sources */,
+				CEA108202BF5F33900AD90E4 /* LoggedOutCoordinatorView.swift in Sources */,
+				CEA108282BF5F89100AD90E4 /* FieldStyle.swift in Sources */,
 				CE1DC0A72B9F427D00CF321D /* RegisterViewModel.swift in Sources */,
 				CE1DC0AE2B9F4CE600CF321D /* AuthSystem.swift in Sources */,
 				CE1DC0A52B9F426F00CF321D /* RegisterView.swift in Sources */,
 				CE1DC0A12B9F424D00CF321D /* LogInView.swift in Sources */,
 				CE1DC0A92B9F428D00CF321D /* AccountView.swift in Sources */,
+				CEA1081C2BF5F31E00AD90E4 /* AppState.swift in Sources */,
+				CEA1081E2BF5F32B00AD90E4 /* HeaderView.swift in Sources */,
+				CEA108182BF5F31800AD90E4 /* AppCoordinator.swift in Sources */,
+				CEA1082B2BF5FB5F00AD90E4 /* BlueButton.swift in Sources */,
 				CE1DC0932B9F296000CF321D /* DirectDemoApp.swift in Sources */,
-				CE1DC09F2B9F421C00CF321D /* LoginAndRegisterView.swift in Sources */,
+				CEA1081A2BF5F31B00AD90E4 /* AppCoordinatorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -854,14 +904,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				CEB907DE2B4D9BF000C8966B /* LogInViewModel.swift in Sources */,
+				CEA108192BF5F31B00AD90E4 /* AppCoordinatorView.swift in Sources */,
 				CEB907E22B4D9C2100C8966B /* RegisterViewModel.swift in Sources */,
+				CEA1081B2BF5F31D00AD90E4 /* AppState.swift in Sources */,
+				CEA108172BF5F31700AD90E4 /* AppCoordinator.swift in Sources */,
 				CEB907E62B4DA08A00C8966B /* AuthPerformer.swift in Sources */,
+				CEA108272BF5F89100AD90E4 /* FieldStyle.swift in Sources */,
 				CEB907E02B4D9C0A00C8966B /* RegisterView.swift in Sources */,
 				CEB907E42B4D9D8C00C8966B /* CustomAuthSystem.swift in Sources */,
+				CEA1081F2BF5F33900AD90E4 /* LoggedOutCoordinatorView.swift in Sources */,
 				CEB907DC2B4D9BC600C8966B /* LogInView.swift in Sources */,
+				CEA1082A2BF5FB5E00AD90E4 /* BlueButton.swift in Sources */,
 				CEB907E92B4DA32000C8966B /* AccountView.swift in Sources */,
-				CEB907DA2B4D9B9B00C8966B /* LoginAndRegisterView.swift in Sources */,
 				CEB907CE2B4D969300C8966B /* IntegrationDemoApp.swift in Sources */,
+				CEA1081D2BF5F32B00AD90E4 /* HeaderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -912,7 +968,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya.screens;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -950,7 +1006,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya.screens;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -986,7 +1042,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1022,7 +1078,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1060,7 +1116,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1098,7 +1154,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.gigya;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1253,7 +1309,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.custom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1295,7 +1351,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.custom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1336,7 +1392,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.custom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1378,7 +1434,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.custom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

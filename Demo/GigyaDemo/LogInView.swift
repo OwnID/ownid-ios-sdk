@@ -1,5 +1,5 @@
 import SwiftUI
-import OwnIDCoreSDK
+import OwnIDGigyaSDK
 
 struct LogInView: View {
     @ObservedObject private var viewModel = LogInViewModel()
@@ -8,7 +8,7 @@ struct LogInView: View {
         VStack {
             fields()
                 .zIndex(1)
-            Button("Log in", action: { /* ignoring login with password */ })
+            BlueButton(text: "Log in", action: viewModel.logIn)
             Text(viewModel.errorMessage)
                 .font(.headline)
                 .foregroundColor(.red)
@@ -25,9 +25,11 @@ private extension LogInView {
     func fields() -> some View {
         Group {
             VStack(alignment: .leading) {
-                TextField("Email", text: $viewModel.email)
+                TextField("Email", text: $viewModel.loginId)
+                    .autocapitalization(.none)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
+                    .fieldStyle()
                     .padding(.bottom, 9)
                 passwordField()
             }
@@ -44,6 +46,7 @@ private extension LogInView {
             SecureField("Password", text: $viewModel.password)
                 .textContentType(.password)
                 .keyboardType(.emailAddress)
+                .fieldStyle()
         }
     }
     

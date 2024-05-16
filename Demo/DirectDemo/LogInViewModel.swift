@@ -5,7 +5,7 @@ final class LogInViewModel: ObservableObject {
     // MARK: OwnID
     var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
-    @Published var email = ""
+    @Published var loginId = ""
     @Published var password = ""
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
@@ -13,7 +13,7 @@ final class LogInViewModel: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     init() {
-        let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginIdPublisher: $email.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginIdPublisher: $loginId.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.flowEventPublisher)
     }
@@ -26,7 +26,7 @@ final class LogInViewModel: ObservableObject {
                 case .success(let event):
                     switch event {
                     case .response(let loginId, let payload, let authType):
-                        email = loginId
+                        self.loginId = loginId
                         
                         AuthSystem.login(ownIdData: payload.data, email: loginId)
                             .sink { completionRegister in
@@ -34,7 +34,7 @@ final class LogInViewModel: ObservableObject {
                                     self.errorMessage = error.localizedDescription
                                 }
                             } receiveValue: { result in
-                                self.fetchUserData(result: result.operationResult)
+                                self.fetchProfile(previousResult: result.operationResult)
                             }
                             .store(in: &bag)
                     case .loading:
@@ -49,8 +49,20 @@ final class LogInViewModel: ObservableObject {
             .store(in: &bag)
     }
     
-    private func fetchUserData(result: OperationResult) {
-        AuthSystem.fetchUserData(previousResult: result)
+    func logIn() {
+        AuthSystem.login(ownIdData: nil, password: password, email: loginId)
+            .sink { completionRegister in
+                if case .failure(let error) = completionRegister {
+                    self.errorMessage = error.localizedDescription
+                }
+            } receiveValue: { result in
+                self.fetchProfile(previousResult: result.operationResult)
+            }
+            .store(in: &bag)
+    }
+    
+    private func fetchProfile(previousResult: OperationResult) {
+        AuthSystem.fetchUserData(previousResult: previousResult)
             .sink { completionRegister in
                 if case .failure(let error) = completionRegister {
                     self.errorMessage = error.localizedDescription
