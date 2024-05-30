@@ -1,10 +1,18 @@
 import Combine
 import OwnIDCoreSDK
 
+extension LogInViewModel {
+    enum State {
+        case initial
+        case loading
+    }
+}
+
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
     var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
+    @Published private(set) var state = State.initial
     @Published var loginId = ""
     @Published var password = ""
     @Published var errorMessage = ""
@@ -42,6 +50,7 @@ final class LogInViewModel: ObservableObject {
                     }
                     
                 case .failure(let ownIDSDKError):
+                    state = .initial
                     print(ownIDSDKError.localizedDescription)
                     errorMessage = ownIDSDKError.localizedDescription
                 }
@@ -50,12 +59,14 @@ final class LogInViewModel: ObservableObject {
     }
     
     func logIn() {
+        state = .loading
         AuthSystem.login(ownIdData: nil, password: password, email: loginId)
             .sink { completionRegister in
                 if case .failure(let error) = completionRegister {
                     self.errorMessage = error.localizedDescription
                 }
             } receiveValue: { result in
+                self.state = .initial
                 self.fetchProfile(previousResult: result.operationResult)
             }
             .store(in: &bag)
@@ -71,5 +82,12 @@ final class LogInViewModel: ObservableObject {
                 self.loggedInModel = AccountModel(name: model.name, email: model.email)
             }
             .store(in: &bag)
+    }
+    
+    func reset() {
+        state = .initial
+        loginId = ""
+        password = ""
+        errorMessage = ""
     }
 }

@@ -3,23 +3,58 @@ import OwnIDCoreSDK
 
 struct LogInView: View {
     @ObservedObject private var viewModel = LogInViewModel()
+    @EnvironmentObject var coordinator: AppCoordinator
     
     var body: some View {
-        VStack {
-            fields()
-                .zIndex(1)
-            BlueButton(text: "Log in", action: viewModel.logIn)
-            Text(viewModel.errorMessage)
-                .font(.headline)
-                .foregroundColor(.red)
-        }
-        .fullScreenCover(item: $viewModel.loggedInModel) { model in
-            AccountView(model: model)
-        }
+        page()
+            .onDisappear(perform: {
+                viewModel.reset()
+            })
+            .onChange(of: viewModel.loggedInModel) { value in
+                if let model = value {
+                    coordinator.showLoggedIn(model: model)
+                }
+            }
     }
 }
 
 private extension LogInView {
+    @ViewBuilder
+    func page() -> some View {
+        switch viewModel.state {
+        case .loading:
+            content()
+                .loading()
+            
+        case .initial:
+            content()
+        }
+    }
+    
+    func content() -> some View {
+        GeometryReader { proxy in
+            ScrollView {
+                VStack {
+                    HeaderView()
+                    Group {
+                        fields()
+                            .zIndex(1)
+                            .padding(.top, proxy.size.height / 10)
+                        BlueButton(text: "Log in", action: viewModel.logIn)
+                        Text(viewModel.errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.top)
+                    }
+                    .padding(.horizontal, 20)
+                    Spacer()
+                }
+                .frame(minHeight: proxy.size.height)
+            }
+        }
+        .edgesIgnoringSafeArea([.top, .bottom])
+    }
+
     
     @ViewBuilder
     func fields() -> some View {

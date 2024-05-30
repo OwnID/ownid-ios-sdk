@@ -9,4 +9,15 @@ extension View {
             .background(backgroundColor)
             .cornerRadius(6)
     }
+    
+    func loading() -> some View {
+        ZStack(alignment: .center) {
+            self
+                .disabled(true)
+                .blur(radius: 3)
+            
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle())
+        }
+    }
 }

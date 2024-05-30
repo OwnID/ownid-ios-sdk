@@ -2,7 +2,15 @@ import Foundation
 import OwnIDCoreSDK
 import Combine
 
+extension RegisterViewModel {
+    enum State {
+        case initial
+        case loading
+    }
+}
+
 final class RegisterViewModel: ObservableObject {
+    @Published private(set) var state = State.initial
     @Published var firstName = ""
     @Published var loginId = ""
     @Published var password = ""
@@ -33,6 +41,7 @@ final class RegisterViewModel: ObservableObject {
                         if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, loginId.isEmpty {
                             loginId = usersEmailFromWebApp
                         }
+                        state = .initial
                         isOwnIDEnabled = true
                         
                     case .userRegisteredAndLoggedIn(let registrationResult, _):
@@ -45,6 +54,7 @@ final class RegisterViewModel: ObservableObject {
                     }
                     
                 case .failure(let ownIDSDKError):
+                    state = .initial
                     print(ownIDSDKError.localizedDescription)
                     errorMessage = ownIDSDKError.localizedDescription
                     switch ownIDSDKError {
@@ -64,6 +74,7 @@ final class RegisterViewModel: ObservableObject {
     }
     
     func register() {
+        state = .loading
         if isOwnIDEnabled {
             ownIDViewModel.register(registerParameters: RegistrationParameters(firstName: firstName))
         } else {
@@ -71,6 +82,7 @@ final class RegisterViewModel: ObservableObject {
                 .sink { completionRegister in
                     if case .failure(let error) = completionRegister {
                         self.errorMessage = error.localizedDescription
+                        self.state = .initial
                     }
                 } receiveValue: { result in
                     self.fetchProfile(previousResult: result.operationResult)
@@ -90,4 +102,14 @@ final class RegisterViewModel: ObservableObject {
             }
             .store(in: &bag)
     }
+    
+    func reset() {
+        state = .initial
+        firstName = ""
+        loginId = ""
+        password = ""
+        isOwnIDEnabled = false
+        errorMessage = ""
+    }
+
 }

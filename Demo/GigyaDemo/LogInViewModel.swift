@@ -2,10 +2,18 @@ import Combine
 import OwnIDCoreSDK
 import Gigya
 
+extension LogInViewModel {
+    enum State {
+        case initial
+        case loading
+    }
+}
+
 final class LogInViewModel: ObservableObject {
     // MARK: OwnID
     var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     
+    @Published private(set) var state = State.initial
     @Published var loginId = ""
     @Published var password = ""
     @Published var errorMessage = ""
@@ -34,6 +42,7 @@ final class LogInViewModel: ObservableObject {
                     }
                     
                 case .failure(let error):
+                    state = .initial
                     switch error {
                     case .integrationError(let gigyaError):
                         if let error = gigyaError as? NetworkError {
@@ -56,11 +65,13 @@ final class LogInViewModel: ObservableObject {
     }
     
     func logIn() {
+        state = .loading
         Gigya.sharedInstance().login(loginId: loginId, password: password) { [weak self] result in
             switch result {
             case .success:
                 self?.fetchProfile()
             case .failure(let error):
+                self?.state = .initial
                 self?.errorMessage = error.error.localizedDescription
             }
         }
@@ -79,5 +90,12 @@ final class LogInViewModel: ObservableObject {
                 errorMessage = "Cannot find logged in profile"
             }
         }
+    }
+    
+    func reset() {
+        state = .initial
+        loginId = ""
+        password = ""
+        errorMessage = ""
     }
 }
