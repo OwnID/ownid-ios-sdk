@@ -1,17 +1,13 @@
 import Foundation
 
 final class AppCoordinator: ObservableObject {
-    @Published private(set) var appState = AppState.loggedOut(.initial)
-
-    public func showLoggedIn() {
-        appState = .loggedIn
+    @Published private(set) var appState = AppState.loggedOut
+    
+    public func showLoggedOut() {
+        appState = .loggedOut
     }
     
-    public func showLogInView() {
-        appState = .loggedOut(.logIn)
-    }
-    
-    public func showRegisterView() {
-        appState = .loggedOut(.register)
+    public func showLoggedIn(model: AccountModel) {
+        appState = .loggedIn(model: model)
     }
 }

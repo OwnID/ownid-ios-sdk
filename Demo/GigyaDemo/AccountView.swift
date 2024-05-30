@@ -1,7 +1,7 @@
 import SwiftUI
 import Gigya
 
-public struct AccountModel: Identifiable, Decodable {
+public struct AccountModel: Identifiable, Decodable, Equatable {
     public init(name: String, email: String) {
         self.name = name
         self.email = email
@@ -18,7 +18,6 @@ public struct AccountView: View {
     }
     
     let model: AccountModel
-    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var coordinator: AppCoordinator
     
     public var body: some View {
@@ -38,9 +37,8 @@ public struct AccountView: View {
             }
             .padding(.bottom)
             Button("Close", action: {
-                coordinator.showLogInView()
+                coordinator.showLoggedOut()
                 Gigya.sharedInstance().logout()
-                presentationMode.wrappedValue.dismiss()
             })
         }
     }

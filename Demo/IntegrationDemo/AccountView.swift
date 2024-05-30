@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct AccountModel: Identifiable, Decodable {
+public struct AccountModel: Identifiable, Decodable, Equatable {
     public init(name: String, email: String) {
         self.name = name
         self.email = email
@@ -37,8 +37,7 @@ public struct AccountView: View {
             }
             .padding(.bottom)
             Button("Close", action: {
-                coordinator.showLogInView()
-                presentationMode.wrappedValue.dismiss()
+                coordinator.showLoggedOut()
             })
         }
     }

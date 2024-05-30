@@ -3,7 +3,15 @@ import OwnIDGigyaSDK
 import Combine
 import Gigya
 
+extension RegisterViewModel {
+    enum State {
+        case initial
+        case loading
+    }
+}
+
 final class RegisterViewModel: ObservableObject {
+    @Published private(set) var state = State.initial
     @Published var firstName = ""
     @Published var loginId = ""
     @Published var password = ""
@@ -33,6 +41,7 @@ final class RegisterViewModel: ObservableObject {
                         if let usersEmailFromWebApp, !usersEmailFromWebApp.isEmpty, loginId.isEmpty {
                             loginId = usersEmailFromWebApp
                         }
+                        state = .initial
                         isOwnIDEnabled = true
                         
                     case .userRegisteredAndLoggedIn:
@@ -48,6 +57,7 @@ final class RegisterViewModel: ObservableObject {
                 case .failure(let ownIDSDKError):
                     print(ownIDSDKError.localizedDescription)
                     errorMessage = ownIDSDKError.localizedDescription
+                    state = .initial
                     switch ownIDSDKError {
                     case .integrationError(let gigyaError):
                         if let error = gigyaError as? NetworkError {
@@ -67,6 +77,7 @@ final class RegisterViewModel: ObservableObject {
     }
     
     func register() {
+        state = .loading
         let nameValue = "{ \"firstName\": \"\(firstName)\" }"
         let paramsDict = ["profile": nameValue]
         let params = OwnID.GigyaSDK.Registration.Parameters(parameters: paramsDict)
@@ -79,7 +90,8 @@ final class RegisterViewModel: ObservableObject {
                 case .success:
                     self?.fetchProfile()
                     
-                case .failure(let error):
+                case .failure(_):
+                    self?.state = .initial
                     self?.errorMessage = "Cannot find logged in profile"
                 }
             }
@@ -99,5 +111,14 @@ final class RegisterViewModel: ObservableObject {
                 errorMessage = "Cannot find logged in profile"
             }
         }
+    }
+    
+    func reset() {
+        state = .initial
+        firstName = ""
+        loginId = ""
+        password = ""
+        isOwnIDEnabled = false
+        errorMessage = ""
     }
 }
