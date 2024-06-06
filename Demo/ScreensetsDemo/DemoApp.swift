@@ -16,8 +16,12 @@ struct DemoApp: App {
             LogInView()
                 .padding(EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
                 .background(Color.white)
-                .cornerRadius(6)
                 .padding()
+                .onAppear {
+                    if Gigya.sharedInstance().isLoggedIn() {
+                        Gigya.sharedInstance().logout()
+                    }
+                }
         }
     }
 }

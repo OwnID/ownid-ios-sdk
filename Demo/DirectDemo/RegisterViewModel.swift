@@ -2,7 +2,15 @@ import Foundation
 import OwnIDCoreSDK
 import Combine
 
+extension RegisterViewModel {
+    enum State {
+        case initial
+        case loading
+    }
+}
+
 final class RegisterViewModel: ObservableObject {
+    @Published private(set) var state = State.initial
     @Published var firstName = ""
     @Published var loginId = ""
     @Published var password = ""
@@ -34,6 +42,7 @@ final class RegisterViewModel: ObservableObject {
                         isOwnIDEnabled = true
                         self.loginId = loginId
                         ownIdData = payload.data
+                        state = .initial
                     case .loading:
                         print("Loading state")
                         
@@ -42,6 +51,7 @@ final class RegisterViewModel: ObservableObject {
                     }
                     
                 case .failure(let ownIDSDKError):
+                    state = .initial
                     print(ownIDSDKError.localizedDescription)
                     errorMessage = ownIDSDKError.localizedDescription
                 }
@@ -50,6 +60,7 @@ final class RegisterViewModel: ObservableObject {
     }
     
     func register() {
+        state = .loading
         AuthSystem.register(ownIdData: isOwnIDEnabled ? ownIdData : nil,
                             password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
                             email: loginId,
@@ -57,6 +68,7 @@ final class RegisterViewModel: ObservableObject {
         .sink { completionRegister in
             if case .failure(let error) = completionRegister {
                 self.errorMessage = error.localizedDescription
+                self.state = .initial
             }
         } receiveValue: { result in
             self.fetchProfile(previousResult: result.operationResult)
@@ -74,5 +86,14 @@ final class RegisterViewModel: ObservableObject {
                 self.loggedInModel = AccountModel(name: model.name, email: model.email)
             }
             .store(in: &bag)
+    }
+    
+    func reset() {
+        state = .initial
+        firstName = ""
+        loginId = ""
+        password = ""
+        isOwnIDEnabled = false
+        errorMessage = ""
     }
 }
