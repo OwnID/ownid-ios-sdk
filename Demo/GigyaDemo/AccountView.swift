@@ -1,45 +1,62 @@
 import SwiftUI
-import Gigya
 
-public struct AccountModel: Identifiable, Decodable, Equatable {
-    public init(name: String, email: String) {
+struct AccountModel: Identifiable, Decodable, Equatable {
+    init(name: String, email: String) {
         self.name = name
         self.email = email
     }
     
-    public var id = UUID().uuidString
-    public let name: String
-    public let email: String
+    var id = UUID().uuidString
+    let name: String
+    let email: String
 }
 
-public struct AccountView: View {
-    public init(model: AccountModel) {
+struct AccountView: View {
+    init(model: AccountModel) {
         self.model = model
     }
     
     let model: AccountModel
+    @ObservedObject private var viewModel = AccountViewModel()
     @EnvironmentObject var coordinator: AppCoordinator
     
-    public var body: some View {
-        VStack {
-            Text("Welcome \(model.name)!")
-                .font(.headline)
-                .padding(.bottom, 20)
-            
-            VStack(spacing: 0) {
-                Text("Name")
-                    .bold()
-                Text(model.name)
-                    .padding(.bottom, 2)
-                Text("Email")
-                    .bold()
-                Text(model.email)
+    var body: some View {
+        content()
+    }
+    
+    func content() -> some View {
+        ZStack {
+            VStack {
+                HeaderView()
+                Spacer()
+                BlueButton(text: "Enroll") {
+                    viewModel.enroll(force: true)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 50)
             }
-            .padding(.bottom)
-            Button("Close", action: {
-                coordinator.showLoggedOut()
-                Gigya.sharedInstance().logout()
-            })
+            .ignoresSafeArea()
+            VStack {
+                Text("Welcome \(model.name)!")
+                    .font(.title3)
+                    .bold()
+                    .padding(.bottom, 20)
+                VStack(spacing: 0) {
+                    Text("Name:")
+                        .bold()
+                    Text(model.name)
+                        .padding(.bottom, 10)
+                    Text("Email:")
+                        .bold()
+                    Text(model.email)
+                }
+                .padding(.bottom)
+                BlueButton(text: "Log Out") {
+                    viewModel.logOut()
+                    coordinator.showLoggedOut()
+                }
+            }
+            .padding(.horizontal, 20)
         }
     }
 }

@@ -77,7 +77,7 @@ final class CustomAuthSystem {
             .eraseToAnyPublisher()
             .tryMap { try JSONSerialization.data(withJSONObject: $0) }
             .map { payloadData -> URLRequest in
-                var request = URLRequest(url: URL(string: "\(baseURL)/register")!)
+                var request = URLRequest(url: URL(string: "\(baseURL)/login")!)
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.httpMethod = "POST"
                 request.httpBody = payloadData
@@ -103,7 +103,7 @@ final class CustomAuthSystem {
             .setFailureType(to: OwnID.CoreSDK.Error.self)
             .eraseToAnyPublisher()
             .map { previousResult -> URLRequest in
-                var request = URLRequest(url: URL(string: "\(baseURL)/register")!)
+                var request = URLRequest(url: URL(string: "\(baseURL)/profile")!)
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.setValue("Bearer \(previousResult)", forHTTPHeaderField: "Authorization")
                 request.httpMethod = "GET"

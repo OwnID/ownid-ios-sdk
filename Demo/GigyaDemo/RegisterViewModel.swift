@@ -92,7 +92,7 @@ final class RegisterViewModel: ObservableObject {
                     
                 case .failure(_):
                     self?.state = .initial
-                    self?.errorMessage = "Cannot find logged in profile"
+                    self?.errorMessage = "Registration error"
                 }
             }
         }
