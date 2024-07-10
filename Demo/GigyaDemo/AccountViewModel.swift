@@ -13,7 +13,6 @@ final class AccountViewModel: ObservableObject {
         OwnID.CoreSDK.enrollCredential(loginIdPublisher: loginIdPublisher(),
                                        authTokenPublisher: authTokenPublisher(),
                                        force: force)
-        OwnID.CoreSDK.enrollEventPublisher
             .receive(on: DispatchQueue.main)
             .sink { event in
                 switch event {

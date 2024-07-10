@@ -8,7 +8,7 @@ public struct AppCoordinatorView: View {
         case .loggedIn(let model):
             AccountView(model: model)
         case .loggedOut:
-            WelcomeView()
+            WelcomeView(coordinator: coordinator)
         }
     }
 }

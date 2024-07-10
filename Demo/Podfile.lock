@@ -1,25 +1,53 @@
 PODS:
-  - Gigya (1.6.1)
-  - ownid-core-ios-sdk (3.3.0)
-  - ownid-gigya-ios-sdk (3.3.0):
+  - AppAuth (1.7.5):
+    - AppAuth/Core (= 1.7.5)
+    - AppAuth/ExternalUserAgent (= 1.7.5)
+  - AppAuth/Core (1.7.5)
+  - AppAuth/ExternalUserAgent (1.7.5):
+    - AppAuth/Core
+  - Gigya (1.6.3)
+  - GoogleSignIn (7.1.0):
+    - AppAuth (< 2.0, >= 1.7.3)
+    - GTMAppAuth (< 5.0, >= 4.1.1)
+    - GTMSessionFetcher/Core (~> 3.3)
+  - GTMAppAuth (4.1.1):
+    - AppAuth/Core (~> 1.7)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3)
+  - GTMSessionFetcher/Core (3.5.0)
+  - private-ownid-core-ios-sdk (3.4.0-beta4)
+  - private-ownid-gigya-ios-sdk (3.4.0-beta4):
     - Gigya (>= 1.6.0)
-    - ownid-core-ios-sdk (= 3.3.0)
+    - private-ownid-core-ios-sdk (= 3.4.0-beta4)
 
 DEPENDENCIES:
-  - ownid-core-ios-sdk
-  - ownid-gigya-ios-sdk
+  - Gigya
+  - GoogleSignIn
+  - private-ownid-core-ios-sdk (from `../../internal-ownid-ios-sdk/`)
+  - private-ownid-gigya-ios-sdk (from `../../internal-ownid-ios-sdk/`)
 
 SPEC REPOS:
   trunk:
+    - AppAuth
     - Gigya
-    - ownid-core-ios-sdk
-    - ownid-gigya-ios-sdk
+    - GoogleSignIn
+    - GTMAppAuth
+    - GTMSessionFetcher
+
+EXTERNAL SOURCES:
+  private-ownid-core-ios-sdk:
+    :path: "../../internal-ownid-ios-sdk/"
+  private-ownid-gigya-ios-sdk:
+    :path: "../../internal-ownid-ios-sdk/"
 
 SPEC CHECKSUMS:
-  Gigya: ee0f517aa6037934c7a78c58b7cdc5485de2a57e
-  ownid-core-ios-sdk: 6a645df67996d79cc3357e50133d38ea34503791
-  ownid-gigya-ios-sdk: 55caaf4b48e3bc50eb10a14aa220d17b8854ae28
+  AppAuth: 501c04eda8a8d11f179dbe8637b7a91bb7e5d2fa
+  Gigya: 8324b11ce227aaed65a82b8d6c4779faf3175388
+  GoogleSignIn: d4281ab6cf21542b1cfaff85c191f230b399d2db
+  GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  private-ownid-core-ios-sdk: 1f7a3f80989dca1cb6cce6ca7d68aec5e3d2012e
+  private-ownid-gigya-ios-sdk: afabaea490427a3fea051f8762285e48a719e3d9
 
-PODFILE CHECKSUM: dfacc5b619d9aea3f6ba87da58bedbf16d2c9c57
+PODFILE CHECKSUM: dff5cd350113fbebaa82a7aa7e84b0db24d82e7c
 
 COCOAPODS: 1.15.2

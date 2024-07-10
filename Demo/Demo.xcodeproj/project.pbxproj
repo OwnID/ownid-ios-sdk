@@ -8,9 +8,21 @@
 
 /* Begin PBXBuildFile section */
 		0356FF99B0D7A0670E571A55 /* Pods_IntegrationDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AC0DB5E650A1FE23B34D5B40 /* Pods_IntegrationDemo.framework */; };
+		110B06A82C3E99B6002F3937 /* ProfileCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06A62C3E99AF002F3937 /* ProfileCollectionView.swift */; };
+		110B06A92C3E99B7002F3937 /* ProfileCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06A62C3E99AF002F3937 /* ProfileCollectionView.swift */; };
+		110B06AA2C3E99B8002F3937 /* ProfileCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06A62C3E99AF002F3937 /* ProfileCollectionView.swift */; };
+		110B06AD2C3E99CC002F3937 /* ProfileCollectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06AB2C3E99C9002F3937 /* ProfileCollectionViewModel.swift */; };
+		110B06B22C3E9AF8002F3937 /* Overlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06B02C3E9AF0002F3937 /* Overlay.swift */; };
+		110B06B32C3E9AF9002F3937 /* Overlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06B02C3E9AF0002F3937 /* Overlay.swift */; };
+		110B06B42C3E9AF9002F3937 /* Overlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06B02C3E9AF0002F3937 /* Overlay.swift */; };
+		110B06B82C3ECFF6002F3937 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06B72C3ECFF6002F3937 /* WelcomeViewModel.swift */; };
+		110B06BA2C3ED1BE002F3937 /* ProfileCollectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06B92C3ED1BE002F3937 /* ProfileCollectionViewModel.swift */; };
+		110B06BC2C3EDA49002F3937 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06BB2C3EDA49002F3937 /* WelcomeViewModel.swift */; };
+		110B06BE2C3EDA50002F3937 /* ProfileCollectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B06BD2C3EDA50002F3937 /* ProfileCollectionViewModel.swift */; };
 		1158B32F2C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
 		1158B3302C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
 		1158B3312C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
+		1183AC7B2C3D886B0078C6E3 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1183AC7A2C3D886B0078C6E3 /* WelcomeViewModel.swift */; };
 		11E6C54A2C11F7100074B747 /* AccountViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E6C5492C11F7100074B747 /* AccountViewModel.swift */; };
 		11E6C54B2C1201200074B747 /* BlueButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686E42BF50DCC007BF445 /* BlueButton.swift */; };
 		11E6C54C2C1201880074B747 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */; };
@@ -111,7 +123,15 @@
 /* Begin PBXFileReference section */
 		024B20E32AC8C86E4353CF1D /* Pods-UIKitInjectionDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UIKitInjectionDemo.release.xcconfig"; path = "Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo.release.xcconfig"; sourceTree = "<group>"; };
 		048BC4A082ECB82876A2F40F /* Pods-ScreensetsDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.debug.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		110B06A62C3E99AF002F3937 /* ProfileCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCollectionView.swift; sourceTree = "<group>"; };
+		110B06AB2C3E99C9002F3937 /* ProfileCollectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCollectionViewModel.swift; sourceTree = "<group>"; };
+		110B06B02C3E9AF0002F3937 /* Overlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Overlay.swift; sourceTree = "<group>"; };
+		110B06B72C3ECFF6002F3937 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WelcomeViewModel.swift; sourceTree = "<group>"; };
+		110B06B92C3ED1BE002F3937 /* ProfileCollectionViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileCollectionViewModel.swift; sourceTree = "<group>"; };
+		110B06BB2C3EDA49002F3937 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WelcomeViewModel.swift; sourceTree = "<group>"; };
+		110B06BD2C3EDA50002F3937 /* ProfileCollectionViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileCollectionViewModel.swift; sourceTree = "<group>"; };
 		1158B32E2C076EF300149316 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		1183AC7A2C3D886B0078C6E3 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeViewModel.swift; sourceTree = "<group>"; };
 		11E6C5492C11F7100074B747 /* AccountViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewModel.swift; sourceTree = "<group>"; };
 		11E6C54E2C1209FE0074B747 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		161C475A290AE94F0014D737 /* ScreensetsDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreensetsDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -296,12 +316,14 @@
 				16FCA8A0290B040E00CF6E82 /* Info.plist */,
 				16C89BF5290F8DCA00F5FE09 /* OwnIDConfiguration.plist */,
 				16E2D82B290B019D00AF28E4 /* GigyaDemoApp.swift */,
+				1183AC7A2C3D886B0078C6E3 /* WelcomeViewModel.swift */,
 				16E35759290C074B0059B5A2 /* LogInView.swift */,
 				16E3575A290C074B0059B5A2 /* LogInViewModel.swift */,
 				16E3575D290C074C0059B5A2 /* RegisterView.swift */,
 				16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */,
 				16E35752290BE3180059B5A2 /* AccountView.swift */,
 				11E6C5492C11F7100074B747 /* AccountViewModel.swift */,
+				110B06AB2C3E99C9002F3937 /* ProfileCollectionViewModel.swift */,
 				16E2D82F290B019D00AF28E4 /* Assets.xcassets */,
 				16E2D831290B019D00AF28E4 /* Preview Content */,
 			);
@@ -378,12 +400,14 @@
 				CE1DC0AC2B9F4C8100CF321D /* DirectDemo.entitlements */,
 				CE1DC0AA2B9F4C5F00CF321D /* OwnIDConfiguration.plist */,
 				CE1DC0922B9F296000CF321D /* DirectDemoApp.swift */,
+				110B06B72C3ECFF6002F3937 /* WelcomeViewModel.swift */,
 				CE1DC0A02B9F424D00CF321D /* LogInView.swift */,
 				CE1DC0A22B9F425800CF321D /* LogInViewModel.swift */,
 				CE1DC0A42B9F426F00CF321D /* RegisterView.swift */,
 				CE1DC0A62B9F427D00CF321D /* RegisterViewModel.swift */,
 				CE1DC0A82B9F428D00CF321D /* AccountView.swift */,
 				CE1DC0AD2B9F4CE600CF321D /* AuthSystem.swift */,
+				110B06B92C3ED1BE002F3937 /* ProfileCollectionViewModel.swift */,
 				CE1DC0962B9F296300CF321D /* Assets.xcassets */,
 				CE1DC0982B9F296300CF321D /* Preview Content */,
 			);
@@ -408,6 +432,8 @@
 				CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */,
 				CEA108252BF5F88800AD90E4 /* ViewExtensions.swift */,
 				CE3686E42BF50DCC007BF445 /* BlueButton.swift */,
+				110B06A62C3E99AF002F3937 /* ProfileCollectionView.swift */,
+				110B06B02C3E9AF0002F3937 /* Overlay.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -418,6 +444,7 @@
 				CEDD45692B4DAEE700C8ACF7 /* IntegrationDemo.entitlements */,
 				CEDD45662B4DA52400C8ACF7 /* OwnIDConfiguration.plist */,
 				CEB907CD2B4D969300C8966B /* IntegrationDemoApp.swift */,
+				110B06BB2C3EDA49002F3937 /* WelcomeViewModel.swift */,
 				CEB907DB2B4D9BC600C8966B /* LogInView.swift */,
 				CEB907DD2B4D9BF000C8966B /* LogInViewModel.swift */,
 				CEB907DF2B4D9C0A00C8966B /* RegisterView.swift */,
@@ -425,6 +452,7 @@
 				CEB907E32B4D9D8C00C8966B /* CustomAuthSystem.swift */,
 				CEB907E52B4DA08A00C8966B /* AuthPerformer.swift */,
 				CEB907E82B4DA32000C8966B /* AccountView.swift */,
+				110B06BD2C3EDA50002F3937 /* ProfileCollectionViewModel.swift */,
 				CEB907D12B4D969500C8966B /* Assets.xcassets */,
 				CEB907D32B4D969500C8966B /* Preview Content */,
 			);
@@ -451,7 +479,7 @@
 				161C4757290AE94F0014D737 /* Frameworks */,
 				161C4758290AE94F0014D737 /* Resources */,
 				167C7CEF290FD864008D047B /* Embed Frameworks */,
-				E7423F2D9466C84FA88604A1 /* [CP] Embed Pods Frameworks */,
+				6514602D33B26D03081AB52F /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -470,7 +498,7 @@
 				1662AD5C291048DB0071894C /* Sources */,
 				1662AD5D291048DB0071894C /* Frameworks */,
 				1662AD5E291048DB0071894C /* Resources */,
-				A1DE92CCBFD3DEDC451A12A5 /* [CP] Embed Pods Frameworks */,
+				0E4427D111915B33CF3C7EE6 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -490,7 +518,7 @@
 				16E2D826290B019D00AF28E4 /* Frameworks */,
 				16E2D827290B019D00AF28E4 /* Resources */,
 				16E35767290C07670059B5A2 /* Embed Frameworks */,
-				89BF4A59C0BE0EBCB4C3F768 /* [CP] Embed Pods Frameworks */,
+				A00A08DA708E4949BEC8E2F6 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -509,7 +537,7 @@
 				CE1DC08C2B9F296000CF321D /* Sources */,
 				CE1DC08D2B9F296000CF321D /* Frameworks */,
 				CE1DC08E2B9F296000CF321D /* Resources */,
-				D3A7B88B0796D5BDCAF12851 /* [CP] Embed Pods Frameworks */,
+				256453F387C0E766CFC942DC /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -528,7 +556,7 @@
 				CEB907C72B4D969200C8966B /* Sources */,
 				CEB907C82B4D969200C8966B /* Frameworks */,
 				CEB907C92B4D969200C8966B /* Resources */,
-				6F775ACC42DD7A5CDAE114FE /* [CP] Embed Pods Frameworks */,
+				D44FFDA8CE24189AF1D125F4 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -645,6 +673,23 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		0E4427D111915B33CF3C7EE6 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		19594265DFF8BD7A7FE46A0C /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -665,6 +710,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		256453F387C0E766CFC942DC /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		337D1AF208E77E286AC766BB /* [CP] Check Pods Manifest.lock */ = {
@@ -689,21 +751,21 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		6F775ACC42DD7A5CDAE114FE /* [CP] Embed Pods Frameworks */ = {
+		6514602D33B26D03081AB52F /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IntegrationDemo/Pods-IntegrationDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IntegrationDemo/Pods-IntegrationDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IntegrationDemo/Pods-IntegrationDemo-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		6FA5A5F8639702FDD4D0E504 /* [CP] Check Pods Manifest.lock */ = {
@@ -750,72 +812,38 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		89BF4A59C0BE0EBCB4C3F768 /* [CP] Embed Pods Frameworks */ = {
+		A00A08DA708E4949BEC8E2F6 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GigyaDemo/Pods-GigyaDemo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A1DE92CCBFD3DEDC451A12A5 /* [CP] Embed Pods Frameworks */ = {
+		D44FFDA8CE24189AF1D125F4 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-IntegrationDemo/Pods-IntegrationDemo-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-IntegrationDemo/Pods-IntegrationDemo-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		D3A7B88B0796D5BDCAF12851 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DirectDemo/Pods-DirectDemo-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		E7423F2D9466C84FA88604A1 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IntegrationDemo/Pods-IntegrationDemo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		EB1DC7EB0528A203834F81B4 /* [CP] Check Pods Manifest.lock */ = {
@@ -872,6 +900,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CE3686DF2BF4E988007BF445 /* AppCoordinator.swift in Sources */,
+				1183AC7B2C3D886B0078C6E3 /* WelcomeViewModel.swift in Sources */,
 				16E3575E290C074C0059B5A2 /* LogInView.swift in Sources */,
 				16E35761290C074C0059B5A2 /* RegisterViewModel.swift in Sources */,
 				CE3686D92BF4E8AE007BF445 /* AppCoordinatorView.swift in Sources */,
@@ -880,10 +909,13 @@
 				CE3686DB2BF4E8BE007BF445 /* HeaderView.swift in Sources */,
 				16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */,
 				11E6C54A2C11F7100074B747 /* AccountViewModel.swift in Sources */,
+				110B06B22C3E9AF8002F3937 /* Overlay.swift in Sources */,
 				CE7879512B1746DC00FA098D /* AccountView.swift in Sources */,
+				110B06AD2C3E99CC002F3937 /* ProfileCollectionViewModel.swift in Sources */,
 				16E3575F290C074C0059B5A2 /* LogInViewModel.swift in Sources */,
 				CE3686E52BF50DCC007BF445 /* BlueButton.swift in Sources */,
 				16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */,
+				110B06A82C3E99B6002F3937 /* ProfileCollectionView.swift in Sources */,
 				1158B32F2C076EF300149316 /* WelcomeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -896,16 +928,20 @@
 				CEA108282BF5F89100AD90E4 /* ViewExtensions.swift in Sources */,
 				CE1DC0A72B9F427D00CF321D /* RegisterViewModel.swift in Sources */,
 				CE1DC0AE2B9F4CE600CF321D /* AuthSystem.swift in Sources */,
+				110B06AA2C3E99B8002F3937 /* ProfileCollectionView.swift in Sources */,
 				CE1DC0A52B9F426F00CF321D /* RegisterView.swift in Sources */,
 				CE1DC0A12B9F424D00CF321D /* LogInView.swift in Sources */,
 				CE1DC0A92B9F428D00CF321D /* AccountView.swift in Sources */,
+				110B06B82C3ECFF6002F3937 /* WelcomeViewModel.swift in Sources */,
 				CEA1081C2BF5F31E00AD90E4 /* AppState.swift in Sources */,
 				CEA1081E2BF5F32B00AD90E4 /* HeaderView.swift in Sources */,
 				1158B3312C076EF300149316 /* WelcomeView.swift in Sources */,
 				CEA108182BF5F31800AD90E4 /* AppCoordinator.swift in Sources */,
 				CEA1082B2BF5FB5F00AD90E4 /* BlueButton.swift in Sources */,
+				110B06BA2C3ED1BE002F3937 /* ProfileCollectionViewModel.swift in Sources */,
 				CE1DC0932B9F296000CF321D /* DirectDemoApp.swift in Sources */,
 				CEA1081A2BF5F31B00AD90E4 /* AppCoordinatorView.swift in Sources */,
+				110B06B42C3E9AF9002F3937 /* Overlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -914,6 +950,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CEB907DE2B4D9BF000C8966B /* LogInViewModel.swift in Sources */,
+				110B06BC2C3EDA49002F3937 /* WelcomeViewModel.swift in Sources */,
 				CEA108192BF5F31B00AD90E4 /* AppCoordinatorView.swift in Sources */,
 				CEB907E22B4D9C2100C8966B /* RegisterViewModel.swift in Sources */,
 				1158B3302C076EF300149316 /* WelcomeView.swift in Sources */,
@@ -923,10 +960,13 @@
 				CEA108272BF5F89100AD90E4 /* ViewExtensions.swift in Sources */,
 				CEB907E02B4D9C0A00C8966B /* RegisterView.swift in Sources */,
 				CEB907E42B4D9D8C00C8966B /* CustomAuthSystem.swift in Sources */,
+				110B06BE2C3EDA50002F3937 /* ProfileCollectionViewModel.swift in Sources */,
+				110B06B32C3E9AF9002F3937 /* Overlay.swift in Sources */,
 				CEB907DC2B4D9BC600C8966B /* LogInView.swift in Sources */,
 				CEA1082A2BF5FB5E00AD90E4 /* BlueButton.swift in Sources */,
 				CEB907E92B4DA32000C8966B /* AccountView.swift in Sources */,
 				CEB907CE2B4D969300C8966B /* IntegrationDemoApp.swift in Sources */,
+				110B06A92C3E99B7002F3937 /* ProfileCollectionView.swift in Sources */,
 				CEA1081D2BF5F32B00AD90E4 /* HeaderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

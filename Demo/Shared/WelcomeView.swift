@@ -1,12 +1,15 @@
 import SwiftUI
 
 public struct WelcomeView: View {
+    @ObservedObject var viewModel: WelcomeViewModel
     @EnvironmentObject var coordinator: AppCoordinator
     
     @State private var isLoginActive = false
     @State private var isRegisterActive = false
     
-    public init() { }
+    init(coordinator: AppCoordinator) {
+        viewModel = WelcomeViewModel(coordinator: coordinator)
+    }
     
     public var body: some View {
         NavigationView {
@@ -33,9 +36,18 @@ public struct WelcomeView: View {
                                 self.isLoginActive = true
                             }
                         }
+                        BlueButton(text: "Start Flow", action: viewModel.startFlow)
                     }
                     .padding(.horizontal, 30)
                     .padding(.vertical, 10)
+                    Text(viewModel.errorMessage ?? "")
+                        .foregroundColor(.red)
+                        .font(.system(size: 12))
+                }
+                if let loginId = viewModel.notFoundLoginId {
+                    ProfileCollectionView(coordinator: coordinator, loginId: loginId, closeClosure: {
+                        viewModel.notFoundLoginId = nil
+                    })
                 }
             }
         }

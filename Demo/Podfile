@@ -1,22 +1,33 @@
 platform :ios, '16.0'
-use_frameworks!
+use_frameworks! :linkage => :static
 
-target 'ScreensetsDemo' do
-  pod 'ownid-gigya-ios-sdk'
+def core_pods
+  pod 'private-ownid-core-ios-sdk', :path => '../../internal-ownid-ios-sdk/'
 end
 
-target 'UIKitInjectionDemo' do
-  pod 'ownid-gigya-ios-sdk'
+def gigya_pods
+  pod 'Gigya'
+  pod 'GoogleSignIn'
+  pod 'private-ownid-gigya-ios-sdk', :path => '../../internal-ownid-ios-sdk/'
+  core_pods
 end
 
 target 'GigyaDemo' do
-  pod 'ownid-gigya-ios-sdk'
+  gigya_pods
 end
 
 target 'IntegrationDemo' do
-  pod 'ownid-core-ios-sdk'
+  core_pods
 end
 
 target 'DirectDemo' do
-  pod 'ownid-core-ios-sdk'
+  core_pods
+end
+
+target 'ScreensetsDemo' do
+  gigya_pods
+end
+
+target 'UIKitInjectionDemo' do
+  gigya_pods
 end
