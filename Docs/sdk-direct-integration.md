@@ -294,10 +294,10 @@ OwnID.CoreSDK.enrollCredential(loginId: String, authToken: String)
 ```
 where `loginId` is a user's login ID, `authToken` is a user's authentication token.
 
-Optionally, to monitor the status of the last credential enrollment request, you can listen to enrollment events by subscribing to `enrollEventPublisher`:
+Optionally, to monitor the status of the last credential enrollment request, you can listen to enrollment events:
 
 ```swift
-OwnID.CoreSDK.enrollEventPublisher
+OwnID.CoreSDK.enrollCredential(loginId: String, authToken: String)
     .receive(on: DispatchQueue.main)
     .sink { event in
         switch event {

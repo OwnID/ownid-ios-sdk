@@ -22,7 +22,7 @@ The [OwnID](https://ownid.com/) iOS SDK is a client library offering a secure an
    
 ### Additional Components:
 
-- **[OwnID WebView Bridge](docs/sdk-webbridge-doc.md)** - A Core SDK component that introduces native Passkeys functionality to the OwnID Web SDK when running within a webview.
+- **[OwnID WebView Bridge](Docs/sdk-webbridge-doc.md)** - A Core SDK component that introduces native Passkeys functionality to the OwnID Web SDK when running within a webview.
 
 ### Advanced Configuration
 
