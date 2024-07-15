@@ -5,13 +5,34 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.3.0"
+    static let version = "3.4.0"
 }
 
 public extension OwnID {
     final class GigyaSDK {
-        
-        // MARK: Setup
+        public struct GigyaSessionAdapter: SessionAdapter {
+            public init() {}
+            public func transform(session: String) throws -> SessionInfo {
+                var data = session.data(using: .utf8) ?? Data()
+                let sessionDict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                if let sessionInfoDict = sessionDict?["sessionInfo"] {
+                    data = try JSONSerialization.data(withJSONObject: sessionInfoDict)
+                    let sessionInfo = try JSONDecoder().decode(SessionInfo.self, from: data)
+                    return sessionInfo
+                } else {
+                    let errorMetadata = try JSONDecoder().decode(ErrorMetadata.self, from: data)
+                    let statusCode = ApiStatusCode(rawValue: errorMetadata.statusCode ?? 0) ?? .unknown
+                    let gigyaErrorModel = GigyaResponseModel(statusCode: statusCode,
+                                                             errorCode: errorMetadata.errorCode ?? 0,
+                                                             callId: errorMetadata.callID ?? "",
+                                                             errorMessage: errorMetadata.errorMessage,
+                                                             sessionInfo: nil,
+                                                             requestData: data)
+                    let gigyaError = NetworkError.gigyaError(data: gigyaErrorModel)
+                    throw gigyaError
+                }
+            }
+        }
         
         public static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }
         
@@ -39,6 +60,10 @@ public extension OwnID {
                                     environment: environment,
                                     enableLogging: enableLogging,
                                     supportedLanguages: supportedLanguages)
+        }
+        
+        public static func start<A: SessionAdapter>(adapter: A = GigyaSessionAdapter()) -> AnyPublisher<Result<OwnID.CoreSDK.FlowResult<A.T>, Never>, Never> {
+            return OwnID.CoreSDK.start(adapter: adapter)
         }
         
         public static func defaultLoginIdPublisher<T: GigyaAccountProtocol>(instance: GigyaCore<T>) -> AnyPublisher<String, Never> {

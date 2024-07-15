@@ -56,7 +56,7 @@ struct ProfileCollectionView: View {
         .foregroundColor(.white)
         .padding()
         .background(Rectangle()
-            .fill(.headerBackground)
+            .fill(Color("headerBackground"))
             .cornerRadius(15))
         .padding(.horizontal, 20)
     }

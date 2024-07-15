@@ -13,6 +13,7 @@ public extension OwnID {
         
         @ObservedObject var store: Store<SDKState, SDKAction>
         
+        private var webFlow = WebFlow()
         private var enrollManager = EnrollManager(supportedLanguages: .init(rawValue: []))
         private let urlPublisher = PassthroughSubject<Void, OwnID.CoreSDK.Error>()
         private let configurationLoadingEventPublisher = PassthroughSubject<ConfigurationLoadingEvent, Never>()
@@ -30,10 +31,6 @@ public extension OwnID {
         
         public static var logger = InternalLogger.shared
         public static var eventService: EventService { EventService.shared }
-        
-        public static var enrollEventPublisher: OwnID.EnrollEventPublisher {
-            shared.enrollManager.eventPublisher
-        }
         
         public func configureForTests() { store.send(.configureForTests) }
         
@@ -90,9 +87,34 @@ public extension OwnID {
         public static func setSupportedLanguages(_ supportedLanguages: [String]) {
             shared.supportedLanguages = supportedLanguages
             shared.store.send(.updateSupportedLanguages(supportedLanguages: Languages(rawValue: supportedLanguages)))
+        }        
+        
+        public static func start<A: SessionAdapter>(adapter: A) -> AnyPublisher<Result<FlowResult<A.T>, Never>, Never> {
+            shared.webFlow.launch()
+                .map { event in
+                    switch event {
+                    case .success(let result):
+                        switch result {
+                        case .login(let session, let loginId, let authToken):
+                            do {
+                                let session = try adapter.transform(session: session)
+                                return .success(.login(session: session, loginId: loginId, authToken: authToken))
+                            } catch {
+                                return .success(.error(error: .integrationError(underlying: error)))
+                            }
+                        case .close:
+                            return .success(.close)
+                        case .error(let error):
+                            return .success(.error(error: error))
+                        case .accountNotFound(let loginId, let authToken, let ownIdData):
+                            return .success(.accountNotFound(loginId: loginId, authToken: authToken, ownIdData: ownIdData))
+                        }
+                    }
+                }
+                .eraseToAnyPublisher()
         }
         
-        public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) {
+        public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) -> OwnID.EnrollEventPublisher {
             let enrollManager = EnrollManager(supportedLanguages: .init(rawValue: shared.supportedLanguages))
             shared.enrollManager = enrollManager
             
@@ -100,23 +122,23 @@ public extension OwnID {
             let authTokenPublisher = Just(authToken).eraseToAnyPublisher()
             let displayName = loginId
             let displayNamePublisher = Just(displayName).eraseToAnyPublisher()
-            shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
-                                        authTokenPublisher: authTokenPublisher,
-                                        displayNamePublisher: displayNamePublisher,
-                                        force: force)
+            return shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
+                                               authTokenPublisher: authTokenPublisher,
+                                               displayNamePublisher: displayNamePublisher,
+                                               force: force)
         }
         
         public static func enrollCredential(loginIdPublisher: AnyPublisher<String, Never>,
                                             authTokenPublisher: AnyPublisher<String, Never>,
-                                            force: Bool = false) {
+                                            force: Bool = false) -> OwnID.EnrollEventPublisher {
             let enrollManager = EnrollManager(supportedLanguages: .init(rawValue: shared.supportedLanguages))
             shared.enrollManager = enrollManager
             
             let displayNamePublisher = loginIdPublisher
-            shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
-                                        authTokenPublisher: authTokenPublisher,
-                                        displayNamePublisher: displayNamePublisher,
-                                        force: force)
+            return shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
+                                               authTokenPublisher: authTokenPublisher,
+                                               displayNamePublisher: displayNamePublisher,
+                                               force: force)
         }
         
         func createCoreViewModelForRegister(loginId: String) -> CoreViewModel {

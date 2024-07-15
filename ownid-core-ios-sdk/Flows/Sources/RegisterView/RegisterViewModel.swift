@@ -135,6 +135,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                     } receiveValue: { [unowned self] registrationResult in
                         if let loginId = payload.loginId {
                             OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                            OwnID.CoreSDK.LoginIdDataSaver.save(loginId: loginId, isOwnIdLogin: true)
                         }
                         integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registrationResult.operationResult, authType: registrationResult.authType)))
                         resetDataAndState()
@@ -148,6 +149,7 @@ public extension OwnID.FlowsSDK.RegisterView {
             
             if let loginId = payload.loginId {
                 OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                OwnID.CoreSDK.LoginIdDataSaver.save(loginId: loginId, isOwnIdLogin: true)
             }
             flowResultPublisher.send(.success(.response(loginId: payload.loginId ?? "", payload: payload, authType: payload.authType)))
         }

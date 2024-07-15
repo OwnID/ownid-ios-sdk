@@ -16,6 +16,7 @@ extension OwnID.CoreSDK {
         let phoneCodes: [PhoneCode]?
         let origins: [String]?
         let displayName: String?
+        let webViewSettings: WebViewSettings?
 
         enum CodingKeys: String, CodingKey {
             case supportedLocales, logLevel, passkeysAutofillEnabled, verification, enableRegistrationFromLogin, phoneCodes, displayName
@@ -24,6 +25,7 @@ extension OwnID.CoreSDK {
             case redirectURLString = "redirectUrl"
             case platformSettings = "iosSettings"
             case origins = "origin"
+            case webViewSettings = "webview"
         }
     }
     
@@ -74,10 +76,20 @@ extension OwnID.CoreSDK {
             lhs.id == rhs.id
         }
     }
+    
+    struct WebViewSettings: Codable {
+        enum CodingKeys: String, CodingKey {
+            case html
+            case baseURL = "baseUrl"
+        }
+        
+        let html: String
+        let baseURL: String
+    }
 }
 
 extension OwnID.CoreSDK.ServerConfiguration {
     static func mock(isFailed: Bool = false) -> Self {
-        Self(isFailed: isFailed, supportedLocales: [], logLevel: .error, passkeysAutofillEnabled: false, serverURL: URL(string: "https://ownid.com")!, redirectURLString: nil, platformSettings: nil, loginIdSettings: OwnID.CoreSDK.LoginIdSettings(type: .email, regex: ""), verification: OwnID.CoreSDK.Verification(type: .email), enableRegistrationFromLogin: true, phoneCodes: [], origins: [], displayName: nil)
+        Self(isFailed: isFailed, supportedLocales: [], logLevel: .error, passkeysAutofillEnabled: false, serverURL: URL(string: "https://ownid.com")!, redirectURLString: nil, platformSettings: nil, loginIdSettings: OwnID.CoreSDK.LoginIdSettings(type: .email, regex: ""), verification: OwnID.CoreSDK.Verification(type: .email), enableRegistrationFromLogin: true, phoneCodes: [], origins: [], displayName: nil, webViewSettings: OwnID.CoreSDK.WebViewSettings(html: "", baseURL: ""))
     }
 }

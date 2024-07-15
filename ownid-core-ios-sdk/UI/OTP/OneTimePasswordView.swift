@@ -188,7 +188,8 @@ extension OwnID.UISDK.OneTimePassword {
                         if store.value.isLoading {
                             OwnID.UISDK.SpinnerLoaderView(spinnerColor: OwnID.Colors.spinnerColor,
                                                           circleColor: OwnID.Colors.spinnerBackgroundColor,
-                                                          viewBackgroundColor: .clear)
+                                                          viewBackgroundColor: .clear,
+                                                          isLoading: .constant(true))
                             .frame(width: 28, height: 28)
                         }
                         resendView()

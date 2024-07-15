@@ -15,7 +15,7 @@ extension OwnID.CoreSDK {
              supportedLanguages: OwnID.CoreSDK.Languages,
              clientConfiguration: LocalConfiguration?) {
             var loginId = loginId
-            if loginId.isBlank, let savedLoginId = DefaultsLoginIdSaver.getLoginId(), !savedLoginId.isBlank, type == .login {
+            if loginId.isBlank, let savedLoginId = DefaultsLoginIdSaver.loginId(), !savedLoginId.isBlank, type == .login {
                 loginId = savedLoginId
             }
             let initialState = State(configuration: clientConfiguration,

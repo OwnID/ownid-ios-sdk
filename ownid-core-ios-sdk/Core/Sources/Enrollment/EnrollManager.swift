@@ -8,7 +8,7 @@ extension OwnID.CoreSDK {
         private let resultPublisher = PassthroughSubject<Void, OwnID.CoreSDK.Error>()
         private var bag = Set<AnyCancellable>()
         
-        var eventPublisher: AnyPublisher<Result<Void, OwnID.CoreSDK.Error>, Never> {
+        private var eventPublisher: OwnID.EnrollEventPublisher {
             return resultPublisher
                 .map { event -> Result<Void, OwnID.CoreSDK.Error> in
                     return .success(event)
@@ -43,11 +43,12 @@ extension OwnID.CoreSDK {
         func enroll(loginIdPublisher: AnyPublisher<String, Never>,
                     authTokenPublisher: AnyPublisher<String, Never>,
                     displayNamePublisher: AnyPublisher<String, Never>,
-                    force: Bool) {
-            store.send(.addPublishers(loginIdPublisher: loginIdPublisher, 
+                    force: Bool) -> OwnID.EnrollEventPublisher {
+            store.send(.addPublishers(loginIdPublisher: loginIdPublisher,
                                       authTokenPublisher: authTokenPublisher,
                                       displayNamePublisher: displayNamePublisher,
                                       force: force))
+            return eventPublisher
         }
         
         private func setupEventPublisher() {

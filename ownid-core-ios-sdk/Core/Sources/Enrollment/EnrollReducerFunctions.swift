@@ -39,11 +39,16 @@ extension OwnID.CoreSDK.EnrollManager {
     }
     
     static func shouldShowView(for loginId: String) -> Bool {
-        let dict = EnrollNotNowSaver.enrollNotNowDict()
-        if let interval = dict?[loginId] {
-            let notNowDate = Date(timeIntervalSince1970: interval)
-            if let days = Calendar.current.dateComponents([.day], from: notNowDate, to: Date()).day {
-                return days >= 7
+        if let loginIdData = OwnID.CoreSDK.LoginIdDataSaver.loginIdData(from: loginId) {
+            guard !loginIdData.isOwnIdLogin else {
+                return false
+            }
+            
+            if let interval = loginIdData.lastEnrollmentTimeInterval {
+                let notNowDate = Date(timeIntervalSince1970: interval)
+                if let days = Calendar.current.dateComponents([.day], from: notNowDate, to: Date()).day {
+                    return days >= 7
+                }
             }
             return true
         } else {

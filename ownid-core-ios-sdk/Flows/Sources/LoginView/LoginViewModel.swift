@@ -204,9 +204,10 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                 } receiveValue: { [unowned self] loginResult in
                     if let loginId = payload.loginId {
                         OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                        OwnID.CoreSDK.LoginIdDataSaver.save(loginId: loginId, isOwnIdLogin: true)
                     }
                     integrationResultPublisher.send(.success(.loggedIn(loginResult: loginResult.operationResult, authType: loginResult.authType)))
-                    resetDataAndState(isResettingToInitialState: false)
+                    resetDataAndState()
                 }
                 .store(in: &bag)
         } else {
@@ -214,9 +215,10 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                         
             if let loginId = payload.loginId {
                 OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                OwnID.CoreSDK.LoginIdDataSaver.save(loginId: loginId, isOwnIdLogin: true)
             }
             flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
-            resetDataAndState(isResettingToInitialState: false)
+            resetDataAndState()
         }
     }
     

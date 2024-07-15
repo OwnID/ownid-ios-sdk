@@ -40,7 +40,7 @@ public extension OwnID.CoreSDK {
         case notYou
         case screenShow(screen: String)
         case userPastedCode
-        case webBridge(type: String)
+        case webBridge(name: String, type: String)
         case error
         case notNow
         case close
@@ -48,6 +48,8 @@ public extension OwnID.CoreSDK {
         case clickEnroll
         case enrollCompleted
         case enrollFailed
+        case flowStarted
+        case flowEnded
                 
         var actionValue: String {
             func fidoActionPrefix(type: AnalyticFidoType) -> String {
@@ -96,8 +98,8 @@ public extension OwnID.CoreSDK {
                 return "Viewed \(screen)"
             case .userPastedCode:
                 return "User Pasted Verification Code"
-            case .webBridge(let type):
-                return "WebViewBridge: received command [FIDO:\(type)]"
+            case .webBridge(let name, let type):
+                return "WebViewBridge: received command [\(name):\(type)]"
             case .error:
                 return "Viewed Error"
             case .notNow:
@@ -112,6 +114,10 @@ public extension OwnID.CoreSDK {
                 return "Completed Device Enrollment"
             case .enrollFailed:
                 return "Failed Device Enrollment"
+            case .flowStarted:
+                return "Flow Started"
+            case .flowEnded:
+                return "Flow Ended"
             }
         }
         
@@ -139,7 +145,9 @@ public extension OwnID.CoreSDK {
                     .enrollSkipped,
                     .clickEnroll,
                     .enrollCompleted,
-                    .enrollFailed:
+                    .enrollFailed,
+                    .flowStarted,
+                    .flowEnded:
                 return false
             case .loaded, .click, .undo:
                 return true

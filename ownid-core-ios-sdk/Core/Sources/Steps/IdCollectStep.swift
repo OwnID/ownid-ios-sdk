@@ -71,7 +71,6 @@ extension OwnID.CoreSDK.CoreViewModel {
                     OwnID.CoreSDK.logger.log(level: .debug, message: "Id Collect Request Finished", type: Self.self)
                 })
                 .map { [self] response in
-                    OwnID.UISDK.PopupManager.dismissPopup()
                     return handleResponse(response: response, isOnUI: true)
                 }
                 .catch { Just(.error(OwnID.CoreSDK.ErrorWrapper(error: $0, isOnUI: true, type: Self.self))) }

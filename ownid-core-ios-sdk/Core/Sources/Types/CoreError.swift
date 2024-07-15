@@ -69,7 +69,7 @@ public extension OwnID.CoreSDK {
         public init(code: String?, message: String?, userMessage: String?) {
             self.code = ErrorTypeCode(rawValue: code ?? "") ?? .unknown
             self.message = message ?? ""
-            self.userMessage = userMessage ?? ""
+            self.userMessage = userMessage ?? OwnID.CoreSDK.TranslationsSDK.TranslationKey.stepsError.localized()
         }
         
         public init(message: String) {

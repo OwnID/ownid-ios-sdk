@@ -68,7 +68,7 @@ extension OwnID.CoreSDK {
 
             registrationRequest.userVerificationPreference = .required
             
-            if registrationRequest.responds(to: Selector("setExcludedCredentials:")) {
+            if #available(iOS 17.4, *) {
                 registrationRequest.excludedCredentials = creds
             } else {
                 OwnID.CoreSDK.logger.log(level: .warning, message: "setExcludedCredentials isn't available", type: Self.self)

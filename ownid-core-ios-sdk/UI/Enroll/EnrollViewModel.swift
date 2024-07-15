@@ -53,7 +53,7 @@ extension OwnID.UISDK.Enroll {
                                                  loginId: loginId,
                                                  source: sourceMetricName))
             
-            OwnID.CoreSDK.EnrollManager.EnrollNotNowSaver.save(loginId: loginId)
+            OwnID.CoreSDK.LoginIdDataSaver.save(loginId: loginId, lastEnrollmentTimeInterval: Date().timeIntervalSince1970)
             
             store.send(.notNow)
         }
