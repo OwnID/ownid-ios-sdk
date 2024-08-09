@@ -11,6 +11,8 @@
 		1158B32F2C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
 		1158B3302C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
 		1158B3312C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
+		1170B15C2C661F9400389D07 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
+		1170B1602C6621DC00389D07 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1170B15F2C6621DC00389D07 /* LoginViewController.swift */; };
 		11E6C54A2C11F7100074B747 /* AccountViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E6C5492C11F7100074B747 /* AccountViewModel.swift */; };
 		11E6C54B2C1201200074B747 /* BlueButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686E42BF50DCC007BF445 /* BlueButton.swift */; };
 		11E6C54C2C1201880074B747 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3686DA2BF4E8BE007BF445 /* HeaderView.swift */; };
@@ -112,6 +114,7 @@
 		024B20E32AC8C86E4353CF1D /* Pods-UIKitInjectionDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UIKitInjectionDemo.release.xcconfig"; path = "Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo.release.xcconfig"; sourceTree = "<group>"; };
 		048BC4A082ECB82876A2F40F /* Pods-ScreensetsDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.debug.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		1158B32E2C076EF300149316 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		1170B15F2C6621DC00389D07 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		11E6C5492C11F7100074B747 /* AccountViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewModel.swift; sourceTree = "<group>"; };
 		11E6C54E2C1209FE0074B747 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		161C475A290AE94F0014D737 /* ScreensetsDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreensetsDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -280,6 +283,7 @@
 				163998D129104EC5003087CD /* OwnIDConfiguration.plist */,
 				1662AD62291048DB0071894C /* AppDelegate.swift */,
 				1662AD66291048DB0071894C /* RegisterViewController.swift */,
+				1170B15F2C6621DC00389D07 /* LoginViewController.swift */,
 				11E6C54E2C1209FE0074B747 /* AccountViewController.swift */,
 				1662AD68291048DB0071894C /* Main.storyboard */,
 				1662AD6B291048DC0071894C /* Assets.xcassets */,
@@ -606,6 +610,7 @@
 			files = (
 				1662AD6C291048DC0071894C /* Assets.xcassets in Resources */,
 				1662AD6A291048DB0071894C /* Main.storyboard in Resources */,
+				1170B15C2C661F9400389D07 /* Assets.xcassets in Resources */,
 				163998D229104EC5003087CD /* OwnIDConfiguration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -861,6 +866,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1170B1602C6621DC00389D07 /* LoginViewController.swift in Sources */,
 				1662AD67291048DB0071894C /* RegisterViewController.swift in Sources */,
 				1662AD63291048DB0071894C /* AppDelegate.swift in Sources */,
 				11E6C54F2C1209FE0074B747 /* AccountViewController.swift in Sources */,

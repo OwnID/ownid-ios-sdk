@@ -4,15 +4,14 @@ import Combine
 import OwnIDGigyaSDK
 import Gigya
 
-final class RegisterViewController: UIViewController {
+final class LoginViewController: UIViewController {
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var ownIdContainerView: UIView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
-    private var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
+    private var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
     private lazy var ownIdButton = makeOwnIDButton()
-    private var isOwnIDEnabled = false
     private var bag = Set<AnyCancellable>()
     
     override func viewDidLoad() {
@@ -22,7 +21,7 @@ final class RegisterViewController: UIViewController {
             .publisher(for: UITextField.textDidChangeNotification, object: emailTextField)
             .map({ ($0.object as? UITextField)?.text ?? "" })
         
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: emailPublisher.eraseToAnyPublisher())
+        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: emailPublisher.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.integrationEventPublisher)
         addChild(ownIdButton)
@@ -30,49 +29,39 @@ final class RegisterViewController: UIViewController {
         ownIdButton.didMove(toParent: self)
     }
     
-    private func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
-        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel)
+    private func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.LoginView> {
+        let headerView = OwnID.GigyaSDK.createLoginView(viewModel: ownIDViewModel)
         let headerVC = UIHostingController(rootView: headerView)
         headerVC.view.translatesAutoresizingMaskIntoConstraints = false
         return headerVC
     }
     
-    @IBAction private func registerTapped(_ sender: UIButton) {
+    @IBAction func loginTapped(_ sender: UIButton) {
         activityIndicator.startAnimating()
-        if isOwnIDEnabled {
-            ownIDViewModel.register()
-        } else {
-            Gigya.sharedInstance().register(email: emailTextField.text ?? "",
-                                            password: passwordTextField.text ?? "") { [weak self] result in
-                switch result {
-                case .success:
-                    self?.fetchProfile()
-                case .failure(let error):
-                    self?.activityIndicator.stopAnimating()
-                    print(error.error.localizedDescription)
-                }
+        Gigya.sharedInstance().login(loginId: emailTextField.text ?? "",
+                                     password: passwordTextField.text ?? "") { [weak self] result in
+            switch result {
+            case .success:
+                self?.fetchProfile()
+            case .failure(let error):
+                self?.activityIndicator.stopAnimating()
+                print(error.error.localizedDescription)
             }
         }
     }
     
-    private func subscribe(to eventsPublisher: OwnID.RegistrationPublisher) {
+    private func subscribe(to eventsPublisher: OwnID.LoginPublisher) {
         eventsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [unowned self] event in
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .readyToRegister:
-                        isOwnIDEnabled = true
-                        
-                    case .userRegisteredAndLoggedIn:
+                    case .loggedIn:
                         fetchProfile()
                         
                     case .loading:
-                        break
-                        
-                    case .resetTapped:
-                        isOwnIDEnabled = false
+                        print("Loading state")
                     }
                     
                 case .failure(let error):
@@ -103,4 +92,3 @@ final class RegisterViewController: UIViewController {
         }
     }
 }
-
