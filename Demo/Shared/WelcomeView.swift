@@ -6,8 +6,6 @@ public struct WelcomeView: View {
     @State private var isLoginActive = false
     @State private var isRegisterActive = false
     
-    public init() { }
-    
     public var body: some View {
         NavigationView {
             ZStack {
