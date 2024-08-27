@@ -134,7 +134,8 @@ public extension OwnID.FlowsSDK.RegisterView {
                         }
                     } receiveValue: { [unowned self] registrationResult in
                         if let loginId = payload.loginId {
-                            OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                            OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId,
+                                                            authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: registrationResult.authType))
                         }
                         integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registrationResult.operationResult, authType: registrationResult.authType)))
                         resetDataAndState()
@@ -147,7 +148,8 @@ public extension OwnID.FlowsSDK.RegisterView {
             OwnID.CoreSDK.logger.log(level: .debug, message: "Registration without integration response", type: Self.self)
             
             if let loginId = payload.loginId {
-                OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId,
+                                                authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: payload.authType))
             }
             flowResultPublisher.send(.success(.response(loginId: payload.loginId ?? "", payload: payload, authType: payload.authType)))
         }
@@ -190,7 +192,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                                                      category: .registration,
                                                      context: payload.context,
                                                      loginId: loginId,
-                                                     authType: payload.authType))
+                                                     authType: payload.authType?.rawValue))
                 
                 if hasIntegration {
                     integrationResultPublisher.send(.success(.readyToRegister(loginId: loginId, authType: registrationData.payload?.authType)))
@@ -237,7 +239,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                                                                  category: .registration,
                                                                  context: payload.context,
                                                                  loginId: loginId,
-                                                                 authType: payload.authType))
+                                                                 authType: payload.authType?.rawValue))
                             
                             if hasIntegration {
                                 integrationResultPublisher.send(.success(.readyToRegister(loginId: payload.loginId, authType: payload.authType)))
@@ -272,10 +274,12 @@ public extension OwnID.FlowsSDK.RegisterView {
                     if let loginIdSettings = configuration?.loginIdSettings {
                         validLoginIdFormat = OwnID.CoreSDK.LoginId(value: loginId, settings: loginIdSettings).isValid
                     }
-                    eventService.sendMetric(.clickMetric(action: .click,
-                                                         category: .registration,
-                                                         hasLoginId: !loginId.isEmpty,
-                                                         validLoginIdFormat: validLoginIdFormat))
+                    if state != .ownidCreated {
+                        eventService.sendMetric(.clickMetric(action: .click,
+                                                             category: .registration,
+                                                             hasLoginId: !loginId.isEmpty,
+                                                             validLoginIdFormat: validLoginIdFormat))
+                    }
                     skipPasswordTapped(loginId: loginId)
                 }
                 .store(in: &bag)
@@ -290,7 +294,7 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
                                              category: .registration,
                                              context: payload.context,
                                              loginId: loginId,
-                                             authType: payload.authType))
+                                             authType: payload.authType?.rawValue))
         
         if let loginPerformer {
             let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)

@@ -61,7 +61,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                         context: context,
                                                         loginId: loginId,
                                                         responseType: OwnID.CoreSDK.StatusResponseType(rawValue: stringType) ?? .registrationInfo,
-                                                        authType: authTypeValue,
+                                                        authType: OwnID.CoreSDK.AuthType(rawValue: authTypeValue ?? ""),
                                                         requestLanguage: requestLanguage)
                     return payload
                 }

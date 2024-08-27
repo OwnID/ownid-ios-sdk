@@ -11,13 +11,8 @@ public extension OwnID.CoreSDK {
         private let sessionService: SessionService
         private var bag = Set<AnyCancellable>()
 
-        private lazy var logQueue: OperationQueue = {
-            var queue = OperationQueue()
-            queue.qualityOfService = .utility
-            queue.name = "\(EventService.self) \(OperationQueue.self)"
-            queue.maxConcurrentOperationCount = 1
-            return queue
-        }()
+        private let queue = DispatchQueue(label: "\(EventService.self).\(OperationQueue.self)")
+        private let semaphore = DispatchSemaphore(value: 1)
         
         static let shared = EventService()
         
@@ -38,15 +33,18 @@ public extension OwnID.CoreSDK {
 
 private extension OwnID.CoreSDK.EventService {
     func sendEvent(for entry: Encodable) {
-        logQueue.addBarrierBlock {
+        queue.async {
+            self.semaphore.wait()
+            
             if let url = OwnID.CoreSDK.shared.metricsURL {
                 self.sessionService.perform(url: url,
                                             method: .post,
                                             body: entry,
-                                            headers: ["Content-Type": "application/json"],
-                                            queue: self.logQueue)
+                                            headers: ["Content-Type": "application/json"])
                 .ignoreOutput()
-                .sink(receiveCompletion: { _ in }, receiveValue: { _ in })
+                .sink(receiveCompletion: { _ in
+                    self.semaphore.signal()
+                }, receiveValue: { _ in })
                 .store(in: &self.bag)
             }
         }

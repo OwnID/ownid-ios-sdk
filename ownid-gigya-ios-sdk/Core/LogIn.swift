@@ -4,13 +4,18 @@ import OwnIDCoreSDK
 import Combine
 
 extension OwnID.GigyaSDK {
-    struct SessionInfo: Decodable {
-        let sessionToken: String
-        let sessionSecret: String
-        let expires_in: String
+    public struct SessionInfo: Decodable {
+        private enum CodingKeys: String, CodingKey {
+            case sessionToken, sessionSecret
+            case sessionExpiration = "expires_in"
+        }
         
-        var expiration: Double {
-            Double(expires_in) ?? 0
+        public let sessionToken: String
+        public let sessionSecret: String
+        public let sessionExpiration: String
+        
+        public var expiration: Double {
+            Double(sessionExpiration) ?? 0
         }
     }
 }

@@ -44,6 +44,11 @@ To manually integrate the OwnID WebView Bridge into your WebView, follow these s
 2. Inject the OwnID WebView Bridge into your Webview. This is typically done during the creation of the WebView and before loading its content.
 
 ```swift
-let webBridge = OwnID.CoreSDK.OwnIDWebBridge()
+let webBridge = OwnID.CoreSDK.createWebViewBridge()
 webBridge.injectInto(webView: webView)
+```
+
+You can optionally specify either includeNamespaces or excludeNamespaces, or both, to customize the namespaces that will be used for the OwnIDWebBridge instance.
+```swift
+OwnID.CoreSDK.createWebViewBridge(includeNamespaces: [.FIDO])
 ```

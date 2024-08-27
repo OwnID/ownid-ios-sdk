@@ -7,18 +7,18 @@ extension OwnID.CoreSDK.EnrollManager {
                         authStore: Store<OwnID.CoreSDK.AuthManager.State, OwnID.CoreSDK.AuthManager.Action>)
         case addPublishers(loginIdPublisher: AnyPublisher<String, Never>,
                            authTokenPublisher: AnyPublisher<String, Never>,
-                           displayNamePublisher: AnyPublisher<String, Never>,
                            force: Bool)
+        case checkPasskeysSupported
         case fetchLoginId
+        case checkLoginId(loginId: String)
         case saveLoginId(loginId: String)
         case fetchAuthToken
         case saveAuthToken(authToken: String)
-        case fetchDisplayName
-        case saveDisplayName(displayName: String?)
-        case showView
-        case skip(OwnID.CoreSDK.Error?)
         case sendinitRequest
-        case fido2Authorize(model: FIDOCreateModel)
+        case checkCredentials(model: FIDOCreateModel)
+        case saveFidoModel(model: FIDOCreateModel)
+        case showView
+        case fido2Authorize
         case sendResultRequest(fido2RegisterPayload: OwnID.CoreSDK.Fido2RegisterPayload)
         case finished(response: ResultResponse)
         case enrollView(OwnID.UISDK.Enroll.Action)
@@ -26,5 +26,6 @@ extension OwnID.CoreSDK.EnrollManager {
         case fidoUnavailable(OwnID.CoreSDK.Error)
         case error(OwnID.CoreSDK.ErrorWrapper)
         case cancelled(OwnID.CoreSDK.FlowType)
+        case skip(OwnID.CoreSDK.Error?)
     }
 }

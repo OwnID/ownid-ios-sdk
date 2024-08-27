@@ -12,6 +12,13 @@ public extension OwnID.CoreSDK {
         case auth = "ownid-auth-button"
     }
     
+    struct DeviceSecurityStatus: Encodable {
+        let isDeviceSecured: Bool
+        let isFaceHardwarePresent: Bool
+        let isFingerprintHardwarePresent: Bool
+        let isStrongBiometricEnabled: Bool
+    }
+    
     struct Metadata: Encodable {
         var correlationId: String?
         var stackTrace: String?
@@ -25,6 +32,7 @@ public extension OwnID.CoreSDK {
         var webViewOrigin: String?
         var widgetId: String?
         let applicationName = OwnID.CoreSDK.shared.store.value.configuration?.displayName
+        var deviceSecurityStatus: DeviceSecurityStatus?
         var isUserVerifyingPlatformAuthenticatorAvailable = ProcessInfo().isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 16,
                                                                                                                           minorVersion: 0,
                                                                                                                           patchVersion: 0))
@@ -62,6 +70,13 @@ public extension OwnID.CoreSDK {
             if let widgetId {
                 metadata.widgetId = widgetId
             }
+            
+            let isAppleIDAvailable = FileManager.default.ubiquityIdentityToken != nil
+            let isStrongBiometricEnabled = isPasscodeAvailable && (isFaceIDAvailable || isTouchIDAvailable) && isAppleIDAvailable
+            metadata.deviceSecurityStatus = DeviceSecurityStatus(isDeviceSecured: isPasscodeAvailable,
+                                                                 isFaceHardwarePresent: isFaceIDAvailable,
+                                                                 isFingerprintHardwarePresent: isTouchIDAvailable,
+                                                                 isStrongBiometricEnabled: isStrongBiometricEnabled)
             return metadata
         }
     }

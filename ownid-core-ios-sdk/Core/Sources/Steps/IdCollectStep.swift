@@ -47,7 +47,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         func sendAuthRequest(state: inout OwnID.CoreSDK.CoreViewModel.State,
                              loginId: String) -> [Effect<Action>] {
             guard let urlString = step.startingData?.url, let url = URL(string: urlString) else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
                                    isOnUI: true,
                                    type: Self.self)
@@ -71,7 +71,6 @@ extension OwnID.CoreSDK.CoreViewModel {
                     OwnID.CoreSDK.logger.log(level: .debug, message: "Id Collect Request Finished", type: Self.self)
                 })
                 .map { [self] response in
-                    OwnID.UISDK.PopupManager.dismissPopup()
                     return handleResponse(response: response, isOnUI: true)
                 }
                 .catch { Just(.error(OwnID.CoreSDK.ErrorWrapper(error: $0, isOnUI: true, type: Self.self))) }

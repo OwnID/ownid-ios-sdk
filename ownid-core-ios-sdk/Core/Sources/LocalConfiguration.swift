@@ -59,6 +59,7 @@ extension OwnID.CoreSDK {
         var phoneCodes: [PhoneCode]?
         var origins: Set<String> = []
         var displayName: String?
+        var webViewSettings: WebViewSettings?
         
         var finalStatusURL: ServerURL {
             var url = serverURL!

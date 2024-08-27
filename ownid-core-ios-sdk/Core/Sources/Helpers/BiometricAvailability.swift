@@ -4,22 +4,30 @@ import Foundation
 extension OwnID.CoreSDK {
     static var isPasskeysSupported: Bool {
         let isLeastPasskeysSupportediOS = ProcessInfo().isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 16, minorVersion: 0, patchVersion: 0))
-        var isBiometricsAvailable = false
-        let authContext = LAContext()
-        let _ = authContext.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
-        switch authContext.biometryType {
-        case .none:
-            break
-        case .touchID, .faceID:
-            isBiometricsAvailable = true
-        case .opticID:
-            //TODO: check on apple vision pro
-            break
-        @unknown default:
-            print("please update biometrics types")
-        }
-        let isPasscodeAvailable = LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
+        let isBiometricsAvailable = isTouchIDAvailable || isFaceIDAvailable
         let isPasskeysSupported = isLeastPasskeysSupportediOS && (isBiometricsAvailable || isPasscodeAvailable)
         return isPasskeysSupported
+    }
+    
+    static var isPasscodeAvailable: Bool {
+        LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
+    }
+    
+    static var isTouchIDAvailable: Bool {
+        let context = LAContext()
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) {
+            return context.biometryType == .touchID
+        } else {
+            return false
+        }
+    }
+    
+    static var isFaceIDAvailable: Bool {
+        let context = LAContext()
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) {
+            return context.biometryType == .faceID
+        } else {
+            return false
+        }
     }
 }

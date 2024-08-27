@@ -8,7 +8,7 @@ extension OwnID.CoreSDK.EnrollManager {
                 OwnID.CoreSDK.logger.log(level: .debug, message: "LoginId was fetched", type: Self.self)
             })
             .map { loginId in
-                return Action.saveLoginId(loginId: loginId)
+                return Action.checkLoginId(loginId: loginId)
             }
             .eraseToEffect()
         return [effect]
@@ -26,24 +26,21 @@ extension OwnID.CoreSDK.EnrollManager {
         return [effect]
     }
     
-    static func fetchDisplayName(displayNamePublisher: AnyPublisher<String, Never>) -> [Effect<Action>] {
-        let effect = displayNamePublisher
-            .handleEvents(receiveOutput: { _ in
-                OwnID.CoreSDK.logger.log(level: .debug, message: "Display name was fetched", type: Self.self)
-            })
-            .map { displayName in
-                return Action.saveDisplayName(displayName: displayName)
+    static func shouldShowView(for loginId: String, force: Bool) -> Bool {
+        guard !force else {
+            return true
+        }
+        
+        if let loginIdData = OwnID.CoreSDK.LoginIdDataSaver.loginIdData(from: loginId) {
+            guard loginIdData.authMethod != .passkey else {
+                return false
             }
-            .eraseToEffect()
-        return [effect]
-    }
-    
-    static func shouldShowView(for loginId: String) -> Bool {
-        let dict = EnrollNotNowSaver.enrollNotNowDict()
-        if let interval = dict?[loginId] {
-            let notNowDate = Date(timeIntervalSince1970: interval)
-            if let days = Calendar.current.dateComponents([.day], from: notNowDate, to: Date()).day {
-                return days >= 7
+            
+            if let interval = loginIdData.lastEnrollmentTimeInterval {
+                let notNowDate = Date(timeIntervalSince1970: interval)
+                if let days = Calendar.current.dateComponents([.day], from: notNowDate, to: Date()).day {
+                    return days >= 7
+                }
             }
             return true
         } else {
@@ -51,9 +48,21 @@ extension OwnID.CoreSDK.EnrollManager {
         }
     }
     
+    static func shouldShowView(for model: FIDOCreateModel, force: Bool) -> Bool {
+        guard !force else {
+            return true
+        }
+        
+        if let excludeCredentials = model.excludeCredentials, !excludeCredentials.isEmpty {
+            return false
+        } else {
+            return true
+        }
+    }
+    
     static func showView(state: inout State) -> [Effect<Action>] {
         guard let enrollViewStore = state.enrollViewStore, let loginId = state.loginId else {
-            let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+            let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "loginId")
             let errorModel = OwnID.CoreSDK.UserErrorModel(message: message)
             return [Just(.error(OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: errorModel), type: Self.self))).eraseToEffect()]
         }
@@ -74,7 +83,7 @@ extension OwnID.CoreSDK.EnrollManager {
         let session = OwnID.CoreSDK.SessionService(supportedLanguages: OwnID.CoreSDK.Languages(rawValue: [locales.serverLanguage]))
         state.session = session
         
-        let body = AttestationOptions(displayName: state.displayName ?? state.loginId,
+        let body = AttestationOptions(displayName: state.loginId,
                                       username: state.loginId)
         
         let effect = session.perform(url: url,
@@ -86,15 +95,18 @@ extension OwnID.CoreSDK.EnrollManager {
                 OwnID.CoreSDK.logger.log(level: .debug, message: "Init enrollment request finished", type: Self.self)
             })
             .map({ response in
-                OwnID.UISDK.PopupManager.dismissPopup()
-                return .fido2Authorize(model: response)
+                return .checkCredentials(model: response)
             })
             .catch { Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0, type: Self.self))) }
             .eraseToEffect()
         return [effect]
     }
     
-    static func fido2Authorize(state: inout State, model: FIDOCreateModel) {
+    static func fido2Authorize(state: inout State) {
+        guard let model = state.fidoCreateModel else {
+            return
+        }
+        
         let authManager = OwnID.CoreSDK.AuthManager(store: state.authManagerStore,
                                                     domain: model.rp.id,
                                                     challenge: model.challenge)
@@ -119,8 +131,19 @@ extension OwnID.CoreSDK.EnrollManager {
             let error = error as NSError
             errorMessage = error.localizedDescription
             
-            let errorModel = OwnID.CoreSDK.UserErrorModel(message: errorMessage)
-            action = .error(OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: errorModel), type: Self.self))
+            let excludedCredentialsErrorCode = 8
+            let excludedCredentialsConstant = "excludeCredentials"
+            if error.code == excludedCredentialsErrorCode || error.description.contains(excludedCredentialsConstant) {
+                OwnID.CoreSDK.eventService.sendMetric(.errorMetric(action: .fidoNotFinished(type: .enroll),
+                                                                   category: .general,
+                                                                   loginId: state.loginId,
+                                                                   errorMessage: errorMessage,
+                                                                   source: state.sourceMetricName))
+                return []
+            } else {
+                let errorModel = OwnID.CoreSDK.UserErrorModel(message: errorMessage)
+                action = .error(OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: errorModel), type: Self.self))
+            }
             
         case .authManagerCredintialsNotFoundOrCanlelledByUser(let error):
             let error = error as NSError

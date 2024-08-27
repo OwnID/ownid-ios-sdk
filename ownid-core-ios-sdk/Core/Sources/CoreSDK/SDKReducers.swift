@@ -79,7 +79,8 @@ extension OwnID.CoreSDK {
                 state.configurationLoadingEventPublisher.send(configurationLoadingEvent)
                 return [
                     translationsDownloaderSDKConfigured(with: state.supportedLanguages),
-                    sendLoggerSDKConfigured()
+                    sendLoggerSDKConfigured(),
+                    notifyConfigurationFetched()
                 ]
                 
             case .error:

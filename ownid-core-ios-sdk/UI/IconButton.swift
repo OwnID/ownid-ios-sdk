@@ -77,7 +77,8 @@ private extension OwnID.UISDK.IconButton {
             if visualConfig.iconButtonConfig.loaderViewConfig.isEnabled {
                 OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.iconButtonConfig.loaderViewConfig.spinnerColor,
                                               circleColor: visualConfig.iconButtonConfig.loaderViewConfig.circleColor,
-                                              viewBackgroundColor: visualConfig.iconButtonConfig.backgroundColor)
+                                              viewBackgroundColor: visualConfig.iconButtonConfig.backgroundColor,
+                                              isLoading: $isLoading)
                 .padding(2)
                 .opacity(isLoading ? 1 : 0)
             }

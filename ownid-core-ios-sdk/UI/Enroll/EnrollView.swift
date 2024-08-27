@@ -104,7 +104,8 @@ extension OwnID.UISDK.Enroll {
                     .opacity(viewModel.isLoading ? 0 : 1)
                     OwnID.UISDK.SpinnerLoaderView(spinnerColor: OwnID.Colors.spinnerColor,
                                                   circleColor: OwnID.Colors.spinnerBackgroundColor,
-                                                  viewBackgroundColor: OwnID.Colors.blue)
+                                                  viewBackgroundColor: OwnID.Colors.blue,
+                                                  isLoading: $viewModel.isLoading)
                     .frame(width: 24, height: 24)
                     .opacity(viewModel.isLoading ? 1 : 0)
                 }

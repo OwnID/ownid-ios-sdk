@@ -5,14 +5,11 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.3.1"
+    static let version = "3.4.0"
 }
 
 public extension OwnID {
     final class GigyaSDK {
-        
-        // MARK: Setup
-        
         public static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }
         
         /// Standard configuration, searches for default .plist file

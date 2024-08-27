@@ -165,6 +165,7 @@ extension OwnID.UISDK.OneTimePassword {
         private func otpTextFieldView() -> some View {
             if #available(iOS 15.0, *) {
                 return OwnID.UISDK.OTPTextFieldView(viewModel: viewModel)
+                    .environment(\.layoutDirection, .leftToRight)
             } else {
                 return  OwnID.UISDK.LegacyOTPTextFieldView(viewModel: viewModel)
             }
@@ -188,7 +189,8 @@ extension OwnID.UISDK.OneTimePassword {
                         if store.value.isLoading {
                             OwnID.UISDK.SpinnerLoaderView(spinnerColor: OwnID.Colors.spinnerColor,
                                                           circleColor: OwnID.Colors.spinnerBackgroundColor,
-                                                          viewBackgroundColor: .clear)
+                                                          viewBackgroundColor: .clear,
+                                                          isLoading: .constant(true))
                             .frame(width: 28, height: 28)
                         }
                         resendView()
