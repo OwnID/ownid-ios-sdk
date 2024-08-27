@@ -11,7 +11,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         
         override func run(state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<OwnID.CoreSDK.CoreViewModel.Action>] {
             guard let urlString = step.webAppData?.url else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
             

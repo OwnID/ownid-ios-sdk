@@ -31,10 +31,6 @@ public extension OwnID {
         public static var logger = InternalLogger.shared
         public static var eventService: EventService { EventService.shared }
         
-        public static var enrollEventPublisher: OwnID.EnrollEventPublisher {
-            shared.enrollManager.eventPublisher
-        }
-        
         public func configureForTests() { store.send(.configureForTests) }
         
         public func requestConfiguration() { store.send(.fetchServerConfiguration) }
@@ -83,6 +79,11 @@ public extension OwnID {
             }
         }
         
+        public static func createWebViewBridge(includeNamespaces: [Namespace]? = nil,
+                                               excludeNamespaces: [Namespace]? = nil) -> OwnIDWebBridge {
+            return OwnIDWebBridge(includeNamespaces: includeNamespaces, excludeNamespaces: excludeNamespaces)
+        }
+        
         func subscribeForURL(coreViewModel: CoreViewModel) {
             coreViewModel.subscribeToURL(publisher: urlPublisher.eraseToAnyPublisher())
         }
@@ -92,31 +93,26 @@ public extension OwnID {
             shared.store.send(.updateSupportedLanguages(supportedLanguages: Languages(rawValue: supportedLanguages)))
         }
         
-        public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) {
+        public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) -> OwnID.EnrollEventPublisher {
             let enrollManager = EnrollManager(supportedLanguages: .init(rawValue: shared.supportedLanguages))
             shared.enrollManager = enrollManager
             
             let loginIdPublisher = Just(loginId).eraseToAnyPublisher()
             let authTokenPublisher = Just(authToken).eraseToAnyPublisher()
-            let displayName = loginId
-            let displayNamePublisher = Just(displayName).eraseToAnyPublisher()
-            shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
-                                        authTokenPublisher: authTokenPublisher,
-                                        displayNamePublisher: displayNamePublisher,
-                                        force: force)
+            return shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
+                                               authTokenPublisher: authTokenPublisher,
+                                               force: force)
         }
         
         public static func enrollCredential(loginIdPublisher: AnyPublisher<String, Never>,
                                             authTokenPublisher: AnyPublisher<String, Never>,
-                                            force: Bool = false) {
+                                            force: Bool = false) -> OwnID.EnrollEventPublisher {
             let enrollManager = EnrollManager(supportedLanguages: .init(rawValue: shared.supportedLanguages))
             shared.enrollManager = enrollManager
             
-            let displayNamePublisher = loginIdPublisher
-            shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
-                                        authTokenPublisher: authTokenPublisher,
-                                        displayNamePublisher: displayNamePublisher,
-                                        force: force)
+            return shared.enrollManager.enroll(loginIdPublisher: loginIdPublisher,
+                                               authTokenPublisher: authTokenPublisher,
+                                               force: force)
         }
         
         func createCoreViewModelForRegister(loginId: String) -> CoreViewModel {

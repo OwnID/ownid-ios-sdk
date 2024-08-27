@@ -15,7 +15,6 @@ public extension OwnID.CoreSDK {
     
     /// Represents app console identifier. Example `q4qy97xgj02r37`
     typealias AppID = String
-    typealias AuthType = String
     
     /// Logs into or creates account for this user ID, passed by symbol
     typealias LoginIdPublisher = AnyPublisher<String, Never>

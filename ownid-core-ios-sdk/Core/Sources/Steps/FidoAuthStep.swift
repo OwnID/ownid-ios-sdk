@@ -44,11 +44,6 @@ extension OwnID.CoreSDK.CoreViewModel {
         }
         
         override func run(state: inout State) -> [Effect<OwnID.CoreSDK.CoreViewModel.Action>] {
-            guard let url = step.fidoData?.url else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
-                return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
-            }
-            
             let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
             OwnID.CoreSDK.logger.log(level: .debug, message: "run Fido \(type.rawValue)", type: Self.self)
             OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .fidoRun(type: .general),
@@ -90,7 +85,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                              fido2Payload: Encodable,
                              type: OwnID.CoreSDK.RequestType) -> [Effect<Action>] {
             guard let urlString = step.fidoData?.url, let url = URL(string: urlString) else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
 
@@ -123,7 +118,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         func handleFidoError(state: inout OwnID.CoreSDK.CoreViewModel.State,
                              error: OwnID.CoreSDK.AuthManager.AuthManagerError) -> [Effect<Action>] {
             guard let urlString = step.fidoData?.url, let url = URL(string: urlString) else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
             

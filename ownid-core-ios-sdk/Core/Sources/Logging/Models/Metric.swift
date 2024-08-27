@@ -40,7 +40,7 @@ public extension OwnID.CoreSDK {
         case notYou
         case screenShow(screen: String)
         case userPastedCode
-        case webBridge(type: String)
+        case webBridge(name: String, type: String)
         case error
         case notNow
         case close
@@ -96,8 +96,8 @@ public extension OwnID.CoreSDK {
                 return "Viewed \(screen)"
             case .userPastedCode:
                 return "User Pasted Verification Code"
-            case .webBridge(let type):
-                return "WebViewBridge: received command [FIDO:\(type)]"
+            case .webBridge(let name, let type):
+                return "WebViewBridge: received command [\(name):\(type)]"
             case .error:
                 return "Viewed Error"
             case .notNow:

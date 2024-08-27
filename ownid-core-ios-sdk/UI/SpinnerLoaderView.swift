@@ -9,6 +9,7 @@ extension OwnID.UISDK {
         private let lineStyle = StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round)
         @State private var circleLineLength: Double = 0.011
         @State private var circleRotation = 0.0
+        @Binding var isLoading: Bool
         private let animationDuration = 2.0
         private let maximumCircleLength: CGFloat = 1/3
         
@@ -31,7 +32,19 @@ extension OwnID.UISDK {
                     increasingCircle()
                 }
                 .background(viewBackgroundColor)
-            }.onAppear {
+            }
+            .onChange(of: isLoading, perform: { value in
+                applyAnimation(isLoading: value)
+            })
+            .onAppear(perform: {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    applyAnimation(isLoading: isLoading)
+                }
+            })
+        }
+        
+        private func applyAnimation(isLoading: Bool) {
+            if isLoading {
                 withAnimation(rotationAnimation) {
                     circleRotation = 1
                 }

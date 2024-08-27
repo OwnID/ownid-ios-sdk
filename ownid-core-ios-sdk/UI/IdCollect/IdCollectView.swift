@@ -168,14 +168,13 @@ extension OwnID.UISDK.IdCollect {
         
         @ViewBuilder
         private func errorText() -> some View {
-            if viewModel.isError {
-                HStack {
-                    Text(localizedKey: .idCollectError(type: viewModel.loginIdType.rawValue))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(OwnID.Colors.errorColor)
-                        .padding(.bottom, 8)
-                }
+            HStack {
+                Text(localizedKey: .idCollectError(type: viewModel.loginIdType.rawValue))
+                    .font(.system(size: 12))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundColor(OwnID.Colors.errorColor)
             }
+            .opacity(viewModel.isError ? 1 : 0)
         }
         
         @ViewBuilder
@@ -220,7 +219,7 @@ extension OwnID.UISDK.IdCollect {
                 RoundedRectangle(cornerRadius: cornerRadiusValue)
                     .stroke(borderColor, lineWidth: 1)
             )
-            .padding(.top, 12)
+            .padding(.top, 20)
             .foregroundColor(.primary)
             .onTapGesture {
                 presentList = true
@@ -261,7 +260,6 @@ extension OwnID.UISDK.IdCollect {
                         .stroke(borderColor, lineWidth: 1)
                 )
                 .padding(.top, 20)
-                .padding(.bottom, 8)
         }
         
         private func viewContent() -> some View {
@@ -272,8 +270,8 @@ extension OwnID.UISDK.IdCollect {
                         .font(.system(size: 16))
                         .foregroundColor(OwnID.Colors.popupContentMessageColor)
                         .padding(.bottom, 8)
-                    errorText()
                     loginIdTextField()
+                    errorText()
                     continueButton()
                         .padding(.bottom, 8)
                     errorView()

@@ -54,7 +54,7 @@ The OwnID SDK uses passkeys to authenticate users.
 
 > [!IMPORTANT]
 >
-> To enable passkey support for your iOS app, associate your app with a website that your app owns using Associated Domains by following this guide: [Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
+> To enable passkey support for your iOS app, associate your app with a website that your app owns using Associated Domains and add the associated domains entitlement to your app by following this guide: [Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
 
 ## Add Property List File to Project
 
@@ -294,10 +294,10 @@ OwnID.CoreSDK.enrollCredential(loginId: String, authToken: String)
 ```
 where `loginId` is a user's login ID, `authToken` is a user's authentication token.
 
-Optionally, to monitor the status of the last credential enrollment request, you can listen to enrollment events by subscribing to `enrollEventPublisher`:
+Optionally, to monitor the status of the last credential enrollment request, you can listen to enrollment events:
 
 ```swift
-OwnID.CoreSDK.enrollEventPublisher
+OwnID.CoreSDK.enrollCredential(loginId: String, authToken: String)
     .receive(on: DispatchQueue.main)
     .sink { event in
         switch event {

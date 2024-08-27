@@ -19,7 +19,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         
         override func run(state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<OwnID.CoreSDK.CoreViewModel.Action>] {
             guard let otpData = step.otpData, let restartUrl = URL(string: otpData.restartUrl) else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "restartUrl")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
             
@@ -67,7 +67,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                      operationType: OwnID.UISDK.OneTimePassword.OperationType,
                      isFlowFinished: Bool) -> [Effect<Action>] {
             guard let otpData = step.otpData, let restartUrl = URL(string: otpData.restartUrl) else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "restartUrl")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
             
@@ -104,7 +104,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         
         func resend(state: inout OwnID.CoreSDK.CoreViewModel.State, operationType: OwnID.UISDK.OneTimePassword.OperationType) -> [Effect<Action>] {
             guard let otpData = step.otpData, let resendUrl = URL(string: otpData.resendUrl) else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "resendUrl")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
             
@@ -145,7 +145,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                       operationType: OwnID.UISDK.OneTimePassword.OperationType,
                       state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<Action>] {
             guard let otpData = step.otpData, let url = URL(string: otpData.url) else {
-                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissing
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
             
@@ -169,20 +169,11 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                            loginId: loginId,
                                                                            source: operationType.metricName))
                     } else if let error = response.error {
-                        let model = OwnID.CoreSDK.UserErrorModel(code: error.errorCode, message: error.message, userMessage: error.userMessage)
-                        if model.code == .invalidCode {
-                            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .wrongOTP(name: operationType.metricName),
-                                                                               category: eventCategory,
-                                                                               context: context,
-                                                                               loginId: loginId,
-                                                                               source: operationType.metricName))
-                        } else {
-                            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .correctOTP(name: operationType.metricName),
-                                                                               category: eventCategory,
-                                                                               context: context,
-                                                                               loginId: loginId,
-                                                                               source: operationType.metricName))
-                        }
+                        OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .wrongOTP(name: operationType.metricName),
+                                                                           category: eventCategory,
+                                                                           context: context,
+                                                                           loginId: loginId,
+                                                                           source: operationType.metricName))
                     }
 
                     return handleResponse(response: response, isOnUI: true)

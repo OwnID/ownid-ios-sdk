@@ -19,10 +19,12 @@ public extension OwnID.CoreSDK {
             allUnderlyingSDKs.append(contentsOf: underlyingSDKs)
             SDKUserAgent = userAgent(for: userFacingSDK, underlyingSDKs: allUnderlyingSDKs)
             version = version(for: userFacingSDK, underlyingSDKs: allUnderlyingSDKs)
+            sdkName = sdkFullName(sdkName: userFacingSDK.name)
         }
         
         private var systemVersion: String { UIDevice.current.systemVersion }
         
+        @Published public var sdkName = OwnID.CoreSDK.sdkName
         public lazy var SDKUserAgent = userAgent(for: (OwnID.CoreSDK.sdkName, OwnID.CoreSDK.version), underlyingSDKs: [])
         lazy var version: String = version(for: (OwnID.CoreSDK.sdkName, OwnID.CoreSDK.version), underlyingSDKs: [])
         
@@ -35,15 +37,21 @@ public extension OwnID.CoreSDK {
         private func userAgent(for userFacingSDK: SDKInformation, underlyingSDKs: [SDKInformation]) -> String {
             let userFacingSDKName = sdkAgentName(sdkName: userFacingSDK.name, version: userFacingSDK.verison)
             let underlyingSDKsNames = underlyingSDKNames(underlyingSDKs: underlyingSDKs)
+            sdkName = sdkFullName(sdkName: OwnID.CoreSDK.sdkName)
             return "\(userFacingSDKName) (iOS; iOS \(systemVersion); \(modelName)) \(underlyingSDKsNames) \(Bundle.main.bundleIdentifier!)"
         }
         
-        private func sdkAgentName(sdkName: String, version: String) -> String {
+        private func sdkFullName(sdkName: String) -> String {
             if !sdkName.hasPrefix("OwnID") {
-                "OwnID\(sdkName)/\(version)"
+                "OwnID\(sdkName)"
             } else {
-                "\(sdkName)/\(version)"
+                sdkName
             }
+            
+        }
+        
+        private func sdkAgentName(sdkName: String, version: String) -> String {
+            "\(sdkFullName(sdkName: sdkName))/\(version)"
         }
         
         private func underlyingSDKNames(underlyingSDKs: [SDKInformation]) -> String {

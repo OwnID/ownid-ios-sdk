@@ -79,7 +79,7 @@ extension OwnID.CoreSDK {
                     
                     var local = config
                     local.serverURL = serverConfiguration.serverURL
-                    local.redirectionURL = (serverConfiguration.platformSettings?.redirectUrlOverride ?? serverConfiguration.redirectURLString) ?? local.redirectionURL
+                    local.redirectionURL = local.redirectionURL ?? (serverConfiguration.platformSettings?.redirectUrlOverride ?? serverConfiguration.redirectURLString)
                     local.passkeysAutofillEnabled = serverConfiguration.passkeysAutofillEnabled
                     local.supportedLocales = serverConfiguration.supportedLocales
                     local.loginIdSettings = serverConfiguration.loginIdSettings
@@ -87,6 +87,7 @@ extension OwnID.CoreSDK {
                     local.phoneCodes = serverConfiguration.phoneCodes
                     local.origins = Set(serverConfiguration.origins ?? [])
                     local.displayName = serverConfiguration.displayName
+                    local.webViewSettings = serverConfiguration.webViewSettings
                     return SDKAction.save(configurationLoadingEvent: .loaded(local), userFacingSDK: userFacingSDK)
                 }
                 .catch { _ in
@@ -110,6 +111,12 @@ extension OwnID.CoreSDK {
     static func sendLoggerSDKConfigured() -> Effect<SDKAction> {
         .fireAndForget {
             OwnID.CoreSDK.logger.sdkConfigured()
+        }
+    }
+    
+    static func notifyConfigurationFetched() -> Effect<SDKAction> {
+        .fireAndForget {
+            NotificationCenter.default.post(name: Notification.Name("ConfigurationFetched"), object: self)
         }
     }
 }

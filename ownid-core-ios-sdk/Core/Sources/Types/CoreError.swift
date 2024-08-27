@@ -32,13 +32,19 @@ extension OwnID.CoreSDK {
         static let notValidRedirectionURLOrNotMatchingFromConfiguration = "Error returning value from browser"
         static let noServerConfig = "No server configuration available"
         static let noLocalConfig = "No local configuration available"
-        static let dataIsMissing = "Data is missing"
         static let payloadMissing = "Payload missing"
         static let emptyResponseData = "Response data is empty"
         static let requestError = "Error while performing action"
         static let webFrameError = "Requests from subframes are not supported"
         static let fidoUnavailable = "FIDO unavailable"
         static let enrollmentSkipped = "Credential enrollment was skipped"
+        
+        static func dataIsMissingError(dataInfo: String? = nil) -> String {
+            if let dataInfo {
+                return "Data is missing: \(dataInfo)"
+            }
+            return "Data is missing"
+        }
         
         static func webSchemeURLError(urlString: String) -> String {
             return "WebAuthn not permitted for current URL: \(urlString)"
@@ -69,7 +75,7 @@ public extension OwnID.CoreSDK {
         public init(code: String?, message: String?, userMessage: String?) {
             self.code = ErrorTypeCode(rawValue: code ?? "") ?? .unknown
             self.message = message ?? ""
-            self.userMessage = userMessage ?? ""
+            self.userMessage = userMessage ?? OwnID.CoreSDK.TranslationsSDK.TranslationKey.stepsError.localized()
         }
         
         public init(message: String) {

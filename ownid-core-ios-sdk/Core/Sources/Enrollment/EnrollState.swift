@@ -7,14 +7,13 @@ extension OwnID.CoreSDK.EnrollManager {
         
         var loginIdPublisher: AnyPublisher<String, Never>!
         var authTokenPublisher: AnyPublisher<String, Never>!
-        var displayNamePublisher: AnyPublisher<String, Never>!
         
         var force = false
         
         var loginId: String!
         var authToken: String!
-        var displayName: String!
         var session: OwnID.CoreSDK.SessionService!
+        var fidoCreateModel: FIDOCreateModel!
         
         var enrollViewStore: Store<OwnID.UISDK.Enroll.ViewState, OwnID.UISDK.Enroll.Action>!
         

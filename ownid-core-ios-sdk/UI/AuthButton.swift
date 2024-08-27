@@ -47,7 +47,8 @@ private extension OwnID.UISDK.AuthButton {
             if visualConfig.authButtonConfig.loaderViewConfig.isEnabled {
                 OwnID.UISDK.SpinnerLoaderView(spinnerColor: visualConfig.authButtonConfig.loaderViewConfig.spinnerColor,
                                               circleColor: visualConfig.authButtonConfig.loaderViewConfig.circleColor,
-                                              viewBackgroundColor: visualConfig.authButtonConfig.backgroundColor)
+                                              viewBackgroundColor: visualConfig.authButtonConfig.backgroundColor,
+                                              isLoading: $isLoading)
                 .frame(width: visualConfig.authButtonConfig.loaderHeight, height: visualConfig.authButtonConfig.loaderHeight)
                 .opacity(isLoading ? 1 : 0)
             }

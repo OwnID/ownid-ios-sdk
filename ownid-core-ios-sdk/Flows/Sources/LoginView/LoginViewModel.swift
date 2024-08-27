@@ -192,7 +192,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                                              context: payload.context,
                                              loginId: loginId,
                                              loginType: loginType,
-                                             authType: payload.authType))
+                                             authType: payload.authType?.rawValue))
         
         if let loginPerformer {
             let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)
@@ -203,20 +203,22 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                     }
                 } receiveValue: { [unowned self] loginResult in
                     if let loginId = payload.loginId {
-                        OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                        OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId, 
+                                                        authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: loginResult.authType))
                     }
                     integrationResultPublisher.send(.success(.loggedIn(loginResult: loginResult.operationResult, authType: loginResult.authType)))
-                    resetDataAndState(isResettingToInitialState: false)
+                    resetDataAndState()
                 }
                 .store(in: &bag)
         } else {
             OwnID.CoreSDK.logger.log(level: .debug, message: "Login without integration response", type: Self.self)
                         
             if let loginId = payload.loginId {
-                OwnID.CoreSDK.DefaultsLoginIdSaver.save(loginId: loginId)
+                OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId,
+                                                authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: payload.authType))
             }
             flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
-            resetDataAndState(isResettingToInitialState: false)
+            resetDataAndState()
         }
     }
     
