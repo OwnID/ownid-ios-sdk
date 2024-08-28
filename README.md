@@ -26,7 +26,7 @@ The [OwnID](https://ownid.com/) iOS SDK is a client library offering a secure an
 
 ### Advanced Configuration
 
-Explore advanced configuration options in OwnID Core Android SDK by referring to the [Advanced Configuration](Docs/sdk-advanced-configuration.md) documentation.
+Explore advanced configuration options in OwnID Core iOS SDK by referring to the [Advanced Configuration](Docs/sdk-advanced-configuration.md) documentation.
 
 ## Demo Applications
 
