@@ -16,13 +16,19 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
 * [Import OwnID Module](#import-ownid-module)
 * [Initialize the SDK](#initialize-the-sdk)
   + [Add OwnID WebView Bridge](#add-ownid-webview-bridge)
-* [Implement the Registration Screen](#implement-the-registration-screen)
-  + [Add the OwnID View](#add-the-ownid-view)
-  + [Customize View Model](#customize-view-model)
-* [Implement the Login Screen](#implement-the-login-screen)
-  + [Add OwnID View](#add-ownid-view)
-  + [Customize View Model](#customize-view-model-1)
-  + [Social Login and Account linking](#social-login-and-account-linking)
+* [Flow variants](#flow-variants)
+    * Native Flow
+      * [Implement the Registration Screen](#implement-the-registration-screen)
+        + [Add the OwnID View](#add-the-ownid-view)
+        + [Customize View Model](#customize-view-model)
+      * [Implement the Login Screen](#implement-the-login-screen)
+        + [Add OwnID View](#add-ownid-view)
+        + [Customize View Model](#customize-view-model-1)
+        + [Social Login and Account linking](#social-login-and-account-linking)
+    * Elite Flow
+      * [Run Elite Flow](#run-elite-flow)
+         + [Create Providers](#create-providers)      
+         + [Start the Elite Flow](#start-the-elite-flow)
 * [Tooltip](#tooltip)
 * [Credential enrollment](#credential-enrollment)
 * [Errors](#errors)
@@ -121,6 +127,17 @@ struct DemoApp: App {
 > [!IMPORTANT]
 > 
 > You don't need to implement Registration/Login screens as Gigya Web Screen-Sets will be used instead.
+
+## Flow variants
+
+OwnID SDK offers two flow variants:
+   + **Native Flow** - utilizes native OwnID UI widgets and native UI.
+   + **Elite Flow** - provides a powerful and flexible framework for integrating and customizing authentication processes within your applications.
+
+You can choose to integrate either or both flows.
+
+<details open>
+<summary><b>Native Flow</b></summary>
 
 
 ## Implement the Registration Screen
@@ -324,6 +341,66 @@ let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstanc
                                                    loginIdPublisher: loginIdPublisher,
                                                    loginType: .linkSocialAccount)
 ```
+
+</details>
+
+<details open>
+<summary><b>Elite Flow</b></summary>
+
+## Run Elite Flow
+
+Elite Flow provides a powerful and flexible framework for integrating and customizing authentication processes within your applications. To implement passwordless authentication using the Elite Flow in OwnID SDK, follow these three steps:
+
+1. Set providers.
+2. Start the Elite Flow with event handlers.
+
+### Create Providers
+
+Providers manage critical components such as session handling and authentication mechanisms, including traditional password-based logins. They allow developers to define how users are authenticated, how sessions are maintained and how accounts are managed within the application.
+
+You can define such providers:
+1. **Session Provider**: Manages user session creation.
+2. **Account Provider**: Handles account creation.
+3. **Authentication Provider**: Manages various authentication mechanisms.
+    1. Password-based authentication provider.
+
+OwnID Gigya SDK provides default implementations for the required providers, so you only need to set them up as follows:
+
+```swift
+OwnID.providers { builder in
+    OwnID.GigyaSDK.gigyaProviders(builder)
+}
+
+```
+
+See [Complete example](../Demo/GigyaDemo/WelcomeViewModel.swift)
+
+### Start the Elite Flow
+
+To start a Elite Flow, call the `start(_:)` function. You can define event handlers for specific actions and responses within the authentication flow. They allow to customize behavior when specific events occur.
+
+```swift
+OwnID.start {
+    $0.events {
+        $0.onFinish { loginId, authMethod, authToken in
+            // Called when the authentication flow successfully completes.
+            // Define post-authentication actions here, such as session management or navigation.
+        }
+        $0.onError { error in
+            // Called when an error occurs during the authentication flow.
+            // Handle errors gracefully, such as logging or showing a message to the user.
+        }
+        $0.onClose {
+            // Called when the authentication flow is closed, either by the user or automatically.
+            // Define any cleanup or UI updates needed.
+        }
+    }
+}
+```
+
+See [complete example](../Demo/GigyaDemo/WelcomeViewModel.swift)
+
+
 
 ## Tooltip
 
