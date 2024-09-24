@@ -9,25 +9,14 @@ extension OwnID.CoreSDK {
     
     public enum Namespace: String, Decodable {
         case FIDO
+        case FLOW
         case METADATA
         case STORAGE
     }
     
-    enum Action: String, Decodable, CaseIterable {
-        case isAvailable
-        case create
-        case get
-        case onAccountNotFound
-        case onLogin
-        case onClose
-        case onError
-        case setLastUser
-        case getLastUser
-    }
-    
     struct JSDataModel: Decodable {
         let namespace: Namespace
-        let action: Action
+        let action: String
         let callbackPath: String
         let params: String?
         let metadata: JSMetadata?
@@ -61,7 +50,7 @@ extension OwnID.CoreSDK {
         case general
     }
     
-    struct OwnIDWebBridgeContext {
+    struct WebBridgeContext {
         var webView: WKWebView
         var sourceOrigin: URL?
         var allowedOriginRules: [URL]
@@ -86,11 +75,11 @@ extension OwnID.CoreSDK {
         }
         
         private var webView: WKWebView?
-        private var namespace: WebNamespace?
+        private var namespaceHandler: NamespaceHandler?
         private var allowedOriginRules: Set<String> = []
         private var origins = [URL]()
         
-        private var namespaces = [WebNamespace]()
+        var namespaceHandlers = [NamespaceHandler]()
         private let includeNamespaces: [Namespace]?
         private let excludeNamespaces: [Namespace]?
         
@@ -99,6 +88,10 @@ extension OwnID.CoreSDK {
         init(includeNamespaces: [Namespace]? = nil, excludeNamespaces: [Namespace]? = nil) {
             self.includeNamespaces = includeNamespaces
             self.excludeNamespaces = excludeNamespaces
+            
+            super.init()
+            
+            setupNamespaces()
         }
         
         public func injectInto(webView: WKWebView, allowedOriginRules: Set<String> = []) {
@@ -144,37 +137,40 @@ extension OwnID.CoreSDK {
         }
         
         private func setupNamespaces() {
-            namespaces = [OwnIDWebBridgeFido(), OwnIDWebBridgeMetadata(), OwnIDWebBridgeStorage()]
+            namespaceHandlers = [WebBridgeFido(),
+                                 WebBridgeFlow.shared,
+                                 WebBridgeMetadata(),
+                                 WebBridgeStorage()]
             
             if let includeNamespaces {
-                namespaces = []
+                namespaceHandlers = []
                 
                 includeNamespaces.forEach { namespace in
                     switch namespace {
                     case .FIDO:
-                        namespaces.append(OwnIDWebBridgeFido())
+                        namespaceHandlers.append(WebBridgeFido())
+                    case .FLOW:
+                        namespaceHandlers.append(WebBridgeFlow.shared)
                     case .METADATA:
-                        namespaces.append(OwnIDWebBridgeMetadata())
+                        namespaceHandlers.append(WebBridgeMetadata())
                     case .STORAGE:
-                        namespaces.append(OwnIDWebBridgeStorage())
+                        namespaceHandlers.append(WebBridgeStorage())
                     }
                 }
             }
             
             if let excludeNamespaces {
                 excludeNamespaces.forEach { namespace in
-                    if let index = namespaces.firstIndex(where: { $0.name == namespace }) {
-                        namespaces.remove(at: index)
+                    if let index = namespaceHandlers.firstIndex(where: { $0.name == namespace }) {
+                        namespaceHandlers.remove(at: index)
                     }
                 }
             }
         }
         
         private func getJSInterface() -> String {
-            setupNamespaces()
-            
-            let namespacesString = namespaces.map { namespace in
-                let actions = namespace.actions.map { $0.rawValue }
+            let namespacesString = namespaceHandlers.map { namespace in
+                let actions = namespace.actions.map { $0 }
                 return "\"\(namespace.name.rawValue)\": \(actions)"
             }.joined(separator: ", ")
 
@@ -218,45 +214,18 @@ extension OwnID.CoreSDK {
                     return
                 }
                 
-                let bridgeContext = OwnIDWebBridgeContext(webView: webView ?? WKWebView(),
+                let bridgeContext = WebBridgeContext(webView: webView ?? WKWebView(),
                                                           sourceOrigin: message.frameInfo.request.url,
                                                           allowedOriginRules: origins,
                                                           isMainFrame: message.frameInfo.isMainFrame,
                                                           resultPublisher: resultPublishers[JSDataModel.namespace])
                 
-                switch JSDataModel.namespace {
-                case .FIDO:
-                    let namespace = OwnIDWebBridgeFido()
-                    self.namespace = namespace
-                case .METADATA:
-                    let namespace = OwnIDWebBridgeMetadata()
-                    self.namespace = namespace
-                case .STORAGE:
-                    let namespace = OwnIDWebBridgeStorage()
-                    self.namespace = namespace
-                }
+                let namespace = namespaceHandlers.first(where: { $0.name == JSDataModel.namespace })
+                self.namespaceHandler = namespace
+                sendMetric(JSDataModel: JSDataModel, webViewOrigin: message.frameInfo.request.url?.absoluteString)
                 
-                let metadata = JSDataModel.metadata
-                let category: EventCategory
-                switch metadata?.category ?? .general {
-                case .general:
-                    category = .general
-                case .register:
-                    category = .registration
-                case .login:
-                    category = .login
-                case .link:
-                    category = .link
-                case .recovery:
-                    category = .recovery
-                }
-                OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .webBridge(name: JSDataModel.namespace.rawValue,
-                                                                                      type: JSDataModel.action.rawValue),
-                                                                   category: category,
-                                                                   context: metadata?.context,
-                                                                   siteUrl: metadata?.siteUrl,
-                                                                   webViewOrigin: bridgeContext.sourceOrigin?.absoluteString,
-                                                                   widgetId: metadata?.widgetId))
+                let message = "Invoke web bridge \(namespace?.name ?? .FIDO) \(JSDataModel.action) \(JSDataModel.params ?? "")"
+                OwnID.CoreSDK.logger.log(level: .information, message: message, type: Self.self)
                 
                 namespace?.invoke(bridgeContext: bridgeContext,
                                   action: JSDataModel.action,
@@ -267,6 +236,30 @@ extension OwnID.CoreSDK {
             default:
                 break
             }
+        }
+        
+        private func sendMetric(JSDataModel: JSDataModel, webViewOrigin: String?) {
+            let metadata = JSDataModel.metadata
+            let category: EventCategory
+            switch metadata?.category ?? .general {
+            case .general:
+                category = .general
+            case .register:
+                category = .registration
+            case .login:
+                category = .login
+            case .link:
+                category = .link
+            case .recovery:
+                category = .recovery
+            }
+            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .webBridge(name: JSDataModel.namespace.rawValue,
+                                                                                  type: JSDataModel.action),
+                                                               category: category,
+                                                               context: metadata?.context,
+                                                               siteUrl: metadata?.siteUrl,
+                                                               webViewOrigin: webViewOrigin,
+                                                               widgetId: metadata?.widgetId))
         }
         
         private func invokeCallback(callbackPath: String, and result: String) {

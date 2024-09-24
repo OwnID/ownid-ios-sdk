@@ -1,11 +1,14 @@
 ![OwnIDSDK](Docs/logo.svg)
 ## OwnID iOS SDK
  
-The [OwnID](https://ownid.com/) iOS SDK is a client library offering a secure and passwordless login alternative for your iOS applications. It leverages [Passkeys](https://www.passkeys.com/) to replace conventional passwords, fostering enhanced authentication methods. This SDK empowers users to seamlessly execute Registration and Login flows within their native iOS applications.
+The [OwnID](https://www.ownid.com/) iOS SDK is a client library offering a secure and passwordless login alternative for your iOS applications. It leverages [Passkeys](https://www.passkeys.com/) to replace conventional passwords, fostering enhanced authentication methods. This SDK empowers users to seamlessly execute Registration and Login flows within their native iOS applications.
 
 ### Key components of the OwnID iOS SDK:
 
-- **OwnID Core** - Facilitates fundamental functionality such as SDK configuration, UI widgets, interaction with iOS, and the return of OwnID flow results to the iOS application.
+- **OwnID Core** - Provides fundamental functionalities such as SDK configuration, UI widgets, interaction with the iOS, and returning OwnID flow results to the iOS application. It also provide two flow variants:
+   + **Native Flow** - utilizes native OwnID UI widgets and native UI.
+   + **Web Flow** - uses WebView to run OwnID flow and OwnID WebView Bridge to integrate native functionality.
+
 
 - **OwnID Integration Component** - An optional extension of the Core SDK, designed for seamless integration with identity platforms on the native side. When present, it executes the actual registration and login processes into the identity platform.
 

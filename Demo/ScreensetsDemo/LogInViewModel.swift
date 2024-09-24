@@ -8,8 +8,6 @@ final class LogInViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var loggedInModel: AccountModel?
     
-    @Published var inlineError: String?
-    
     private var bag = Set<AnyCancellable>()
     
     internal init() {
@@ -37,7 +35,7 @@ final class LogInViewModel: ObservableObject {
                     if let details = error["errorDetails"] as? String {
                         message.append(" Details: \(details)")
                     }
-                    inlineError = message
+                    errorMessage = message
                     
                 default:
                     print(result)

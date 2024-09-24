@@ -48,6 +48,8 @@ public extension OwnID.CoreSDK {
         case clickEnroll
         case enrollCompleted
         case enrollFailed
+        case flowTriggered
+        case flowError
                 
         var actionValue: String {
             func fidoActionPrefix(type: AnalyticFidoType) -> String {
@@ -112,6 +114,10 @@ public extension OwnID.CoreSDK {
                 return "Completed Device Enrollment"
             case .enrollFailed:
                 return "Failed Device Enrollment"
+            case .flowTriggered:
+                return "Flow Triggered From Mobile SDK"
+            case .flowError:
+                return "Flow Error"
             }
         }
         
@@ -139,7 +145,9 @@ public extension OwnID.CoreSDK {
                     .enrollSkipped,
                     .clickEnroll,
                     .enrollCompleted,
-                    .enrollFailed:
+                    .enrollFailed,
+                    .flowTriggered,
+                    .flowError:
                 return false
             case .loaded, .click, .undo:
                 return true

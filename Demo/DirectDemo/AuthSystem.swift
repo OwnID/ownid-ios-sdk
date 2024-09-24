@@ -132,7 +132,7 @@ struct UserResponse: Decodable {
     let name: String
 }
 
-extension String: OperationResult { }
+extension String: @retroactive OperationResult { }
 
 enum IntegrationError: Error, LocalizedError {
     case registrationDataError(message: String)

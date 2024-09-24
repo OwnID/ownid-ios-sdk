@@ -1,20 +1,9 @@
 import WebKit
 
-protocol WebNamespace {
-    var name: OwnID.CoreSDK.Namespace { set get }
-    var actions: [OwnID.CoreSDK.Action] { set get }
-    
-    func invoke(bridgeContext: OwnID.CoreSDK.OwnIDWebBridgeContext,
-                action: OwnID.CoreSDK.Action,
-                params: String,
-                metadata: OwnID.CoreSDK.JSMetadata?,
-                completion: @escaping (_ result: String) -> Void)
-}
-
 extension OwnID.CoreSDK {
-    final class OwnIDWebBridgeFido: WebNamespace {        
+    final class WebBridgeFido: NamespaceHandler {
         var name = Namespace.FIDO
-        var actions: [Action] = [.create, .get, .isAvailable]
+        var actions: [String] = ["isAvailable", "create", "get"]
         
         private var authManager: AuthManager?
         
@@ -25,8 +14,8 @@ extension OwnID.CoreSDK {
                                                             message: message)
         }
         
-        func invoke(bridgeContext: OwnIDWebBridgeContext,
-                    action: OwnID.CoreSDK.Action,
+        func invoke(bridgeContext: WebBridgeContext,
+                    action: String,
                     params: String,
                     metadata: JSMetadata?,
                     completion: @escaping (_ result: String) -> Void) {
@@ -43,9 +32,9 @@ extension OwnID.CoreSDK {
             }
             
             switch action {
-            case .isAvailable:
+            case "isAvailable":
                 completion("\(isPasskeysSupported)")
-            case .create, .get:
+            case "create", "get":
                 let allowedOrigin = bridgeContext.allowedOriginRules.first { rule in
                     if let sourceHost = bridgeContext.sourceOrigin?.host, let allowHost = rule.host {
                         return sourceHost == allowHost || (allowHost.hasPrefix("*.") && sourceHost.hasSuffix(String(allowHost.dropFirst(2))))
@@ -76,9 +65,9 @@ extension OwnID.CoreSDK {
                 
                 authManager = AuthManager(store: store, domain: fidoData.rpId, challenge: context)
                 if #available(iOS 16.0, *) {
-                    if action == .create {
+                    if action == "create" {
                         authManager?.signUpWith(userName: fidoData.userName, credsIds: fidoData.credsIds)
-                    } else if action == .get {
+                    } else if action == "get" {
                         authManager?.signIn(credsIds: fidoData.credsIds)
                     }
                 }

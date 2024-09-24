@@ -33,7 +33,7 @@ final class LogInViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .response(let loginId, let payload, let authType):
+                    case .response(let loginId, let payload, _):
                         self.loginId = loginId
                         
                         AuthSystem.login(ownIdData: payload.data, email: loginId)
@@ -63,6 +63,7 @@ final class LogInViewModel: ObservableObject {
         AuthSystem.login(ownIdData: nil, password: password, email: loginId)
             .sink { completionRegister in
                 if case .failure(let error) = completionRegister {
+                    self.state = .initial
                     self.errorMessage = error.localizedDescription
                 }
             } receiveValue: { result in

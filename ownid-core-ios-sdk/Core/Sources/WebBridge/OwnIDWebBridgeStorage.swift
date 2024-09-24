@@ -1,18 +1,22 @@
 import Foundation
 
 extension OwnID.CoreSDK {
-    final class OwnIDWebBridgeStorage: WebNamespace {
+    final class WebBridgeStorage: NamespaceHandler {
         struct JSStorage: Codable {
             let loginId: String
             let authMethod: String?
         }
         
         var name = Namespace.STORAGE
-        var actions: [Action] = [.setLastUser, .getLastUser]
+        var actions: [String] = ["setLastUser", "getLastUser"]
         
-        func invoke(bridgeContext: OwnID.CoreSDK.OwnIDWebBridgeContext, action: OwnID.CoreSDK.Action, params: String, metadata: OwnID.CoreSDK.JSMetadata?, completion: @escaping (String) -> Void) {
+        func invoke(bridgeContext: OwnID.CoreSDK.WebBridgeContext, 
+                    action: String,
+                    params: String,
+                    metadata: OwnID.CoreSDK.JSMetadata?,
+                    completion: @escaping (String) -> Void) {
             switch action {
-            case .setLastUser:
+            case "setLastUser":
                 do {
                     let jsonData = params.data(using: .utf8) ?? Data()
                     let loginIdSaver = try JSONDecoder().decode(JSStorage.self, from: jsonData)
@@ -27,7 +31,7 @@ extension OwnID.CoreSDK {
                     
                     completion(handleErrorResult(errorMessage: error.localizedDescription))
                 }
-            case .getLastUser:
+            case "getLastUser":
                 if let loginId = DefaultsLoginIdSaver.loginId(), !loginId.isEmpty {
                     let authMethod = LoginIdDataSaver.loginIdData(from: loginId)?.authMethod
                     

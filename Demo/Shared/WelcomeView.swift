@@ -2,9 +2,11 @@ import SwiftUI
 
 public struct WelcomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject var viewModel = WelcomeViewModel()
     
     @State private var isLoginActive = false
     @State private var isRegisterActive = false
+    @State private var errorMessage = ""
     
     public var body: some View {
         NavigationView {
@@ -31,9 +33,30 @@ public struct WelcomeView: View {
                                 self.isLoginActive = true
                             }
                         }
+                        BlueButton(text: "Start Flow", action: viewModel.startFlow)
                     }
                     .padding(.horizontal, 30)
                     .padding(.vertical, 10)
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.top)
+                }
+            }
+        }
+        .onChange(of: viewModel.flowResult) { result in
+            DispatchQueue.main.async {
+                if let result {
+                    switch result {
+                    case .close:
+                        break
+                    case .error(let error):
+                        errorMessage = error.localizedDescription
+                    case .loggedIn(let account):
+                        if let model = account {
+                            coordinator.showLoggedIn(model: model)
+                        }
+                    }
                 }
             }
         }

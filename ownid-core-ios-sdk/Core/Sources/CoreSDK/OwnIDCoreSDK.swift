@@ -13,6 +13,8 @@ public extension OwnID {
         
         @ObservedObject var store: Store<SDKState, SDKAction>
         
+        var providers: Providers?
+        private var flow = OwnID.Flow()
         private var enrollManager = EnrollManager(supportedLanguages: .init(rawValue: []))
         private let urlPublisher = PassthroughSubject<Void, OwnID.CoreSDK.Error>()
         private let configurationLoadingEventPublisher = PassthroughSubject<ConfigurationLoadingEvent, Never>()
@@ -91,6 +93,10 @@ public extension OwnID {
         public static func setSupportedLanguages(_ supportedLanguages: [String]) {
             shared.supportedLanguages = supportedLanguages
             shared.store.send(.updateSupportedLanguages(supportedLanguages: Languages(rawValue: supportedLanguages)))
+        }        
+        
+        static func start(providers: OwnID.Providers?, eventWrappers: [any FlowWrapper]) {
+            shared.flow.start(providers: providers, eventWrappers: eventWrappers)
         }
         
         public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) -> OwnID.EnrollEventPublisher {

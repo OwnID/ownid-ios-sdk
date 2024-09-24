@@ -15,12 +15,18 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
 * [Add Property List File to Project](#add-property-list-file-to-project)
 * [Import OwnID Module](#import-ownid-module)
 * [Initialize the SDK](#initialize-the-sdk)
-* [Implement the Registration Screen](#implement-the-registration-screen)
-  + [Add the OwnID View](#add-the-ownid-view)
-  + [Customize View Model](#customize-view-model)
-* [Implement the Login Screen](#implement-the-login-screen)
-  + [Add OwnID View](#add-ownid-view)
-  + [Customize View Model](#customize-view-model-1)
+* [Flow variants](#flow-variants)
+    * Native Flow
+      * [Implement the Registration Screen](#implement-the-registration-screen)
+        + [Add the OwnID View](#add-the-ownid-view)
+        + [Customize View Model](#customize-view-model)
+      * [Implement the Login Screen](#implement-the-login-screen)
+        + [Add OwnID View](#add-ownid-view)
+        + [Customize View Model](#customize-view-model-1)
+    * Elite Flow
+      * [Run Elite Flow](#run-elite-flow)
+         + [Create Providers](#create-providers)      
+         + [Start the Elite Flow](#start-the-elite-flow)
 * [Tooltip](#tooltip)
 * [Credential enrollment](#credential-enrollment)
 * [Errors](#errors)
@@ -94,6 +100,17 @@ struct ExampleApp: App {
 }
 ```
 If you did not follow the recommendation for creating the `OwnIDConfiguration.plist` file, you need to specify arguments when calling the `configure` function. For details, see [Alternative Syntax for Configure Function](#alternative-syntax-for-configure-function).
+
+## Flow variants
+
+OwnID SDK offers two flow variants:
+   + **Native Flow** - utilizes native OwnID UI widgets and native UI.
+   + **Elite Flow** - provides a powerful and flexible framework for integrating and customizing authentication processes within your applications.
+
+You can choose to integrate either or both flows.
+
+<details open>
+<summary><b>Native Flow</b></summary>
 
 ## Implement the Registration Screen
 Within a Model-View-ViewModel (MVVM) architecture pattern, adding the Skip Password option to your registration screen is as easy as adding an OwnID view model and subscription to your app's ViewModel layer, then adding the OwnID view to your main View. That's it! When the user selects Skip Password, your app waits for events while the user interacts with the OwnID flow views, then calls a function to register the user once they have completed the Skip Password process.
@@ -252,6 +269,76 @@ final class MyLogInViewModel: ObservableObject {
     }
 }
 ```
+</details>
+
+<details open>
+<summary><b>Elite Flow</b></summary>
+
+## Run Elite Flow
+
+To implement passwordless authentication using the Elite Flow in OwnID SDK, follow these three steps:
+
+1. Create providers.
+2. Start the Elite Flow with event handlers.
+
+### Create Providers
+
+Providers manage critical components such as session handling and authentication mechanisms, including traditional password-based logins. They allow developers to define how users are authenticated, how sessions are maintained and how accounts are managed within the application.
+
+You can define such providers:
+1. **Session Provider**: Manages user session creation.
+2. **Account Provider**: Handles account creation.
+3. **Authentication Provider**: Manages various authentication mechanisms.
+    1. Password-based authentication provider.
+
+```swift
+OwnID.providers {
+    $0.session {
+        $0.create { loginId, session, authToken, authMethod in
+            // Create a user session using the provided data and return an AuthResult indicating success or failure.
+        }
+    }
+    $0.account {
+        $0.register { loginId, profile, ownIdData, authToken in
+            // Register a new account with the given loginId and profile data.
+            // Set ownIdData to the user profile if available.
+            // Return an AuthResult indicating the outcome of the registration.
+        }
+    }
+    $0.auth {
+        $0.password {
+            $0.authenticate { loginId, password in
+                // Authenticate the user with the provided loginId and password.
+                // Return an AuthResult to indicate success or failure.
+            }
+        }
+    }
+}
+```
+
+### Start the Elite Flow
+
+To start a Elite Flow, call the `start(_:)` function. You can define event handlers for specific actions and responses within the authentication flow. They allow to customize behavior when specific events occur.
+
+```swift
+OwnID.start {
+    $0.events {
+        $0.onFinish { loginId, authMethod, authToken in
+            // Called when the authentication flow successfully completes.
+            // Define post-authentication actions here, such as session management or navigation.
+        }
+        $0.onError { error in
+            // Called when an error occurs during the authentication flow.
+            // Handle errors gracefully, such as logging or showing a message to the user.
+        }
+        $0.onClose {
+            // Called when the authentication flow is closed, either by the user or automatically.
+            // Define any cleanup or UI updates needed.
+        }
+    }
+}
+```
+</details>
 
 ## Tooltip
 

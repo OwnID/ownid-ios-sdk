@@ -96,6 +96,7 @@ final class RegisterViewModel: ObservableObject {
             .sink { completionRegister in
                 if case .failure(let error) = completionRegister {
                     self.errorMessage = error.localizedDescription
+                    self.state = .initial
                 }
             } receiveValue: { model in
                 self.loggedInModel = AccountModel(name: model.name, email: model.email)

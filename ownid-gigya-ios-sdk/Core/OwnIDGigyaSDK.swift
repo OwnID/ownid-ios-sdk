@@ -5,11 +5,11 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.4.0"
+    static let version = "3.5.0"
 }
 
 public extension OwnID {
-    final class GigyaSDK {
+    final class GigyaSDK {        
         public static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }
         
         /// Standard configuration, searches for default .plist file
@@ -36,29 +36,6 @@ public extension OwnID {
                                     environment: environment,
                                     enableLogging: enableLogging,
                                     supportedLanguages: supportedLanguages)
-        }
-        
-        public static func defaultLoginIdPublisher<T: GigyaAccountProtocol>(instance: GigyaCore<T>) -> AnyPublisher<String, Never> {
-            Future<String, Never> { promise in
-                instance.getAccount(true) { result in
-                    if case let .success(data) = result {
-                        promise(.success(data.profile?.email ?? ""))
-                    }
-                }
-            }
-            .eraseToAnyPublisher()
-        }
-        
-        public static func defaultAuthTokenPublisher<T: GigyaAccountProtocol>(instance: GigyaCore<T>) -> AnyPublisher<String, Never> {
-            Future<String, Never> { promise in
-                instance.send(api: "accounts.getJWT") { result in
-                    if case let .success(data) = result {
-                        let authToken = data["id_token"]?.value as? String ?? ""
-                        promise(.success(authToken))
-                    }
-                }
-            }
-            .eraseToAnyPublisher()
         }
         
         /// Handles redirects from other flows back to the app
@@ -101,5 +78,71 @@ public extension OwnID {
                                            visualConfig: OwnID.UISDK.VisualLookConfig = .init()) -> OwnID.FlowsSDK.LoginView {
             OwnID.FlowsSDK.LoginView(viewModel: viewModel, visualConfig: visualConfig)
         }
+        
+        public static func gigyaProviders<T: GigyaAccountProtocol>(_ builder: ProvidersBuilder,
+                                                                   instance: GigyaCore<T> = Gigya.sharedInstance()) {
+            builder.session {
+                $0.create { loginId, session, authToken, authMethod in
+                    do {
+                        let sessionInfoDict = session["sessionInfo"] as? [String: Any] ?? [:]
+                        let jsonData = try JSONSerialization.data(withJSONObject: sessionInfoDict)
+                        let sessionInfo = try JSONDecoder().decode(SessionInfo.self, from: jsonData)
+                        
+                        if let session = GigyaSession(sessionToken: sessionInfo.sessionToken,
+                                                      secret: sessionInfo.sessionSecret,
+                                                      expiration: sessionInfo.expiration) {
+                            
+                            instance.setSession(session)
+                            return .loggedIn
+                        } else {
+                            return .fail(reason: "error")
+                        }
+                        
+                    } catch {
+                        return .fail(reason: error.localizedDescription)
+                    }
+                }
+            }
+            
+            builder.account {
+                $0.register { loginId, profile, ownIdData, authToken in
+                    return await withCheckedContinuation { continuation in
+                        
+                        var registerParams = profile
+                        let ownIDParameters = ["ownId": ownIdData]
+                        registerParams["data"] = ownIDParameters
+                        
+                        instance.register(email: loginId,
+                                          password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
+                                          params: registerParams) { result in
+                            switch result {
+                            case .success:
+                                continuation.resume(returning: .loggedIn)
+                            case .failure(let error):
+                                continuation.resume(returning: .fail(reason: error.error.localizedDescription))
+                            }
+                        }
+                    }
+                }
+            }
+            
+            builder.auth {
+                $0.password {
+                    $0.authenticate { loginId, password in
+                        return await withCheckedContinuation { continuation in
+                            instance.login(loginId: loginId, password: password) { result in
+                                switch result {
+                                case .success:
+                                    continuation.resume(returning: .loggedIn)
+                                case .failure(let error):
+                                    continuation.resume(returning: .fail(reason: error.error.localizedDescription))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }

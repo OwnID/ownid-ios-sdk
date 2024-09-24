@@ -2,7 +2,7 @@ import Foundation
 import CryptoKit
 
 extension OwnID.CoreSDK {
-    enum AuthMethod: String, Codable {
+    public enum AuthMethod: String, Codable {
         case passkey
         case otp
         case password

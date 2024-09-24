@@ -38,7 +38,7 @@ final class RegisterViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .response(let loginId, let payload, let authType):
+                    case .response(let loginId, let payload, _):
                         isOwnIDEnabled = true
                         self.loginId = loginId
                         ownIdData = payload.data
@@ -62,7 +62,7 @@ final class RegisterViewModel: ObservableObject {
     func register() {
         state = .loading
         AuthSystem.register(ownIdData: isOwnIDEnabled ? ownIdData : nil,
-                            password: OwnID.FlowsSDK.Password.generatePassword().passwordString,
+                            password: isOwnIDEnabled ? OwnID.FlowsSDK.Password.generatePassword().passwordString : password,
                             email: loginId,
                             name: firstName)
         .sink { completionRegister in
