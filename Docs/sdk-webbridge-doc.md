@@ -12,6 +12,8 @@ To get more information about the OwnID iOS SDK, please refer to the [OwnID iOS 
 * [Adding WebView Bridge](#adding-webview-bridge)
    + [Utilizing Prebuilt Integration-specific WebView Bridge](#utilizing-prebuilt-integration-specific-webview-bridge)
    + [Manual Integration of WebView Bridge](#manual-integration-of-webview-bridge)
+* [Integration with Capacitor](#integration-with-capacitor)
+* [Integration with Apache Cordova](#integration-with-apache-cordova)
 
 ---
 
@@ -51,4 +53,75 @@ webBridge.injectInto(webView: webView)
 You can optionally specify either includeNamespaces or excludeNamespaces, or both, to customize the namespaces that will be used for the OwnIDWebBridge instance.
 ```swift
 OwnID.CoreSDK.createWebViewBridge(includeNamespaces: [.FIDO])
+```
+
+## Integration with Capacitor
+
+To integrate the OwnID WebView Bridge into your [Capaciptor](https://capacitorjs.com/) WebView, follow these steps:
+
+1. Add the [OwnID iOS SDK](../README.md) to your native app based on your identity platform. Complete steps:
+   * Add Package Dependency
+   * Enable Passkey Authentication
+   * Add Property List File to Project
+   * Import OwnID Module
+   * Initialize the SDK
+
+2. Create a subclass of `CAPBridgeViewController` and add the OwnID WebView Bridge injection code in `viewDidLoad`:
+
+```swift
+final class OwnIDCAPBridgeViewController: CAPBridgeViewController {
+    let webBridge = OwnID.CoreSDK.createWebViewBridge()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        if let webView {
+            // Specify any allowed origin rules for the WebView Bridge, in addition to server-configured values (if required)
+            webBridge.injectInto(webView: webView, allowedOriginRules: ["yourscheme://your.domain.com"])
+        }
+    }
+}
+```
+
+3. Change the initial view controller to the created subclass. By default, you can do it in `Main.storyboard`
+
+![](capacitor_tutorial.png)
+
+## Integration with Apache Cordova
+
+To integrate the OwnID WebView Bridge into your [Apache Cordova](https://cordova.apache.org) WebView, follow these steps:
+
+1. Add the [OwnID iOS SDK](../README.md) to your native app based on your identity platform. Complete steps:
+   * Add Package Dependency
+   * Enable Passkey Authentication
+   * Add Property List File to Project
+   * Import OwnID Module
+   * Initialize the SDK
+
+2. Create a class to facilitate the injection of a web bridge into a WKWebView.
+
+```swift
+@objc class OwnIDHelper: NSObject {
+    static let webBridge = OwnID.CoreSDK.createWebBridge()
+    
+    @objc static func inject(webView: UIView) {
+        if let webView = webView as? WKWebView {
+            webBridge.injectInto(webView: webView)
+        }
+    }
+}
+```
+
+3. Add the injection in `MainViewController.m`
+
+```obj-c
+@implementation MainViewController
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [OwnIDHelper injectWithWebView:self.webView];
+}
+@end
+
 ```
