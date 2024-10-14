@@ -25,24 +25,11 @@ extension OwnID.CoreSDK {
                 return
             }
             
-            guard bridgeContext.sourceOrigin?.scheme == "https" else {
-                let message = OwnID.CoreSDK.ErrorMessage.webSchemeURLError(urlString: bridgeContext.sourceOrigin?.absoluteString ?? "")
-                completion(handleErrorResult(fidoError: fidoError(message: message)))
-                return
-            }
-            
             switch action {
             case "isAvailable":
                 completion("\(isPasskeysSupported)")
             case "create", "get":
-                let allowedOrigin = bridgeContext.allowedOriginRules.first { rule in
-                    if let sourceHost = bridgeContext.sourceOrigin?.host, let allowHost = rule.host {
-                        return sourceHost == allowHost || (allowHost.hasPrefix("*.") && sourceHost.hasSuffix(String(allowHost.dropFirst(2))))
-                    }
-                    return false
-                }
-                
-                guard allowedOrigin != nil else {
+                guard isOriginAllowed(bridgeContext.allowedOriginRules, sourceOrigin: bridgeContext.sourceOrigin) else {
                     let message = OwnID.CoreSDK.ErrorMessage.webSchemeURLError(urlString: bridgeContext.sourceOrigin?.absoluteString ?? "")
                     completion(handleErrorResult(fidoError: fidoError(message: message)))
                     return
@@ -74,6 +61,20 @@ extension OwnID.CoreSDK {
             default:
                 break
             }
+        }
+        
+        private func isOriginAllowed(_ allowedOriginRules: [URL], sourceOrigin: URL?) -> Bool {
+            if allowedOriginRules.map({ $0.absoluteString }).contains("*") { return true }
+
+            let allowedOrigin = allowedOriginRules.first { rule in
+                if let sourceHost = sourceOrigin?.host, let allowHost = rule.host, let sourceScheme = sourceOrigin?.scheme, let allowScheme = rule.scheme {
+                    return sourceHost.lowercased() == allowHost.lowercased() && sourceScheme.lowercased() == allowScheme.lowercased()
+                }
+                
+                return false
+            }
+            
+            return allowedOrigin != nil
         }
         
         private func enroll(params: String,

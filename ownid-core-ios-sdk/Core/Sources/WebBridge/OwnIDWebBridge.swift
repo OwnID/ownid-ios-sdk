@@ -122,14 +122,14 @@ extension OwnID.CoreSDK {
                 let allOrigins = configOrigins.union(self.allowedOriginRules)
                     .compactMap { URL(string: $0) }
                     .compactMap { url in
-                        switch url.scheme {
-                        case nil:
-                            return URL(string:"https://\(url)")
-                        case "https" where url.scheme?.caseInsensitiveCompare("https") == .orderedSame:
+                        if url.absoluteString == "*" {
                             return url
-                        default:
-                            return nil
                         }
+                        
+                        if url.scheme == nil {
+                            return URL(string:"https://\(url)")
+                        }
+                        return url
                     }
                 
                 self.origins = allOrigins
