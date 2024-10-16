@@ -16,8 +16,8 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
 * [Import OwnID Module](#import-ownid-module)
 * [Initialize the SDK](#initialize-the-sdk)
   + [Add OwnID WebView Bridge](#add-ownid-webview-bridge)
-* [Flow variants](#flow-variants)
-    * Native Flow
+* [OwnID variants](#ownid-variants)
+    * Boost
       * [Implement the Registration Screen](#implement-the-registration-screen)
         + [Add the OwnID View](#add-the-ownid-view)
         + [Customize View Model](#customize-view-model)
@@ -25,10 +25,10 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
         + [Add OwnID View](#add-ownid-view)
         + [Customize View Model](#customize-view-model-1)
         + [Social Login and Account linking](#social-login-and-account-linking)
-    * Elite Flow
-      * [Run Elite Flow](#run-elite-flow)
+    * Elite
+      * [Run Elite](#run-elite)
          + [Create Providers](#create-providers)      
-         + [Start the Elite Flow](#start-the-elite-flow)
+         + [Start the Elite](#start-the-elite)
 * [Tooltip](#tooltip)
 * [Credential enrollment](#credential-enrollment)
 * [Errors](#errors)
@@ -128,20 +128,20 @@ struct DemoApp: App {
 > 
 > You don't need to implement Registration/Login screens as Gigya Web Screen-Sets will be used instead.
 
-## Flow variants
+## OwnID variants
 
-OwnID SDK offers two flow variants:
-   + **Native Flow** - utilizes native OwnID UI widgets and native UI.
-   + **Elite Flow** - provides a powerful and flexible framework for integrating and customizing authentication processes within your applications.
+OwnID SDK offers two variants:
+   + **Boost** - designed to enhance your existing login and registration forms by adding OwnID widget as an add-on.
+   + **Elite** - provides predefined authentication screens that can be easily customized with your brand’s look and feel.
 
-You can choose to integrate either or both flows.
+You can choose to integrate either or both.
 
 <details open>
-<summary><b>Native Flow</b></summary>
+<summary><b>Boost</b></summary>
 
 
 ## Implement the Registration Screen
-Within a Model-View-ViewModel (MVVM) architecture pattern, adding the Skip Password option to your registration screen is as easy as adding an OwnID view model and subscription to your app's ViewModel layer, then adding the OwnID view to your main View. That's it! When the user selects Skip Password, your app waits for events while the user interacts with the OwnID flow views, then calls a function to register the user once they have completed the Skip Password process.
+Within a Model-View-ViewModel (MVVM) architecture pattern, adding the Skip Password option to your registration screen is as easy as adding an OwnID view model and subscription to your app's ViewModel layer, then adding the OwnID view to your main View. That's it! When the user selects Skip Password, your app waits for events while the user interacts with the OwnID views, then calls a function to register the user once they have completed the Skip Password process.
 
 > [!NOTE]
 >
@@ -345,14 +345,14 @@ let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstanc
 </details>
 
 <details open>
-<summary><b>Elite Flow</b></summary>
+<summary><b>Elite</b></summary>
 
-## Run Elite Flow
+## Run Elite
 
-Elite Flow provides a powerful and flexible framework for integrating and customizing authentication processes within your applications. To implement passwordless authentication using the Elite Flow in OwnID SDK, follow these three steps:
+Elite provides a powerful and flexible framework for integrating and customizing authentication processes within your applications. To implement passwordless authentication using the Elite in OwnID SDK, follow these three steps:
 
 1. Set providers.
-2. Start the Elite Flow with event handlers.
+2. Start the Elite with event handlers.
 
 ### Create Providers
 
@@ -375,9 +375,9 @@ OwnID.providers { builder in
 
 See [Complete example](../Demo/GigyaDemo/WelcomeViewModel.swift)
 
-### Start the Elite Flow
+### Start the Elite
 
-To start a Elite Flow, call the `start(_:)` function. You can define event handlers for specific actions and responses within the authentication flow. They allow to customize behavior when specific events occur.
+To start a Elite, call the `start(_:)` function. You can define event handlers for specific actions and responses within the authentication flow. They allow to customize behavior when specific events occur.
 
 ```swift
 OwnID.start {

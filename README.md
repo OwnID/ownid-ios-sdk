@@ -5,9 +5,9 @@ The [OwnID](https://www.ownid.com/) iOS SDK is a client library offering a secur
 
 ### Key components of the OwnID iOS SDK:
 
-- **OwnID Core** - Provides fundamental functionalities such as SDK configuration, UI widgets, interaction with the iOS, and returning OwnID flow results to the iOS application. It also provide two flow variants:
-   + **Native Flow** - utilizes native OwnID UI widgets and native UI.
-   + **Web Flow** - uses WebView to run OwnID flow and OwnID WebView Bridge to integrate native functionality.
+- **OwnID Core** - Provides fundamental functionalities such as SDK configuration, UI widgets, interaction with the iOS, and returning OwnID results to the iOS application. It also provide two variants:
+   + **Boost** - designed to enhance your existing login and registration forms by adding OwnID widget as an add-on.
+   + **Elite** - provides predefined authentication screens that can be easily customized with your brand’s look and feel.
 
 
 - **OwnID Integration Component** - An optional extension of the Core SDK, designed for seamless integration with identity platforms on the native side. When present, it executes the actual registration and login processes into the identity platform.
@@ -25,7 +25,7 @@ The [OwnID](https://www.ownid.com/) iOS SDK is a client library offering a secur
    
 ### Additional Components:
 
-- **[OwnID WebView Bridge](Docs/sdk-webbridge-doc.md)** - A Core SDK component that introduces native Passkeys functionality to the OwnID Web SDK when running within a webview.
+- **[OwnID WebView Bridge](Docs/sdk-webbridge-doc.md)** - A Core SDK component that introduces native Passkeys functionality to the OwnID Web SDK when running within a webview. Also, it suports the integration in Capacitor app.
 
 ### Advanced Configuration
 

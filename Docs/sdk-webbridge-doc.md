@@ -13,7 +13,6 @@ To get more information about the OwnID iOS SDK, please refer to the [OwnID iOS 
    + [Utilizing Prebuilt Integration-specific WebView Bridge](#utilizing-prebuilt-integration-specific-webview-bridge)
    + [Manual Integration of WebView Bridge](#manual-integration-of-webview-bridge)
 * [Integration with Capacitor](#integration-with-capacitor)
-* [Integration with Apache Cordova](#integration-with-apache-cordova)
 
 ---
 
@@ -86,42 +85,3 @@ final class OwnIDCAPBridgeViewController: CAPBridgeViewController {
 3. Change the initial view controller to the created subclass. By default, you can do it in `Main.storyboard`
 
 ![](capacitor_tutorial.png)
-
-## Integration with Apache Cordova
-
-To integrate the OwnID WebView Bridge into your [Apache Cordova](https://cordova.apache.org) WebView, follow these steps:
-
-1. Add the [OwnID iOS SDK](../README.md) to your native app based on your identity platform. Complete steps:
-   * Add Package Dependency
-   * Enable Passkey Authentication
-   * Add Property List File to Project
-   * Import OwnID Module
-   * Initialize the SDK
-
-2. Create a class to facilitate the injection of a web bridge into a WKWebView.
-
-```swift
-@objc class OwnIDHelper: NSObject {
-    static let webBridge = OwnID.CoreSDK.createWebBridge()
-    
-    @objc static func inject(webView: UIView) {
-        if let webView = webView as? WKWebView {
-            webBridge.injectInto(webView: webView)
-        }
-    }
-}
-```
-
-3. Add the injection in `MainViewController.m`
-
-```obj-c
-@implementation MainViewController
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-    [OwnIDHelper injectWithWebView:self.webView];
-}
-@end
-
-```
