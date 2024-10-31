@@ -5,7 +5,7 @@ import Combine
 /// This allows for consistent handling and processing of various custom operations.
 public protocol FlowWrapper {
     associatedtype PayloadType
-    associatedtype R: Encodable
+    associatedtype R
     func invoke(payload: PayloadType) async -> R
 }
 
@@ -72,20 +72,37 @@ extension OwnID {
         }
     }
     
+    struct OnNativeActionWrapper: FlowWrapper {
+        struct Payload: FlowPayload {
+            let name: String
+            let params: [String: Any]?
+        }
+        
+        typealias PayloadType = Payload
+        typealias R = PageAction?
+        
+        var onNativeAction: ((_ name: String, _ params: [String: Any]?) async -> Void)?
+        
+        func invoke(payload: PayloadType) async -> R {
+            await onNativeAction?(payload.name, payload.params)
+            return nil
+        }
+    }
+    
     struct OnAccountNotFoundWrapper: FlowWrapper {
         struct Payload: FlowPayload {
             let loginId: String
-            let ownIdData: String?
+            let ownIdData: [String: Any]?
             let authToken: String?
         }
         
         typealias PayloadType = Payload
-        typealias R = PageAction
+        typealias R = PageAction?
         
-        var onAccountNotFoundClosure: ((_ loginId: String, _ ownIdData: String?, _ authToken: String?) async -> PageAction)?
+        var onAccountNotFound: ((_ loginId: String, _ ownIdData: [String: Any]?, _ authToken: String?) async -> PageAction)?
         
-        func invoke(payload: PayloadType) async -> PageAction {
-            return await onAccountNotFoundClosure?(payload.loginId, payload.ownIdData, payload.authToken) ?? .none
+        func invoke(payload: PayloadType) async -> R {
+            return await onAccountNotFound?(payload.loginId, payload.ownIdData, payload.authToken)
         }
     }
     
@@ -99,13 +116,13 @@ extension OwnID {
         }
         
         typealias PayloadType = Payload
-        typealias R = PageAction
+        typealias R = PageAction?
         
         var onFinish: ((_ loginId: String, _ authMethod: OwnID.CoreSDK.AuthMethod?, _ authToken: String?) async -> Void)?
         
-        func invoke(payload: PayloadType) async -> PageAction {
+        func invoke(payload: PayloadType) async -> R {
             await onFinish?(payload.loginId, payload.authMethod, payload.authToken)
-            return PageAction.none
+            return nil
         }
     }
     
@@ -115,39 +132,88 @@ extension OwnID {
         }
         
         typealias PayloadType = Payload
-        typealias R = PageAction
+        typealias R = PageAction?
         
         var onError: ((OwnID.CoreSDK.Error) async -> Void)?
         
-        func invoke(payload: PayloadType) async -> PageAction {
+        func invoke(payload: PayloadType) async -> R {
             await onError?(payload.error)
-            return PageAction.none
+            return nil
         }
     }
     
     struct OnCloseWrapper: FlowWrapper {
         typealias PayloadType = VoidFlowPayload
-        typealias R = PageAction
+        typealias R = PageAction?
         
         var onClose: (() async -> Void)?
         
-        func invoke(payload: PayloadType) async -> PageAction {
+        func invoke(payload: PayloadType) async -> R {
             await onClose?()
-            return PageAction.none
+            return nil
         }
     }
 }
 
 extension OwnID {
     /// Represents a result of an OwnID Elite flow event.
-    public enum PageAction: String, Encodable {
-        case none
+    public enum PageAction {
+        /// Represents a close action in the OwnID Elite flow. The `onClose` event handler will be called.
+        case close
+        /// Represents a native action in the OwnID Elite flow. The `onNativeAction` event handler will be called with action name.
+        case native(type: PageActionType)
         
         var toString: String {
-            let dict = ["action": self.rawValue]
+            var dict: [String: Any] = ["action": action]
+            
+            switch self {
+            case .native(let type):
+                dict["name"] = type.name
+                dict["params"] = type.params
+            case .close:
+                break
+            }
+            
             let jsonData = (try? JSONSerialization.data(withJSONObject: dict)) ?? Data()
             let jsonString = String(data: jsonData, encoding: .utf8)
             return jsonString ?? ""
+        }
+        
+        var action: String {
+            switch self {
+            case .native:
+                return "native"
+            case .close:
+                return "close"
+            }
+        }
+    }
+    
+    public enum PageActionType {
+        ///Represents a native "register" action in the OwnID Elite flow.
+        ///
+        /// This action is used to trigger a native registration process, typically when a user's account is not found.
+        ///
+        /// In response to this action, the `onNativeAction` event handler will be called with the action name "register" and
+        /// parameters containing the `loginId`, `ownIdData`, and `authToken` encoded as a JSON string.
+        ///
+        /// It has parameters:  **loginId** - the user's login identifier, **ownIdData** - optional data associated with the user, **authToken** - optional OwnID authentication token.
+        case register(_ loginId: String, _ ownIdData: [String: Any]?, _ authToken: String?)
+        
+        var name : String {
+            switch self {
+            case .register:
+                return "register"
+            }
+        }
+        
+        var params: [String: Any] {
+            switch self {
+            case .register(let loginId, let ownIdData, let authToken):
+                return ["loginId": loginId,
+                        "ownIdData": ownIdData ?? "",
+                        "authToken": authToken ?? ""]
+            }
         }
     }
     

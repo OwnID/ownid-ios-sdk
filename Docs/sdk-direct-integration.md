@@ -329,29 +329,49 @@ See [Complete example](../Demo/DirectDemo/WelcomeViewModel.swift)
 
 ### Start the Elite
 
-To start a Elite, call the `start(_:)` function. You can define event handlers for specific actions and responses within the authentication flow. They allow to customize behavior when specific events occur.
+To start a Elite, call the `start(_:)` function. You can define event handlers for specific actions and responses within the authentication flow. They allow to customize behavior when specific events occur. All event handlers are optional.
 
 ```swift
 OwnID.start {
-    $0.events {
+    $0.events { // All event handlers are optional.
+        $0.onNativeAction { name, params in
+            // Called when a native action is requested by other event handlers, such as `onAccountNotFound`.
+            // Elite UI is currently closed or will be closed in a moment.
+            // Run native actions such as user registration.
+        }
+        $0.onAccountNotFound { loginId, ownIdData, authToken in
+            // Called when the specified account details do not match any existing accounts.
+            // Use it to customize the flow if no account is found.
+            // It should return a PageAction to define the next steps in the flow.
+            //return OwnID.PageAction...
+        }
         $0.onFinish { loginId, authMethod, authToken in
             // Called when the authentication flow successfully completes.
+            // Elite UI is currently closed or will be closed in a moment.
             // Define post-authentication actions here, such as session management or navigation.
         }
         $0.onError { error in
             // Called when an error occurs during the authentication flow.
+            // Elite UI is currently closed or will be closed in a moment.
             // Handle errors gracefully, such as logging or showing a message to the user.
         }
         $0.onClose {
             // Called when the authentication flow is closed, either by the user or automatically.
+            // Elite UI is currently closed or will be closed in a moment.
             // Define any cleanup or UI updates needed.
         }
     }
 }
 ```
-</details>
 
 See [Complete example](../Demo/DirectDemo/WelcomeViewModel.swift)
+
+**Page Actions**
+OwnID SDK provides two Page Actions to control the next steps in the Elite flow:
+1. `OwnID.PageAction.close` - In response to this action the `onClose` event handler will be called.
+2. `OwnID.PageAction.native(type: .register(loginId, ownIdData, authToken))` - In response to this action the `onNativeAction` event handler will be called with the action name "register" and parameters containing the `loginId`, `ownIdData`, and `authToken` encoded as a JSON string.
+
+</details>
 
 ## Tooltip
 

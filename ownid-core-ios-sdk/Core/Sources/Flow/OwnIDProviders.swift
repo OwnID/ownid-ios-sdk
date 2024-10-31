@@ -13,7 +13,7 @@ public protocol ProviderProtocol { }
 public protocol SessionProviderProtocol: ProviderProtocol {
     /// Implement function to create a user session using the provided data and return an ``OwnID/AuthResult`` indicating whether the session creation was successful or not.
     /// - Parameters:
-    ///   - loginId: The user's login ID.
+    ///   - loginId: The user's login identifier.
     ///   - session: Raw session data received from the OwnID.
     ///   - authToken: OwnID authentication token associated with the session.
     ///   - authMethod: Type of authentication used for the session (optional).
@@ -25,7 +25,7 @@ public protocol SessionProviderProtocol: ProviderProtocol {
 public protocol AccountProviderProtocol: ProviderProtocol {
     /// Implement function to registers a new account with the given loginId and profile information.
     /// - Parameters:
-    ///   - loginId: The user's login ID.
+    ///   - loginId: The user's login identifier.
     ///   - profile: Raw profile data received from the OwnID.
     ///   - ownIdData: Optional data associated with the user.
     ///   - authToken: OwnID authentication token associated with the session (optional).
@@ -40,7 +40,7 @@ public protocol AuthProviderProtocol: ProviderProtocol { }
 public protocol PasswordProviderProtocol: AuthProviderProtocol {
     /// Implement function to authenticates user with the given loginId and password.
     /// - Parameters:
-    ///   - loginId: The user's login ID.
+    ///   - loginId: The user's login identifier.
     ///   - password: The user's password.
     /// - Returns: ``OwnID/AuthResult`` with the result of the session creation operation.
     func authenticate(loginId: String, password: String) async -> OwnID.AuthResult

@@ -93,13 +93,29 @@ extension OwnID.CoreSDK {
                             let result = await wrapper?.invoke(payload: payload)
                             completion(result?.toString ?? "{}")
                         }
+                    case .onNativeAction:
+                        guard let name = authDict["name"] as? String else {
+                            throw WebBridgeFlowError.wrongData
+                        }
+                        
+                        let params = authDict["params"] as? [String: Any]
+                        let payload = OwnID.OnNativeActionWrapper.Payload(name: name, params: params)
+                        let wrapper: OwnID.OnNativeActionWrapper? = OwnID.wrapperByAction(flowAction, wrappers: wrappers)
+                        let flowEvent = OwnID.FlowEvent(action: flowAction, wrapper: wrapper, payload: payload)
+                        
+                        Task {
+                            await flowEvent.runSideEffect()
+                            bridgeContext.resultPublisher?.send(flowEvent)
+                        }
+                        
+                        
                     case .onAccountNotFound:
                         guard let loginId = authDict["loginId"] as? String else {
                             throw WebBridgeFlowError.wrongData
                         }
                         
                         let authToken = authDict["authToken"] as? String
-                        let ownIdData = authDict["ownIdData"] as? String
+                        let ownIdData = authDict["ownIdData"] as? [String: Any]
                         let payload = OwnID.OnAccountNotFoundWrapper.Payload(loginId: loginId, ownIdData: ownIdData, authToken: authToken)
                         let wrapper: OwnID.OnAccountNotFoundWrapper? = OwnID.wrapperByAction(flowAction, wrappers: wrappers)
                         let flowEvent = OwnID.FlowEvent(action: flowAction, wrapper: wrapper, payload: payload)
@@ -185,6 +201,11 @@ extension OwnID.CoreSDK {
                 case .onFinish:
                     if let wrapper = flowEvent.wrapper as? OwnID.OnFinishWrapper,
                        let payload = flowEvent.payload as? OwnID.OnFinishWrapper.PayloadType {
+                        await _ = wrapper.invoke(payload: payload)
+                    }
+                case .onNativeAction:
+                    if let wrapper = flowEvent.wrapper as? OwnID.OnNativeActionWrapper,
+                       let payload = flowEvent.payload as? OwnID.OnNativeActionWrapper.PayloadType {
                         await _ = wrapper.invoke(payload: payload)
                     }
                 default:

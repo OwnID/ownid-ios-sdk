@@ -12,28 +12,32 @@ extension OwnID.CoreSDK {
         init(appID: OwnID.CoreSDK.AppID, 
              redirectionURL: OwnID.CoreSDK.RedirectionURLString?,
              environment: String?,
+             region: String?,
              enableLogging: Bool?) throws {
             self.environment = environment
             self.appID = appID
             self.redirectionURL = redirectionURL
+            self.region = region == "eu" ? "-eu" : ""
             self.enableLogging = enableLogging
-            try buildURLFrom(appID, environment)
+            try buildURLFrom(appID, environment, self.region)
         }
         
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             let appID = try container.decode(String.self, forKey: .appID)
             let env = try container.decodeIfPresent(String.self, forKey: .env)
+            let region = try container.decodeIfPresent(String.self, forKey: .region)
             self.appID = appID
             self.environment = env
+            self.region = region == "eu" ? "-eu" : ""
             self.redirectionURL = try container.decodeIfPresent(String.self, forKey: .redirectionURL)
             self.enableLogging = try container.decodeIfPresent(Bool.self, forKey: .enableLogging)
             
-            try buildURLFrom(appID, env)
+            try buildURLFrom(appID, env, self.region)
         }
         
-        private mutating func buildURLFrom(_ appID: String, _ env: String?) throws {
-            let serverURL = Self.buildServerConfigurationURL(for: appID, env: env)
+        private mutating func buildURLFrom(_ appID: String, _ env: String?, _ region: String) throws {
+            let serverURL = Self.buildServerConfigurationURL(for: appID, env: env, region: region)
             ownIDServerConfigurationURL = serverURL
             
             try performPropertyChecks()
@@ -43,6 +47,7 @@ extension OwnID.CoreSDK {
             case appID = "OwnIDAppID"
             case redirectionURL = "OwnIDRedirectionURL"
             case env = "OwnIDEnv"
+            case region = "OwnIDRegion"
             case enableLogging = "EnableLogging"
         }
         
@@ -50,6 +55,7 @@ extension OwnID.CoreSDK {
         var redirectionURL: RedirectionURLString?
         let appID: OwnID.CoreSDK.AppID
         let environment: String?
+        let region: String
         let enableLogging: Bool?
         var serverURL: ServerURL!
         var passkeysAutofillEnabled: Bool!
@@ -91,9 +97,9 @@ extension OwnID.CoreSDK {
         }
         
         var metricsURL: ServerURL {
-            var url = URL(string: "https://\(appID).server.ownid.com/events")!
+            var url = URL(string: "https://\(appID).server.ownid\(region).com/events")!
             if let environment {
-                url = URL(string: "https://\(appID).server.\(environment).ownid.com/events")!
+                url = URL(string: "https://\(appID).server.\(environment).ownid\(region).com/events")!
             }
             return url
         }
@@ -112,10 +118,10 @@ private extension OwnID.CoreSDK.LocalConfiguration {
         url.appendPathComponent(Self.pathComponent)
     }
     
-    static func buildServerConfigurationURL(for appID: OwnID.CoreSDK.AppID, env: String?) -> URL {
-        var serverConfigURLString = "https://cdn.ownid.com/sdk/\(appID)/\(mobileSuffix)"
+    static func buildServerConfigurationURL(for appID: OwnID.CoreSDK.AppID, env: String?, region: String) -> URL {
+        var serverConfigURLString = "https://cdn.ownid\(region).com/sdk/\(appID)/\(mobileSuffix)"
         if let env {
-            serverConfigURLString = "https://cdn.\(env).ownid.com/sdk/\(appID)/\(mobileSuffix)"
+            serverConfigURLString = "https://cdn.\(env).ownid\(region).com/sdk/\(appID)/\(mobileSuffix)"
         }
         let serverConfigURL = URL(string: serverConfigURLString)!
         return serverConfigURL
@@ -136,6 +142,7 @@ private extension OwnID.CoreSDK.LocalConfiguration {
         guard ownIDServerURL.scheme == "https" else { throw OwnID.CoreSDK.LocalConfiguration.Error.serverURLIsNotComplete }
         
         let domain = "ownid.com"
+        let euDomain = "ownid-eu.com"
         guard let hostName = ownIDServerURL.host else { throw OwnID.CoreSDK.LocalConfiguration.Error.serverURLIsNotComplete }
         let subStrings = hostName.components(separatedBy: ".")
         var domainName = ""
@@ -145,7 +152,7 @@ private extension OwnID.CoreSDK.LocalConfiguration {
         } else if count == 2 {
             domainName = hostName
         }
-        guard domain == domainName else { throw OwnID.CoreSDK.LocalConfiguration.Error.serverURLIsNotComplete }
+        guard domain == domainName || euDomain == domainName  else { throw OwnID.CoreSDK.LocalConfiguration.Error.serverURLIsNotComplete }
         
         guard ownIDServerURL.lastPathComponent == Self.mobileSuffix else { throw OwnID.CoreSDK.LocalConfiguration.Error.serverURLIsNotComplete }
     }

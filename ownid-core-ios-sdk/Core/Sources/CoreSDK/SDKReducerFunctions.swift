@@ -23,6 +23,7 @@ extension OwnID.CoreSDK {
                                          underlyingSDKs: [],
                                          isTestingEnvironment: true,
                                          environment: .none,
+                                         region: nil,
                                          enableLogging: true,
                                          supportedLanguages: .init(rawValue: Locale.preferredLanguages))
         return Just(action).eraseToEffect()
@@ -34,10 +35,12 @@ extension OwnID.CoreSDK {
                                     underlyingSDKs: [SDKInformation],
                                     isTestingEnvironment: Bool,
                                     environment: String?,
+                                    region: String?,
                                     enableLogging: Bool?) -> Effect<SDKAction> {
         let config = try! OwnID.CoreSDK.LocalConfiguration(appID: appID,
                                                            redirectionURL: redirectionURL,
                                                            environment: environment,
+                                                           region: region,
                                                            enableLogging: enableLogging)
         return Just(.configurationCreated(configuration: config,
                                           userFacingSDK: userFacingSDK,

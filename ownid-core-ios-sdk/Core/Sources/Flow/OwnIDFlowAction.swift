@@ -6,6 +6,7 @@ extension OwnID {
         case sessionCreate = "session_create"
         case authenticatePassword = "auth_password_authenticate"
         case onAccountNotFound
+        case onNativeAction
         case onFinish
         case onError
         case onClose
@@ -14,7 +15,7 @@ extension OwnID {
             switch self {
             case .accountRegister, .sessionCreate, .authenticatePassword, .onAccountNotFound:
                 return false
-            case .onFinish, .onError, .onClose:
+            case .onNativeAction, .onFinish, .onError, .onClose:
                 return true
             }
         }
@@ -29,6 +30,8 @@ extension OwnID {
                 return AuthPasswordWrapper.self
             case .onAccountNotFound:
                 return OnAccountNotFoundWrapper.self
+            case .onNativeAction:
+                return OnNativeActionWrapper.self
             case .onFinish:
                 return OnFinishWrapper.self
             case .onError:

@@ -85,7 +85,7 @@ extension OwnID {
         /// Defines how sessions are created.
         /// 
         /// Implement function to create a user session using the provided data and return a ``OwnID/AuthResult`` indicating whether the session creation was successful or not.
-        /// - Parameter block: The closure to be executed upon completion. Closure parameters: **loginId** - The user's login ID; **session** - raw session data received from the OwnID; **authToken** - OwnID authentication token associated with the session; **authMethod** - type of authentication used for the session (optional); returns ``OwnID/AuthResult`` with the result of the session creation operation.
+        /// - Parameter block: The closure to be executed upon completion. Closure parameters: **loginId** - The user's login identifier; **session** - raw session data received from the OwnID; **authToken** - OwnID authentication token associated with the session; **authMethod** - type of authentication used for the session (optional); returns ``OwnID/AuthResult`` with the result of the session creation operation.
         public func create(block: @escaping (_ loginId: String,
                                              _ session: [String: Any],
                                              _ authToken: String,
@@ -132,7 +132,7 @@ extension OwnID {
         /// Implement function to registers a new account with the given loginId and profile information.
         ///
         /// Set `ownIdData` to the user profile if available.
-        /// - Parameter block: The closure to be executed upon completion. Closure parameters: **loginId** - The user's login ID; **profile** - raw profile data received from the OwnID; **ownIdData** - optional data associated with the user; **authToken** - OwnID authentication token associated with the session (optional); returns ``OwnID/AuthResult`` with the result of the session creation operation.
+        /// - Parameter block: The closure to be executed upon completion. Closure parameters: **loginId** - The user's login identifier; **profile** - raw profile data received from the OwnID; **ownIdData** - optional data associated with the user; **authToken** - OwnID authentication token associated with the session (optional); returns ``OwnID/AuthResult`` with the result of the session creation operation.
         public func register(block: @escaping (_ loginId: String,
                                                _ profile: [String: Any],
                                                _ ownIdData: [String: Any]?,
@@ -197,7 +197,7 @@ extension OwnID {
         /// Defines how password authentication is performed.
         ///
         /// Implement function to authenticates user with the given loginId and password.
-        /// - Parameter block: The closure to be executed upon completion. Closure parameters: **loginId** - The user's login ID;  **password** The user's password; returns ``OwnID/AuthResult`` with the result of the session creation operation.
+        /// - Parameter block: The closure to be executed upon completion. Closure parameters: **loginId** - The user's login identifier;  **password** The user's password; returns ``OwnID/AuthResult`` with the result of the session creation operation.
         public func authenticate(block: @escaping (_ loginId: String, _ password: String) async -> AuthResult) {
             authenticate = block
         }

@@ -30,7 +30,7 @@ struct OwnIDFlowWebView: UIViewRepresentable {
                  <svg viewBox="0 0 100 100"><circle class="bg" r="42.5" cx="50" cy="50"></circle></svg>
                  <svg class="sp-svg" viewBox="0 0 100 100"><circle class="sp" r="42.5" cx="50" cy="50"></circle></svg>
                </div>
-               <script src="https://cdn.OWNID-ENVownid.com/sdk/OWNID-APPID" type="text/javascript" onerror="onJSLoadError()"></script>
+               <script src="https://cdn.OWNID-ENVownidOWNID-REGION.com/sdk/OWNID-APPID" type="text/javascript" onerror="onJSLoadError()"></script>
                <script>ownid('start', { language: window.navigator.languages || 'en', animation: false });</script>
                </body>
                </html>
@@ -38,6 +38,8 @@ struct OwnIDFlowWebView: UIViewRepresentable {
         static let defaultBaseURL = "https://webview.ownid.com"
         static let envPlaceholder = "OWNID-ENV"
         static let appIdPlaceholder = "OWNID-APPID"
+        static let regionPlaceholder = "OWNID-REGION"
+        
     }
     
     private let webView: WKWebView
@@ -63,11 +65,13 @@ struct OwnIDFlowWebView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         let appId = OwnID.CoreSDK.shared.appID ?? ""
         let env = OwnID.CoreSDK.shared.environment ?? ""
+        let region = OwnID.CoreSDK.shared.region
         
         let webViewSettings = OwnID.CoreSDK.shared.store.value.configuration?.webViewSettings
         let html = (webViewSettings?.html ?? Constants.defaultHtml)
             .replacingOccurrences(of: Constants.envPlaceholder, with: env.isEmpty ? env : "\(env).")
             .replacingOccurrences(of: Constants.appIdPlaceholder, with: appId)
+            .replacingOccurrences(of: Constants.regionPlaceholder, with: region)
         let urlString = webViewSettings?.baseURL ?? Constants.defaultBaseURL
         
         webView.loadHTMLString(html, baseURL: URL(string: urlString)!)

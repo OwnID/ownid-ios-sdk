@@ -8,7 +8,7 @@ extension OwnID {
         
         func runSideEffect() async {
             switch action {
-            case .accountRegister, .authenticatePassword, .onAccountNotFound, .onFinish, .onClose:
+            case .accountRegister, .authenticatePassword, .onAccountNotFound, .onNativeAction, .onFinish, .onClose:
                 break
             case .sessionCreate:
                 if let payload = payload as? SessionProviderWrapper.Payload {

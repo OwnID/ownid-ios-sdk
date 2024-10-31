@@ -10,6 +10,7 @@ extension OwnID.CoreSDK {
                             underlyingSDKs,
                             isTestingEnvironment,
                             environment,
+                            region,
                             enableLogging,
                             supportedLanguages):
             state.supportedLanguages = supportedLanguages
@@ -21,6 +22,7 @@ extension OwnID.CoreSDK {
                                         underlyingSDKs: underlyingSDKs,
                                         isTestingEnvironment: isTestingEnvironment,
                                         environment: environment,
+                                        region: region,
                                         enableLogging: enableLogging)]
             
         case let .configurationCreated(configuration, userFacingSDK, underlyingSDKs, isTestingEnvironment):

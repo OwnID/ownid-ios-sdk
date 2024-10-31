@@ -7,6 +7,7 @@ The OwnID iOS SDK offers multiple configuration options:
 * [Before You Begin](#before-you-begin)
 * [Logging Events](#logging-events)
 * [OwnID Environment](#ownid-environment)
+* [OwnID Region](#ownid-region)
 * [OwnID SDK Language](#ownid-sdk-language)
 * [Redirection URI Alternatives](#redirection-uri-alternatives)
 * [Manually Invoke OwnID Flow](#manually-invoke-ownid-flow)
@@ -49,9 +50,9 @@ Alternatively, you can enable the logging from the configuration file `OwnIDConf
 > [!IMPORTANT]
 > It is strongly advised to disable logging in production builds.
 
-## OwnID environment
+## OwnID Environment
 
-By default, the OwnID uses production environment for `appId` specified in configuration. You can set different environment. Possible options are: `uat`, `staging` and `dev`. Use `env` key in `OwnIDConfiguration.plist` to specify required non-production environment:
+By default, the OwnID uses production environment for `appId` specified in configuration. You can set different environment. Possible options are: `uat`, `staging` and `dev`. Use `OwnIDEnv` key in `OwnIDConfiguration.plist` to specify required non-production environment:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -62,6 +63,23 @@ By default, the OwnID uses production environment for `appId` specified in confi
     <string>...</string>
     <key>OwnIDEnv</key>
     <string>uat</string>   
+</dict>
+</plist>
+```
+
+## OwnID Region
+
+ By default, OwnID SDK connects to the datacenter in US region. However, if you are using the datacenter in EU region, you need to specify this using the `OwnIDRegion` key in `OwnIDConfiguration.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>OwnIDAppID</key>
+    <string>...</string>
+    <key>OwnIDRegion</key>
+    <string>eu</string>   
 </dict>
 </plist>
 ```

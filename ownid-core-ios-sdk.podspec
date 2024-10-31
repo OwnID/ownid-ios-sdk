@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'ownid-core-ios-sdk'
-  s.version          = '3.5.1'
+  s.version          = '3.6.0'
   s.summary          = 'ownid-core-ios-sdk'
 
   s.description      = <<-DESC

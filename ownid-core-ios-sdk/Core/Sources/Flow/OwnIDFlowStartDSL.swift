@@ -69,6 +69,10 @@ public extension OwnID {
     ///         }
     ///     }
     ///     $0.events {
+    ///         $0.onNativeAction { name, params in
+    ///         }
+    ///         $0.onAccountNotFound { loginId, ownIdData, authToken in
+    ///         }
     ///         $0.onFinish { loginId, authMethod, authToken in
     ///         }
     ///         $0.onError { error in

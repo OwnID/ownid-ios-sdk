@@ -53,6 +53,7 @@ public extension OwnID {
                                      userFacingSDK: SDKInformation,
                                      underlyingSDKs: [SDKInformation] = [],
                                      environment: String? = nil,
+                                     region: String? = nil,
                                      enableLogging: Bool? = nil,
                                      supportedLanguages: [String] = Locale.preferredLanguages) {
             if shared.store.value.configurationRequestData == nil {
@@ -63,6 +64,7 @@ public extension OwnID {
                                              underlyingSDKs: underlyingSDKs,
                                              isTestingEnvironment: false,
                                              environment: environment,
+                                             region: region,
                                              enableLogging: enableLogging,
                                              supportedLanguages: .init(rawValue: supportedLanguages)))
             }

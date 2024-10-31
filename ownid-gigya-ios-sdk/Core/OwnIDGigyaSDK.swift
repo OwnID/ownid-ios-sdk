@@ -5,7 +5,7 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.5.1"
+    static let version = "3.6.0"
 }
 
 public extension OwnID {
@@ -28,12 +28,14 @@ public extension OwnID {
         public static func configure(appID: OwnID.CoreSDK.AppID,
                                      redirectionURL: OwnID.CoreSDK.RedirectionURLString? = nil,
                                      environment: String? = nil,
+                                     region: String? = nil,
                                      enableLogging: Bool? = nil,
                                      supportedLanguages: [String] = Locale.preferredLanguages) {
             OwnID.CoreSDK.configure(appID: appID,
                                     redirectionURL: redirectionURL,
                                     userFacingSDK: info(),
                                     environment: environment,
+                                    region: region,
                                     enableLogging: enableLogging,
                                     supportedLanguages: supportedLanguages)
         }
