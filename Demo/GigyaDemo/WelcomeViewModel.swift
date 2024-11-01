@@ -29,6 +29,12 @@ final class WelcomeViewModel: ObservableObject {
         
         OwnID.start {
             $0.events {
+                $0.onNativeAction { _, params in
+                    subject.send(.profileCollect(params: params))
+                }
+                $0.onAccountNotFound { loginId, ownIdData, authToken in
+                    return OwnID.PageAction.native(type: .register(loginId, ownIdData, authToken))
+                }
                 $0.onFinish { loginId, authMethod, authToken in
                     let result = await self.fetchProfile()
                     subject.send(result)

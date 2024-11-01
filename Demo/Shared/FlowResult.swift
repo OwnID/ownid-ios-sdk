@@ -2,6 +2,7 @@ import Foundation
 import OwnIDCoreSDK
 
 enum FlowResult: Equatable {
+    case profileCollect(params: [String: Any]?)
     case loggedIn(account: AccountModel?)
     case error(error: OwnID.CoreSDK.Error)
     case close

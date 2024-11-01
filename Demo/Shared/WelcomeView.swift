@@ -7,6 +7,7 @@ public struct WelcomeView: View {
     @State private var isLoginActive = false
     @State private var isRegisterActive = false
     @State private var errorMessage = ""
+    @State private var notFoundLoginId: String?
     
     public var body: some View {
         NavigationView {
@@ -42,12 +43,19 @@ public struct WelcomeView: View {
                         .foregroundColor(.red)
                         .padding(.top)
                 }
+                if let loginId = notFoundLoginId {
+                    ProfileCollectionView(coordinator: coordinator, loginId: loginId, closeClosure: {
+                        notFoundLoginId = nil
+                    })
+                }
             }
         }
         .onChange(of: viewModel.flowResult) { result in
             DispatchQueue.main.async {
                 if let result {
                     switch result {
+                    case .profileCollect(let params):
+                        notFoundLoginId = params?["loginId"] as? String
                     case .close:
                         break
                     case .error(let error):

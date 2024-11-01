@@ -11,6 +11,12 @@
 		1158B32F2C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
 		1158B3302C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
 		1158B3312C076EF300149316 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1158B32E2C076EF300149316 /* WelcomeView.swift */; };
+		116E48CE2CD4F18300F490A2 /* ProfileCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116E48CD2CD4F18300F490A2 /* ProfileCollectionView.swift */; };
+		116E48CF2CD4F18300F490A2 /* ProfileCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116E48CD2CD4F18300F490A2 /* ProfileCollectionView.swift */; };
+		116E48D02CD4F18300F490A2 /* ProfileCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116E48CD2CD4F18300F490A2 /* ProfileCollectionView.swift */; };
+		116E48D32CD4F19600F490A2 /* ProfileCollectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116E48D12CD4F19600F490A2 /* ProfileCollectionViewModel.swift */; };
+		116E48D62CD4F34400F490A2 /* ProfileCollectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116E48D52CD4F34400F490A2 /* ProfileCollectionViewModel.swift */; };
+		116E48D82CD4F35300F490A2 /* ProfileCollectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116E48D72CD4F35300F490A2 /* ProfileCollectionViewModel.swift */; };
 		1170B15C2C661F9400389D07 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16E2D82F290B019D00AF28E4 /* Assets.xcassets */; };
 		1170B1602C6621DC00389D07 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1170B15F2C6621DC00389D07 /* LoginViewController.swift */; };
 		118D894B2CA2E72A00FB7920 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118D894A2CA2E72A00FB7920 /* WelcomeViewModel.swift */; };
@@ -120,6 +126,10 @@
 		024B20E32AC8C86E4353CF1D /* Pods-UIKitInjectionDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UIKitInjectionDemo.release.xcconfig"; path = "Target Support Files/Pods-UIKitInjectionDemo/Pods-UIKitInjectionDemo.release.xcconfig"; sourceTree = "<group>"; };
 		048BC4A082ECB82876A2F40F /* Pods-ScreensetsDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ScreensetsDemo.debug.xcconfig"; path = "Target Support Files/Pods-ScreensetsDemo/Pods-ScreensetsDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		1158B32E2C076EF300149316 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		116E48CD2CD4F18300F490A2 /* ProfileCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCollectionView.swift; sourceTree = "<group>"; };
+		116E48D12CD4F19600F490A2 /* ProfileCollectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCollectionViewModel.swift; sourceTree = "<group>"; };
+		116E48D52CD4F34400F490A2 /* ProfileCollectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCollectionViewModel.swift; sourceTree = "<group>"; };
+		116E48D72CD4F35300F490A2 /* ProfileCollectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCollectionViewModel.swift; sourceTree = "<group>"; };
 		1170B15F2C6621DC00389D07 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		118D894A2CA2E72A00FB7920 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeViewModel.swift; sourceTree = "<group>"; };
 		118D894C2CA2EC8300FB7920 /* FlowResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowResult.swift; sourceTree = "<group>"; };
@@ -317,6 +327,7 @@
 				16E3575C290C074C0059B5A2 /* RegisterViewModel.swift */,
 				16E35752290BE3180059B5A2 /* AccountView.swift */,
 				11E6C5492C11F7100074B747 /* AccountViewModel.swift */,
+				116E48D72CD4F35300F490A2 /* ProfileCollectionViewModel.swift */,
 				16E2D82F290B019D00AF28E4 /* Assets.xcassets */,
 				16E2D831290B019D00AF28E4 /* Preview Content */,
 			);
@@ -400,6 +411,7 @@
 				CE1DC0A62B9F427D00CF321D /* RegisterViewModel.swift */,
 				CE1DC0A82B9F428D00CF321D /* AccountView.swift */,
 				CE1DC0AD2B9F4CE600CF321D /* AuthSystem.swift */,
+				116E48D52CD4F34400F490A2 /* ProfileCollectionViewModel.swift */,
 				CE1DC0962B9F296300CF321D /* Assets.xcassets */,
 				CE1DC0982B9F296300CF321D /* Preview Content */,
 			);
@@ -425,6 +437,7 @@
 				CEA108252BF5F88800AD90E4 /* ViewExtensions.swift */,
 				CE3686E42BF50DCC007BF445 /* BlueButton.swift */,
 				118D894C2CA2EC8300FB7920 /* FlowResult.swift */,
+				116E48CD2CD4F18300F490A2 /* ProfileCollectionView.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -443,6 +456,7 @@
 				CEB907E32B4D9D8C00C8966B /* CustomAuthSystem.swift */,
 				CEB907E52B4DA08A00C8966B /* AuthPerformer.swift */,
 				CEB907E82B4DA32000C8966B /* AccountView.swift */,
+				116E48D12CD4F19600F490A2 /* ProfileCollectionViewModel.swift */,
 				CEB907D12B4D969500C8966B /* Assets.xcassets */,
 				CEB907D32B4D969500C8966B /* Preview Content */,
 			);
@@ -900,10 +914,12 @@
 				CE3686DB2BF4E8BE007BF445 /* HeaderView.swift in Sources */,
 				16E35762290C074C0059B5A2 /* RegisterView.swift in Sources */,
 				11E6C54A2C11F7100074B747 /* AccountViewModel.swift in Sources */,
+				116E48CE2CD4F18300F490A2 /* ProfileCollectionView.swift in Sources */,
 				118D89532CA30C7200FB7920 /* WelcomeViewModel.swift in Sources */,
 				CE7879512B1746DC00FA098D /* AccountView.swift in Sources */,
 				16E3575F290C074C0059B5A2 /* LogInViewModel.swift in Sources */,
 				118D894E2CA2EC8300FB7920 /* FlowResult.swift in Sources */,
+				116E48D82CD4F35300F490A2 /* ProfileCollectionViewModel.swift in Sources */,
 				CE3686E52BF50DCC007BF445 /* BlueButton.swift in Sources */,
 				16E2D82C290B019D00AF28E4 /* GigyaDemoApp.swift in Sources */,
 				1158B32F2C076EF300149316 /* WelcomeView.swift in Sources */,
@@ -923,10 +939,12 @@
 				CE1DC0A52B9F426F00CF321D /* RegisterView.swift in Sources */,
 				CE1DC0A12B9F424D00CF321D /* LogInView.swift in Sources */,
 				CE1DC0A92B9F428D00CF321D /* AccountView.swift in Sources */,
+				116E48D02CD4F18300F490A2 /* ProfileCollectionView.swift in Sources */,
 				CEA1081C2BF5F31E00AD90E4 /* AppState.swift in Sources */,
 				CEA1081E2BF5F32B00AD90E4 /* HeaderView.swift in Sources */,
 				1158B3312C076EF300149316 /* WelcomeView.swift in Sources */,
 				CEA108182BF5F31800AD90E4 /* AppCoordinator.swift in Sources */,
+				116E48D62CD4F34400F490A2 /* ProfileCollectionViewModel.swift in Sources */,
 				CEA1082B2BF5FB5F00AD90E4 /* BlueButton.swift in Sources */,
 				CE1DC0932B9F296000CF321D /* DirectDemoApp.swift in Sources */,
 				CEA1081A2BF5F31B00AD90E4 /* AppCoordinatorView.swift in Sources */,
@@ -947,6 +965,8 @@
 				CEB907E62B4DA08A00C8966B /* AuthPerformer.swift in Sources */,
 				118D89512CA30AB200FB7920 /* WelcomeViewModel.swift in Sources */,
 				CEA108272BF5F89100AD90E4 /* ViewExtensions.swift in Sources */,
+				116E48CF2CD4F18300F490A2 /* ProfileCollectionView.swift in Sources */,
+				116E48D32CD4F19600F490A2 /* ProfileCollectionViewModel.swift in Sources */,
 				CEB907E02B4D9C0A00C8966B /* RegisterView.swift in Sources */,
 				CEB907E42B4D9D8C00C8966B /* CustomAuthSystem.swift in Sources */,
 				CEB907DC2B4D9BC600C8966B /* LogInView.swift in Sources */,
