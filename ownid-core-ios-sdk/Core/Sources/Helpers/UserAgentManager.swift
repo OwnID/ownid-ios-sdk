@@ -6,7 +6,7 @@ public extension OwnID.CoreSDK {
     /// Examples:
     /// name - "com.example.myapp", "DemoApplication"
     /// version - "0.0.5", "3.34.7"
-    typealias SDKInformation = (name: String, verison: String)
+    typealias SDKInformation = (name: String, version: String)
     
     final class UserAgentManager {
         public static let shared = UserAgentManager()
@@ -29,13 +29,13 @@ public extension OwnID.CoreSDK {
         lazy var version: String = version(for: (OwnID.CoreSDK.sdkName, OwnID.CoreSDK.version), underlyingSDKs: [])
         
         private func version(for userFacingSDK: SDKInformation, underlyingSDKs: [SDKInformation]) -> String {
-            let userFacingSDKName = sdkAgentName(sdkName: userFacingSDK.name, version: userFacingSDK.verison)
+            let userFacingSDKName = sdkAgentName(sdkName: userFacingSDK.name, version: userFacingSDK.version)
             let underlyingSDKsNames = underlyingSDKNames(underlyingSDKs: underlyingSDKs)
             return "\(userFacingSDKName) \(underlyingSDKsNames)"
         }
         
         private func userAgent(for userFacingSDK: SDKInformation, underlyingSDKs: [SDKInformation]) -> String {
-            let userFacingSDKName = sdkAgentName(sdkName: userFacingSDK.name, version: userFacingSDK.verison)
+            let userFacingSDKName = sdkAgentName(sdkName: userFacingSDK.name, version: userFacingSDK.version)
             let underlyingSDKsNames = underlyingSDKNames(underlyingSDKs: underlyingSDKs)
             sdkName = sdkFullName(sdkName: OwnID.CoreSDK.sdkName)
             return "\(userFacingSDKName) (iOS; iOS \(systemVersion); \(modelName)) \(underlyingSDKsNames) \(Bundle.main.bundleIdentifier!)"
@@ -56,7 +56,7 @@ public extension OwnID.CoreSDK {
         
         private func underlyingSDKNames(underlyingSDKs: [SDKInformation]) -> String {
             underlyingSDKs.reduce("") { partialResult, sdkInfo in
-                let newUnderlying = sdkAgentName(sdkName: sdkInfo.name, version: sdkInfo.verison)
+                let newUnderlying = sdkAgentName(sdkName: sdkInfo.name, version: sdkInfo.version)
                 if partialResult == "" {
                     return newUnderlying
                 } else {

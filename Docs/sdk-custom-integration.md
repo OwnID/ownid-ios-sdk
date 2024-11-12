@@ -414,6 +414,15 @@ OwnID SDK provides two Page Actions to control the next steps in the Elite flow:
 1. `OwnID.PageAction.close` - In response to this action the `onClose` event handler will be called.
 2. `OwnID.PageAction.native(type: .register(loginId, ownIdData, authToken))` - In response to this action the `onNativeAction` event handler will be called with the action name "register" and parameters containing the `loginId`, `ownIdData`, and `authToken` encoded as a JSON string.
 
+You can pass additional optional parameters to configure Elite WebView.
+
+```swift
+OwnID.start(options: OwnID.EliteOptions(webView: OwnID.EliteOptions.WebView(baseURL: "https://mysite.com", // Optional base URL for the WebView content
+                                                                            html: "<html></html>"))) {     // Optional HTML content to be rendered in the WebView
+    //...
+}
+```
+
 </details>
 
 ## Tooltip

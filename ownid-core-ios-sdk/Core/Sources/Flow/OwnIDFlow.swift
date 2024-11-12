@@ -9,13 +9,14 @@ extension OwnID {
         private var resultPublisher = OwnID.CoreSDK.WebBridgePublisher()
         private var bag = Set<AnyCancellable>()
         
-        func start(providers: Providers?, eventWrappers: [any FlowWrapper]) {
+        func start(options: EliteOptions?, providers: Providers?, eventWrappers: [any FlowWrapper]) {
             resultPublisher = OwnID.CoreSDK.WebBridgePublisher()
             
             let viewController = FlowViewController()
             self.viewController = viewController
             self.wrappers = combinedWrappers(providers: providers, eventWrappers: eventWrappers)
             
+            viewController.flowView.webView.options = options
             viewController.flowView.webView.wrappers = wrappers
             viewController.flowView.webView.resultPublisher = resultPublisher
             

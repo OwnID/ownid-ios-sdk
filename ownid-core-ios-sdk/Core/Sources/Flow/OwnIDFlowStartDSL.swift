@@ -31,8 +31,8 @@ public extension OwnID {
         }
         
         /// Starts the OwnID flow with configured providers and events.
-        public func invoke() {
-            OwnID.CoreSDK.start(providers: providers, eventWrappers: eventWrappers ?? [])
+        public func invoke(options: EliteOptions?) {
+            OwnID.CoreSDK.start(options: options, providers: providers, eventWrappers: eventWrappers ?? [])
         }
     }
     
@@ -84,9 +84,27 @@ public extension OwnID {
     /// ```
     /// 
     /// - Parameter block: A closure that configures the flow using ``OwnID/StartBuilder``.
-    static func start(_ block: (StartBuilder) -> Void) {
+    static func start(options: EliteOptions? = nil, _ block: (StartBuilder) -> Void) {
         let builder = StartBuilder()
         block(builder)
-        builder.build().invoke()
+        builder.build().invoke(options: options)
+    }
+    
+    struct EliteOptions {
+        public struct WebView {
+            public var baseURL: String?
+            public var html: String?
+            
+            public init(baseURL: String? = nil, html: String? = nil) {
+                self.baseURL = baseURL
+                self.html = html
+            }
+        }
+        
+        public init(webView: WebView? = nil) {
+            self.webView = webView
+        }
+        
+        public var webView: WebView?
     }
 }

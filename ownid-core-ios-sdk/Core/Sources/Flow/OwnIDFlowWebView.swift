@@ -45,6 +45,7 @@ struct OwnIDFlowWebView: UIViewRepresentable {
     private let webView: WKWebView
     private var webBridge = OwnID.CoreSDK.createWebViewBridge()
     var wrappers = [any FlowWrapper]()
+    var options: OwnID.EliteOptions?
     
     var resultPublisher = OwnID.CoreSDK.WebBridgePublisher()
     var webViewDelegate = OwnIDFlowWebViewDelegate()
@@ -67,12 +68,13 @@ struct OwnIDFlowWebView: UIViewRepresentable {
         let env = OwnID.CoreSDK.shared.environment ?? ""
         let region = OwnID.CoreSDK.shared.region
         
+        let webViewOptions = options?.webView
         let webViewSettings = OwnID.CoreSDK.shared.store.value.configuration?.webViewSettings
-        let html = (webViewSettings?.html ?? Constants.defaultHtml)
+        let html = (webViewOptions?.html ?? webViewSettings?.html ?? Constants.defaultHtml)
             .replacingOccurrences(of: Constants.envPlaceholder, with: env.isEmpty ? env : "\(env).")
             .replacingOccurrences(of: Constants.appIdPlaceholder, with: appId)
             .replacingOccurrences(of: Constants.regionPlaceholder, with: region)
-        let urlString = webViewSettings?.baseURL ?? Constants.defaultBaseURL
+        let urlString = webViewOptions?.baseURL ?? webViewSettings?.baseURL ?? Constants.defaultBaseURL
         
         webView.loadHTMLString(html, baseURL: URL(string: urlString)!)
         

@@ -97,8 +97,8 @@ public extension OwnID {
             shared.store.send(.updateSupportedLanguages(supportedLanguages: Languages(rawValue: supportedLanguages)))
         }        
         
-        static func start(providers: OwnID.Providers?, eventWrappers: [any FlowWrapper]) {
-            shared.flow.start(providers: providers, eventWrappers: eventWrappers)
+        static func start(options: EliteOptions?, providers: OwnID.Providers?, eventWrappers: [any FlowWrapper]) {
+            shared.flow.start(options: options, providers: providers, eventWrappers: eventWrappers)
         }
         
         public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) -> OwnID.EnrollEventPublisher {

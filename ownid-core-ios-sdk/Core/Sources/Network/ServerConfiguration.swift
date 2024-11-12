@@ -83,8 +83,8 @@ extension OwnID.CoreSDK {
             case baseURL = "baseUrl"
         }
         
-        let html: String
-        let baseURL: String
+        let html: String?
+        let baseURL: String?
     }
 }
 

@@ -3,19 +3,26 @@ import SwiftUI
 
 extension OwnID {
     final class FlowViewController: UIViewController, UIAdaptivePresentationControllerDelegate {
-        private var hostingController: UIViewController!
+        private var hostingController: UIHostingController<FlowView>!
         var flowView = FlowView()
         
         override func viewDidLoad() {
             super.viewDidLoad()
             
             let hostingController = UIHostingController(rootView: flowView)
+            self.hostingController = hostingController
+            
             addChild(hostingController)
             view.addSubview(hostingController.view)
-            hostingController.view.frame = view.bounds
             hostingController.didMove(toParent: self)
-            hostingController.presentationController?.delegate = self
-            self.hostingController = hostingController
+            
+            hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+                hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
         }
     }
     
@@ -27,4 +34,3 @@ extension OwnID {
         }
     }
 }
-
