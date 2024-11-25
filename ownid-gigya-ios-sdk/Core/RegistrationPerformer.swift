@@ -46,6 +46,15 @@ extension OwnID.GigyaSDK.Registration {
             }
             
             let gigyaParameters = parameters as? OwnID.GigyaSDK.Registration.Parameters ?? OwnID.GigyaSDK.Registration.Parameters(parameters: [:])
+            var registerParams = gigyaParameters.parameters
+            
+            var dataJson: [String: Any]
+            if let data = registerParams["data"] as? [String: Any] {
+               dataJson = data
+            } else {
+                dataJson = [:]
+            }
+            
             guard let metadata = configuration.payload.metadata,
                   let dataField = (metadata as? [String: Any])?["dataField"] as? String
             else {
@@ -55,11 +64,10 @@ extension OwnID.GigyaSDK.Registration {
             }
             
             let data = Data((configuration.payload.data ?? "").utf8)
-            let dataJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let ownIDDataJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
             
-            var registerParams = gigyaParameters.parameters
-            let ownIDParameters = [dataField: dataJson]
-            registerParams["data"] = ownIDParameters
+            dataJson[dataField] = ownIDDataJson
+            registerParams["data"] = dataJson
             
             if var language = configuration.payload.requestLanguage {
                 language = String(language.prefix(2))

@@ -15,6 +15,7 @@ extension OwnID.CoreSDK.TranslationsSDK {
         
         private static let rootFolderName = "\(OwnID.CoreSDK.TranslationsSDK.self)"
         private let fileManager = FileManager.default
+        private var isFileNotFoundError = false
         private var currentLanguageKey: LanguageKey? {
             get {
                 UserDefaults.standard.string(forKey: Constants.currentLanguageKey)
@@ -84,9 +85,23 @@ extension OwnID.CoreSDK.TranslationsSDK {
                             return nil
                         }
                     }
-                } catch {
-                    let error = OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: error.localizedDescription))
-                    OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log()
+                } catch let error as NSError {
+                    if error.code == 260 {
+                        if !isFileNotFoundError {
+                            isFileNotFoundError = true
+                            let errorModel = OwnID.CoreSDK.UserErrorModel(code: nil,
+                                                                          message: error.localizedDescription,
+                                                                          userMessage: "Something went wrong. Please try again later.")
+                            let error = OwnID.CoreSDK.Error.userError(errorModel: errorModel)
+                            OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log()
+                        }
+                    } else {
+                        let errorModel = OwnID.CoreSDK.UserErrorModel(code: nil,
+                                                                      message: error.localizedDescription,
+                                                                      userMessage: "Something went wrong. Please try again later.")
+                        let error = OwnID.CoreSDK.Error.userError(errorModel: errorModel)
+                        OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log()
+                    }
                 }
             }
             
