@@ -63,13 +63,21 @@ extension OwnID.GigyaSDK.Registration {
             
             guard configuration.email.isValid else { handle(error: .emailIsNotValid); return }
             let gigyaParameters = parameters as? OwnID.GigyaSDK.Registration.Parameters ?? OwnID.GigyaSDK.Registration.Parameters(parameters: [:])
+            var registerParams = gigyaParameters.parameters
+            
+            var dataJson: [String: Any]
+            if let data = registerParams["data"] as? [String: Any] {
+               dataJson = data
+            } else {
+                dataJson = [:]
+            }
+            
             guard let metadata = configuration.payload.metadata,
                   let dataField = (metadata as? [String: Any])?["dataField"] as? String
             else { handle(error: .cannotParseRegistrationMetadataParameter); return }
             
-            var registerParams = gigyaParameters.parameters
-            let ownIDParameters = [dataField: configuration.payload.dataContainer]
-            registerParams["data"] = ownIDParameters
+            dataJson[dataField] = configuration.payload.dataContainer
+            registerParams["data"] = dataJson
             
             if var language = configuration.payload.requestLanguage {
                 language = String(language.prefix(2))
