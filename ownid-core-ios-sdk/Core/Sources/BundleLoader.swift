@@ -4,15 +4,21 @@ class OwnIDCoreSDK { }
 
 extension Bundle {
     static let resourceBundle: Bundle = {
-        let myBundle = Bundle(for: OwnIDCoreSDK.self)
-
-        guard let resourceBundleURL = myBundle.url(
-            forResource: String(describing: OwnIDCoreSDK.self), withExtension: "bundle")
-            else { fatalError(".bundle not found!") }
-
-        guard let resourceBundle = Bundle(url: resourceBundleURL)
-            else { fatalError("Cannot access .bundle!") }
-
-        return resourceBundle
+        let candidates = [
+            Bundle.main.resourceURL,
+            Bundle(for: OwnIDCoreSDK.self).resourceURL,
+        ]
+        
+        let bundleNames = ["OwnIDCoreSDK", "OwnID_OwnIDCoreSDK"]
+        for bundleName in bundleNames {
+            for candidate in candidates {
+                let bundlePath = candidate?.appendingPathComponent(bundleName + ".bundle")
+                if let bundle = bundlePath.flatMap(Bundle.init(url:)) {
+                    return bundle
+                }
+            }
+        }
+        
+        return Bundle(for: OwnIDCoreSDK.self)
     }()
 }

@@ -25,12 +25,15 @@ let package = Package(
         .target(
             name: "OwnIDCoreSDK",
             dependencies: [],
-            path: "ownid-core-ios-sdk"
+            path: "ownid-core-ios-sdk",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .target(
             name: "OwnIDGigyaSDK",
             dependencies: [
-                "OwnIDCoreSDK", 
+                "OwnIDCoreSDK",
                 .product(name: "Gigya", package: "gigya-swift-sdk")
             ],
             path: "ownid-gigya-ios-sdk"
