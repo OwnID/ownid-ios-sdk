@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>webcredentials:demo.ownid.com</string>
+		<string>webcredentials:playground.ownid.com</string>
 	</array>
 </dict>
 </plist>
