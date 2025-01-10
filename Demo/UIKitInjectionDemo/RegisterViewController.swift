@@ -7,11 +7,11 @@ import Gigya
 final class RegisterViewController: UIViewController {
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
-    @IBOutlet weak var ownIdContainerView: UIView!
+    @IBOutlet weak var ownIDContainerView: UIView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     private var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
-    private lazy var ownIdButton = makeOwnIDButton()
+    private lazy var ownIDButton = makeOwnIDButton()
     private var isOwnIDEnabled = false
     private var bag = Set<AnyCancellable>()
     
@@ -25,9 +25,9 @@ final class RegisterViewController: UIViewController {
         let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: emailPublisher.eraseToAnyPublisher())
         self.ownIDViewModel = ownIDViewModel
         subscribe(to: ownIDViewModel.integrationEventPublisher)
-        addChild(ownIdButton)
-        ownIdContainerView.addSubview(ownIdButton.view)
-        ownIdButton.didMove(toParent: self)
+        addChild(ownIDButton)
+        ownIDContainerView.addSubview(ownIDButton.view)
+        ownIDButton.didMove(toParent: self)
     }
     
     private func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
