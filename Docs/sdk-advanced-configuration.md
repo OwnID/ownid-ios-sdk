@@ -128,9 +128,7 @@ The redirection URI determines where the user lands once they are done using the
 In Xcode, go to **Info > URL Types**, and then use the **URL Schemes** field to specify the redirection URL. For example, if the value of the `OwnIDRedirectionURL` key is `com.myapp.demo://myhost`, then you could copy `com.myapp.demo` and paste it into the **URL Schemes** field.
 
 ## Manually Invoke OwnID Flow
-As alternative to OwnID button it is possible to use custom view to call functionality. In a nutshell, here it is the same behaviour from `ownIDViewModel`, just with your custom view provided.
-
-Create simple `PassthroughSubject`. After you created custom view, on press send void action through this `PassthroughSubject`. In your `viewModel`, make `ownIDViewModel` to subscribe to this newly created publisher.
+As an alternative to using the OwnID button, you can create a custom view to trigger the same functionality. Essentially, this will mirror the behavior of OwnIDViewModel, but with your custom view. To implement this, create a `PassthroughSubject` and send a value on the button press. In your ViewModel, make the `OwnIDViewModel` subscribe to this newly created publisher.
 
 ```swift
 // ...
