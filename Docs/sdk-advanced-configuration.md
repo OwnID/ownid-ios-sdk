@@ -133,7 +133,32 @@ As alternative to OwnID button it is possible to use custom view to call functio
 Create simple `PassthroughSubject`. After you created custom view, on press send void action through this `PassthroughSubject`. In your `viewModel`, make `ownIDViewModel` to subscribe to this newly created publisher.
 
 ```swift
-ownIDViewModel.subscribe(to: customButtonPublisher.eraseToAnyPublisher())
+// ...
+var body: some View {
+    CustomButton() {
+        viewModel.handleCustomButtonAction()
+    }
+}
+// ...
+
+final class MyLogInViewModel: ObservableObject {
+    @Published var loginId = ""
+     
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    private let resultPublisher = PassthroughSubject<Void, Never>()
+    
+    init() {
+        ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: Login(),
+                                                            loginIdPublisher: $loginId.eraseToAnyPublisher())
+        ownIDViewModel.subscribe(to: resultPublisher.eraseToAnyPublisher())
+    }
+    
+    func handleCustomButtonAction() {
+        resultPublisher.send()
+    }
+    
+    //...
+}
 ```
 
-Additionally you can reset view by calling `ownIDViewModel.resetState()`.
+Additionally you can reset view by calling `ownIDViewModel.resetDataAndState()`.

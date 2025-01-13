@@ -170,7 +170,13 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 [Complete example](../Demo/GigyaDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: /* Your Instance Of Gigya */, loginIdPublisher: loginIdPublisher)
+    @Published var loginId = ""
+    
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    
+    init() {
+        ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: /* Your Instance Of Gigya */, loginIdPublisher: $loginId.eraseToAnyPublisher())
+    }
 }
 ```
 
@@ -181,14 +187,14 @@ After creating this OwnID view model, your View Model layer should listen to eve
 [Complete example](../Demo/GigyaDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
+    @Published var loginId = ""
+    @Published var firstName = ""
     
-    func createViewModel(loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
-        let ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
-        self.ownIDViewModel = ownIDViewModel
-    }
-
+    var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
+    private var bag = Set<AnyCancellable>()
+    
     init() {
+        ownIDViewModel = OwnID.GigyaSDK.registrationViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $loginId.eraseToAnyPublisher())
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 
@@ -272,7 +278,7 @@ You can use any of this buttons based on your requirements.
     Add the following code to set up authButton:
     ```swift
     var body: some View {
-        OwnID.GigyaSDK.createLoginView(viewModel: ownIDViewModel, visualConfig: .init(widgetType: .authButton))
+        OwnID.GigyaSDK.createLoginView(viewModel: viewModel.ownIDViewModel, visualConfig: .init(widgetType: .authButton))
     }
 
 ![how it looks like](auth_button_design.png) ![how it looks like](auth_button_design_dark.png)
@@ -285,7 +291,12 @@ You need to create an instance of the view model, `OwnID.LoginView.ViewModel`, t
 [Complete example](../Demo/GigyaDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: /* Your Instance Of Gigya */, loginIdPublisher: loginIdPublisher)
+    @Published var loginId = ""
+    
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    init() {
+        ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: /* Your Instance Of Gigya */, loginIdPublisher: $loginId.eraseToAnyPublisher())
+    }
 }
 ```
 
@@ -296,14 +307,13 @@ After creating this OwnID view model, your View Model layer should listen to eve
 [Complete example](../Demo/GigyaDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    @Published var loginId = ""
     
-    func createViewModel(loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
-        let ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: loginIdPublisher)
-        self.ownIDViewModel = ownIDViewModel
-    }
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    private var bag = Set<AnyCancellable>()
 
     init() {
+        ownIDViewModel = OwnID.GigyaSDK.loginViewModel(instance: Gigya.sharedInstance(), loginIdPublisher: $loginId.eraseToAnyPublisher())
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 

@@ -111,9 +111,9 @@ To create your OwnID integration component, provide a custom implementation of t
 
 [Complete example](../Demo/IntegrationDemo/AuthPerformer.swift)
 ```swift
-final class CustomRegistration: RegistrationPerformer {
-    func register(configuration: OwnID.FlowsSDK.RegistrationParameters, parameters: RegisterParameters) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
-        let ownIdData = configuration.payload.dataContainer.rawDataForCustomFlow()
+final class OwnIDRegistration: RegistrationPerformer {
+    func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> OwnID.RegistrationResultPublisher {
+        let ownIdData = configuration.payload.data
         return //Add code that registers user in your identity platform and set OwnID Data to user profile
     }
 }
@@ -123,10 +123,9 @@ Also, provide a custom implementation of the `LoginPerformer` protocol and add `
 
 [Complete example](../Demo/IntegrationDemo/AuthPerformer.swift)
 ```swift
-final class CustomLoginPerformer: LoginPerformer {
+final class OwnIDLogin: LoginPerformer {
     func login(payload: OwnID.CoreSDK.Payload,
-                email: String) -> AnyPublisher<OperationResult, OwnID.CoreSDK.Error> {
-        let ownIdData = configuration.payload.dataContainer.rawDataForCustomFlow()
+               loginId: String) -> OwnID.LoginResultPublisher {
         return //Add code that log in user in your identity platform using data
     }
 }
@@ -155,7 +154,7 @@ It is recommended to set height of button the same as text field and disable tex
 ```swift
 //Put RegisterView inside your main view, preferably besides password field
 var body: some View {
-    OwnID.FlowsSDK.RegisterView(viewModel: ownIDViewModel)
+    OwnID.FlowsSDK.RegisterView(viewModel: ownIDViewModel, visualConfig: .init())
 }
 ```
 
@@ -169,10 +168,16 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 [Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
-                                                               loginPerformer: CustomLogin(),
-                                                               loginIdPublisher: loginIdPublisher)
-}
+    @Published var loginId = ""
+    
+    var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
+    
+    init() {
+        ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: OwnIDRegistration(),
+                                                                loginPerformer: OwnIDLogin(),
+                                                                loginIdPublisher: $loginId.eraseToAnyPublisher())
+    }
+} 
 ```
 
 Where `loginIdPublisher` provides input that user is typing into loginID field. See example of `@Published` property in demo app.
@@ -182,11 +187,15 @@ After creating this OwnID view model, your View Model layer should listen to int
 [Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
-    let ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: CustomRegistration(),
-                                                               loginPerformer: CustomLogin(),
-                                                               loginIdPublisher: loginIdPublisher)
+    @Published var loginId = ""
+
+    var ownIDViewModel: OwnID.FlowsSDK.RegisterView.ViewModel!
+    private var bag = Set<AnyCancellable>()
 
     init() {
+        ownIDViewModel = OwnID.FlowsSDK.RegisterView.ViewModel(registrationPerformer: OwnIDRegistration(),
+                                                               loginPerformer: OwnIDLogin(),
+                                                               loginIdPublisher: $loginId.eraseToAnyPublisher())
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 
@@ -199,7 +208,7 @@ final class MyRegisterViewModel: ObservableObject {
                     switch event {
                     // Event when user successfully finishes OwnID registration flow
                     case .readyToRegister:
-                        // Call register(:) function and 
+                        // Call register(:) function and
                         // pass the custom user's parameters if needed
 
                         ownIDViewModel.register(registerParameters: parameters)
@@ -254,7 +263,7 @@ You can use any of this buttons based on your requirements.
     ```swift
     //Put LoginView inside your main view, preferably below password field
     var body: some View {
-        OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel)
+        OwnID.FlowsSDK.LoginView(viewModel: ownIDViewModel, visualConfig: .init())
     }
     ```
 
@@ -278,8 +287,14 @@ The OwnID view that inserts the Skip Password UI is bound to an instance of the 
 [Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
-                                                            loginIdPublisher: loginIdPublisher)
+    @Published var loginId = ""
+    
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    
+    init() {
+        ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: OwnIDLogin(),
+                                                            loginIdPublisher: $loginId.eraseToAnyPublisher())
+    }
 }
 ```
 
@@ -290,10 +305,14 @@ After creating this OwnID view model, you should listen to integration events fr
 [Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
-    let ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: CustomLoginPerformer(),
-                                                            loginIdPublisher: loginIdPublisher)
-
+    @Published var loginId = ""
+    
+    var ownIDViewModel: OwnID.FlowsSDK.LoginView.ViewModel!
+    private var bag = Set<AnyCancellable>()
+    
     init() {
+        ownIDViewModel = OwnID.FlowsSDK.LoginView.ViewModel(loginPerformer: OwnIDLogin(),
+                                                            loginIdPublisher: $loginId.eraseToAnyPublisher())
         subscribe(to: ownIDViewModel.integrationEventPublisher)
     }
 
@@ -493,10 +512,10 @@ switch error {
 case flowCancelled(let flow):
     print("flowCancelled")
      
- case userError(let errorModel):
+case userError(let errorModel):
     print("userError")
      
- case integrationError(underlying: Swift.Error):
+case integrationError(underlying: Swift.Error):
     print("integrationError")
 }
 ```

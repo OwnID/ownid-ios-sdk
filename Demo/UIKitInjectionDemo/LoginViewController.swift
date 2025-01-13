@@ -30,10 +30,10 @@ final class LoginViewController: UIViewController {
     }
     
     private func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.LoginView> {
-        let headerView = OwnID.GigyaSDK.createLoginView(viewModel: ownIDViewModel)
-        let headerVC = UIHostingController(rootView: headerView)
-        headerVC.view.translatesAutoresizingMaskIntoConstraints = false
-        return headerVC
+        let ownIDView = OwnID.GigyaSDK.createLoginView(viewModel: ownIDViewModel)
+        let ownIDVC = UIHostingController(rootView: ownIDView)
+        ownIDVC.view.translatesAutoresizingMaskIntoConstraints = false
+        return ownIDVC
     }
     
     @IBAction func loginTapped(_ sender: UIButton) {

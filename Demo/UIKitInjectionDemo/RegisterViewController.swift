@@ -31,10 +31,10 @@ final class RegisterViewController: UIViewController {
     }
     
     private func makeOwnIDButton() -> UIHostingController<OwnID.FlowsSDK.RegisterView> {
-        let headerView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel)
-        let headerVC = UIHostingController(rootView: headerView)
-        headerVC.view.translatesAutoresizingMaskIntoConstraints = false
-        return headerVC
+        let ownIDView = OwnID.GigyaSDK.createRegisterView(viewModel: ownIDViewModel)
+        let ownIDVC = UIHostingController(rootView: ownIDView)
+        ownIDVC.view.translatesAutoresizingMaskIntoConstraints = false
+        return ownIDVC
     }
     
     @IBAction private func registerTapped(_ sender: UIButton) {
