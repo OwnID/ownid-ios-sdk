@@ -91,7 +91,7 @@ public extension OwnID.FlowsSDK.LoginView {
             loginIdPublisher.assign(to: \.loginId, on: self).store(in: &bag)
         }
         
-        /// Reset visual state and any possible data from web flow
+        /// Reset visual state and any possible data
         public func resetDataAndState(isResettingToInitialState: Bool = true) {
             payload = .none
             resetToInitialState(isResettingToInitialState: isResettingToInitialState)
@@ -176,9 +176,39 @@ public extension OwnID.FlowsSDK.LoginView {
                                                              loginType: loginType,
                                                              validLoginIdFormat: validLoginIdFormat))
                     }
+                    var loginId = loginId
+                    if loginId.isBlank, let savedLoginId = OwnID.CoreSDK.DefaultsLoginIdSaver.loginId(), !savedLoginId.isBlank {
+                        loginId = savedLoginId
+                    }
                     skipPasswordTapped(loginId: loginId)
                 }
                 .store(in: &bag)
+        }
+        
+        /// Initiates an OwnID login flow if no other flow is active.
+        ///
+        /// - If `onlyReturningUser` is false, the authentication flow will start for the given `loginId`. If no `loginId` is provided, a prompt is displayed to get it and continue.
+        /// - If `onlyReturningUser` is true, the authentication flow starts only for a previously logged in user (the `loginId` parameter is ignored). If no such user exists, the flow will not start.
+        ///
+        /// - Parameters:
+        ///   - loginId: Optional user login ID (default `""`).
+        ///   - onlyReturningUser: If true, only attempts a returning user flow (default `false`).
+        /// - Returns: `true` if the flow starts, otherwise `false`.
+        @discardableResult
+        public func auth(loginId: String = "", onlyReturningUser: Bool = false) -> Bool {
+            OwnID.CoreSDK.logger.log(level: .debug, message: "Invoked auth", type: Self.self)
+            
+            if onlyReturningUser {
+                guard let savedLoginId = OwnID.CoreSDK.DefaultsLoginIdSaver.loginId(), !savedLoginId.isEmpty else {
+                    return false
+                }
+                
+                skipPasswordTapped(loginId: savedLoginId)
+                return true
+            } else {
+                skipPasswordTapped(loginId: loginId)
+                return true
+            }
         }
     }
 }

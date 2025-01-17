@@ -154,7 +154,7 @@ public extension OwnID.FlowsSDK.RegisterView {
             flowResultPublisher.send(.success(.response(loginId: payload.loginId ?? "", payload: payload, authType: payload.authType)))
         }
         
-        /// Reset visual state and any possible data from web flow
+        /// Reset visual state and any possible data
         public func resetDataAndState(isResettingToInitialState: Bool = true) {
             registrationData = RegistrationData()
             resetToInitialState(isResettingToInitialState: isResettingToInitialState)

@@ -13,7 +13,7 @@ public extension OwnID {
         
         @ObservedObject var store: Store<SDKState, SDKAction>
         
-        var providers: Providers?
+        public static var providers: Providers?
         private var flow = OwnID.Flow()
         private var enrollManager = EnrollManager(supportedLanguages: .init(rawValue: []))
         private let urlPublisher = PassthroughSubject<Void, OwnID.CoreSDK.Error>()

@@ -1,4 +1,6 @@
 import Foundation
+import Combine
+import SwiftUI
 
 /// Represents different types of providers used for OwnID authentication flow.
 ///
@@ -44,4 +46,13 @@ public protocol PasswordProviderProtocol: AuthProviderProtocol {
     ///   - password: The user's password.
     /// - Returns: ``OwnID/AuthResult`` with the result of the session creation operation.
     func authenticate(loginId: String, password: String) async -> OwnID.AuthResult
+}
+
+/// The Logo Provider retrieves a logo for branding purposes.
+public protocol LogoProviderProtocol: ProviderProtocol {
+    /// Retrieves a `Image` as a publisher, which can be emitted from any data source (e.g., remote or local).
+    ///
+    /// - Parameter logoUrl: An optional URL for locating the logo.
+    /// - Returns: A publisher that emits the `UIImage?` (or `nil` if not found).
+    func logo(logoURL: URL?) -> AnyPublisher<Image?, Never>
 }

@@ -24,7 +24,9 @@ extension OwnID.CoreSDK {
                                   isTestingEnvironment: Bool)
         case updateSupportedLanguages(supportedLanguages: OwnID.CoreSDK.Languages)
         case configureForTests
-        case save(configurationLoadingEvent: OwnID.CoreSDK.ConfigurationLoadingEvent, userFacingSDK: OwnID.CoreSDK.SDKInformation?)
         case fetchServerConfiguration
+        case save(configurationLoadingEvent: OwnID.CoreSDK.ConfigurationLoadingEvent, userFacingSDK: OwnID.CoreSDK.SDKInformation?)
+        case fetchLogo(config: LocalConfiguration)
+        case success
     }
 }

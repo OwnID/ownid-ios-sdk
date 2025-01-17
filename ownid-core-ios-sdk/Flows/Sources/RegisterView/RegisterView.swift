@@ -11,7 +11,7 @@ public extension OwnID.FlowsSDK {
         @ObservedObject public var viewModel: ViewModel
         
         public init(viewModel: ViewModel,
-                    visualConfig: OwnID.UISDK.VisualLookConfig) {
+                    visualConfig: OwnID.UISDK.VisualLookConfig = .init()) {
             self.viewModel = viewModel
             self.visualConfig = visualConfig
             self.viewModel.currentMetadata = visualConfig.convertToCurrentMetric()

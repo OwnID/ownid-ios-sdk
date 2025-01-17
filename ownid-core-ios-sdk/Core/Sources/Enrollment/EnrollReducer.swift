@@ -38,8 +38,8 @@ extension OwnID.CoreSDK.EnrollManager {
             return fetchAuthToken(authTokenPublisher: state.authTokenPublisher)
         case .saveAuthToken(let authToken):
             state.authToken = authToken
-            return [Just(.sendinitRequest).eraseToEffect()]
-        case .sendinitRequest:
+            return [Just(.sendInitRequest).eraseToEffect()]
+        case .sendInitRequest:
             return sendInitRequest(state: &state)
         case .checkCredentials(let model):
             if shouldShowView(for: model, force: state.force) {

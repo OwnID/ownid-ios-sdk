@@ -76,7 +76,7 @@ extension OwnID.CoreSDK {
                         let appBundleID = Bundle.main.bundleIdentifier ?? "empty"
                         OwnID.CoreSDK.logger.log(level: .warning,
                                                  message: "Incorrect Passkeys Configuration",
-                                                 errorMessage: "Bundle ID mismatch. Expecting \(serverBundleID) but it's \(appBundleID)",
+                                                 errorMessage: "Bundle ID mismatch. Configured in the OwnID console \(serverBundleID) but it's \(appBundleID)",
                                                  type: Self.self)
                     }
                     
@@ -87,6 +87,7 @@ extension OwnID.CoreSDK {
                     local.supportedLocales = serverConfiguration.supportedLocales
                     local.loginIdSettings = serverConfiguration.loginIdSettings
                     local.enableRegistrationFromLogin = serverConfiguration.enableRegistrationFromLogin
+                    local.logoURL = serverConfiguration.logoURL
                     local.phoneCodes = serverConfiguration.phoneCodes
                     local.origins = Set(serverConfiguration.origins ?? [])
                     local.displayName = serverConfiguration.displayName

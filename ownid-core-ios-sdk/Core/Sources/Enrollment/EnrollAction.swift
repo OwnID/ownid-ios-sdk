@@ -14,7 +14,7 @@ extension OwnID.CoreSDK.EnrollManager {
         case saveLoginId(loginId: String)
         case fetchAuthToken
         case saveAuthToken(authToken: String)
-        case sendinitRequest
+        case sendInitRequest
         case checkCredentials(model: FIDOCreateModel)
         case saveFidoModel(model: FIDOCreateModel)
         case showView

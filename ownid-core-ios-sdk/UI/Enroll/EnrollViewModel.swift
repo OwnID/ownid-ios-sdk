@@ -7,6 +7,8 @@ extension OwnID.UISDK.Enroll {
             static let metricName = "Device Enrollment"
         }
         
+        var cancellable: AnyCancellable? 
+        
         @Published var isLoading = false
         private let store: Store<ViewState, Action>
         private let loginId: String

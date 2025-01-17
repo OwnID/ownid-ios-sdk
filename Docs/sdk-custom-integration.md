@@ -24,6 +24,7 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
       * [Implement the Login Screen](#implement-the-login-screen)
         + [Add OwnID View](#add-ownid-view)
         + [Customize View Model](#customize-view-model-1)
+        + [Launching the login flow programmatically](#launching-the-login-flow-programmatically)
     * Elite
       * [Run Elite](#run-elite)
          + [Create Providers](#create-providers)      
@@ -340,6 +341,27 @@ final class MyLogInViewModel: ObservableObject {
     }
 }
 ```
+
+### Launching the login flow programmatically
+
+ To start the login flow programmatically, you can use the `auth()` function provided by `LoginViewModel`:
+
+ ```swift
+ ownIDViewModel.auth(
+ loginId: "",               // (optional) User login ID
+ onlyReturningUser: true    // (optional) If true, only attempts a returning user flow
+ )
+ ```
+
+ If `onlyReturningUser` is false, the authentication flow will start for the given `loginId`. If no `loginId` is provided, a prompt is displayed to get it and continue.
+
+ If `onlyReturningUser` is true, the authentication flow starts only for a previously logged in user (the `loginId` parameter is ignored). If no such user exists, the flow will not start.
+
+ The function returns `true` if the flow starts, otherwise `false`.
+
+ Flow result is returned via integration events, see [Customize View Model](#customize-view-model-1)
+
+
 </details>
 
 <details open>

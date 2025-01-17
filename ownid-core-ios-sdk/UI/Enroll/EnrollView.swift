@@ -22,6 +22,7 @@ extension OwnID.UISDK.Enroll {
         @ObservedObject private var viewModel: ViewModel
         private var loginId: String
         
+        @State private var logoImage: Image?
         @State private var isTranslationChanged = false
         
         private var cancel: String {
@@ -71,6 +72,14 @@ extension OwnID.UISDK.Enroll {
         
         private func viewContent() -> some View {
             VStack {
+                if let logoImage = logoImage {
+                    logoImage
+                        .resizable()
+                        .scaledToFit()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 50)
+                        .padding(.top, 20)
+                }
                 Text(localizedKey: .enrollTitle)
                     .font(.system(size: 20))
                     .bold()
@@ -86,6 +95,17 @@ extension OwnID.UISDK.Enroll {
             }
             .padding(.all, 20)
             .frame(maxWidth: .infinity)
+            .onAppear {
+                let configuration = OwnID.CoreSDK.shared.store.value.configuration
+                viewModel.cancellable = OwnID.CoreSDK.providers?.logo?.logo(logoURL: configuration?.logoURL)
+                    .receive(on: DispatchQueue.main)
+                    .sink { image in
+                        self.logoImage = image
+                    }
+            }
+            .onDisappear {
+                viewModel.cancellable?.cancel()
+            }
         }
         
         private func continueButton() -> some View {

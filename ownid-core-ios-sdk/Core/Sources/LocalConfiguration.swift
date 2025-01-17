@@ -62,6 +62,7 @@ extension OwnID.CoreSDK {
         var supportedLocales: [String]?
         var loginIdSettings: LoginIdSettings?
         var enableRegistrationFromLogin: Bool?
+        var logoURL: URL?
         var phoneCodes: [PhoneCode]?
         var origins: Set<String> = []
         var displayName: String?

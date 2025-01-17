@@ -1,16 +1,23 @@
 import Foundation
+import Combine
+import SwiftUI
 
 extension OwnID {
     /// Holds instances of different OwnID providers.
     public class Providers {
-        var session: SessionProviderProtocol?
-        var account: AccountProviderProtocol?
-        var auths: [AuthProviderProtocol] = []
+        public var session: SessionProviderProtocol?
+        public var account: AccountProviderProtocol?
+        public var auths: [AuthProviderProtocol] = []
+        public var logo: LogoProviderProtocol?
         
-        init(session: SessionProviderProtocol? = nil, account: AccountProviderProtocol? = nil, auths: [AuthProviderProtocol] = []) {
+        init(session: SessionProviderProtocol? = nil,
+             account: AccountProviderProtocol? = nil,
+             auths: [AuthProviderProtocol] = [],
+             logo: LogoProviderProtocol? = nil) {
             self.session = session
             self.account = account
             self.auths = auths
+            self.logo = logo
         }
         
         func toWrappers() -> [any FlowWrapper] {
@@ -41,6 +48,7 @@ extension OwnID {
         private var sessionProvider: SessionProviderProtocol?
         private var accountProvider: AccountProviderProtocol?
         private var authProviders: [AuthProviderProtocol] = []
+        private var logoProvider: LogoProviderProtocol?
         
         /// Configures the session provider using a ``OwnID/SessionProviderBuilder``.
         /// - Parameter block: A closure that configures the session provider.
@@ -66,10 +74,16 @@ extension OwnID {
             authProviders.append(builder.build())
         }
         
+        /// Configures the logo provider
+        /// - Parameter block: A closure that configures the logo provider.
+        public func logo(block: @escaping (_ logoURL: URL?) -> AnyPublisher<Image?, Never>) {
+            logoProvider = LogoProvider(logoClosure: block)
+        }
+        
         /// Builds the ``OwnID/Providers`` instance.
         /// - Returns: The ``OwnID/Providers`` instance.
         public func build() -> Providers {
-            return OwnID.Providers(session: sessionProvider, account: accountProvider, auths: authProviders)
+            return OwnID.Providers(session: sessionProvider, account: accountProvider, auths: authProviders, logo: logoProvider)
         }
     }
     
@@ -220,6 +234,22 @@ extension OwnID {
             }
         }
     }
+    
+    /// Retrieves a logo for branding purposes.
+    private class LogoProvider: LogoProviderProtocol {
+        let logoClosure: (_ logoURL: URL?) -> AnyPublisher<Image?, Never>
+        
+        init(logoClosure: @escaping (_ logoURL: URL?) -> AnyPublisher<Image?, Never>) {
+            self.logoClosure = logoClosure
+        }
+        
+        /// Retrieves the logo image for the given URL.
+        /// - Parameter logoURL: The URL where the logo is located.
+        /// - Returns: A publisher that emits an optional `Image` corresponding to the logo at the URL,
+        public func logo(logoURL: URL?) -> AnyPublisher<Image?, Never> {
+            return logoClosure(logoURL)
+        }
+    }
 }
 
 extension OwnID {
@@ -229,6 +259,6 @@ extension OwnID {
     public static func providers(_ block: (ProvidersBuilder) -> Void) {
         let builder = ProvidersBuilder()
         block(builder)
-        CoreSDK.shared.providers = builder.build()
+        CoreSDK.providers = builder.build()
     }
 }

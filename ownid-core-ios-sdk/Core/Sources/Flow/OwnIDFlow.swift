@@ -47,7 +47,7 @@ extension OwnID {
         private func combinedWrappers(providers: Providers?, eventWrappers: [any FlowWrapper]) -> [any FlowWrapper] {
             var wrappers = [any FlowWrapper]()
             
-            let globalProvidersWrappers = OwnID.CoreSDK.shared.providers?.toWrappers() ?? []
+            let globalProvidersWrappers = OwnID.CoreSDK.providers?.toWrappers() ?? []
             if let providers {
                 let providersWrappers = providers.toWrappers()
                 wrappers.append(contentsOf: providersWrappers)

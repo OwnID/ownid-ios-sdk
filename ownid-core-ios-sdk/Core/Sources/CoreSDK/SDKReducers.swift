@@ -72,14 +72,34 @@ extension OwnID.CoreSDK {
                                 userFacingSDK: userFacingSDK,
                                 underlyingSDKs: underlyingSDKs,
                                 isTestingEnvironment: false)]
-            
+        case .fetchLogo(let config):
+            let effect = OwnID.CoreSDK.providers?.logo?.logo(logoURL: config.logoURL)
+                .map({ response in
+                    return SDKAction.success
+                })
+                .eraseToEffect()
+            if let effect {
+                return [effect]
+            } else {
+                return []
+            }
+        case .success:
+            return []
         case .save(let configurationLoadingEvent, _):
             switch configurationLoadingEvent {
             case .loaded(let config):
                 state.configurationRequestData = .none
                 state.configuration = config
                 state.configurationLoadingEventPublisher.send(configurationLoadingEvent)
+                
+                if OwnID.CoreSDK.providers == nil {
+                    OwnID.CoreSDK.providers = OwnID.Providers(logo: OwnIDNetworkLogoProvider())
+                } else {
+                    OwnID.CoreSDK.providers?.logo = OwnID.CoreSDK.providers?.logo ?? OwnIDNetworkLogoProvider()
+                }
+                
                 return [
+                    Just(SDKAction.fetchLogo(config: config)).eraseToEffect(),
                     translationsDownloaderSDKConfigured(with: state.supportedLanguages),
                     sendLoggerSDKConfigured(),
                     notifyConfigurationFetched()
