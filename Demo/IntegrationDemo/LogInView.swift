@@ -1,9 +1,11 @@
 import SwiftUI
 import OwnIDCoreSDK
+import GoogleSignInSwift
 
 struct LogInView: View {
     @ObservedObject private var viewModel = LogInViewModel()
     @EnvironmentObject var coordinator: AppCoordinator
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         page()
@@ -41,6 +43,14 @@ private extension LogInView {
                             .zIndex(1)
                             .padding(.top, proxy.size.height / 10)
                         BlueButton(text: "Log in", action: viewModel.logIn)
+                        Group {
+                            OwnID.UISDK.SignInWithAppleButton(style: colorScheme == .dark ? .white : .black) {
+                                viewModel.appleLogin()
+                            }
+                            GoogleSignInButton(style: .wide, action: viewModel.googleLogin)
+                        }
+                        .frame(width: 180, height: 40)
+                        .padding(.top, 10)
                         Text(viewModel.errorMessage)
                             .font(.caption)
                             .foregroundColor(.red)

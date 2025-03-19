@@ -74,6 +74,42 @@ final class LogInViewModel: ObservableObject {
             .store(in: &bag)
     }
     
+    func appleLogin() {
+        state = .loading
+        OwnID.CoreSDK.startSocialLogin(type: .apple)
+            .sink { [weak self] result in
+                self?.handleSocialResult(result: result)
+            }
+            .store(in: &bag)
+    }
+    
+    func googleLogin() {
+        state = .loading
+        OwnID.CoreSDK.startSocialLogin(type: .google)
+            .sink { [weak self] result in
+                self?.handleSocialResult(result: result)
+            }
+            .store(in: &bag)
+    }
+    
+    private func handleSocialResult(result: Result<(String, String?), OwnID.CoreSDK.Error>) {
+        switch result {
+        case .success((_, let sessionPayload)):
+            do {
+                let data = Data((sessionPayload ?? "").utf8)
+                let dataJson = try JSONSerialization.jsonObject(with: data) as? [String: String] ?? [:]
+                let token = dataJson["token"] ?? ""
+                fetchProfile(previousResult: token)
+            } catch {
+                state = .initial
+                errorMessage = error.localizedDescription
+            }
+        case .failure(let error):
+            state = .initial
+            errorMessage = error.localizedDescription
+        }
+    }
+    
     private func fetchProfile(previousResult: OperationResult) {
         CustomAuthSystem.fetchUserData(previousResult: previousResult)
             .sink { completionRegister in

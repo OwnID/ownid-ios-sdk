@@ -14,9 +14,13 @@ target 'GigyaDemo' do
 end
 
 target 'IntegrationDemo' do
+  pod 'GoogleSignIn'
+  pod 'GoogleSignInSwiftSupport'
   pod 'ownid-core-ios-sdk'
 end
 
 target 'DirectDemo' do
+  pod 'GoogleSignIn'
+  pod 'GoogleSignInSwiftSupport'
   pod 'ownid-core-ios-sdk'
 end
