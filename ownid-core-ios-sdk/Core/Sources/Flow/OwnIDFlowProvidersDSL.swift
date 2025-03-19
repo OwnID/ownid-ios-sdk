@@ -9,15 +9,18 @@ extension OwnID {
         public var account: AccountProviderProtocol?
         public var auths: [AuthProviderProtocol] = []
         public var logo: LogoProviderProtocol?
+        public var google: GoogleProviderProtocol?
         
         init(session: SessionProviderProtocol? = nil,
              account: AccountProviderProtocol? = nil,
              auths: [AuthProviderProtocol] = [],
-             logo: LogoProviderProtocol? = nil) {
+             logo: LogoProviderProtocol? = nil,
+             google: GoogleProviderProtocol? = nil) {
             self.session = session
             self.account = account
             self.auths = auths
             self.logo = logo
+            self.google = google
         }
         
         func toWrappers() -> [any FlowWrapper] {
@@ -49,6 +52,7 @@ extension OwnID {
         private var accountProvider: AccountProviderProtocol?
         private var authProviders: [AuthProviderProtocol] = []
         private var logoProvider: LogoProviderProtocol?
+        private var googleProvider: GoogleProviderProtocol?
         
         /// Configures the session provider using a ``OwnID/SessionProviderBuilder``.
         /// - Parameter block: A closure that configures the session provider.
@@ -80,10 +84,18 @@ extension OwnID {
             logoProvider = LogoProvider(logoClosure: block)
         }
         
+        public func google(block: @escaping () -> SocialProvider) {
+            googleProvider = GoogleProvider(googleClosure: block)
+        }
+        
         /// Builds the ``OwnID/Providers`` instance.
         /// - Returns: The ``OwnID/Providers`` instance.
         public func build() -> Providers {
-            return OwnID.Providers(session: sessionProvider, account: accountProvider, auths: authProviders, logo: logoProvider)
+            return OwnID.Providers(session: sessionProvider,
+                                   account: accountProvider,
+                                   auths: authProviders,
+                                   logo: logoProvider,
+                                   google: googleProvider)
         }
     }
     
@@ -248,6 +260,18 @@ extension OwnID {
         /// - Returns: A publisher that emits an optional `Image` corresponding to the logo at the URL,
         public func logo(logoURL: URL?) -> AnyPublisher<Image?, Never> {
             return logoClosure(logoURL)
+        }
+    }
+    
+    private class GoogleProvider: GoogleProviderProtocol {
+        let googleClosure: () -> SocialProvider
+        
+        init(googleClosure: @escaping () -> SocialProvider) {
+            self.googleClosure = googleClosure
+        }
+        
+        var googleProvider: any SocialProvider {
+            googleClosure()
         }
     }
 }

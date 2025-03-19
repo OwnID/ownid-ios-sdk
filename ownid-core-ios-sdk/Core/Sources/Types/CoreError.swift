@@ -9,6 +9,7 @@ public extension OwnID.CoreSDK {
         case otp(flowType: String)
         case webApp
         case enroll
+        case socialLogin
         
         var source: String? {
             switch self {

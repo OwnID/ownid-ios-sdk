@@ -12,6 +12,7 @@ extension OwnID.CoreSDK {
         case FLOW
         case METADATA
         case STORAGE
+        case SOCIAL
     }
     
     struct JSDataModel: Decodable {
@@ -140,7 +141,8 @@ extension OwnID.CoreSDK {
             namespaceHandlers = [WebBridgeFido(),
                                  WebBridgeFlow.shared,
                                  WebBridgeMetadata(),
-                                 WebBridgeStorage()]
+                                 WebBridgeStorage(),
+                                 WebBridgeSocial()]
             
             if let includeNamespaces {
                 namespaceHandlers = []
@@ -155,6 +157,8 @@ extension OwnID.CoreSDK {
                         namespaceHandlers.append(WebBridgeMetadata())
                     case .STORAGE:
                         namespaceHandlers.append(WebBridgeStorage())
+                    case .SOCIAL:
+                        namespaceHandlers.append(WebBridgeSocial())
                     }
                 }
             }

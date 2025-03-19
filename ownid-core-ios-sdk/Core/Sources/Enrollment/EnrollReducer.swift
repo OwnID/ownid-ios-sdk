@@ -45,7 +45,7 @@ extension OwnID.CoreSDK.EnrollManager {
             if shouldShowView(for: model, force: state.force) {
                 return [Just(.saveFidoModel(model: model)).eraseToEffect()]
             } else {
-                OwnID.CoreSDK.LoginIdSaver.save(loginId: state.loginId, authMethod: .passkey)
+//                OwnID.CoreSDK.LoginIdSaver.save(loginId: state.loginId, authMethod: .passkey)
                 
                 let message = OwnID.CoreSDK.ErrorMessage.enrollmentSkipped
                 let error = OwnID.CoreSDK.Error.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))

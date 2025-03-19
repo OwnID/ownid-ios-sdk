@@ -16,6 +16,7 @@ public extension OwnID {
         public static var providers: Providers?
         private var flow = OwnID.Flow()
         private var enrollManager = EnrollManager(supportedLanguages: .init(rawValue: []))
+        private var socialAuthManager = SocialAuthManager(type: .apple, provider: nil)
         private let urlPublisher = PassthroughSubject<Void, OwnID.CoreSDK.Error>()
         private let configurationLoadingEventPublisher = PassthroughSubject<ConfigurationLoadingEvent, Never>()
         private var supportedLanguages = [String]()
@@ -99,6 +100,12 @@ public extension OwnID {
         
         static func start(options: EliteOptions?, providers: OwnID.Providers?, eventWrappers: [any FlowWrapper]) {
             shared.flow.start(options: options, providers: providers, eventWrappers: eventWrappers)
+        }
+        
+        public static func startSocialLogin(type: SocialProviderType, provider: SocialProvider? = nil) -> OwnID.SocialEventPublisher {
+            let socialAuthManager = SocialAuthManager(type: type, provider: provider)
+            shared.socialAuthManager = socialAuthManager
+            return shared.socialAuthManager.start()
         }
         
         public static func enrollCredential(loginId: String, authToken: String, force: Bool = false) -> OwnID.EnrollEventPublisher {

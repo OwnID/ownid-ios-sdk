@@ -40,6 +40,10 @@ extension OwnID.CoreSDK {
                 .eraseToAnyPublisher()
                 .decode(type: type, decoder: JSONDecoder())
                 .mapError { error in
+                    if let ownIDError = error as? OwnID.CoreSDK.Error {
+                        return ownIDError
+                    }
+                    
                     let message = OwnID.CoreSDK.ErrorMessage.decodingError(description: error.localizedDescription)
                     return .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
                 }
@@ -59,6 +63,10 @@ extension OwnID.CoreSDK {
                 }
                 .eraseToAnyPublisher()
                 .mapError { error in
+                    if let ownIDError = error as? OwnID.CoreSDK.Error {
+                        return ownIDError
+                    }
+                    
                     let message = OwnID.CoreSDK.ErrorMessage.decodingError(description: error.localizedDescription)
                     return .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
                 }
@@ -80,24 +88,47 @@ extension OwnID.CoreSDK {
                     return .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
                 }
                 .map { [self] body -> URLRequest in
-                    if headers.isEmpty {
-                        if let supportedLanguages {
-                            let headers = URLRequest.defaultHeaders(supportedLanguages: supportedLanguages)
-                            return URLRequest.request(url: url, method: method, body: body, headers: headers)
-                        } else {
-                            return URLRequest.request(url: url, method: method, body: body, headers: headers)
-                        }
-                    } else {
-                        return URLRequest.request(url: url, method: method, body: body, headers: headers)
-                    }
+                    let mergedHeaders = headers.isEmpty
+                        ? URLRequest.defaultHeaders(supportedLanguages: supportedLanguages ?? .init(rawValue: []))
+                        : headers
+
+                    return URLRequest.request(url: url, method: method, body: body, headers: mergedHeaders)
                 }
                 .eraseToAnyPublisher()
                 .flatMap { [self] request -> AnyPublisher<URLSession.DataTaskPublisher.Output, Error> in
-                    return provider.apiResponse(for: request)
+                    provider.apiResponse(for: request)
                         .mapError { .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: $0.localizedDescription)) }
+                        .flatMap { output -> AnyPublisher<URLSession.DataTaskPublisher.Output, Error> in
+                            guard let httpResponse = output.response as? HTTPURLResponse else {
+                                let message = "Invalid (non-HTTP) response."
+                                return Fail(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)))
+                                    .eraseToAnyPublisher()
+                            }
+                            
+                            guard (200..<300).contains(httpResponse.statusCode) else {
+                                let serverErrorMessage = self.extractServerErrorMessage(from: output.data)
+                                
+                                let message = "Request failed (\(httpResponse.statusCode)): \(serverErrorMessage)"
+                                
+                                return Fail(error: .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)))
+                                    .eraseToAnyPublisher()
+                            }
+
+                            return Just(output)
+                                .setFailureType(to: Error.self)
+                                .eraseToAnyPublisher()
+                        }
                         .eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
+        }
+
+        private func extractServerErrorMessage(from data: Data) -> String {
+            if let jsonObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let serverMessage = jsonObject["code"] as? String {
+                return serverMessage
+            }
+            return "An unknown error occurred."
         }
         
         private func printResponse(data: Data) {

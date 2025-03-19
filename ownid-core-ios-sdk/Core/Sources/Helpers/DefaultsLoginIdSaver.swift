@@ -6,6 +6,8 @@ extension OwnID.CoreSDK {
         case passkey
         case otp
         case password
+        case socialGoogle
+        case socialApple
         
         static func authMethod(from authType: OwnID.CoreSDK.AuthType?) -> AuthMethod? {
             guard let authType else {
@@ -19,6 +21,10 @@ extension OwnID.CoreSDK {
                 return .otp
             case .password:
                 return .password
+            case .socialGoogle:
+                return .socialGoogle
+            case .socialApple:
+                return .socialApple
             }
         }
     }

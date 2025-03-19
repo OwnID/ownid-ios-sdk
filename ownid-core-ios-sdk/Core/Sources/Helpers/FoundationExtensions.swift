@@ -5,7 +5,8 @@ extension URLRequest {
         let languagesString = supportedLanguages.rawValue.joined(separator: ",")
         return ["User-Agent": OwnID.CoreSDK.UserAgentManager.shared.SDKUserAgent,
                 "X-API-Version": OwnID.CoreSDK.APIVersion,
-                "Accept-Language": languagesString]
+                "Accept-Language": languagesString,
+                "Content-Type": "application/json"]
     }
     
     static func request(url: OwnID.CoreSDK.ServerURL,

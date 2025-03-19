@@ -27,6 +27,9 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
       * [Run Elite](#run-elite)
          + [Create Providers](#create-providers)      
          + [Start the Elite](#start-the-elite)
+    * Social
+        * [Sign in with Apple](#sign-in-with-apple)
+        * [Sign in with Google](#sign-in-with-google)
 * [Tooltip](#tooltip)
 * [Credential enrollment](#credential-enrollment)
 * [Errors](#errors)
@@ -398,6 +401,75 @@ OwnID.start(options: OwnID.EliteOptions(webView: OwnID.EliteOptions.WebView(base
                                                                             html: "<html></html>"))) {     // Optional HTML content to be rendered in the WebView
     //...
 }
+```
+
+</details>
+
+<details open>
+<summary><b>Social Login</b></summary>
+
+## Sign in with Apple
+
+The `Sign in with Apple` feature allows users to sign in with their Apple ID.
+
+To trigger sign in with Apple:
+1. Add Sign in with Apple Capability. In Xcode go to your target settings, `Signing & Capabilities` and add `Sign in with Apple`.
+
+2. Invoke Social Login:
+
+```swift
+OwnID.CoreSDK.startSocialLogin(type: .apple)
+    .sink { result in
+        switch result {
+        case .success((let accessToken, let sessionPayload)):
+            // accessToken: // The OwnID access token
+            // sessionPayload: // Optional Identity Platform payload
+        case .failure(let error):
+            //handle error
+        }
+    }
+    .store(in: &bag)
+```
+
+You can also use OwnID built-in Apple Sign In button:
+
+```swift
+OwnID.UISDK.SignInWithAppleButton {
+	viewModel.appleLogin()
+}
+```
+Available Optional Parameters:
+`type` - `ASAuthorizationAppleIDButton.ButtonType` (e.g., .signIn, .continue, or .default)
+`style` - `ASAuthorizationAppleIDButton.Style` (e.g., .black, .white, .whiteOutline)
+
+## Sign in with Google
+
+The `Sign in with Google` feature allows users to sign in with their Google account.
+
+To trigger sign in with Google:
+1. Follow the [official Google Sign-In for iOS tutorial](https://developers.google.com/identity/sign-in/ios/start-integrating) to configure your project.
+2. Locate the `GoogleProvider.swift` file in OwnID’s Providers folder and drag the file into your Xcode project.
+3. In `GoogleProvider.swift`, replace the placeholder clientID with your actual Google client ID.
+4. Invoke Social Login:
+
+```swift
+OwnID.CoreSDK.startSocialLogin(type: .google)
+    .sink { result in
+        switch result {
+        case .success((let accessToken, let sessionPayload)):
+            // accessToken: The OwnID access token
+            // sessionPayload: Optional Identity Platform payload
+        case .failure(let error):
+            //handle error
+        }
+    }
+    .store(in: &bag)
+```
+
+Optionally, you can set your own provider class:
+
+```swift
+OwnID.CoreSDK.startSocialLogin(type: .google, provider: GoogleProvider())
 ```
 
 </details>

@@ -9,5 +9,7 @@ extension OwnID.CoreSDK {
         case smsFallback = "sms-fallback"
         case otp
         case password
+        case socialGoogle = "social-google"
+        case socialApple = "social-apple"
     }
 }

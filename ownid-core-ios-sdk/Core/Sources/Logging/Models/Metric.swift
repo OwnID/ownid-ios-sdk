@@ -50,6 +50,10 @@ public extension OwnID.CoreSDK {
         case enrollFailed
         case flowTriggered
         case flowError
+        case socialStart(type: SocialProviderType)
+        case socialComplete(type: SocialProviderType)
+        case socialCancel(type: SocialProviderType)
+        case socialError(type: SocialProviderType)
                 
         var actionValue: String {
             func fidoActionPrefix(type: AnalyticFidoType) -> String {
@@ -118,6 +122,14 @@ public extension OwnID.CoreSDK {
                 return "Flow Triggered From Mobile SDK"
             case .flowError:
                 return "Flow Error"
+            case .socialStart(let type):
+                return "[Social Login] - \(type.rawValue): Execution Start"
+            case .socialComplete(let type):
+                return "[Social Login] - \(type.rawValue): Execution Complete"
+            case .socialCancel(let type):
+                return "[Social Login] - \(type.rawValue): Execution Cancelled"
+            case .socialError(let type):
+                return "[Social Login] - \(type.rawValue): Execution Did Not Complete"
             }
         }
         
@@ -147,7 +159,11 @@ public extension OwnID.CoreSDK {
                     .enrollCompleted,
                     .enrollFailed,
                     .flowTriggered,
-                    .flowError:
+                    .flowError,
+                    .socialStart,
+                    .socialComplete,
+                    .socialError,
+                    .socialCancel:
                 return false
             case .loaded, .click, .undo:
                 return true

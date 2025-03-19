@@ -56,3 +56,10 @@ public protocol LogoProviderProtocol: ProviderProtocol {
     /// - Returns: A publisher that emits the `UIImage?` (or `nil` if not found).
     func logo(logoURL: URL?) -> AnyPublisher<Image?, Never>
 }
+
+
+/// The Google Provider retrieves a provider that interacts with Google services.
+public protocol GoogleProviderProtocol: ProviderProtocol {
+    /// Retrieves a Google socila provider for interacting with Google services.
+    var googleProvider: SocialProvider { get }
+}

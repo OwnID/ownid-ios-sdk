@@ -58,10 +58,25 @@ extension OwnID.CoreSDK {
                         }
                     case .sessionCreate:
                         let metadata = authDict["metadata"] as? [String: Any] ?? [:]
-                        
+
                         guard let loginId = metadata["loginId"] as? String,
-                              let authToken = metadata["authToken"] as? String,
-                              let session = authDict["session"] as? [String: Any] else {
+                              let authToken = metadata["authToken"] as? String else {
+                            throw WebBridgeFlowError.wrongData
+                        }
+                        guard let sessionValue = authDict["session"] else {
+                            throw WebBridgeFlowError.wrongData
+                        }
+                        
+                        let session: [String: Any]
+                        if let sessionDict = sessionValue as? [String: Any] {
+                            session = sessionDict
+                        } else if let sessionString = sessionValue as? String {
+                            guard let sessionData = sessionString.data(using: .utf8),
+                                  let sessionDict = try JSONSerialization.jsonObject(with: sessionData) as? [String: Any] else {
+                                throw WebBridgeFlowError.wrongData
+                            }
+                            session = sessionDict
+                        } else {
                             throw WebBridgeFlowError.wrongData
                         }
                         
