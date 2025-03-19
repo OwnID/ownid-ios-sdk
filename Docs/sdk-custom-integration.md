@@ -514,8 +514,7 @@ The `Sign in with Google` feature allows users to sign in with their Google acco
 To trigger sign in with Google:
 1. Follow the [official Google Sign-In for iOS tutorial](https://developers.google.com/identity/sign-in/ios/start-integrating) to configure your project.
 2. Locate the `GoogleProvider.swift` file in OwnID’s Providers folder and drag the file into your Xcode project.
-3. In `GoogleProvider.swift`, replace the placeholder clientID with your actual Google client ID.
-4. Invoke Social Login:
+3. Invoke Social Login:
 
 ```swift
 OwnID.CoreSDK.startSocialLogin(type: .google)
