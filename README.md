@@ -63,7 +63,7 @@ We'd love to hear from you! If you have any questions or suggestions, feel free 
 ## License
 
 ```
-Copyright 2024 OwnID INC.
+Copyright 2025 OwnID INC.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
