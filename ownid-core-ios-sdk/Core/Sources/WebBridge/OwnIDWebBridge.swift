@@ -64,9 +64,9 @@ extension OwnID.CoreSDK {
     }
     
     struct JSErrorData: Codable {
+        let name: String?
         let type: String?
-        let errorMessage: String?
-        let errorCode: String?
+        let message: String?
     }
     
     public class OwnIDWebBridge: NSObject, WKScriptMessageHandler {

@@ -16,16 +16,19 @@ let package = Package(
         .library(
             name: "OwnIDGigyaSDK",
             targets: ["OwnIDGigyaSDK"]
-        ),
+        )
     ],
     dependencies: [
-        .package(url: "https://github.com/SAP/gigya-swift-sdk.git", from: "1.6.0")
+        .package(url: "https://github.com/SAP/gigya-swift-sdk.git", from: "1.7.5")
     ],
     targets: [
         .target(
             name: "OwnIDCoreSDK",
             dependencies: [],
             path: "ownid-core-ios-sdk",
+            exclude: [
+                "Tests",
+            ],
             resources: [
                 .process("Resources")
             ]
@@ -37,6 +40,6 @@ let package = Package(
                 .product(name: "Gigya", package: "gigya-swift-sdk")
             ],
             path: "ownid-gigya-ios-sdk"
-        ),
+        )
     ]
 )

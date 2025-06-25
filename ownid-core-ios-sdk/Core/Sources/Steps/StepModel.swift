@@ -80,16 +80,11 @@ extension OwnID.CoreSDK.CoreViewModel {
             self.userName = try container.decode(String.self, forKey: .userName)
             self.operation = try container.decodeIfPresent(Operation.self, forKey: .operation)
             
-            let credId = try container.decodeIfPresent(String.self, forKey: .credId)
-            let credsIds = try container.decodeIfPresent([String].self, forKey: .credsIds)
+            let multipleIds = try container.decodeIfPresent([String].self, forKey: .credsIds) ?? []
+            let singleId = try container.decodeIfPresent(String.self, forKey: .credId).map { [$0] } ?? []
             
-            if let credsIds, !credsIds.isEmpty {
-                self.credsIds = credsIds
-            } else if let credId {
-                self.credsIds = [credId]
-            } else {
-                self.credsIds = []
-            }
+            let allCreds = multipleIds + singleId
+            self.credsIds = Array(Set(allCreds.filter { !$0.isEmpty }))
         }
     }
     

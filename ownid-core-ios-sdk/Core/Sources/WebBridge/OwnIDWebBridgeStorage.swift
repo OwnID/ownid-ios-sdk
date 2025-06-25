@@ -56,9 +56,11 @@ extension OwnID.CoreSDK {
         }
         
         private func handleErrorResult(errorMessage: String) -> String {
-            let error = JSError(error: OwnID.CoreSDK.JSErrorData(type: String(describing: Self.self),
-                                                                 errorMessage: errorMessage,
-                                                                 errorCode: "ownIdWebViewBridgeStorageError"))
+            let error = JSError(error: OwnID.CoreSDK.JSErrorData(
+                name: self.name.rawValue,
+                type: String(describing: Self.self),
+                message: errorMessage)
+            )
             
             guard let jsonData = try? JSONEncoder().encode(error),
                   let errorString = String(data: jsonData, encoding: String.Encoding.utf8) else {

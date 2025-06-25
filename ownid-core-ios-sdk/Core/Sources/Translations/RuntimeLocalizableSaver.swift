@@ -89,11 +89,7 @@ extension OwnID.CoreSDK.TranslationsSDK {
                     if error.code == 260 {
                         if !isFileNotFoundError {
                             isFileNotFoundError = true
-                            let errorModel = OwnID.CoreSDK.UserErrorModel(code: nil,
-                                                                          message: error.localizedDescription,
-                                                                          userMessage: "Something went wrong. Please try again later.")
-                            let error = OwnID.CoreSDK.Error.userError(errorModel: errorModel)
-                            OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self).log()
+                            OwnID.CoreSDK.logger.log(level: .information, message: error.localizedDescription)
                         }
                     } else {
                         let errorModel = OwnID.CoreSDK.UserErrorModel(code: nil,
