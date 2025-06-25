@@ -10,6 +10,7 @@ target 'UIKitInjectionDemo' do
 end
 
 target 'GigyaDemo' do
+  pod 'GoogleSignIn'
   pod 'ownid-gigya-ios-sdk'
 end
 

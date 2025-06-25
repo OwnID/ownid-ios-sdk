@@ -9,7 +9,7 @@ PODS:
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
-  - Gigya (1.7.3)
+  - Gigya (1.7.5)
   - GoogleSignIn (8.0.0):
     - AppAuth (< 2.0, >= 1.7.3)
     - AppCheckCore (~> 11.0)
@@ -17,23 +17,23 @@ PODS:
     - GTMSessionFetcher/Core (~> 3.3)
   - GoogleSignInSwiftSupport (8.0.0):
     - GoogleSignIn (~> 8.0)
-  - GoogleUtilities/Environment (8.0.2):
+  - GoogleUtilities/Environment (8.1.0):
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Logger (8.0.2):
+  - GoogleUtilities/Logger (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Privacy (8.0.2)
-  - GoogleUtilities/UserDefaults (8.0.2):
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/UserDefaults (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
   - GTMAppAuth (4.1.1):
     - AppAuth/Core (~> 1.7)
     - GTMSessionFetcher/Core (< 4.0, >= 3.3)
   - GTMSessionFetcher/Core (3.5.0)
-  - ownid-core-ios-sdk (3.8.0)
-  - ownid-gigya-ios-sdk (3.8.0):
-    - Gigya (>= 1.6.0)
-    - ownid-core-ios-sdk (= 3.8.0)
+  - ownid-core-ios-sdk (3.8.1)
+  - ownid-gigya-ios-sdk (3.8.1):
+    - Gigya (>= 1.7.5)
+    - ownid-core-ios-sdk (= 3.8.1)
   - PromisesObjC (2.4.0)
 
 DEPENDENCIES:
@@ -59,16 +59,16 @@ SPEC REPOS:
 SPEC CHECKSUMS:
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
-  Gigya: 4a12d6808068abc40f89eb383e74e32a3a350ce0
+  Gigya: 7ae1fdb9fed7f5958fb3b78d0048ca47774d0a1e
   GoogleSignIn: ce8c89bb9b37fb624b92e7514cc67335d1e277e4
   GoogleSignInSwiftSupport: de6a0f0c2f0f7420d77a58275fbef7c7f4fcf3c2
-  GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  ownid-core-ios-sdk: 0ad8a2653900baaf173b3405fb064ebe6c0ec5d0
-  ownid-gigya-ios-sdk: f77ac0dd10245bae6082f3370460310d32cdcf35
+  ownid-core-ios-sdk: 3cdb66d8374176f5140dfd225209485de6e3e78c
+  ownid-gigya-ios-sdk: 093095b5858cac68d5f6fa8ad273c46a44632c32
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
 
-PODFILE CHECKSUM: c81208cb96f4ca4621d55b8492e7c7c4294e41e2
+PODFILE CHECKSUM: 1199b16e4e66a3132257a5bbfebf499d9e09f27b
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2
