@@ -145,7 +145,7 @@ extension OwnID.CoreSDK.EnrollManager {
                 action = .error(OwnID.CoreSDK.ErrorWrapper(error: .userError(errorModel: errorModel), type: Self.self))
             }
             
-        case .authManagerCredintialsNotFoundOrCanlelledByUser(let error):
+        case .authManagerCanlelledByUser(let error), .authManagerCredintialsNotFound(let error):
             let error = error as NSError
             errorMessage = error.localizedDescription
             action = .cancelled(.fidoRegister)

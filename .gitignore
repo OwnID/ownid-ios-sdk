@@ -1,4 +1,121 @@
+# macOS file metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
 
-**/.DS_Store
-Demo/Pods
-Demo/Demo.xcworkspace/xcuserdata/
+# macOS resource forks
+._*
+
+# Temporary and lock files
+*.swp
+*.swo
+*.tmp
+*.lock
+
+# Xcode
+## Project & personal settings
+*.xcworkspace
+*.xcuserdata
+*.xcuserstate
+xcuserdata/
+
+## Derived data & build output
+DerivedData/
+build/
+*.xcresult
+
+## Archives & symbols
+*.ipa
+*.xcarchive
+*.dSYM
+*.dSYM.zip
+*.dSYM.dSYM
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+SourcePackages/
+SourcePackages/*
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+Carthage/Checkouts/
+
+# SwiftPM binary frameworks
+*.binary.swiftmodule
+
+# SPM Artifacts caching
+.artifactcache/
+
+# XCFrameworks
+*.xcframework
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Fastlane
+fastlane/report.xml
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/Preview.html
+
+# Signing & Provisioning
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.p12
+*.key
+
+# Code Coverage & Reports
+*.xccovreport
+*.xccovarchive
+*.gcda
+
+# Generated files (SwiftGen, Sourcery, protobuf, etc.)
+Generated/
+
+# Tuist
+Tuist/Dependencies/
+
+# Jazzy output docs
+/docs/
+
+# SwiftLint / SwiftFormat caches
+.swiftlint.yml.tmp
+.swiftformat.cache
+
+# Realm database files
+*.realm
+*.realm.lock
+*.realm.management
+
+# Firebase / Crashlytics
+crashlytics-build/
+
+# CocoaPods Keys plugin
+.env
+
+# xcpretty generated logs
+build/reports/
+
+# SPm, clangd, indexing caches
+.clangd/
+.cidb/
+
+# Other backups & patch files
+*.orig
+*.moved-aside
+*.backup
+*.patch
+
+# User-specific data
+*.personal.xcscheme
+
+# End

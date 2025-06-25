@@ -30,7 +30,6 @@ extension OwnID.CoreSDK.CoreViewModel {
         struct Error: Encodable {
             let name: String
             let type: String
-            let code: Int
             let message: String
         }
     }
@@ -60,12 +59,8 @@ extension OwnID.CoreSDK.CoreViewModel {
                     switch operation {
                     case .login:
                         if credsIds.isEmpty {
-                            let message = "Login failed - no credentials specified, trying to register new one"
+                            let message = "FIDO: Login but no credentials specified, trying to register new one"
                             OwnID.CoreSDK.logger.log(level: .warning, message: message, type: Self.self)
-                            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .fidoFailed,
-                                                                               category: eventCategory,
-                                                                               context: state.context,
-                                                                               loginId: state.loginId))
                             authManager.signUpWith(userName: state.loginId, credsIds: credsIds)
                         } else {
                             authManager.signIn(credsIds: credsIds)
@@ -129,20 +124,31 @@ extension OwnID.CoreSDK.CoreViewModel {
                 let error = error as NSError
                 fidoError = OwnID.CoreSDK.CoreViewModel.FidoErrorRequestBody.Error(name: error.domain,
                                                                                    type: error.domain,
-                                                                                   code: error.code,
                                                                                    message: error.localizedDescription)
                 errorMessage = error.localizedDescription
-            case .authManagerCredintialsNotFoundOrCanlelledByUser(let error):
+            case .authManagerCanlelledByUser(let error):
                 let error = error as NSError
                 fidoError = OwnID.CoreSDK.CoreViewModel.FidoErrorRequestBody.Error(name: error.domain,
                                                                                    type: error.domain,
-                                                                                   code: error.code,
                                                                                    message: error.localizedDescription)
                 errorMessage = error.localizedDescription
+            case .authManagerCredintialsNotFound(let error):
+                if #available(iOS 16.0, *), let authManager = state.authManager {
+                    let message = "FIDO: Login failed, trying to register new one"
+                    OwnID.CoreSDK.logger.log(level: .information, message: message, type: Self.self)
+                    authManager.signUpWith(userName: state.loginId, credsIds: [])
+                    return []
+                } else {
+                    let error = error as NSError
+                    fidoError = OwnID.CoreSDK.CoreViewModel.FidoErrorRequestBody.Error(name: error.domain,
+                                                                                      type: error.domain,
+                                                                                      message: error.localizedDescription)
+                   errorMessage = error.localizedDescription
+                }
+
             default:
                 fidoError = OwnID.CoreSDK.CoreViewModel.FidoErrorRequestBody.Error(name: error.errorDescription,
                                                                                    type: error.errorDescription,
-                                                                                   code: 0,
                                                                                    message: error.errorDescription)
                 errorMessage = error.errorDescription
             }

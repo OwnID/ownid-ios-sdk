@@ -71,7 +71,7 @@ The OwnID SDK uses passkeys to authenticate users.
 
 When the application starts, the OwnID SDK automatically reads `OwnIDConfiguration.plist` from the file system to configure the default instance that is created. At a minimum, this PLIST file defines the OwnID App Id - the unique identifier of your OwnID application, which you can obtain from the [OwnID Console](https://console.ownid.com). Create `OwnIDConfiguration.plist` and define the following mandatory parameters:
 
-[Complete example](../Demo/IntegrationDemo/OwnIDConfiguration.plist)
+[Complete example](../Demo/IntegrationDemo/Configs/Example/OwnIDConfiguration.plist)
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -89,7 +89,7 @@ For additional configuration options, including environment configuration, see [
 ## Import OwnID Module
 Once you have added the OwnID package dependency, you need to import the OwnID module so you can access the SDK features. As you implement OwnID in your project, add the following to your source files:
 
-[Complete example](../Demo/IntegrationDemo/IntegrationDemoApp.swift)
+[Complete example](../Demo/IntegrationDemo/App/DemoApp.swift)
 ```swift
 import OwnIDCoreSDK
 ```
@@ -97,7 +97,7 @@ import OwnIDCoreSDK
 ## Initialize the SDK
 The OwnID SDK must be initialized properly using the `configure(userFacingSDK:)` function, preferably in the main entry point of your app (in the `@main` `App` struct). Info is used in networks calls as part of `User Agent` string:
 
-[Complete example](../Demo/IntegrationDemo/IntegrationDemoApp.swift)
+[Complete example](../Demo/IntegrationDemo/App/DemoApp.swift)
 ```swift
 @main
 struct ExampleApp: App {
@@ -113,7 +113,7 @@ If you did not follow the recommendation for creating the `OwnIDConfiguration.pl
 
 To create your OwnID integration component, provide a custom implementation of the `RegistrationPerformer` protocol and add `register` method with your logic.
 
-[Complete example](../Demo/IntegrationDemo/AuthPerformer.swift)
+[Complete example](../Demo/IntegrationDemo/App/Register.swift)
 ```swift
 final class OwnIDRegistration: RegistrationPerformer {
     func register(configuration: OwnID.FlowsSDK.RegistrationConfiguration, parameters: RegisterParameters) -> OwnID.RegistrationResultPublisher {
@@ -125,7 +125,7 @@ final class OwnIDRegistration: RegistrationPerformer {
 
 Also, provide a custom implementation of the `LoginPerformer` protocol and add `login` method with your logic.
 
-[Complete example](../Demo/IntegrationDemo/AuthPerformer.swift)
+[Complete example](../Demo/IntegrationDemo/App/Login.swift)
 ```swift
 final class OwnIDLogin: LoginPerformer {
     func login(payload: OwnID.CoreSDK.Payload,
@@ -154,7 +154,7 @@ Inserting the OwnID view into your View layer results in the OwnID button appear
 
 It is recommended to set height of button the same as text field and disable text field when OwnID is enabled.
 
-[Complete example](../Demo/IntegrationDemo/RegisterView.swift)
+[Complete example](../Demo/IntegrationDemo/App/Register.swift)
 ```swift
 //Put RegisterView inside your main view, preferably besides password field
 var body: some View {
@@ -169,7 +169,7 @@ For additional OwnIDButton UI customization see [Button UI customization](#butto
 ### Customize View Model
 The OwnID view that inserts the Skip Password UI is bound to an instance of the OwnID view model. Before modifying your View layer, create an instance of this view model, `OwnID.FlowsSDK.RegisterView.ViewModel`, within your ViewModel layer with `CustomRegistration` and `CustomLogin` you created earlier:
 
-[Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
+[Complete example](../Demo/IntegrationDemo/App/Register.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
     @Published var loginId = ""
@@ -188,7 +188,7 @@ Where `loginIdPublisher` provides input that user is typing into loginID field. 
 
 After creating this OwnID view model, your View Model layer should listen to integration events from the OwnID Event Publisher, which allows your app to know what actions to take based on the user's interaction. Simply add the following to your existing ViewModel layer to subscribe to the OwnID Event Publisher and respond to integration events (it can be placed just after the code that creates the OwnID view model instance).
 
-[Complete example](../Demo/IntegrationDemo/RegisterViewModel.swift)
+[Complete example](../Demo/IntegrationDemo/App/Register.swift)
 ```swift
 final class MyRegisterViewModel: ObservableObject {
     @Published var loginId = ""
@@ -263,7 +263,7 @@ You can use any of this buttons based on your requirements.
 
     It is recommended to set height of button the same as text field and disable text field when OwnID is enabled.
 
-    [Complete example](../Demo/IntegrationDemo/LogInView.swift)
+    [Complete example](../Demo/IntegrationDemo/App/Login.swift)
     ```swift
     //Put LoginView inside your main view, preferably below password field
     var body: some View {
@@ -288,7 +288,7 @@ For additional OwnIDButton UI customization see [Button Appearance](#button-appe
 ### Customize View Model
 The OwnID view that inserts the Skip Password UI is bound to an instance of the OwnID view model. Before modifying your View layer, create an instance of this view model, `OwnID.FlowsSDK.RegisterView.ViewModel`, within your ViewModel layer with `CustomLogin` you created earlier:
 
-[Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
+[Complete example](../Demo/IntegrationDemo/App/Login.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
     @Published var loginId = ""
@@ -306,7 +306,7 @@ final class MyLogInViewModel: ObservableObject {
 
 After creating this OwnID view model, you should listen to integration events from the OwnID Event Publisher, which allows your app to know what actions to take based on the user's interaction with the Skip Password option. Simply add the following to subscribe to the OwnID Event Publisher and respond to integration events.
 
-[Complete example](../Demo/IntegrationDemo/LogInViewModel.swift)
+[Complete example](../Demo/IntegrationDemo/App/Login.swift)
 ```swift
 final class MyLogInViewModel: ObservableObject {
     @Published var loginId = ""
@@ -411,7 +411,7 @@ OwnID.providers {
 }
 ```
 
-See [Complete example](../Demo/IntegrationDemo/WelcomeViewModel.swift)
+See [Complete example](../Demo/IntegrationDemo/App/Flow.swift)
 
 ### Start the Elite
 
@@ -449,8 +449,6 @@ OwnID.start {
     }
 }
 ```
-
-See [Complete example](../Demo/IntegrationDemo/WelcomeViewModel.swift)
 
 **Page Actions**
 OwnID SDK provides two Page Actions to control the next steps in the Elite flow:
