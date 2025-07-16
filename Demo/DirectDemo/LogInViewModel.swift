@@ -33,7 +33,7 @@ final class LogInViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .response(let loginId, let payload, _):
+                    case .response(let loginId, let payload, let authMethod, let authToken):
                         self.loginId = loginId
                         
                         AuthSystem.login(ownIdData: payload.data, email: loginId)

@@ -34,7 +34,7 @@ final class LogInViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .loggedIn(let loginResult, _):
+                    case .loggedIn(let loginResult, let authMethod, let authToken):
                         fetchProfile(previousResult: loginResult)
                     case .loading:
                         print("Loading state")

@@ -44,7 +44,7 @@ final class RegisterViewModel: ObservableObject {
                         state = .initial
                         isOwnIDEnabled = true
                         
-                    case .userRegisteredAndLoggedIn(let registrationResult, _):
+                    case .userRegisteredAndLoggedIn(let registrationResult, let authMethod, let authToken):
                         fetchProfile(previousResult: registrationResult)
                     case .loading:
                         print("Loading state")

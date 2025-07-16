@@ -38,7 +38,7 @@ final class RegisterViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .response(let loginId, let payload, _):
+                    case .response(let loginId, let payload, let authMethod, let authToken):
                         isOwnIDEnabled = true
                         self.loginId = loginId
                         ownIdData = payload.data
