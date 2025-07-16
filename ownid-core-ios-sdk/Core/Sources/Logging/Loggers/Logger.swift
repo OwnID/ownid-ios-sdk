@@ -52,7 +52,7 @@ public extension OwnID.CoreSDK {
                  errorMessage: String? = nil,
                  force: Bool = false,
                  type: Any.Type = Any.self) {
-            let message = "\(message) \(function) \((file as NSString).lastPathComponent)"
+//            let message = "\(message) \(function) \((file as NSString).lastPathComponent)"
             if force {
                 logger.forceLog(level: level, codeInitiator: String(describing: type.self), message: message, errorMessage: errorMessage)
             } else {

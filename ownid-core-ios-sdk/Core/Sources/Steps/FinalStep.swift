@@ -12,6 +12,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         static let typeKey = "type"
         static let flowInfo = "flowInfo"
         static let authType = "authType"
+        static let authToken = "authToken"
     }
     
     struct FinalRequestBody: Encodable {
@@ -53,15 +54,23 @@ extension OwnID.CoreSDK.CoreViewModel {
                     let metadata = responsePayload[Constants.metadataKey]
                     let stringType = responsePayload[Constants.typeKey] as? String ?? ""
                     var authTypeValue: String?
-                    if let flowInfo = response[Constants.flowInfo] as? [String: Any], let authType = flowInfo[Constants.authType] as? String {
+                    if let flowInfo = response[Constants.flowInfo] as? [String: Any],
+                       let authType = flowInfo[Constants.authType] as? String {
                         authTypeValue = authType
                     }
+                    var authTokenValue: String?
+                    if let flowInfo = response[Constants.flowInfo] as? [String: Any],
+                       let authToken = flowInfo[Constants.authToken] as? String {
+                        authTokenValue = authToken
+                    }
+                    
                     let payload = OwnID.CoreSDK.Payload(data: ownIdData,
                                                         metadata: metadata,
                                                         context: context,
                                                         loginId: loginId,
                                                         responseType: OwnID.CoreSDK.StatusResponseType(rawValue: stringType) ?? .registrationInfo,
                                                         authType: OwnID.CoreSDK.AuthType(rawValue: authTypeValue ?? ""),
+                                                        authToken: authTokenValue,
                                                         requestLanguage: requestLanguage)
                     return payload
                 }

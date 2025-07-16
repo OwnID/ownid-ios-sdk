@@ -20,12 +20,12 @@ public extension OwnID {
 public extension OwnID.FlowsSDK {
     enum LoginEvent {
         case loading
-        case loggedIn(loginResult: OperationResult, authType: OwnID.CoreSDK.AuthType?)
+        case loggedIn(loginResult: OperationResult, authType: OwnID.CoreSDK.AuthType?, authToken: String?)
     }
     
     enum LoginFlowEvent {
         case loading
-        case response(loginId: String, payload: OwnID.CoreSDK.Payload, authType: OwnID.CoreSDK.AuthType?)
+        case response(loginId: String, payload: OwnID.CoreSDK.Payload, authType: OwnID.CoreSDK.AuthType?, authToken: String?)
     }
 }
 

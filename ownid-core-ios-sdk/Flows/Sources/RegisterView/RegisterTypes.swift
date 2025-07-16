@@ -23,13 +23,13 @@ public extension OwnID.FlowsSDK {
         case loading
         case resetTapped
         case readyToRegister(loginId: String?, authType: OwnID.CoreSDK.AuthType?)
-        case userRegisteredAndLoggedIn(registrationResult: OperationResult, authType: OwnID.CoreSDK.AuthType?)
+        case userRegisteredAndLoggedIn(registrationResult: OperationResult, authType: OwnID.CoreSDK.AuthType?, authToken: String?)
     }
     
     enum RegistrationFlowEvent {
         case loading
         case resetTapped
-        case response(loginId: String, payload: OwnID.CoreSDK.Payload, authType: OwnID.CoreSDK.AuthType?)
+        case response(loginId: String, payload: OwnID.CoreSDK.Payload, authType: OwnID.CoreSDK.AuthType?, authToken: String?)
     }
     
     struct RegistrationConfiguration {

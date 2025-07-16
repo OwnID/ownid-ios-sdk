@@ -236,7 +236,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                         OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId, 
                                                         authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: loginResult.authType))
                     }
-                    integrationResultPublisher.send(.success(.loggedIn(loginResult: loginResult.operationResult, authType: loginResult.authType)))
+                    integrationResultPublisher.send(.success(.loggedIn(loginResult: loginResult.operationResult, authType: loginResult.authType, authToken: payload.authToken)))
                     resetDataAndState()
                 }
                 .store(in: &bag)
@@ -247,7 +247,7 @@ private extension OwnID.FlowsSDK.LoginView.ViewModel {
                 OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId,
                                                 authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: payload.authType))
             }
-            flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
+            flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType, authToken: payload.authToken)))
             resetDataAndState()
         }
     }

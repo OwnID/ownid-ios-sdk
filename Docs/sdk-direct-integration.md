@@ -278,7 +278,7 @@ final class MyLogInViewModel: ObservableObject {
                 switch event {
                 case .success(let event):
                     switch event {
-                    case .response(let loginId, let payload, let authType):
+                    case .response(let loginId, let payload, let authType, let authToken):
                         // Login user with your identity platform using OwnId Data from this event (payload.data)
                     case .loading:
                         // Display loading indicator according to your designs

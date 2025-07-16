@@ -226,7 +226,7 @@ extension OwnID.CoreSDK {
                 
                 let namespace = namespaceHandlers.first(where: { $0.name == JSDataModel.namespace })
                 self.namespaceHandler = namespace
-                sendMetric(JSDataModel: JSDataModel, webViewOrigin: message.frameInfo.request.url?.absoluteString)
+                sendLog(JSDataModel: JSDataModel, webViewOrigin: message.frameInfo.request.url?.absoluteString)
                 
                 let message = "Invoke web bridge \(namespace?.name ?? .FIDO) \(JSDataModel.action) \(JSDataModel.params ?? "")"
                 OwnID.CoreSDK.logger.log(level: .information, message: message, type: Self.self)
@@ -242,28 +242,11 @@ extension OwnID.CoreSDK {
             }
         }
         
-        private func sendMetric(JSDataModel: JSDataModel, webViewOrigin: String?) {
+        private func sendLog(JSDataModel: JSDataModel, webViewOrigin: String?) {
             let metadata = JSDataModel.metadata
-            let category: EventCategory
-            switch metadata?.category ?? .general {
-            case .general:
-                category = .general
-            case .register:
-                category = .registration
-            case .login:
-                category = .login
-            case .link:
-                category = .link
-            case .recovery:
-                category = .recovery
-            }
-            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .webBridge(name: JSDataModel.namespace.rawValue,
-                                                                                  type: JSDataModel.action),
-                                                               category: category,
-                                                               context: metadata?.context,
-                                                               siteUrl: metadata?.siteUrl,
-                                                               webViewOrigin: webViewOrigin,
-                                                               widgetId: metadata?.widgetId))
+            OwnID.CoreSDK.logger.log(level: .information,
+                                    message: "WebViewBridge: received command [\(JSDataModel.namespace.rawValue):\(JSDataModel.action)] \(metadata?.siteUrl ?? "")",
+                                    type: Self.self)
         }
         
         private func invokeCallback(callbackPath: String, and result: String) {

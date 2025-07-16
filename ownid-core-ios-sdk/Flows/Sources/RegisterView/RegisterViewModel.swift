@@ -137,7 +137,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                             OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId,
                                                             authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: registrationResult.authType))
                         }
-                        integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registrationResult.operationResult, authType: registrationResult.authType)))
+                        integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registrationResult.operationResult, authType: registrationResult.authType, authToken: payload.authToken)))
                         resetDataAndState()
                     }
                     .store(in: &bag)
@@ -151,7 +151,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                 OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId,
                                                 authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: payload.authType))
             }
-            flowResultPublisher.send(.success(.response(loginId: payload.loginId ?? "", payload: payload, authType: payload.authType)))
+            flowResultPublisher.send(.success(.response(loginId: payload.loginId ?? "", payload: payload, authType: payload.authType, authToken: payload.authToken)))
         }
         
         /// Reset visual state and any possible data
@@ -197,7 +197,7 @@ public extension OwnID.FlowsSDK.RegisterView {
                 if hasIntegration {
                     integrationResultPublisher.send(.success(.readyToRegister(loginId: loginId, authType: registrationData.payload?.authType)))
                 } else {
-                    flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
+                    flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType, authToken: payload.authToken)))
                 }
                 return
             }
@@ -305,7 +305,7 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
                     }
                 } receiveValue: { [unowned self] registerResult in
                     state = .ownidCreated
-                    integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registerResult.operationResult, authType: registerResult.authType)))
+                    integrationResultPublisher.send(.success(.userRegisteredAndLoggedIn(registrationResult: registerResult.operationResult, authType: registerResult.authType, authToken: payload.authToken)))
                     resetDataAndState(isResettingToInitialState: false)
                 }
                 .store(in: &bag)
@@ -313,7 +313,7 @@ private extension OwnID.FlowsSDK.RegisterView.ViewModel {
             OwnID.CoreSDK.logger.log(level: .debug, message: "Login without integration response", type: Self.self)
             
             state = .ownidCreated
-            flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType)))
+            flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType, authToken: payload.authToken)))
             resetDataAndState(isResettingToInitialState: false)
         }
     }
