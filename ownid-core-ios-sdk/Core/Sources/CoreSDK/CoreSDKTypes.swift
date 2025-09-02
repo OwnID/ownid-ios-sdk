@@ -1,6 +1,6 @@
 public extension OwnID.CoreSDK {
     static let sdkName = "Core"
-    static let version = "3.8.2"
+    static let version = "3.8.3"
     static let APIVersion = "1"
     
     static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }

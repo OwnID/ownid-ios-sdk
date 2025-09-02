@@ -3,7 +3,7 @@ import OwnIDCoreSDK
 
 extension DirectDemoApp {
     static let clientName = "Direct"
-    static let version = "3.8.2"
+    static let version = "3.8.3"
 }
 
 @main

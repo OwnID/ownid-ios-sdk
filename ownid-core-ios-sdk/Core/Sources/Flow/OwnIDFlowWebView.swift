@@ -69,6 +69,7 @@ struct OwnIDFlowWebView: UIViewRepresentable {
         let region = OwnID.CoreSDK.shared.region
         
         let webViewOptions = options?.webView
+        if #available(iOS 16.4, *) { webView.isInspectable = webViewOptions?.webViewIsInspectable ?? false}
         let webViewSettings = OwnID.CoreSDK.shared.store.value.configuration?.webViewSettings
         let html = (webViewOptions?.html ?? webViewSettings?.html ?? Constants.defaultHtml)
             .replacingOccurrences(of: Constants.envPlaceholder, with: env.isEmpty ? env : "\(env).")
