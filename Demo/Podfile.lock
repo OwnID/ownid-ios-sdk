@@ -9,7 +9,7 @@ PODS:
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
-  - Gigya (1.7.5)
+  - Gigya (1.7.6)
   - GoogleSignIn (9.0.0):
     - AppAuth (~> 2.0)
     - AppCheckCore (~> 11.0)
@@ -30,10 +30,10 @@ PODS:
     - AppAuth/Core (~> 2.0)
     - GTMSessionFetcher/Core (< 4.0, >= 3.3)
   - GTMSessionFetcher/Core (3.5.0)
-  - ownid-core-ios-sdk (3.8.2)
-  - ownid-gigya-ios-sdk (3.8.2):
+  - ownid-core-ios-sdk (3.8.3)
+  - ownid-gigya-ios-sdk (3.8.3):
     - Gigya (>= 1.7.5)
-    - ownid-core-ios-sdk (= 3.8.2)
+    - ownid-core-ios-sdk (= 3.8.3)
   - PromisesObjC (2.4.0)
 
 DEPENDENCIES:
@@ -59,14 +59,14 @@ SPEC REPOS:
 SPEC CHECKSUMS:
   AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
-  Gigya: 7ae1fdb9fed7f5958fb3b78d0048ca47774d0a1e
+  Gigya: 4f318c2e24ce3f0c8bac8dc7715232bde47f9184
   GoogleSignIn: c7f09cfbc85a1abf69187be091997c317cc33b77
   GoogleSignInSwiftSupport: bac3baa0ab3617dc69011f548ee985fddc694e05
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  ownid-core-ios-sdk: e7e838a50935ff2a9adfec6d6e96df84865e93da
-  ownid-gigya-ios-sdk: 4d59b3fc51374534f661045c215af022af9d07d9
+  ownid-core-ios-sdk: 2eba90974c4e69a4e02017c9ccbe7632b52c40d9
+  ownid-gigya-ios-sdk: 3261490cf83785947be76a0cbbe48b6e9034d8c5
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
 
 PODFILE CHECKSUM: 1199b16e4e66a3132257a5bbfebf499d9e09f27b
