@@ -112,7 +112,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         
         func handleFidoError(state: inout OwnID.CoreSDK.CoreViewModel.State,
                              error: OwnID.CoreSDK.AuthManager.AuthManagerError) -> [Effect<Action>] {
-            guard let urlString = step.fidoData?.url, let url = URL(string: urlString) else {
+            guard let urlString = step.fidoData?.url, let url = URL(string: urlString), let apiBaseURL = state.configuration?.apiBaseURL else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
@@ -163,7 +163,7 @@ extension OwnID.CoreSDK.CoreViewModel {
             
             let requestBody = FidoErrorRequestBody(type: type,
                                                    error: fidoError)
-            let effect = state.session.perform(url: url,
+            let effect = state.session.perform(url: apiBaseURL.appendingPathComponent(url.path),
                                                method: .post,
                                                body: requestBody,
                                                with: StepResponse.self)

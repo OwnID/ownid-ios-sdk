@@ -12,7 +12,8 @@ extension OwnID.CoreSDK {
                             environment,
                             region,
                             enableLogging,
-                            supportedLanguages):
+                            supportedLanguages,
+                            rootURL):
             state.supportedLanguages = supportedLanguages
             OwnID.CoreSDK.logger.log(level: .information, message: "Configuration created", type: Self.self)
 
@@ -23,7 +24,8 @@ extension OwnID.CoreSDK {
                                         isTestingEnvironment: isTestingEnvironment,
                                         environment: environment,
                                         region: region,
-                                        enableLogging: enableLogging)]
+                                        enableLogging: enableLogging,
+                                        rootURL: rootURL)]
             
         case let .configurationCreated(configuration, userFacingSDK, underlyingSDKs, isTestingEnvironment):
             if let enableLogging = configuration.enableLogging {

@@ -25,7 +25,8 @@ extension OwnID.CoreSDK {
                                          environment: .none,
                                          region: nil,
                                          enableLogging: true,
-                                         supportedLanguages: .init(rawValue: Locale.preferredLanguages))
+                                         supportedLanguages: .init(rawValue: Locale.preferredLanguages),
+                                         rootURL: nil)
         return Just(action).eraseToEffect()
     }
     
@@ -36,12 +37,14 @@ extension OwnID.CoreSDK {
                                     isTestingEnvironment: Bool,
                                     environment: String?,
                                     region: String?,
-                                    enableLogging: Bool?) -> Effect<SDKAction> {
+                                    enableLogging: Bool?,
+                                    rootURL: String?) -> Effect<SDKAction> {
         let config = try! OwnID.CoreSDK.LocalConfiguration(appID: appID,
                                                            redirectionURL: redirectionURL,
                                                            environment: environment,
                                                            region: region,
-                                                           enableLogging: enableLogging)
+                                                           enableLogging: enableLogging,
+                                                           rootURL: rootURL)
         return Just(.configurationCreated(configuration: config,
                                           userFacingSDK: userFacingSDK,
                                           underlyingSDKs: underlyingSDKs,
@@ -61,8 +64,9 @@ extension OwnID.CoreSDK {
     static func fetchServerConfiguration(config: LocalConfiguration,
                                          apiEndpoint: APIEndpoint,
                                          userFacingSDK: OwnID.CoreSDK.SDKInformation) -> Effect<SDKAction> {
+        let serverConfigurationURL: ServerURL = config.cdnBaseURL.appendingPathComponent(config.appID).appendingPathComponent("mobile")
         let effect = Deferred {
-            apiEndpoint.serverConfiguration(config.ownIDServerConfigurationURL)
+            apiEndpoint.serverConfiguration(serverConfigurationURL)
                 .map { serverConfiguration in
                     if let logLevel = serverConfiguration.logLevel {
                         OwnID.CoreSDK.logger.updateLogLevel(logLevel: logLevel)
@@ -72,16 +76,16 @@ extension OwnID.CoreSDK {
                         OwnID.CoreSDK.logger.log(level: .warning, message: "Server configuration is not set", force: true, type: Self.self)
                     }
                     if serverConfiguration.platformSettings?.bundleId != Bundle.main.bundleIdentifier {
-                        let serverBundleID = serverConfiguration.platformSettings?.bundleId ?? "empty"
-                        let appBundleID = Bundle.main.bundleIdentifier ?? "empty"
-                        OwnID.CoreSDK.logger.log(level: .warning,
-                                                 message: "Incorrect Passkeys Configuration",
-                                                 errorMessage: "Bundle ID mismatch. Configured in the OwnID console \(serverBundleID) but it's \(appBundleID)",
-                                                 type: Self.self)
+//                        let serverBundleID = serverConfiguration.platformSettings?.bundleId ?? "empty"
+//                        let appBundleID = Bundle.main.bundleIdentifier ?? "empty"
+//                        OwnID.CoreSDK.logger.log(level: .warning,
+//                                                 message: "Incorrect Passkeys Configuration",
+//                                                 errorMessage: "Bundle ID mismatch. Configured in the OwnID console \(serverBundleID) but it's \(appBundleID)",
+//                                                 type: Self.self)
                     }
                     
                     var local = config
-                    local.serverURL = serverConfiguration.serverURL
+//                    local.serverURL = serverConfiguration.serverURL
                     local.redirectionURL = local.redirectionURL ?? (serverConfiguration.platformSettings?.redirectUrlOverride ?? serverConfiguration.redirectURLString)
                     local.passkeysAutofillEnabled = serverConfiguration.passkeysAutofillEnabled
                     local.supportedLocales = serverConfiguration.supportedLocales

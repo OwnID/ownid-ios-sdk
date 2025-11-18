@@ -4,8 +4,6 @@ import Combine
 /// OwnID class represents core part of SDK. It performs initialization and creates views. It reads OwnIDConfiguration from disk, parses it and loads to memory for later usage. It is a singleton, so the URL returned from outside can be linked to corresponding flow.
 public extension OwnID {
     final class CoreSDK {
-        public var serverConfigurationURL: ServerURL? { store.value.configuration?.ownIDServerConfigurationURL }
-        
         public static let shared = CoreSDK()
         public let translationsModule = TranslationsSDK.Manager()
         
@@ -56,7 +54,9 @@ public extension OwnID {
                                      environment: String? = nil,
                                      region: String? = nil,
                                      enableLogging: Bool? = nil,
-                                     supportedLanguages: [String] = Locale.preferredLanguages) {
+                                     supportedLanguages: [String] = Locale.preferredLanguages,
+                                     rootURL: String? = nil
+        ) {
             if shared.store.value.configurationRequestData == nil {
                 shared.supportedLanguages = supportedLanguages
                 shared.store.send(.configure(appID: appID,
@@ -67,7 +67,8 @@ public extension OwnID {
                                              environment: environment,
                                              region: region,
                                              enableLogging: enableLogging,
-                                             supportedLanguages: .init(rawValue: supportedLanguages)))
+                                             supportedLanguages: .init(rawValue: supportedLanguages),
+                                             rootURL: rootURL))
             }
         }
         

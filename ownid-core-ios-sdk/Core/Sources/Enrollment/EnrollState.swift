@@ -24,17 +24,17 @@ extension OwnID.CoreSDK.EnrollManager {
         
         var initURL: URL {
             if #available(iOS 16.0, *) {
-                return OwnID.CoreSDK.shared.serverURL!.appending(path: "/ownid/attestation/options")
+                return OwnID.CoreSDK.shared.apiBaseURL!.appending(path: "/ownid/attestation/options")
             } else {
-                return OwnID.CoreSDK.shared.serverURL!.appendingPathComponent("/ownid/attestation/options")
+                return OwnID.CoreSDK.shared.apiBaseURL!.appendingPathComponent("/ownid/attestation/options")
             }
         }
         
         var resultURL: URL {
             if #available(iOS 16.0, *) {
-                return OwnID.CoreSDK.shared.serverURL!.appending(path: "/ownid/attestation/result")
+                return OwnID.CoreSDK.shared.apiBaseURL!.appending(path: "/ownid/attestation/result")
             } else {
-                return OwnID.CoreSDK.shared.serverURL!.appendingPathComponent("/ownid/attestation/result")
+                return OwnID.CoreSDK.shared.apiBaseURL!.appendingPathComponent("/ownid/attestation/result")
             }
         }
     }

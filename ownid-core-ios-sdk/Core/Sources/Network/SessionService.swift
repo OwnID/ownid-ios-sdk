@@ -88,9 +88,8 @@ extension OwnID.CoreSDK {
                     return .userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message))
                 }
                 .map { [self] body -> URLRequest in
-                    let mergedHeaders = headers.isEmpty
-                        ? URLRequest.defaultHeaders(supportedLanguages: supportedLanguages ?? .init(rawValue: []))
-                        : headers
+                    var mergedHeaders = URLRequest.defaultHeaders(supportedLanguages: supportedLanguages ?? .init(rawValue: []))
+                    headers.forEach { key, value in mergedHeaders[key] = value }
 
                     return URLRequest.request(url: url, method: method, body: body, headers: mergedHeaders)
                 }

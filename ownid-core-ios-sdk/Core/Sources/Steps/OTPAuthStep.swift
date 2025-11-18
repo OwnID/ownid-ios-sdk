@@ -18,7 +18,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         }
         
         override func run(state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<OwnID.CoreSDK.CoreViewModel.Action>] {
-            guard let otpData = step.otpData, let restartUrl = URL(string: otpData.restartUrl) else {
+            guard let otpData = step.otpData, let restartUrl = URL(string: otpData.restartUrl), let apiBaseURL = state.configuration?.apiBaseURL else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "restartUrl")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
@@ -31,7 +31,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                 OwnID.UISDK.showOTPView(store: oneTimePasswordStore,
                                         loginId: loginId,
                                         otpLength: otpLength,
-                                        restartUrl: restartUrl,
+                                        restartUrl: apiBaseURL.appendingPathComponent(restartUrl.path),
                                         type: self.step.type,
                                         verificationType: otpData.verificationType,
                                         context: context)
@@ -66,7 +66,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         func restart(state: inout OwnID.CoreSDK.CoreViewModel.State,
                      operationType: OwnID.UISDK.OneTimePassword.OperationType,
                      isFlowFinished: Bool) -> [Effect<Action>] {
-            guard let otpData = step.otpData, let restartUrl = URL(string: otpData.restartUrl) else {
+            guard let otpData = step.otpData, let restartUrl = URL(string: otpData.restartUrl), let apiBaseURL = state.configuration?.apiBaseURL else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "restartUrl")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
@@ -85,7 +85,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                     return stopAndInit(state: &state)
                 }
                 
-                let effect = state.session.perform(url: restartUrl,
+                let effect = state.session.perform(url: apiBaseURL.appendingPathComponent(restartUrl.path),
                                                    method: .post,
                                                    body: EmptyBody(),
                                                    with: StepResponse.self)
@@ -103,7 +103,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         }
         
         func resend(state: inout OwnID.CoreSDK.CoreViewModel.State, operationType: OwnID.UISDK.OneTimePassword.OperationType) -> [Effect<Action>] {
-            guard let otpData = step.otpData, let resendUrl = URL(string: otpData.resendUrl) else {
+            guard let otpData = step.otpData, let resendUrl = URL(string: otpData.resendUrl), let apiBaseURL = state.configuration?.apiBaseURL else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "resendUrl")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
@@ -116,7 +116,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                loginId: state.loginId,
                                                                source: operationType.metricName))
             
-            let effect = state.session.perform(url: resendUrl,
+            let effect = state.session.perform(url: apiBaseURL.appendingPathComponent(resendUrl.path),
                                                method: .post,
                                                body: EmptyBody(),
                                                with: StepResponse.self)
@@ -144,7 +144,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         func sendCode(code: String,
                       operationType: OwnID.UISDK.OneTimePassword.OperationType,
                       state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<Action>] {
-            guard let otpData = step.otpData, let url = URL(string: otpData.url) else {
+            guard let otpData = step.otpData, let url = URL(string: otpData.url), let apiBaseURL = state.configuration?.apiBaseURL else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), isOnUI: true, type: Self.self)
             }
@@ -153,7 +153,7 @@ extension OwnID.CoreSDK.CoreViewModel {
             let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
             let requestBody = OTPAuthRequestBody(code: code)
             let loginId = state.loginId
-            let effect = state.session.perform(url: url,
+            let effect = state.session.perform(url: apiBaseURL.appendingPathComponent(url.path),
                                                method: .post,
                                                body: requestBody,
                                                with: StepResponse.self)

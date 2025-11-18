@@ -5,7 +5,7 @@ import Gigya
 
 public extension OwnID.GigyaSDK {
     static let sdkName = "Gigya"
-    static let version = "3.8.3"
+    static let version = "3.9.0"
 }
 
 public extension OwnID {
@@ -30,14 +30,17 @@ public extension OwnID {
                                      environment: String? = nil,
                                      region: String? = nil,
                                      enableLogging: Bool? = nil,
-                                     supportedLanguages: [String] = Locale.preferredLanguages) {
+                                     supportedLanguages: [String] = Locale.preferredLanguages,
+                                     rootURL: String? = nil
+        ) {
             OwnID.CoreSDK.configure(appID: appID,
                                     redirectionURL: redirectionURL,
                                     userFacingSDK: info(),
                                     environment: environment,
                                     region: region,
                                     enableLogging: enableLogging,
-                                    supportedLanguages: supportedLanguages)
+                                    supportedLanguages: supportedLanguages,
+                                    rootURL: rootURL)
         }
         
         /// Handles redirects from other flows back to the app

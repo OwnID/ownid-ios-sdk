@@ -17,7 +17,8 @@ extension OwnID.CoreSDK {
                        environment: String?,
                        region: String?,
                        enableLogging: Bool?,
-                       supportedLanguages: OwnID.CoreSDK.Languages)
+                       supportedLanguages: OwnID.CoreSDK.Languages,
+                       rootURL: String?)
         case configurationCreated(configuration: OwnID.CoreSDK.LocalConfiguration,
                                   userFacingSDK: OwnID.CoreSDK.SDKInformation,
                                   underlyingSDKs: [OwnID.CoreSDK.SDKInformation],

@@ -37,19 +37,25 @@ extension OwnID.CoreSDK.TranslationsSDK {
 }
 
 private extension OwnID.CoreSDK.TranslationsSDK.Downloader {
-    var basei18nURL: URL {
-        if let env = OwnID.CoreSDK.shared.environment {
-            return URL(string: "https://i18n.\(env).ownid.com")!
-        }
-        return URL(string: "https://i18n.prod.ownid.com")!
-    }
-    
-    func valuesURL(currentLanguage: String) -> URL {
-        basei18nURL.appendingPathComponent(currentLanguage).appendingPathComponent("mobile-sdk.json")
+    func valuesURL(currentLanguage: String) -> URL? {
+        guard let base = OwnID.CoreSDK.shared.store.value.configuration?.i18nBaseURL else { return nil }
+        return base.appendingPathComponent(currentLanguage).appendingPathComponent("mobile-sdk.json")
     }
 
     func downloadCurrentLocalizationFile(for currentBELanguage: String, correspondingSystemLanguage: String) -> DownloaderPublisher {
-        return session.dataTaskPublisher(for: valuesURL(currentLanguage: currentBELanguage))
+        guard let url = valuesURL(currentLanguage: currentBELanguage) else {
+            OwnID.CoreSDK.logger.log(level: .warning, message: "Skip translations download: i18n base URL is unavailable", type: OwnID.CoreSDK.TranslationsSDK.Downloader.self)
+            return Empty().setFailureType(to: OwnID.CoreSDK.Error.self).eraseToAnyPublisher()
+        }
+        var request = URLRequest(url: url)
+        var headers: [String: String] = [
+            "User-Agent": OwnID.CoreSDK.UserAgentManager.shared.SDKUserAgent,
+            "Accept-Language": correspondingSystemLanguage
+        ]
+        if let appUrl = OwnID.CoreSDK.shared.store.value.configuration?.appUrl { headers["X-OwnID-AppUrl"] = appUrl }
+        request.allHTTPHeaderFields = headers
+        
+        return session.dataTaskPublisher(for: request)
             .eraseToAnyPublisher()
             .map { $0.data }
             .compactMap {

@@ -36,12 +36,9 @@ private extension OwnID.CoreSDK.EventService {
         queue.async {
             self.semaphore.wait()
             
-            if let url = OwnID.CoreSDK.shared.metricsURL {
-                self.sessionService.perform(url: url,
-                                            method: .post,
-                                            body: entry,
-                                            headers: ["Content-Type": "application/json"])
-                .ignoreOutput()
+            if let url = OwnID.CoreSDK.shared.apiBaseURL?.appendingPathComponent("events") {
+                self.sessionService.perform(url: url, method: .post, body: entry, headers: ["Content-Type": "application/json"])
+                    .ignoreOutput()
                 .sink(receiveCompletion: { _ in
                     self.semaphore.signal()
                 }, receiveValue: { _ in })

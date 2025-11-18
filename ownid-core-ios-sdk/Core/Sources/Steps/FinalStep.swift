@@ -23,7 +23,8 @@ extension OwnID.CoreSDK.CoreViewModel {
         override func run(state: inout OwnID.CoreSDK.CoreViewModel.State) -> [Effect<OwnID.CoreSDK.CoreViewModel.Action>] {
             let requestBody = FinalRequestBody(sessionVerifier: state.sessionVerifier)
             let requestLanguage = state.supportedLanguages.rawValue.first
-            let action = state.session.perform(url: state.finalUrl,
+            let finalUrl = state.configuration?.apiBaseURL.appendingPathComponent(state.finalUrl.path)
+            let action = state.session.perform(url: finalUrl ?? state.finalUrl,
                                                method: .post,
                                                body: requestBody)
                 .receive(on: DispatchQueue.main)

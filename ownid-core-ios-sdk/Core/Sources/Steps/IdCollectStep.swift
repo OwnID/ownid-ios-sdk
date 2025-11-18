@@ -46,7 +46,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         
         func sendAuthRequest(state: inout OwnID.CoreSDK.CoreViewModel.State,
                              loginId: String) -> [Effect<Action>] {
-            guard let urlString = step.startingData?.url, let url = URL(string: urlString) else {
+            guard let urlString = step.startingData?.url, let url = URL(string: urlString), let apiBaseURL = state.configuration?.apiBaseURL else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
                                    isOnUI: true,
@@ -62,7 +62,7 @@ extension OwnID.CoreSDK.CoreViewModel {
 
             let requestBody = IdCollectRequestBody(loginId: loginId, supportsFido2: OwnID.CoreSDK.isPasskeysSupported)
             state.loginId = loginId
-            let effect = state.session.perform(url: url,
+            let effect = state.session.perform(url: apiBaseURL.appendingPathComponent(url.path),
                                                method: .post,
                                                body: requestBody,
                                                with: StepResponse.self)

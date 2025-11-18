@@ -1,6 +1,8 @@
+import Foundation
+
 public extension OwnID.CoreSDK {
     static let sdkName = "Core"
-    static let version = "3.8.3"
+    static let version = "3.9.0"
     static let APIVersion = "1"
     
     static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }
@@ -19,12 +21,8 @@ public extension OwnID.CoreSDK {
         store.value.configuration?.environment
     }
     
-    var serverURL: ServerURL? {
-        store.value.configuration?.serverURL
-    }
-    
-    var metricsURL: ServerURL? {
-        store.value.configuration?.metricsURL
+    var apiBaseURL: URL? {
+        store.value.configuration?.apiBaseURL
     }
     
     var supportedLocales: [String]? {

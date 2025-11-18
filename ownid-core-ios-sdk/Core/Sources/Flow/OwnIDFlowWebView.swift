@@ -30,16 +30,12 @@ struct OwnIDFlowWebView: UIViewRepresentable {
                  <svg viewBox="0 0 100 100"><circle class="bg" r="42.5" cx="50" cy="50"></circle></svg>
                  <svg class="sp-svg" viewBox="0 0 100 100"><circle class="sp" r="42.5" cx="50" cy="50"></circle></svg>
                </div>
-               <script src="https://cdn.OWNID-ENVownidOWNID-REGION.com/sdk/OWNID-APPID" type="text/javascript" onerror="onJSLoadError()"></script>
+               <script src="OWNID-CDN-URL" type="text/javascript" onerror="onJSLoadError()"></script>
                <script>ownid('start', { language: window.navigator.languages || 'en', animation: false });</script>
                </body>
                </html>
                """
         static let defaultBaseURL = "https://webview.ownid.com"
-        static let envPlaceholder = "OWNID-ENV"
-        static let appIdPlaceholder = "OWNID-APPID"
-        static let regionPlaceholder = "OWNID-REGION"
-        
     }
     
     private let webView: WKWebView
@@ -65,16 +61,19 @@ struct OwnIDFlowWebView: UIViewRepresentable {
     
     func updateUIView(_ uiView: WKWebView, context: Context) {
         let appId = OwnID.CoreSDK.shared.appID ?? ""
-        let env = OwnID.CoreSDK.shared.environment ?? ""
+        let env = OwnID.CoreSDK.shared.environment?.lowercased() ?? ""
+        let envPart = ["dev", "staging", "uat"].contains(env) ? "\(env)." : ""
         let region = OwnID.CoreSDK.shared.region
         
         let webViewOptions = options?.webView
         if #available(iOS 16.4, *) { webView.isInspectable = webViewOptions?.webViewIsInspectable ?? false}
         let webViewSettings = OwnID.CoreSDK.shared.store.value.configuration?.webViewSettings
+        
+        let cdnBase = OwnID.CoreSDK.shared.store.value.configuration?.cdnBaseURL.absoluteString
+            ?? ("https://cdn.\(envPart)ownid\(region).com/sdk")
+        let cdnScript = cdnBase + "/" + appId
         let html = (webViewOptions?.html ?? webViewSettings?.html ?? Constants.defaultHtml)
-            .replacingOccurrences(of: Constants.envPlaceholder, with: env.isEmpty ? env : "\(env).")
-            .replacingOccurrences(of: Constants.appIdPlaceholder, with: appId)
-            .replacingOccurrences(of: Constants.regionPlaceholder, with: region)
+            .replacingOccurrences(of: "OWNID-CDN-URL", with: cdnScript)
         let urlString = webViewOptions?.baseURL ?? webViewSettings?.baseURL ?? Constants.defaultBaseURL
         
         webView.loadHTMLString(html, baseURL: URL(string: urlString)!)

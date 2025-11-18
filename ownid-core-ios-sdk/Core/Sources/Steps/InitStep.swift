@@ -56,7 +56,7 @@ extension OwnID.CoreSDK.CoreViewModel {
         private func sendInitialRequest(requestBody: InitRequestBody,
                                         session: OwnID.CoreSDK.SessionService,
                                         configuration: OwnID.CoreSDK.LocalConfiguration) -> Effect<Action> {
-            session.perform(url: configuration.initURL,
+            session.perform(url: configuration.apiBaseURL.appendingPathComponent("mobile/v1/ownid"),
                             method: .post,
                             body: requestBody,
                             with: InitResponse.self)

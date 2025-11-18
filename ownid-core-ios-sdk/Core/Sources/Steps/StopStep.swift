@@ -21,8 +21,8 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                context: context,
                                                                loginId: state.loginId,
                                                                source: flow.source))
-            
-            let effect = state.session.perform(url: state.stopUrl,
+            let stopUrl = state.configuration?.apiBaseURL.appendingPathComponent(state.stopUrl.path)
+            let effect = state.session.perform(url: stopUrl ?? state.stopUrl,
                                                method: .post,
                                                body: EmptyBody(),
                                                with: EmptyBody.self)

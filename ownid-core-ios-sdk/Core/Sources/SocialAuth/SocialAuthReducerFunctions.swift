@@ -23,7 +23,7 @@ extension OwnID.CoreSDK.SocialAuthManager {
     }
     
     static func sendInitRequest(state: inout State) -> Effect<Action> {
-        let session = OwnID.CoreSDK.SessionService()
+        let session = OwnID.CoreSDK.SessionService(supportedLanguages: OwnID.CoreSDK.shared.store.value.supportedLanguages)
         state.session = session
         
         let url = state.initURL(type: state.type)

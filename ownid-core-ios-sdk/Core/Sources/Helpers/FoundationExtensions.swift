@@ -3,10 +3,14 @@ import Foundation
 extension URLRequest {
     static func defaultHeaders(supportedLanguages: OwnID.CoreSDK.Languages) -> [String: String] {
         let languagesString = supportedLanguages.rawValue.joined(separator: ",")
-        return ["User-Agent": OwnID.CoreSDK.UserAgentManager.shared.SDKUserAgent,
-                "X-API-Version": OwnID.CoreSDK.APIVersion,
-                "Accept-Language": languagesString,
-                "Content-Type": "application/json"]
+        var headers: [String: String] = [
+            "User-Agent": OwnID.CoreSDK.UserAgentManager.shared.SDKUserAgent,
+            "X-API-Version": OwnID.CoreSDK.APIVersion,
+            "Accept-Language": languagesString,
+            "Content-Type": "application/json"
+        ]
+        if let appUrl = OwnID.CoreSDK.shared.store.value.configuration?.appUrl { headers["X-OwnID-AppUrl"] = appUrl }
+        return headers
     }
     
     static func request(url: OwnID.CoreSDK.ServerURL,
@@ -49,10 +53,11 @@ extension URLRequest {
 
 extension String {
     func extendHttpsIfNeeded() -> Self {
-        if !contains("https://"), !contains("http://"), !contains("http") {
-            return "https://" + self
+        let trimmed = self.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.range(of: "^[a-zA-Z][a-zA-Z0-9+.-]*://", options: .regularExpression) != nil {
+            return trimmed
         }
-        return self
+        return "https://" + trimmed
     }
     
     var isBlank: Bool {
