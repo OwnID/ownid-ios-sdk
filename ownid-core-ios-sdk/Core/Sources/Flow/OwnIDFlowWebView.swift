@@ -46,9 +46,13 @@ struct OwnIDFlowWebView: UIViewRepresentable {
     var resultPublisher = OwnID.CoreSDK.WebBridgePublisher()
     var webViewDelegate = OwnIDFlowWebViewDelegate()
     
-    init() {
+    init(options: OwnID.EliteOptions? = nil) {
+        self.options = options
         let webConfiguration = WKWebViewConfiguration()
         webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
+        if #available(iOS 14.0, *), options?.webView?.limitsNavigationsToAppBoundDomains == true {
+            webConfiguration.limitsNavigationsToAppBoundDomains = true
+        }
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
         webView.customUserAgent = OwnID.CoreSDK.UserAgentManager.shared.SDKUserAgent
         webView.uiDelegate = webViewDelegate

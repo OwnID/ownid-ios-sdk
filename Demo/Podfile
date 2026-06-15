@@ -2,26 +2,36 @@ platform :ios, '16.0'
 use_frameworks!
 
 target 'ScreensetsDemo' do
-  pod 'ownid-gigya-ios-sdk'
+  pod 'ownid-gigya-ios-sdk',
+      :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+      :tag => '3.10.0'
 end
 
 target 'UIKitInjectionDemo' do
-  pod 'ownid-gigya-ios-sdk'
+  pod 'ownid-gigya-ios-sdk',
+      :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+      :tag => '3.10.0'
 end
 
 target 'GigyaDemo' do
   pod 'GoogleSignIn'
-  pod 'ownid-gigya-ios-sdk'
+  pod 'ownid-gigya-ios-sdk',
+      :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+      :tag => '3.10.0'
 end
 
 target 'IntegrationDemo' do
   pod 'GoogleSignIn'
   pod 'GoogleSignInSwiftSupport'
-  pod 'ownid-core-ios-sdk'
+  pod 'ownid-core-ios-sdk',
+      :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+      :tag => '3.10.0'
 end
 
 target 'DirectDemo' do
   pod 'GoogleSignIn'
   pod 'GoogleSignInSwiftSupport'
-  pod 'ownid-core-ios-sdk'
+  pod 'ownid-core-ios-sdk',
+      :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+      :tag => '3.10.0'
 end

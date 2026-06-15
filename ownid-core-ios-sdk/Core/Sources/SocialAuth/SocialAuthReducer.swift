@@ -15,7 +15,7 @@ extension OwnID.CoreSDK.SocialAuthManager {
             return [sendInitRequest(state: &state)]
         case .login(let clientID, let challengeID):
             state.challengeID = challengeID
-            return [login(clientID: clientID, provider: state.provider!)]
+            return [login(clientID: clientID, challengeID: challengeID, provider: state.provider!)]
         case .sendCompleteRequest(let idToken):
             return [sendCompleteRequest(state: &state, idToken: idToken)]
         case .sendLoginRequest(let accessToken, let loginID):

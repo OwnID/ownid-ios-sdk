@@ -46,10 +46,12 @@ You should also ensure you have done everything to [integrate Gigya's service in
 
 ### Cocoapods
 
-The SDK is distributed via Cocoapods. Use the Cocoapods to add the following package dependency to your project:
+Use CocoaPods to add the following package dependency to your project. The example below uses `3.10.0`; replace it with the release tag you want to install, such as `3.10.0` or newer.
 
-```
-pod 'ownid-gigya-ios-sdk'
+```ruby
+pod 'ownid-gigya-ios-sdk',
+    :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+    :tag => '3.10.0'
 ```
 
 ### Swift Package Manager

@@ -2,7 +2,7 @@ import Foundation
 
 public extension OwnID.CoreSDK {
     static let sdkName = "Core"
-    static let version = "3.9.0"
+    static let version = "3.10.0"
     static let APIVersion = "1"
     
     static func info() -> OwnID.CoreSDK.SDKInformation { (sdkName, version) }

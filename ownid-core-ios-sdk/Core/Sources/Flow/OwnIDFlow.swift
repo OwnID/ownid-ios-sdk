@@ -16,7 +16,7 @@ extension OwnID {
             self.viewController = viewController
             self.wrappers = combinedWrappers(providers: providers, eventWrappers: eventWrappers)
             
-            viewController.flowView.webView.options = options
+            viewController.flowView = FlowView(options: options)
             viewController.flowView.webView.wrappers = wrappers
             viewController.flowView.webView.resultPublisher = resultPublisher
             

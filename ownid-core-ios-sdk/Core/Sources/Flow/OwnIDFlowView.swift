@@ -27,7 +27,11 @@ extension OwnID {
     }
     
     struct FlowView: View {
-        var webView = OwnIDFlowWebView()
+        var webView: OwnIDFlowWebView
+
+        init(options: OwnID.EliteOptions? = nil) {
+            webView = OwnIDFlowWebView(options: options)
+        }
         
         var body: some View {
             webView

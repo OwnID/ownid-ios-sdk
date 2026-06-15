@@ -95,11 +95,18 @@ public extension OwnID {
             public var baseURL: String?
             public var html: String?
             public var webViewIsInspectable: Bool = false
+            public var limitsNavigationsToAppBoundDomains: Bool = false
             
-            public init(baseURL: String? = nil, html: String? = nil, webViewIsInspectable: Bool = false) {
+            public init(
+                baseURL: String? = nil,
+                html: String? = nil,
+                webViewIsInspectable: Bool = false,
+                limitsNavigationsToAppBoundDomains: Bool = false
+            ) {
                 self.baseURL = baseURL
                 self.html = html
                 self.webViewIsInspectable = webViewIsInspectable
+                self.limitsNavigationsToAppBoundDomains = limitsNavigationsToAppBoundDomains
             }
         }
         

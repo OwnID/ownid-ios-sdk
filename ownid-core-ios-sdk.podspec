@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'ownid-core-ios-sdk'
-  s.version          = '3.9.0'
+  s.version          = '3.10.0'
   s.summary          = 'ownid-core-ios-sdk'
 
   s.description      = <<-DESC
@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.license          = 'Apache 2.0'
   s.authors          = 'OwnID, Inc'
 
-  s.source           = { :git => 'https://github.com/OwnID/ownid-ios-sdk-demo.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/OwnID/ownid-ios-sdk.git', :tag => s.version.to_s }
   s.module_name   = 'OwnIDCoreSDK'
   s.ios.deployment_target = '14.0'
   s.swift_version = '5.1.1'

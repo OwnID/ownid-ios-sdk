@@ -22,6 +22,19 @@ The [OwnID](https://www.ownid.com/) iOS SDK is a client library offering a secur
 - **Prebuilt Integration** - Utilize the existing OwnID SDK with a prebuilt Integration component. Options include:
 
    - **[OwnID Gigya](Docs/sdk-gigya.md)** - Expands Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk). It also includes the [OwnID WebView Bridge extension](Docs/sdk-gigya.md#add-ownid-webview-bridge), enabling native Passkeys functionality for Gigya Web Screen-Sets with OwnID Web SDK.
+
+> [!IMPORTANT]
+> When installing with CocoaPods, reference the SDK release Git tag in your Podfile. The example below uses `3.10.0`; replace it with the release tag you want to install, such as `3.10.0` or newer.
+>
+> ```ruby
+> pod 'ownid-core-ios-sdk',
+>     :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+>     :tag => '3.10.0'
+>
+> pod 'ownid-gigya-ios-sdk',
+>     :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+>     :tag => '3.10.0'
+> ```
    
 ### Additional Components:
 

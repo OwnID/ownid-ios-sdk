@@ -45,8 +45,22 @@ extension OwnID.CoreSDK.SocialAuthManager {
     }
     
     
-    static func login(clientID: String, provider: SocialProvider) -> Effect<Action> {
-        return provider.login(clientID: clientID, viewController: UIApplication.topViewController())
+    static func login(clientID: String, challengeID: String, provider: SocialProvider) -> Effect<Action> {
+        let viewController = UIApplication.topViewController()
+        let publisher: OwnID.SocialResultPublisher
+
+        if let appleProvider = provider as? AppleAuthProvider {
+            publisher = appleProvider.login(
+                clientID: clientID,
+                viewController: viewController,
+                nonce: challengeID,
+                state: AppleAuthProvider.makeRequestState()
+            )
+        } else {
+            publisher = provider.login(clientID: clientID, viewController: viewController)
+        }
+
+        return publisher
             .map({ response in
                 OwnID.CoreSDK.logger.log(level: .debug, message: "TokenID was fetched", type: Self.self)
                 return .sendCompleteRequest(idToken: response)

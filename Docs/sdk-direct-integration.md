@@ -44,10 +44,12 @@ Before incorporating OwnID into your iOS app, you need to create an OwnID applic
 
 ### Cocoapods
 
-The SDK is distributed via Cocoapods. Use the Cocoapods to add the following package dependency to your project:
+Use CocoaPods to add the following package dependency to your project. The example below uses `3.10.0`; replace it with the release tag you want to install, such as `3.10.0` or newer.
 
-```
-pod 'ownid-core-ios-sdk'
+```ruby
+pod 'ownid-core-ios-sdk',
+    :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+    :tag => '3.10.0'
 ```
 
 ### Swift Package Manager
@@ -385,10 +387,13 @@ You can pass additional optional parameters to configure Elite WebView.
 
 ```swift
 OwnID.start(options: OwnID.EliteOptions(webView: OwnID.EliteOptions.WebView(baseURL: "https://mysite.com", // Optional base URL for the WebView content
-                                                                            html: "<html></html>"))) {     // Optional HTML content to be rendered in the WebView
+                                                                            html: "<html></html>",          // Optional HTML content to be rendered in the WebView
+                                                                            limitsNavigationsToAppBoundDomains: true))) { // Optional. Requires WKAppBoundDomains in the app Info.plist.
     //...
 }
 ```
+
+If `baseURL` is omitted, Elite uses server configuration, then the SDK fallback `https://webview.ownid.com`. `limitsNavigationsToAppBoundDomains` enables Apple's App-Bound Domains mode for the Elite WebView on iOS 14 and later. The host app must also declare trusted domains with `WKAppBoundDomains`, including `webview.ownid.com` when the fallback is used. See [Apple `WKWebViewConfiguration.limitsNavigationsToAppBoundDomains`](https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/limitsnavigationstoappbounddomains) and [WebKit App-Bound Domains](https://webkit.org/blog/10882/app-bound-domains/).
 
 </details>
 
