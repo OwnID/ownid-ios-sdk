@@ -84,9 +84,6 @@ Generated/
 # Tuist
 Tuist/Dependencies/
 
-# Jazzy output docs
-/docs/
-
 # SwiftLint / SwiftFormat caches
 .swiftlint.yml.tmp
 .swiftformat.cache

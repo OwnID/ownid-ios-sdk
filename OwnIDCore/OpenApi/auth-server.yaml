@@ -1,0 +1,3484 @@
+openapi: 3.1.0
+info:
+  title: Auth Server
+  version: 1.0.0
+  description: Auth Operations API
+servers:
+  - url: 'https://{appId}.server.ownid.com'
+    description: Production server
+    variables:
+      appId:
+        default: TBD
+        description: the application id
+paths:
+  /api/login:
+    post:
+      summary: User login
+      operationId: login
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '206':
+          description: >-
+            No session, but may contain next operations requirements and
+            recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRequiredResponse'
+        '400':
+          $ref: '#/components/responses/BadLoginIdRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - login
+  /api/challenges/defer/start:
+    post:
+      summary: Start Deferred Challenge
+      operationId: startDeferredChallenge
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Initiate a deferred challenge and return a URL for solving it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeferredChallengeStart'
+      responses:
+        '201':
+          description: Challenge initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeferredChallenge'
+        '400':
+          $ref: '#/components/responses/BadLoginIdRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - defer
+  /api/challenges/defer/continue:
+    post:
+      summary: Set Challenge Status to Pending
+      operationId: ContinueDeferChallenge
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Update the status of the challenge to "pending".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeferChallengeRequest'
+      responses:
+        '200':
+          description: Challenge status updated to pending.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeStatusCheckResponse'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - defer
+  /api/challenges/defer/complete:
+    post:
+      summary: Complete Deferred Challenge
+      operationId: completeDeferredChallenge
+      description: >-
+        Complete the challenge on a valid sub-domain using the provided
+        challenge ID.
+      security:
+        - AccessTokenAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteDeferChallengeRequest'
+      responses:
+        '202':
+          description: Challenge completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - defer
+  /api/challenges/defer/status:
+    post:
+      summary: Check Challenge Status
+      operationId: checkDeferredChallengeStatus
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Check the current status of a challenge using the challenge ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeferChallengeRequest'
+      responses:
+        '200':
+          description: Challenge status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeStatusCheckResponse'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - defer
+  /api/challenges/defer/cancel:
+    post:
+      summary: Cancel Deferred Challenge
+      operationId: cancelDeferredChallenge
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Invalidates (cancels) the provided deferred challenge for a given user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeferChallengeRequest'
+      responses:
+        '204':
+          description: Challenge cancelled successfully.
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - defer
+  /api/passkeys/assertion/options:
+    post:
+      summary: Request options for asserting an existing credential
+      operationId: assertionOptions
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssertionOptionsRequest'
+      responses:
+        '201':
+          description: Started a passkey challenge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssertionOptionsResponse'
+          links:
+            AssertionResult:
+              operationId: assertionResult
+              description: Completing the assertion challenge
+        '400':
+          $ref: '#/components/responses/BadLoginIdRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - passkeys
+  /api/passkeys/assertion/result:
+    post:
+      summary: Send the result of a credential assertion
+      operationId: assertionResult
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssertionResultRequest'
+      responses:
+        '200':
+          description: Assertion result processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssertionResultResponse'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - passkeys
+  /api/passkeys/assertion/cancel:
+    post:
+      summary: Cancel the assertion process
+      operationId: assertionCancel
+      security:
+        - AccessTokenAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyCancelRequest'
+      responses:
+        '204':
+          description: Assertion process canceled
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+      tags:
+        - passkeys
+  /api/passkeys/attestation/options:
+    post:
+      summary: Request options for creating a new credential
+      operationId: attestationOptions
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttestationOptionsRequest'
+      responses:
+        '200':
+          description: Continue with passkey attestation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttestationOptionsResponse'
+          links:
+            AttestationResult:
+              operationId: attestationResult
+              description: Completing the attestation challenge
+        '400':
+          $ref: '#/components/responses/BadLoginIdRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - passkeys
+  /api/passkeys/attestation/result:
+    post:
+      summary: Send the result of a new credential creation
+      operationId: attestationResult
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttestationResultRequest'
+      responses:
+        '200':
+          description: Attestation result processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttestationResultResponse'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+      tags:
+        - passkeys
+  /api/passkeys/attestation/cancel:
+    post:
+      summary: Cancel the attestation process
+      operationId: attestationCancel
+      security:
+        - AccessTokenAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyCancelRequest'
+      responses:
+        '204':
+          description: Attestation process canceled
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+      tags:
+        - passkeys
+  /api/passkeys/attestation/enroll:
+    post:
+      summary: Links a passkey to the user account
+      operationId: attestationEnroll
+      security:
+        - AccessTokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttestationEnrollRequest'
+      responses:
+        '204':
+          description: Enrollment processed successfully
+        '400':
+          $ref: '#/components/responses/BadEnrollRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - passkeys
+  /api/facekeys/start:
+    post:
+      summary: Start Facekey challenge
+      operationId: startFacekeyVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Initializes a Facekey challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartFacekeyChallengeRequest'
+      responses:
+        '201':
+          description: Facekey challenge started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartFacekeyChallengeResponse'
+          links:
+            completeFacekeyChallenge:
+              operationId: completeFacekeyChallenge
+              parameters:
+                challengeId: $response.body#/challengeId
+            cancelFacekeyChallenge:
+              operationId: cancelFacekeyChallenge
+              parameters:
+                challengeId: $response.body#/challengeId
+        '400':
+          $ref: '#/components/responses/BadLoginIdRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - facekeys
+  /api/facekeys/complete:
+    post:
+      summary: Complete Facekey Challenge
+      operationId: completeFacekeyChallenge
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Submits the Facekey challenge solution for a given challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteFacekeyChallengeRequest'
+      responses:
+        '200':
+          description: Facekey challenge passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessOrProofTokensResponse'
+          links:
+            enrollFacekey:
+              operationId: enrollFacekey
+              requestBody: '{"proofToken":"$response.body#/proofToken"}'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - facekeys
+  /api/facekeys/enroll:
+    post:
+      summary: Enrolls a Facekey for an account.
+      operationId: enrollFacekey
+      security:
+        - AccessTokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Enrolls a Facekey for an account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollFacekeyRequest'
+      responses:
+        '204':
+          description: Facekey enrolled successfully
+        '400':
+          $ref: '#/components/responses/BadEnrollRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - facekeys
+  /api/facekeys/cancel:
+    post:
+      summary: Cancel Facekey challenge
+      operationId: cancelFacekeyChallenge
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Cancels the Facekey challenge by its id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelFacekeyChallengeRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/FacekeyChallengeCancelled'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - facekeys
+  /api/verifications/email/start:
+    post:
+      summary: Start email verification challenge
+      operationId: startEmailVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Initializes an email verification challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartVerificationRequest'
+      responses:
+        '201':
+          description: Challenge started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartVerificationResponse'
+          links:
+            CompleteEmailVerification:
+              operationId: completeEmailVerification
+              parameters:
+                challengeId: $response.body#/challengeId
+            CancelEmailVerification:
+              operationId: cancelEmailVerification
+              parameters:
+                challengeId: $response.body#/challengeId
+        '400':
+          $ref: '#/components/responses/BadVerificationRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/email/complete:
+    post:
+      summary: Complete verification code
+      operationId: completeEmailVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Complete the provided verification code for a given challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteVerificationRequest'
+      responses:
+        '200':
+          description: Email LoginIdVerification passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessOrProofTokensResponse'
+        '400':
+          $ref: '#/components/responses/BadCompleteVerificationRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/email/cancel:
+    post:
+      summary: Cancel verification code
+      operationId: cancelEmailVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Cancels the verification challenge by its id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelVerificationRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/EmailVerificationCancelled'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/email/resend:
+    post:
+      summary: Resend verification code
+      operationId: resendEmailVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Resends the verification code for a given challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequest'
+      responses:
+        '204':
+          description: LoginIdVerification code resent successfully
+        '400':
+          $ref: '#/components/responses/BadResendRequestErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/email/enroll:
+    post:
+      summary: Enroll email address to an account
+      operationId: enrollEmailAddress
+      security:
+        - AccessTokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Enrolls an email address to an account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollRequest'
+      responses:
+        '204':
+          description: Email address enrolled successfully
+        '400':
+          $ref: '#/components/responses/BadEnrollRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/phone/start:
+    post:
+      summary: Start phone verification challenge
+      operationId: startPhoneVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      description: Initializes a phone verification challenge
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartVerificationRequest'
+      responses:
+        '201':
+          description: Challenge started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartVerificationResponse'
+          links:
+            CompletePhoneVerification:
+              operationId: completePhoneVerification
+              parameters:
+                challengeId: $response.body#/challengeId
+            CancelPhoneVerification:
+              operationId: cancelPhoneVerification
+              parameters:
+                challengeId: $response.body#/challengeId
+        '400':
+          $ref: '#/components/responses/BadVerificationRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/phone/complete:
+    post:
+      summary: Complete phone verification
+      operationId: completePhoneVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Complete the provided verification code for a given challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteVerificationRequest'
+      responses:
+        '200':
+          description: Phone LoginIdVerification passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessOrProofTokensResponse'
+        '400':
+          $ref: '#/components/responses/BadCompleteVerificationRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/phone/cancel:
+    post:
+      summary: Cancel phone verification
+      operationId: cancelPhoneVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Cancels the verification challenge by its id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelVerificationRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/PhoneVerificationCancelled'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/phone/resend:
+    post:
+      summary: Resend phone verification code
+      operationId: resendPhoneVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Resends the verification code for a given challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequest'
+      responses:
+        '204':
+          description: Code resent successfully
+        '400':
+          $ref: '#/components/responses/BadResendRequestErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - verifications
+  /api/verifications/phone/enroll:
+    post:
+      summary: Enroll phone number to an account
+      operationId: enrollPhoneNumber
+      security:
+        - AccessTokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Enrolls a phone number to an account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollRequest'
+      responses:
+        '204':
+          description: Phone number enrolled successfully
+        '400':
+          $ref: '#/components/responses/BadEnrollRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - verifications
+  /api/event/journey:
+    post:
+      summary: Submit a journey event log
+      description: >-
+        Receives and processes event logs from clients, enforcing schema
+        validation and event type restrictions.
+      operationId: submitJourneyEventLog
+      parameters:
+        - name: appUrl
+          in: query
+          description: The URL of the application submitting the event
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserJourneySummary'
+      responses:
+        '204':
+          description: Event log accepted and processed
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+      tags:
+        - events
+  '/api/oidc/idp/start/{provider}':
+    post:
+      summary: Start OIDC challenge against an external IDP
+      operationId: startOidcChallenge
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - name: provider
+          in: path
+          required: true
+          description: The OIDC provider to use
+          schema:
+            $ref: '#/components/schemas/OidcProvider'
+      description: Initializes an OIDC challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartOidcChallengeRequest'
+      responses:
+        '201':
+          description: Challenge started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OidcChallengeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - oidc
+  /api/oidc/idp/complete:
+    post:
+      summary: Complete an OIDC challenge using an authorization code or an ID token
+      operationId: completeOidcChallenge
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Complete the OIDC challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteOidcChallengeRequest'
+      responses:
+        '200':
+          description: OIDC challenge completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenWithUserInfoResponse'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+      tags:
+        - oidc
+  /api/oidc/idp/cancel:
+    post:
+      summary: Cancel challenge
+      operationId: cancelOidcVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Invalidates (cancels) the provided verification code for a given user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelOidcChallengeRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/OidcCancelled'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - oidc
+  /api/verifications/iddoc/start:
+    post:
+      summary: Start iddoc verification challenge
+      operationId: startIdDocVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Initializes an iddoc verification challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartIdDocVerificationRequest'
+      responses:
+        '201':
+          description: Challenge started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartIdDocVerificationResponse'
+          links:
+            CompleteIdDocVerification:
+              operationId: completeIdDocVerification
+              parameters:
+                challengeId: $response.body#/challengeId
+            CancelIdDocVerification:
+              operationId: cancelIdDocVerification
+              parameters:
+                challengeId: $response.body#/challengeId
+        '400':
+          $ref: '#/components/responses/BadIdDocVerificationRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '424':
+          $ref: '#/components/responses/FailedDependencyErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsErrorResponse'
+      tags:
+        - iddoc
+  /api/verifications/iddoc/status:
+    post:
+      summary: Check iddoc challenge status
+      operationId: checkIdDocChallengeStatus
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Check the current status of a challenge using the challenge ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdDocChallengeRequest'
+      responses:
+        '200':
+          description: Challenge status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdDocChallengeStatusCheckResponse'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - iddoc
+  /api/verifications/iddoc/cancel:
+    post:
+      summary: Cancel verification code
+      operationId: cancelIdDocVerification
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+      description: Cancels the verification challenge by its id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelIdDocVerificationRequest'
+      responses:
+        '204':
+          $ref: '#/components/responses/IdDocVerificationCancelled'
+        '400':
+          $ref: '#/components/responses/BadChallengeRequestErrorResponse'
+      tags:
+        - iddoc
+  /api/config/app:
+    get:
+      summary: Get app auth config
+      operationId: getAppAuthConfig
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppAuthConfig'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+      tags:
+        - auth-config
+components:
+  schemas:
+    ErrorCode:
+      type: string
+      enum:
+        - aborted
+        - cancel_not_supported
+        - device_not_supported
+        - dom_element_not_found
+        - empty_login_id
+        - forbidden
+        - integration_error
+        - invalid_argument
+        - invalid_challenge
+        - login_id_type_not_supported
+        - login_id_validation_failed
+        - login_with_password_failed
+        - maximum_attempts_reached
+        - maximum_challenges_reached
+        - maximum_resend_attempts_reached
+        - missing_capability_provider
+        - missing_channel
+        - network
+        - no_applicable_passkeys
+        - notification_blocked
+        - oidc_failed
+        - passkey_already_registered
+        - passkey_not_created
+        - passkeys_not_supported
+        - screens_not_ready
+        - session_not_established
+        - timeout
+        - unauthorized
+        - unknown
+        - user_blocked
+        - user_changed
+        - user_not_found
+        - verification_code_wrong
+        - widget_already_exists
+    AnyError:
+      description: Any OwnID error response with a concrete `errorCode`.
+      oneOf:
+        - $ref: '#/components/schemas/AbortedError'
+        - $ref: '#/components/schemas/CancelNotSupportedError'
+        - $ref: '#/components/schemas/DeviceNotSupportedError'
+        - $ref: '#/components/schemas/DomElementNotFoundError'
+        - $ref: '#/components/schemas/EmptyLoginIdError'
+        - $ref: '#/components/schemas/ForbiddenError'
+        - $ref: '#/components/schemas/ProviderError'
+        - $ref: '#/components/schemas/InvalidArgumentError'
+        - $ref: '#/components/schemas/InvalidChallengeError'
+        - $ref: '#/components/schemas/LoginIdTypeNotSupportedError'
+        - $ref: '#/components/schemas/LoginIdValidationError'
+        - $ref: '#/components/schemas/LoginWithPasswordFailedError'
+        - $ref: '#/components/schemas/MaximumAttemptsReachedError'
+        - $ref: '#/components/schemas/MaximumChallengesReachedError'
+        - $ref: '#/components/schemas/MaximumResendAttemptsReachedError'
+        - $ref: '#/components/schemas/MissingProviderError'
+        - $ref: '#/components/schemas/MissingChannelError'
+        - $ref: '#/components/schemas/NetworkError'
+        - $ref: '#/components/schemas/NoApplicablePasskeysError'
+        - $ref: '#/components/schemas/NotificationBlockedError'
+        - $ref: '#/components/schemas/OidcFailedError'
+        - $ref: '#/components/schemas/PasskeyAlreadyRegisteredError'
+        - $ref: '#/components/schemas/PasskeyNotCreatedError'
+        - $ref: '#/components/schemas/PasskeysNotSupportedError'
+        - $ref: '#/components/schemas/ScreensNotReadyError'
+        - $ref: '#/components/schemas/SessionNotEstablishedError'
+        - $ref: '#/components/schemas/TimeoutError'
+        - $ref: '#/components/schemas/UnauthorizedError'
+        - $ref: '#/components/schemas/UnknownError'
+        - $ref: '#/components/schemas/UserBlockedError'
+        - $ref: '#/components/schemas/UserChangedError'
+        - $ref: '#/components/schemas/UserNotFoundError'
+        - $ref: '#/components/schemas/VerificationCodeWrongError'
+        - $ref: '#/components/schemas/WidgetAlreadyExistsError'
+    ErrorBase:
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          description: Human-readable diagnostic message.
+      required:
+        - errorCode
+        - message
+    AbortedError:
+      description: >
+        About: The user or client aborted the operation.
+
+        End-user: Let the user retry when they are ready.
+
+        Developer action: Treat as expected cancellation and avoid escalation
+        unless aborts spike.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: aborted
+    CancelNotSupportedError:
+      description: |
+        About: The current operation cannot be cancelled.
+        End-user: Explain that cancellation is unavailable for this flow.
+        Developer action: Hide cancel UI for unsupported operations.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: cancel_not_supported
+    DeviceNotSupportedError:
+      description: >
+        About: The current device cannot perform the requested operation.
+
+        End-user: Ask the user to switch to a supported device or method.
+
+        Developer action: Check feature detection and offer an alternate
+        challenge.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: device_not_supported
+    DomElementNotFoundError:
+      description: >
+        About: Required client-side UI container or element was not found.
+
+        End-user: Show a generic setup failure if the flow cannot continue.
+
+        Developer action: Verify SDK initialization targets and page lifecycle
+        timing.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: dom_element_not_found
+    EmptyLoginIdError:
+      description: >
+        About: A login ID was required but empty.
+
+        End-user: Ask the user to enter their identifier.
+
+        Developer action: Validate required login ID fields before starting the
+        operation.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: empty_login_id
+    InvalidArgumentError:
+      description: >
+        About: The request payload, route parameter, query parameter, or
+        operation state is invalid.
+
+        End-user: Not Applicable
+
+        Developer action: Validate the request has all the required fields in
+        their expected format.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: invalid_argument
+    UnauthorizedError:
+      description: >
+        About: The caller is missing valid authentication for the operation.
+
+        End-user: Prompt the user to authenticate again.
+
+        Developer action: Refresh credentials, verify token forwarding, and
+        avoid retry loops without new credentials.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: unauthorized
+    ForbiddenError:
+      description: >
+        About: The caller is authenticated but not allowed to perform the
+        operation.
+
+        End-user: Explain that the action is unavailable or expired.
+
+        Developer action: Check access token claims or the operation's policy
+        for the required claims.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: forbidden
+    LoginWithPasswordFailedError:
+      description: >
+        About: Password authentication failed.
+
+        End-user: Ask the user to check their credentials or choose another
+        method.
+
+        Developer action: Treat as an expected authentication failure and avoid
+        logging secrets.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: login_with_password_failed
+    NetworkError:
+      description: |
+        About: The client could not complete a network request.
+        End-user: Ask the user to check connectivity and retry.
+        Developer action: Log request context and retry only when safe.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: network
+    NoApplicablePasskeysError:
+      description: >
+        About: No passkey is available for the current account, device, or
+        browser.
+
+        End-user: Offer another authentication method.
+
+        Developer action: Continue with an alternate challenge instead of
+        retrying passkey assertion.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: no_applicable_passkeys
+    NotificationBlockedError:
+      description: >
+        About: Browser or device notification permissions blocked the operation.
+
+        End-user: Ask the user to enable notifications or choose another method.
+
+        Developer action: Detect permission state and avoid repeating prompts
+        without user action.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: notification_blocked
+    OidcFailedError:
+      description: >
+        About: OIDC authentication failed before OwnID could complete the flow.
+
+        End-user: Ask the user to retry or choose another provider.
+
+        Developer action: Log provider context and inspect redirect/token
+        handling.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: oidc_failed
+    PasskeyAlreadyRegisteredError:
+      description: >
+        About: The passkey already exists for the account.
+
+        End-user: Tell the user this passkey is already registered.
+
+        Developer action: Refresh account state and suppress duplicate
+        enrollment prompts.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: passkey_already_registered
+    PasskeyNotCreatedError:
+      description: |
+        About: The passkey creation ceremony did not produce a credential.
+        End-user: Ask the user to retry or use another method.
+        Developer action: Inspect WebAuthn ceremony errors and browser support.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: passkey_not_created
+    PasskeysNotSupportedError:
+      description: >
+        About: The current browser or platform does not support passkeys.
+
+        End-user: Offer another authentication method or a supported
+        browser/device.
+
+        Developer action: Gate passkey UI behind capability checks.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: passkeys_not_supported
+    ScreensNotReadyError:
+      description: >
+        About: Required UI screens were not ready when the operation started.
+
+        End-user: Ask the user to retry.
+
+        Developer action: Ensure UI providers are mounted before starting the
+        flow.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: screens_not_ready
+    SessionNotEstablishedError:
+      description: >
+        About: The flow completed without establishing a session.
+
+        End-user: Ask the user to retry or use another login method.
+
+        Developer action: Check session creation integration and response
+        handling.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: session_not_established
+    TimeoutError:
+      description: >
+        About: The operation timed out.
+
+        End-user: Ask the user to restart the flow.
+
+        Developer action: Clear stale local state and create a fresh challenge
+        when needed.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: timeout
+    UserBlockedError:
+      description: >
+        About: The user's account or action is blocked.
+
+        End-user: Explain that the action is unavailable and route to support
+        when appropriate.
+
+        Developer action: Treat as a business outcome and avoid repeated
+        retries.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: user_blocked
+    UserChangedError:
+      description: >
+        About: The active user changed while the flow was in progress.
+
+        End-user: Restart the flow for the current user.
+
+        Developer action: Clear previous flow state and re-check the current
+        login ID.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: user_changed
+    UserNotFoundError:
+      description: >
+        About: The account provider did not find an account for the requested
+        login ID.
+
+        End-user: Direct the user to register an account.
+
+        Developer action: Treat this as an expected business outcome; do not
+        escalate unless provider data is inconsistent.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: user_not_found
+    WidgetAlreadyExistsError:
+      description: >
+        About: A widget instance already exists for the current target.
+
+        End-user: No action is usually required unless the UI is stuck.
+
+        Developer action: Avoid duplicate SDK/widget initialization for the same
+        page region.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: widget_already_exists
+    MaximumChallengesReachedError:
+      description: >
+        About: The active challenge limit or concurrency guard was reached.
+
+        End-user: Ask the user to wait briefly or finish an existing challenge
+        before starting another.
+
+        Developer action: Rate-limit retries, log repeated occurrences, and
+        inspect challenge cleanup if this persists.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: maximum_challenges_reached
+    UnknownError:
+      description: >
+        About: The server could not map the failure to a more specific public
+        error code.
+
+        End-user: Show a generic failure message and suggest retrying.
+
+        Developer action: Log the correlation context, inspect server logs, and
+        escalate if the issue repeats.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: unknown
+    LoginIdTypeNotSupportedError:
+      description: >
+        About: The supplied login ID type is not supported by the app or
+        operation.
+
+        End-user: Ask for a supported identifier such as email or phone, based
+        on app configuration.
+
+        Developer action: Compare the requested login ID type with the app's
+        login ID configuration.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: login_id_type_not_supported
+    LoginIdValidationError:
+      description: >
+        About: The login ID value does not match the validation rule configured
+        for its type.
+
+        End-user: Ask the user to correct the identifier.
+
+        Developer action: Surface the configured regex only in diagnostics and
+        keep client validation aligned with server config.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: login_id_validation_failed
+            loginId:
+              $ref: '#/components/schemas/LoginId'
+            regex:
+              type: string
+          required:
+            - loginId
+            - regex
+    MissingChannelError:
+      description: >
+        About: The selected verification channel is unavailable for the login
+        ID.
+
+        End-user: Offer another authentication method or ask the user to update
+        account contact details.
+
+        Developer action: Check account provider data and channel configuration
+        before retrying.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: missing_channel
+            loginId:
+              $ref: '#/components/schemas/LoginId'
+          required:
+            - loginId
+    InvalidChallengeError:
+      description: >
+        About: The challenge was not found, expired or already completed.
+
+        End-user: Ask the user to restart the operation.
+
+        Developer action: Stop polling or completing this challenge ID and
+        create a fresh challenge.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: invalid_challenge
+            challengeId:
+              $ref: '#/components/schemas/ChallengeId'
+          required:
+            - challengeId
+    MaximumAttemptsReachedError:
+      description: >
+        About: The user exhausted the allowed verification attempts for the
+        challenge.
+
+        End-user: Ask the user to start a new challenge.
+
+        Developer action: Do not retry the same challenge; clear local challenge
+        state and restart the flow.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: maximum_attempts_reached
+            challengeId:
+              $ref: '#/components/schemas/ChallengeId'
+          required:
+            - challengeId
+    MaximumResendAttemptsReachedError:
+      description: >
+        About: The verification code resend limit or debounce policy was
+        reached.
+
+        End-user: Ask the user to wait or restart the challenge.
+
+        Developer action: Disable resend UI for the current challenge and
+        respect the server resend policy.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: maximum_resend_attempts_reached
+            challengeId:
+              $ref: '#/components/schemas/ChallengeId'
+          required:
+            - challengeId
+    VerificationCodeWrongError:
+      description: >
+        About: The submitted verification code or equivalent challenge proof is
+        incorrect.
+
+        End-user: Ask the user to try again while attempts remain.
+
+        Developer action: Keep the current challenge active and update
+        remaining-attempt UI if available.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: verification_code_wrong
+            challengeId:
+              $ref: '#/components/schemas/ChallengeId'
+          required:
+            - challengeId
+    ProviderError:
+      description: >
+        About: A configured provider failed while OwnID was processing the
+        operation, e.g. integration-endpoint failed to fetch the user,
+        email-server failed to send the email.
+
+        End-user: Show a temporary failure message.
+
+        Developer action: Log provider request context, monitor the provider
+        integration, and escalate repeated failures.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: integration_error
+            scope:
+              $ref: '#/components/schemas/ScopeType'
+          required:
+            - scope
+    MissingProviderError:
+      description: >
+        About: No provider is configured for the capability required by the
+        operation, e.g. send SMS for phone-verification.
+
+        End-user: Not Applicable.
+
+        Developer action: Configure the missing provider capability for the app
+        and deployment environment.
+      allOf:
+        - $ref: '#/components/schemas/ErrorBase'
+        - type: object
+          properties:
+            errorCode:
+              const: missing_capability_provider
+            capability:
+              type: string
+            scope:
+              $ref: '#/components/schemas/ScopeType'
+          required:
+            - capability
+            - scope
+    AuthorizationTokenJti:
+      type:
+        - string
+        - 'null'
+      description: The JTI of the authorization token used to initiate the challenge.
+    LoginIdType:
+      type: string
+      enum:
+        - Anonymous
+        - UserName
+        - Email
+        - PhoneNumber
+        - CredentialId
+        - FaceKeyPersonId
+    LoginId:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/LoginIdType'
+      required:
+        - id
+        - type
+    LoginIdURN:
+      type: string
+      description: The URN of the login ID.
+      contentSchema:
+        type: array
+        minItems: 3
+        maxItems: 3
+        prefixItems:
+          - $ref: '#/components/schemas/LoginIdType'
+          - const: ':'
+          - type: string
+            description: The ID of the login ID
+    UnixTimestamp:
+      type: integer
+      format: int64
+      description: 'A Unix timestamp, in seconds since 1970.'
+    VerificationChallengeData:
+      type: object
+      description: The data of a verification challenge.
+      properties:
+        LoginId:
+          $ref: '#/components/schemas/LoginId'
+        Channel:
+          type: string
+          description: >-
+            The channel through which the verification is being performed (email
+            address or phone number).
+        OtpCode:
+          type:
+            - string
+            - 'null'
+          description: An optional code used for verification.
+        MagicLinkCode:
+          type:
+            - string
+            - 'null'
+          description: An optional code used for verification.
+        MagicLinkRedirectUrl:
+          type:
+            - string
+            - 'null'
+          description: An optional URL used for redirection when magic link is used.
+        VerificationAttempts:
+          type:
+            - integer
+            - 'null'
+          description: The number of attempts made for verification.
+        ResendAttempts:
+          type:
+            - integer
+            - 'null'
+          description: The number of times the verification code has been resent.
+        LastResendTimeSec:
+          $ref: '#/components/schemas/UnixTimestamp'
+        AuthorizationTokenJti:
+          $ref: '#/components/schemas/AuthorizationTokenJti'
+        IsProofOnly:
+          type: boolean
+      required:
+        - LoginId
+        - Channel
+        - LastResendTimeSec
+        - IsProofOnly
+    FaceKeyChallengeData:
+      type: object
+      description: The data of a FaceKey challenge.
+      properties:
+        LoginId:
+          $ref: '#/components/schemas/LoginId'
+        AuthorizationTokenJti:
+          $ref: '#/components/schemas/AuthorizationTokenJti'
+        IsProofOnly:
+          type: boolean
+      required:
+        - LoginId
+    IdDocChallengeData:
+      type: object
+      description: The data of an iddoc challenge.
+      properties:
+        LoginId:
+          $ref: '#/components/schemas/LoginId'
+        ProcessId:
+          type: string
+          description: The iddoc verification process identifier.
+        AuthorizationTokenJti:
+          $ref: '#/components/schemas/AuthorizationTokenJti'
+      required:
+        - LoginId
+        - ProcessId
+    OidcProvider:
+      type: string
+      enum:
+        - Google
+        - Apple
+    OidcChallengeData:
+      type: object
+      description: The data of an OIDC challenge.
+      properties:
+        Provider:
+          $ref: '#/components/schemas/OidcProvider'
+      required:
+        - Provider
+    DeferredChallengeData:
+      type: object
+      description: The data structure for a deferred challenge.
+      properties:
+        LoginId:
+          $ref: '#/components/schemas/LoginId'
+        CompletedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the challenge was completed.
+        OriginDomain:
+          type: string
+          description: The domain or party initiating the challenge.
+        Status:
+          $ref: '#/components/schemas/ChallengeStatus'
+        AuthorizationTokenJti:
+          $ref: '#/components/schemas/AuthorizationTokenJti'
+        AuthorizationDetailsList:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizationDetails'
+          description: An array of authorization details related to the challenge.
+        Context:
+          $ref: '#/components/schemas/ChallengeContext'
+      required:
+        - LoginId
+        - OriginDomain
+        - Status
+    PasskeyAttestationChallengeData:
+      type: object
+      properties:
+        LoginId:
+          $ref: '#/components/schemas/LoginId'
+        RpId:
+          type: string
+          examples:
+            - example.com
+        Challenge:
+          type: string
+          examples:
+            - random-challenge-string
+        UserId:
+          type: string
+          format: uuid
+          examples:
+            - e4d909c290d0fb1ca068ffaddf22cbd0
+        AuthorizationTokenJti:
+          $ref: '#/components/schemas/AuthorizationTokenJti'
+      required:
+        - RpId
+        - Challenge
+        - UserId
+        - LoginId
+    PasskeyAssertionChallengeData:
+      type: object
+      properties:
+        LoginId:
+          $ref: '#/components/schemas/LoginId'
+        Challenge:
+          type: string
+          examples:
+            - random-challenge-string
+        RpId:
+          type: string
+          examples:
+            - example.com
+        AuthorizationTokenJti:
+          $ref: '#/components/schemas/AuthorizationTokenJti'
+      required:
+        - LoginId
+        - Challenge
+        - RpId
+    ChallengeStatus:
+      type: string
+      description: The status of the challenge.
+      enum:
+        - initiated
+        - pending
+        - completed
+    ChallengeId:
+      type: string
+      description: The challenge's identifier
+      examples:
+        - MTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDAw
+        - 123e4567-e89b-12d3-a456-426614174000
+    Timeout:
+      type: integer
+      format: int64
+      description: >-
+        A numerical hint, in milliseconds, which indicates the time the calling
+        web app is willing to wait for the creation operation to complete. This
+        hint may be overridden by the browser.
+    DeviceDelegation:
+      type: string
+      description: >-
+        Specifies the type of device delegation method. this goes to
+        getSessionByLoginIdEndpoint,search IsDeferred on CreateSession function
+      enum:
+        - qr
+    AccessTokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: >-
+            A signed JWT that can be verified as a proof of successful
+            operations
+          contentEncoding: base64
+          contentMediaType: application/jwt
+          contentSchema:
+            $ref: '#/components/schemas/OperationsTokenJwt'
+      required:
+        - accessToken
+    ProofTokenResponse:
+      type: object
+      properties:
+        proofToken:
+          type: string
+          description: >-
+            A signed JWT that can be verified as a proof of successful single
+            operation
+          contentEncoding: base64
+          contentMediaType: application/jwt
+          contentSchema:
+            $ref: '#/components/schemas/OperationsTokenJwt'
+      required:
+        - proofToken
+    AccessOrProofTokensResponse:
+      oneOf:
+        - $ref: '#/components/schemas/AccessTokenResponse'
+        - $ref: '#/components/schemas/ProofTokenResponse'
+    OperationType:
+      type: string
+      enum:
+        - LoginIdCollect
+        - EmailVerification
+        - EmailEnrollment
+        - PhoneNumberVerification
+        - PhoneNumberEnrollment
+        - PasskeyCreation
+        - PasskeyAuth
+        - PasskeyEnrollment
+        - SessionCreation
+        - DeferredAuthentication
+        - ExternalAuthentication
+        - ProfileCollection
+        - PasswordAuthentication
+        - OidcAuthenticationApple
+        - OidcAuthenticationGoogle
+        - Registration
+        - ProfileUpdate
+        - SessionManagement
+        - WebBridge
+        - FaceKeyVerification
+        - FaceKeyCreation
+        - FaceKeyEnrollment
+        - IdDocumentVerification
+    VerificationMethod:
+      type: string
+      enum:
+        - MagicLink
+        - Otp
+    SignedDetails:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/OperationType'
+        method:
+          $ref: '#/components/schemas/VerificationMethod'
+        iat:
+          type: integer
+          format: date-time
+          description: Issued at timestamp in UNIX format
+        exp:
+          type: integer
+          format: date-time
+          description: Expiration timestamp in UNIX format
+        device:
+          $ref: '#/components/schemas/BasicDeviceInfo'
+        deviceDelegation:
+          $ref: '#/components/schemas/DeviceDelegation'
+      required:
+        - type
+        - iat
+        - exp
+    AuthorizationDetails:
+      allOf:
+        - $ref: '#/components/schemas/SignedDetails'
+        - type: object
+          properties:
+            credentialId:
+              type: string
+    ProofDetails:
+      allOf:
+        - $ref: '#/components/schemas/SignedDetails'
+        - type: object
+          properties:
+            passkey:
+              $ref: '#/components/schemas/PasskeyProof'
+            facekey:
+              $ref: '#/components/schemas/FacekeyProof'
+            verificationChannel:
+              type: string
+    BasicDeviceInfo:
+      type: object
+      properties:
+        Os:
+          $ref: '#/components/schemas/NameWithVersion'
+        Browser:
+          $ref: '#/components/schemas/NameWithVersion'
+      required:
+        - Os
+        - Browser
+    NameWithVersion:
+      type: object
+      properties:
+        Name:
+          type: string
+        Version:
+          type: string
+    PasskeyProof:
+      type: object
+      properties:
+        PublicKey:
+          type: string
+        RpId:
+          type: string
+        CredentialId:
+          type: string
+        Aaguid:
+          type: string
+          format: uuid
+        SignCounter:
+          type: integer
+        Synced:
+          type: boolean
+      required:
+        - PublicKey
+        - RpId
+        - CredentialId
+        - Aaguid
+        - SignCounter
+        - Synced
+    FacekeyProof:
+      type: object
+      properties:
+        PersonId:
+          type: string
+      required:
+        - PersonId
+    OperationsTokenJwt:
+      type: array
+      minItems: 2
+      prefixItems:
+        - const:
+            typ: at+jwt
+            alg: RS256
+            kid:
+              type: string
+              description: App identifier
+        - properties:
+            jti:
+              type: string
+              description: Token unique id
+            iss:
+              type: string
+              description: Token Issuer
+            aud:
+              type: string
+              description: App identifier
+            sub:
+              type: string
+              description: Account identifier in URN format
+            iat:
+              $ref: '#/components/schemas/UnixTimestamp'
+            exp:
+              $ref: '#/components/schemas/UnixTimestamp'
+            authorization_details:
+              type: array
+              items:
+                $ref: '#/components/schemas/AuthorizationDetails'
+            proofs:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProofDetails'
+          required:
+            - jti
+            - iss
+            - aud
+            - sub
+            - iat
+            - exp
+    ScopeType:
+      type: string
+      enum:
+        - data
+        - channel
+        - session
+    EventType:
+      type: string
+      enum:
+        - Auth
+        - Session
+        - Client
+    AuthChallengeAction:
+      type: string
+      enum:
+        - ChallengeStarted
+        - ChallengeCompleted
+        - ChallengeFailed
+        - ChallengeCancelled
+        - ChallengeResent
+        - ContinueChallenge
+        - ChallengeWrongAttempt
+        - Enrolled
+        - Revoked
+    SessionAction:
+      type: string
+      description: Defines the possible actions for a session.
+      enum:
+        - created
+    FailureReason:
+      type: string
+      enum:
+        - Timeout
+        - LimitReached
+        - NotFound
+        - WrongCode
+        - UnknownError
+        - Misconfiguration
+        - MissingVerificationChannel
+    WithUserPayload:
+      type: object
+      properties:
+        User:
+          $ref: '#/components/schemas/LoginId'
+      required:
+        - User
+    WithFailureReason:
+      type: object
+      description: Contains user information and a failure reason.
+      properties:
+        user:
+          $ref: '#/components/schemas/LoginId'
+        reason:
+          $ref: '#/components/schemas/FailureReason'
+      required:
+        - reason
+      examples:
+        - user:
+            id: user123
+            idType: email
+          reason: timeout
+    WithCredential:
+      type: object
+      description: Contains credential information.
+      properties:
+        credentialId:
+          type: string
+          description: The unique identifier for the credential.
+      required:
+        - credentialId
+    CancelReason:
+      type: string
+      enum:
+        - timeout
+        - userClose
+        - moveToOtherChallenge
+        - systemError
+        - unknown
+        - alreadyExists
+    OperationScore:
+      type: integer
+      format: int
+      description: Discrete score for an operation
+    OperationRequirement:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/OperationType'
+        score:
+          $ref: '#/components/schemas/OperationScore'
+        channels:
+          type: array
+          description: List of available channels with ids to perform the operation
+          items:
+            $ref: '#/components/schemas/OperationChannel'
+      required:
+        - type
+        - score
+    OperationChannel:
+      type: object
+      properties:
+        channel:
+          type: string
+          description: >-
+            The channel through which the operation can be performed. The
+            channel will be masked if it was not provided as operation input.
+        id:
+          type: string
+      required:
+        - channel
+        - id
+    AuthRequirements:
+      type: object
+      properties:
+        targetScore:
+          $ref: '#/components/schemas/OperationScore'
+        operations:
+          type: array
+          description: >-
+            Sorted list of recommended operations that can be performed to reach
+            the target score
+          items:
+            $ref: '#/components/schemas/OperationRequirement'
+      required:
+        - targetScore
+        - operations
+    ChallengeContext:
+      type: object
+      properties:
+        proofToken:
+          type: string
+          description: >-
+            A signed JWT that can be verified as a proof of successful single
+            operation
+          contentEncoding: base64
+          contentMediaType: application/jwt
+          contentSchema:
+            $ref: '#/components/schemas/OperationsTokenJwt'
+      required:
+        - proofToken
+    AuthMethod:
+      type: string
+      enum:
+        - otp
+        - passkey
+        - magic-link
+        - password
+        - deferred
+        - immediate
+        - unknown
+        - social-google
+        - social-apple
+        - facekey
+    LoginRequest:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+        extendedClientCapabilities:
+          type: object
+          properties:
+            passkeys:
+              type: object
+              properties:
+                peek:
+                  type: boolean
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/AccessTokenResponse'
+        - type: object
+          properties:
+            sessionPayload:
+              description: >-
+                The session payload, could be of any type, depending on the app
+                and integrations
+          required:
+            - sessionPayload
+    AuthRequiredResponse:
+      allOf:
+        - type: object
+          properties:
+            reason:
+              type: string
+              description: The reason why the session was not created
+        - oneOf:
+            - type: object
+              properties:
+                accountNotFound:
+                  type: boolean
+                  description: >-
+                    Hint if the account was not found. Will be provided in a
+                    discovery call only for apps that enable this exposure.
+                accountBlocked:
+                  type: 'null'
+                authRequirements:
+                  type: 'null'
+              required:
+                - accountNotFound
+            - type: object
+              properties:
+                accountNotFound:
+                  type: 'null'
+                accountBlocked:
+                  type: boolean
+                  description: >-
+                    Hint if the account is blocked. Will be provided in a
+                    discovery call only for apps that enable this exposure.
+                authRequirements:
+                  type: 'null'
+              required:
+                - accountBlocked
+            - type: object
+              properties:
+                accountNotFound:
+                  type: 'null'
+                accountBlocked:
+                  type: 'null'
+                authRequirements:
+                  $ref: '#/components/schemas/AuthRequirements'
+              required:
+                - authRequirements
+    DeferredChallengeStart:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+    DeferredChallenge:
+      type: object
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        challengeUrl:
+          type: string
+          description: URL to solve the challenge
+        domain:
+          type: string
+          description: The domain where the challenge was initiated
+        timeout:
+          $ref: '#/components/schemas/Timeout'
+      required:
+        - challengeId
+        - challengeUrl
+        - domain
+        - timeout
+    ChallengeStatusResponse:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ChallengeStatus'
+        context:
+          $ref: '#/components/schemas/ChallengeContext'
+      required:
+        - status
+    DeferChallengeRequest:
+      type: object
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+      required:
+        - challengeId
+    CompleteDeferChallengeRequest:
+      type: object
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        context:
+          $ref: '#/components/schemas/ChallengeContext'
+      required:
+        - challengeId
+    ChallengeStatusCheckResponse:
+      allOf:
+        - $ref: '#/components/schemas/AccessTokenResponse'
+        - $ref: '#/components/schemas/ChallengeStatusResponse'
+    CredentialType:
+      type: string
+      description: 'The type of credential, always ''public-key'''
+      enum:
+        - public-key
+    TransportType:
+      type: string
+      enum:
+        - usb
+        - nfc
+        - ble
+        - smart-card
+        - hybrid
+        - internal
+        - cable
+    KeyAlgorithmType:
+      type: integer
+      description: The cryptographic algorithm to be used in COSE format
+      enum:
+        - -7
+        - -257
+    PublicKeyCredentialDescriptor:
+      type: object
+      required:
+        - type
+        - id
+      properties:
+        type:
+          $ref: '#/components/schemas/CredentialType'
+        id:
+          type: string
+          description: Base64url encoded credential ID
+        transports:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransportType'
+    UserVerification:
+      type: string
+      enum:
+        - preferred
+        - required
+        - discouraged
+    AuthenticatorAttachment:
+      type: string
+      enum:
+        - platform
+        - cross-platform
+    ResidentKey:
+      type: string
+      enum:
+        - required
+        - preferred
+        - discouraged
+    AttestationConveyancePreference:
+      type: string
+      description: Attestation conveyance during credential generation
+      enum:
+        - none
+        - direct
+        - indirect
+        - enterprise
+    AssertionOptionsRequest:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+    AssertionOptionsResponse:
+      type: object
+      required:
+        - challenge
+        - rpId
+      properties:
+        challenge:
+          $ref: '#/components/schemas/ChallengeId'
+        rpId:
+          type: string
+          description: Relying Party identifier
+        allowCredentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicKeyCredentialDescriptor'
+        userVerification:
+          $ref: '#/components/schemas/UserVerification'
+        timeout:
+          $ref: '#/components/schemas/Timeout'
+    AssertionResultRequest:
+      type: object
+      required:
+        - id
+        - type
+        - response
+        - authenticatorAttachment
+      properties:
+        id:
+          type: string
+          description: Base64url encoded credential ID
+        type:
+          $ref: '#/components/schemas/CredentialType'
+        response:
+          $ref: '#/components/schemas/AssertionAuthenticatorResponse'
+        authenticatorAttachment:
+          $ref: '#/components/schemas/AuthenticatorAttachment'
+    AssertionAuthenticatorResponse:
+      type: object
+      required:
+        - clientDataJSON
+        - authenticatorData
+        - signature
+      properties:
+        clientDataJSON:
+          type: string
+          maxLength: 1024
+          description: Client data in JSON format
+        authenticatorData:
+          type: string
+          maxLength: 1024
+          description: Authenticator data used in the assertion signing process
+        userHandle:
+          type: string
+          maxLength: 1024
+          description: >-
+            Base64url encoded identifier for a user account, specified by the
+            Relying Party as user.id during registration
+        signature:
+          type: string
+          maxLength: 1024
+          description: 'Signature for the server challenge, returned from the authenticator'
+    AttestationOptionsRequest:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+        accountDisplayName:
+          type: string
+          description: Display name for the user account
+    AttestationOptionsResponse:
+      type: object
+      required:
+        - rp
+        - user
+        - challenge
+        - pubKeyCredParams
+      properties:
+        rp:
+          $ref: '#/components/schemas/RelayingParty'
+        user:
+          $ref: '#/components/schemas/Fido2User'
+        challenge:
+          $ref: '#/components/schemas/ChallengeId'
+        pubKeyCredParams:
+          type: array
+          items:
+            type: object
+            required:
+              - type
+              - alg
+            properties:
+              type:
+                $ref: '#/components/schemas/CredentialType'
+              alg:
+                $ref: '#/components/schemas/KeyAlgorithmType'
+        attestation:
+          $ref: '#/components/schemas/AttestationConveyancePreference'
+        authenticatorSelection:
+          type: object
+          properties:
+            authenticatorAttachment:
+              $ref: '#/components/schemas/AuthenticatorAttachment'
+            userVerification:
+              $ref: '#/components/schemas/UserVerification'
+            residentKey:
+              $ref: '#/components/schemas/ResidentKey'
+        timeout:
+          $ref: '#/components/schemas/Timeout'
+        excludeCredentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicKeyCredentialDescriptor'
+    AttestationResultResponse:
+      type: object
+      required:
+        - ownIdData
+        - proofToken
+      properties:
+        ownIdData:
+          description: ownidData object to replace the data in the vendor's db
+        proofToken:
+          type: string
+          description: >-
+            A signed JWT that can be verified as a proof of successful single
+            operation
+          contentEncoding: base64
+          contentMediaType: application/jwt
+    AttestationEnrollRequest:
+      type: object
+      required:
+        - proofToken
+      properties:
+        proofToken:
+          type: string
+          description: A signed JWT that contains an attested passkey
+        proofTokenVerifier:
+          type: string
+          description: The verifier for the attestation token
+    AssertionResultResponse:
+      $ref: '#/components/schemas/AccessTokenResponse'
+    RelayingParty:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Relying Party identifier (passkey's domain)
+        name:
+          type: string
+    Fido2User:
+      type: object
+      required:
+        - id
+        - name
+        - displayName
+      properties:
+        id:
+          type: string
+          description: Base64url encoded user ID
+        name:
+          type: string
+          description: User's name
+        displayName:
+          type: string
+          description: User's display name
+    AttestationResultRequest:
+      type: object
+      required:
+        - id
+        - type
+        - response
+      properties:
+        id:
+          type: string
+          description: Base64url encoded credential ID
+        type:
+          $ref: '#/components/schemas/CredentialType'
+        response:
+          $ref: '#/components/schemas/AttestationAuthenticatorResponse'
+        authenticatorAttachment:
+          $ref: '#/components/schemas/AuthenticatorAttachment'
+    AttestationAuthenticatorResponse:
+      type: object
+      required:
+        - clientDataJSON
+        - attestationObject
+        - transports
+      properties:
+        clientDataJSON:
+          type: string
+          maxLength: 1024
+          description: Client data in JSON format
+        attestationObject:
+          type: string
+          maxLength: 2048
+          description: Attestation object
+        transports:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransportType'
+    PasskeyCancelRequest:
+      type: object
+      required:
+        - challenge
+        - reason
+      properties:
+        challenge:
+          $ref: '#/components/schemas/ChallengeId'
+        reason:
+          $ref: '#/components/schemas/CancelReason'
+    FacekeySolution:
+      type: string
+      minLength: 1
+      description: Opaque facekeys challenge solution payload.
+    StartFacekeyChallengeRequest:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+    StartFacekeyChallengeResponse:
+      type: object
+      required:
+        - challengeId
+        - timeout
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        timeout:
+          $ref: '#/components/schemas/Timeout'
+    CompleteFacekeyChallengeRequest:
+      type: object
+      required:
+        - challengeId
+        - data
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        data:
+          $ref: '#/components/schemas/FacekeySolution'
+    EnrollFacekeyRequest:
+      type: object
+      required:
+        - proofToken
+      properties:
+        proofToken:
+          type: string
+          description: A signed JWT that contains verified facekeys data
+        proofTokenVerifier:
+          type: string
+          description: The verifier for the facekeys proof token
+    CancelFacekeyChallengeRequest:
+      type: object
+      description: Request payload for canceling a facekeys verification challenge.
+      required:
+        - challengeId
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        reason:
+          $ref: '#/components/schemas/CancelReason'
+    Code:
+      type: string
+      examples:
+        - '123456'
+    ResendPolicy:
+      type: object
+      properties:
+        allow:
+          type: boolean
+          description: Indicates whether resending is allowed.
+        attempts:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: The maximum number of resends allowed.
+        debounce:
+          type: integer
+          minimum: 1
+          description: The delay in seconds before another resend can be made.
+      required:
+        - allow
+        - attempts
+        - debounce
+    StartVerificationResponse:
+      type: object
+      required:
+        - challengeId
+        - methods
+        - timeout
+        - attempts
+        - resendPolicy
+        - channel
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        resendPolicy:
+          $ref: '#/components/schemas/ResendPolicy'
+        timeout:
+          $ref: '#/components/schemas/Timeout'
+        attempts:
+          type: integer
+          minimum: 1
+          default: 5
+        channel:
+          $ref: '#/components/schemas/OperationChannel'
+        methods:
+          type: object
+          properties:
+            otp:
+              type: object
+              properties:
+                length:
+                  type: integer
+                  minimum: 4
+                  default: 4
+            magicLink:
+              type: object
+          anyOf:
+            - required:
+                - otp
+            - required:
+                - magicLink
+    StartVerificationRequest:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+        loginIdHintId:
+          type: string
+          description: An optional hint identifier for the login ID
+        verificationMethods:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationMethod'
+        magicLinkRedirectUrl:
+          type: string
+          description: >-
+            An optional URL to which the user will be redirected to after
+            clicking a magic link, if this method is used in the verification
+    CompleteVerificationRequest:
+      type: object
+      required:
+        - challengeId
+        - code
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        code:
+          $ref: '#/components/schemas/Code'
+    VerificationRequest:
+      type: object
+      required:
+        - challengeId
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+    CancelVerificationRequest:
+      type: object
+      description: Request payload for canceling a challenge operation.
+      required:
+        - challengeId
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        reason:
+          $ref: '#/components/schemas/CancelReason'
+    EnrollRequest:
+      type: object
+      required:
+        - proofToken
+      properties:
+        proofToken:
+          type: string
+          description: A signed JWT that contains a verified channel
+        proofTokenVerifier:
+          type: string
+          description: The token verifier
+    UserJourneySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the journey
+        traceparent:
+          type: string
+          description: Traceparent header for distributed tracing
+        reporter:
+          $ref: '#/components/schemas/Reporter'
+        eventInfo:
+          $ref: '#/components/schemas/EventInfo'
+        deviceInfo:
+          $ref: '#/components/schemas/ClientDeviceInfo'
+        userInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserInfo'
+      required:
+        - id
+        - traceparent
+        - reporter
+        - eventInfo
+        - deviceInfo
+        - userInfo
+    Reporter:
+      type: object
+      properties:
+        service:
+          type: string
+          enum:
+            - web-sdk
+            - android-sdk
+            - ios-sdk
+        version:
+          type: string
+        origin:
+          type: string
+        referer:
+          type: string
+      required:
+        - service
+        - origin
+        - referer
+    EventInfo:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - journey-summary
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Flow'
+      required:
+        - type
+        - flows
+    Flow:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the flow
+        name:
+          type: string
+        source:
+          type: string
+          enum:
+            - widget-button
+            - returning-user-prompt
+            - recovery-prompt
+            - enroll-prompt
+            - elite
+            - agent-authorizing
+            - deferred
+            - explicit
+            - implicit
+        status:
+          type: string
+          enum:
+            - aborted
+            - in-progress
+            - completed
+            - switched
+            - failed
+        startedAt:
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          $ref: '#/components/schemas/Timestamp'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientError'
+        switchedToFlow:
+          type: string
+        insights:
+          $ref: '#/components/schemas/FlowInsights'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+      required:
+        - id
+        - source
+        - status
+        - startedAt
+        - steps
+    ClientError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        source:
+          type: string
+        message:
+          type: string
+      required:
+        - errorCode
+    FlowInsights:
+      type: object
+      properties:
+        duration:
+          $ref: '#/components/schemas/Duration'
+        errorRate:
+          type: number
+          format: float
+          description: Percentage of errors encountered in the flow
+        retries:
+          type: integer
+        clicksCount:
+          type: integer
+        authMethod:
+          $ref: '#/components/schemas/AuthMethod'
+        loggedIn:
+          type: boolean
+          description: Indicates if the user was logged in
+        registered:
+          type: boolean
+          description: Indicates if the user was registered
+    Step:
+      type: object
+      properties:
+        operationType:
+          $ref: '#/components/schemas/OperationType'
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+            - aborted
+            - in-progress
+            - completed
+            - failed
+        startedAt:
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          $ref: '#/components/schemas/Timestamp'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientError'
+        insights:
+          $ref: '#/components/schemas/StepInsights'
+      required:
+        - operationType
+        - status
+        - startedAt
+    StepInsights:
+      type: object
+      properties:
+        duration:
+          $ref: '#/components/schemas/Duration'
+        retries:
+          type: integer
+        clicksCount:
+          type: integer
+    ClientDeviceInfo:
+      type: object
+      properties:
+        isPlatformAuthenticatorAvailable:
+          type: boolean
+        isWebView:
+          type: boolean
+        isMobileNative:
+          type: boolean
+      required:
+        - isPlatformAuthenticatorAvailable
+        - isWebView
+        - isMobileNative
+    UserInfo:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+        returningUser:
+          type: boolean
+        lastAuthMethod:
+          $ref: '#/components/schemas/AuthMethod'
+      required:
+        - loginId
+    Duration:
+      type: integer
+      format: int64
+      description: Duration in milliseconds
+    Timestamp:
+      type: string
+      format: date-time
+      description: UTC timestamp
+    OidcChallengeResponse:
+      type: object
+      required:
+        - challengeId
+        - timeout
+        - clientId
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        timeout:
+          $ref: '#/components/schemas/Timeout'
+        clientId:
+          type: string
+          description: The client ID of the OIDC provider
+        challengeUrl:
+          type: string
+          description: >-
+            The URL to navigate to in order to face the challenge, will be
+            provided if using web flow
+    StartOidcChallengeRequest:
+      type: object
+      properties:
+        loginIdHint:
+          type: string
+          description: A login ID hint for the OIDC provider
+        oauthResponseType:
+          type: string
+          description: >-
+            The response type that will be used to resolve the challenge.
+            Currently only a subset of the types in the protocol are supported
+          enum:
+            - code
+            - id_token
+        redirectUri:
+          type: string
+          description: >-
+            The redirect URI to be used in an OIDC web flow, defaults to the
+            preconfigured app's redirect uri
+      required:
+        - oauthResponseType
+    CompleteOidcChallengeRequest:
+      oneOf:
+        - type: object
+          properties:
+            challengeId:
+              $ref: '#/components/schemas/ChallengeId'
+            code:
+              type: string
+              description: The authorization code returned by the OIDC provider
+          required:
+            - challengeId
+            - code
+        - type: object
+          properties:
+            challengeId:
+              $ref: '#/components/schemas/ChallengeId'
+            idToken:
+              type: string
+              description: The ID token returned by the OIDC provider
+          required:
+            - idToken
+            - challengeId
+    CancelOidcChallengeRequest:
+      type: object
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        reason:
+          $ref: '#/components/schemas/CancelReason'
+      required:
+        - challengeId
+    AccessTokenWithUserInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/AccessTokenResponse'
+        - type: object
+          properties:
+            loginId:
+              $ref: '#/components/schemas/LoginId'
+            userInfo:
+              type: object
+              description: The user information
+              additionalProperties:
+                type: string
+            provider:
+              $ref: '#/components/schemas/OidcProvider'
+          required:
+            - userInfo
+            - loginId
+            - provider
+    StartIdDocVerificationRequest:
+      type: object
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+        finishUrl:
+          type: string
+          description: >-
+            A URL that the user will be redirected to after completing the iddoc
+            verification challenge, or empty if no redirection is needed
+        sendNotification:
+          type: boolean
+          description: >-
+            Indicates whether a notification should be sent to the user to
+            prompt them to complete the iddoc verification challenge
+    StartIdDocVerificationResponse:
+      type: object
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        timeout:
+          $ref: '#/components/schemas/Timeout'
+        challengeUrl:
+          type: string
+          description: >-
+            A URL that the user can open to complete the iddoc verification
+            challenge
+      required:
+        - challengeId
+        - timeout
+        - challengeUrl
+    IdDocChallengeRequest:
+      type: object
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+      required:
+        - challengeId
+    CancelIdDocVerificationRequest:
+      type: object
+      description: Request payload for canceling a challenge operation.
+      required:
+        - challengeId
+      properties:
+        challengeId:
+          $ref: '#/components/schemas/ChallengeId'
+        reason:
+          $ref: '#/components/schemas/CancelReason'
+    IdDocChallengeStatusCheckResponse:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ChallengeStatus'
+        result:
+          allOf:
+            - $ref: '#/components/schemas/AccessTokenResponse'
+            - type: object
+              properties:
+                documentData:
+                  type: object
+                  additionalProperties: true
+                documentFile:
+                  $ref: '#/components/schemas/FilePayload'
+                selfieImage:
+                  $ref: '#/components/schemas/FilePayload'
+              required:
+                - documentData
+                - documentFile
+                - selfieImage
+      required:
+        - status
+    FilePayload:
+      type: object
+      description: Represents a file payload with its contents and MIME type.
+      properties:
+        fileContents:
+          type: string
+          description: The raw contents of a file.
+        contentType:
+          type: string
+          description: The MIME type of the file.
+      required:
+        - fileContents
+        - contentType
+    AppAuthConfig:
+      type: object
+      required:
+        - loginIdConfig
+      properties:
+        displayName:
+          type: string
+          description: Application display name
+        loginIdConfig:
+          type: array
+          description: Settings related to login ID types
+          items:
+            type: object
+            properties:
+              type:
+                $ref: '#/components/schemas/LoginIdType'
+              regex:
+                type: string
+            required:
+              - type
+        webView:
+          $ref: '#/components/schemas/WebViewConfig'
+        capabilities:
+          type: array
+          description: Configuration regarding app capabilities
+          items:
+            $ref: '#/components/schemas/CapabilityConfig'
+        ui:
+          $ref: '#/components/schemas/UIConfig'
+        logLevel:
+          $ref: '#/components/schemas/LogLevel'
+    LogLevel:
+      type: string
+      enum:
+        - Error
+        - Warning
+        - Information
+        - Debug
+        - None
+    UIConfig:
+      type: object
+      description: UI configuration with theme-specific assets
+      required:
+        - default
+      properties:
+        default:
+          $ref: '#/components/schemas/UIThemeConfig'
+        dark:
+          $ref: '#/components/schemas/UIThemeConfig'
+    UIThemeConfig:
+      type: object
+      properties:
+        logoUrl:
+          type: string
+          format: uri
+          description: Theme-specific logo URL
+    WebViewConfig:
+      type: object
+      properties:
+        baseUrl:
+          type: string
+          format: uri
+          description: Base URL for the webview
+        html:
+          type: string
+          description: HTML content for the webview
+        allowedOrigins:
+          type: array
+          items:
+            type: string
+          description: Allowed webview origins
+    CapabilityConfig:
+      oneOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              const: Salesforce
+            clientId:
+              type: string
+              description: OCAPI client ID
+            siteId:
+              type: string
+              description: OCAPI site ID
+          required:
+            - type
+            - clientId
+            - siteId
+        - type: object
+          properties:
+            type:
+              type: string
+              const: Unico
+            env:
+              type: string
+              enum:
+                - Production
+                - UAT
+            sdkKey:
+              type: string
+              description: Unico SDK key
+          required:
+            - type
+            - sdkKey
+            - env
+        - type: object
+          properties:
+            type:
+              type: string
+              const: Okta
+            idpId:
+              type: string
+              description: Okta Identity Provider ID
+          required:
+            - type
+            - idpId
+  responses:
+    BadLoginIdRequestErrorResponse:
+      description: Bad request.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/LoginIdValidationError'
+              - $ref: '#/components/schemas/LoginIdTypeNotSupportedError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadRequestErrorResponse:
+      description: Bad request.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadEnrollRequestErrorResponse:
+      description: Bad request while validating a proof token.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadChallengeRequestErrorResponse:
+      description: Bad request against an existing challenge.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/InvalidChallengeError'
+              - $ref: '#/components/schemas/MaximumAttemptsReachedError'
+              - $ref: '#/components/schemas/UnknownError'
+    UnauthorizedErrorResponse:
+      description: >-
+        Unauthorized. The response may include a JSON error message or be
+        returned without a body.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/UnauthorizedError'
+    ForbiddenErrorResponse:
+      description: >-
+        Forbidden. The response may include a JSON error message or be returned
+        without a body.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ForbiddenError'
+    NotFoundErrorResponse:
+      description: Not found.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/UserNotFoundError'
+    FailedDependencyErrorResponse:
+      description: Provider or capability dependency failed.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ProviderError'
+              - $ref: '#/components/schemas/MissingProviderError'
+    TooManyRequestsErrorResponse:
+      description: Too many active challenges or concurrent attempts.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MaximumChallengesReachedError'
+    FacekeyChallengeCancelled:
+      description: Facekey challenge was cancelled successfully
+    BadVerificationRequestErrorResponse:
+      description: Bad verification start request.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/LoginIdValidationError'
+              - $ref: '#/components/schemas/LoginIdTypeNotSupportedError'
+              - $ref: '#/components/schemas/MissingChannelError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadCompleteVerificationRequestErrorResponse:
+      description: Bad request while completing a verification challenge.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/InvalidChallengeError'
+              - $ref: '#/components/schemas/MaximumAttemptsReachedError'
+              - $ref: '#/components/schemas/VerificationCodeWrongError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadResendRequestErrorResponse:
+      description: Bad request while resending a verification challenge code.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/InvalidChallengeError'
+              - $ref: '#/components/schemas/MaximumResendAttemptsReachedError'
+              - $ref: '#/components/schemas/UnknownError'
+    PhoneVerificationCancelled:
+      description: Phone LoginIdVerification was cancelled successfully
+    EmailVerificationCancelled:
+      description: Email LoginIdVerification was cancelled successfully
+    OidcCancelled:
+      description: Challenge was cancelled successfully
+    BadIdDocVerificationRequestErrorResponse:
+      description: Bad verification start request.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/LoginIdValidationError'
+              - $ref: '#/components/schemas/LoginIdTypeNotSupportedError'
+              - $ref: '#/components/schemas/MissingChannelError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadCompleteIdDocVerificationRequestErrorResponse:
+      description: Bad request while completing a verification challenge.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/InvalidChallengeError'
+              - $ref: '#/components/schemas/MaximumAttemptsReachedError'
+              - $ref: '#/components/schemas/VerificationCodeWrongError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadCompleteIdDocVerificationChallengeFailedErrorResponse:
+      description: >-
+        The verification process failed to verify the identity or the
+        document(s).
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/TimeoutError'
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/UnknownError'
+    IdDocVerificationCancelled:
+      description: Verification was cancelled successfully
+  parameters:
+    FlowTokenVerifier:
+      in: header
+      name: X-OwnID-Token-Verifier
+      description: The plain secret used to verify a flow was initiated by same actor.
+      schema:
+        type: string
+      required: false
+    FlowTokenChallenge:
+      in: header
+      name: X-OwnID-Token-Challenge
+      description: The encrypted challenge used to initiate a verifiable flow.
+      schema:
+        type: string
+      required: false
+  securitySchemes:
+    AccessTokenAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

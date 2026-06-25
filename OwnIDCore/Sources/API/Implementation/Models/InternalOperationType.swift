@@ -1,0 +1,26 @@
+import Foundation
+
+internal enum InternalOperationType: String, Sendable, Codable, Hashable, CaseIterable {
+    case loginIdCollect = "LoginIdCollect"
+    case emailVerification = "EmailVerification"
+    case emailEnrollment = "EmailEnrollment"
+    case phoneNumberVerification = "PhoneNumberVerification"
+    case phoneNumberEnrollment = "PhoneNumberEnrollment"
+    case passkeyCreation = "PasskeyCreation"
+    case passkeyAuth = "PasskeyAuth"
+    case passkeyEnrollment = "PasskeyEnrollment"
+    case sessionCreation = "SessionCreation"
+    case deferredAuthentication = "DeferredAuthentication"
+    case externalAuthentication = "ExternalAuthentication"
+    case profileCollection = "ProfileCollection"
+    case passwordAuthentication = "PasswordAuthentication"
+    case oidcAuthenticationApple = "OidcAuthenticationApple"
+    case oidcAuthenticationGoogle = "OidcAuthenticationGoogle"
+    case registration = "Registration"
+    case profileUpdate = "ProfileUpdate"
+    case sessionManagement = "SessionManagement"
+    case webBridge = "WebBridge"
+    case faceKeyVerification = "FaceKeyVerification"
+    case faceKeyCreation = "FaceKeyCreation"
+    case faceKeyEnrollment = "FaceKeyEnrollment"
+}

@@ -1,0 +1,6 @@
+# CocoaPods generated content
+**/Pods/
+
+# Xcode user-specific files inside demo projects
+**/xcuserdata/
+**/*.xcuserstate
