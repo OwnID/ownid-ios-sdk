@@ -1,0 +1,6 @@
+PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.uat
+OWNID_CONFIG_JSON = {"appID":"4usvqc0dt3k7ol","env":"uat"}
+DEMO_IDENTITY_BASE_URL = https:/$()/node-mongo.custom.demo.staging.ownid.com/api/auth/
+ASSOCIATED_DOMAINS = webcredentials:uat.ownid.com
+GOOGLE_IOS_CLIENT_ID = 288363962454-pqq0tgd7nqhood1r4ehtupr2d4bfo62g.apps.googleusercontent.com
+GOOGLE_IOS_URL_SCHEME = com.googleusercontent.apps.288363962454-pqq0tgd7nqhood1r4ehtupr2d4bfo62g

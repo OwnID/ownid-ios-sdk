@@ -1,45 +1,19 @@
-// swift-tools-version:5.6
-
+// swift-tools-version:6.0
 import PackageDescription
 
 let package = Package(
     name: "OwnID",
     defaultLocalization: "en",
-    platforms: [
-        .iOS(.v14),
-    ],
+    platforms: [.iOS(.v13)],
     products: [
-        .library(
-            name: "OwnIDCoreSDK",
-            targets: ["OwnIDCoreSDK"]
-        ),
-        .library(
-            name: "OwnIDGigyaSDK",
-            targets: ["OwnIDGigyaSDK"]
-        )
-    ],
-    dependencies: [
-        .package(url: "https://github.com/SAP/gigya-swift-sdk.git", from: "1.7.5")
+        .library(name: "OwnIDCore", targets: ["OwnIDCore"]),
+        .library(name: "OwnIDSwiftUI", targets: ["OwnIDSwiftUI"]),
     ],
     targets: [
-        .target(
-            name: "OwnIDCoreSDK",
-            dependencies: [],
-            path: "ownid-core-ios-sdk",
-            exclude: [
-                "Tests",
-            ],
-            resources: [
-                .process("Resources")
-            ]
-        ),
-        .target(
-            name: "OwnIDGigyaSDK",
-            dependencies: [
-                "OwnIDCoreSDK",
-                .product(name: "Gigya", package: "gigya-swift-sdk")
-            ],
-            path: "ownid-gigya-ios-sdk"
-        )
-    ]
+        .target(name: "OwnIDCore", path: "OwnIDCore", exclude: ["Tests", "OpenApi", "api"], resources: [.process("Resources")]),
+        .target(name: "OwnIDSwiftUI", dependencies: ["OwnIDCore"], path: "OwnIDSwiftUI/Sources"),
+        .testTarget(name: "OwnIDCoreTests", dependencies: ["OwnIDCore"], path: "OwnIDCore/Tests"),
+        .testTarget(name: "OwnIDSwiftUITests", dependencies: ["OwnIDSwiftUI"], path: "OwnIDSwiftUI/Tests"),
+    ],
+    swiftLanguageModes: [.v6]
 )
