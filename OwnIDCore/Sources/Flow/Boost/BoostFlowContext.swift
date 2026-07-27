@@ -8,6 +8,13 @@ internal struct BoostFlowContextKey<Value: Sendable>: Hashable, Sendable {
     }
 }
 
+/// Authentication operation categories that an app can allow for a Boost Login flow.
+public enum BoostLoginAuthOperation: Hashable, Sendable {
+    case passkey
+    case emailVerification
+    case phoneNumberVerification
+}
+
 /// Configuration for a Boost authentication flow.
 ///
 /// Carries optional login-ID hints and behavioral flags that customize flow execution. `BoostFlowContext` has value
@@ -98,9 +105,16 @@ public struct BoostFlowContext: CustomStringConvertible, @unchecked Sendable {
         let nextTypes = authRequirements.operations
             .filter { !passedTypes.contains($0.type) }
             .filter { $0.isSelectableBoostAuthOperation(loginID: currentLoginID) }
+            .filter { isAuthOperationAllowed($0.type) }
             .map { $0.type }
 
         return nextTypes.isEmpty ? nil : nextTypes
+    }
+
+    internal func isAuthOperationAllowed(_ operationType: OperationType) -> Bool {
+        guard !allowedAuthOperations.isEmpty else { return true }
+        guard let authOperation = operationType.boostLoginAuthOperation else { return false }
+        return allowedAuthOperations.contains(authOperation)
     }
 
     internal mutating func addSucceedOperation(operationType: OperationType) {
@@ -160,6 +174,7 @@ private enum BoostFlowContextKeys {
     fileprivate static let authMethod = BoostFlowContextKey<AuthMethod>("authMethod")
     fileprivate static let authRequiredResponse = BoostFlowContextKey<LoginResponse.AuthRequired>("authRequiredResponse")
     fileprivate static let requestedOps = BoostFlowContextKey<[OperationType: Bool]>("requestedOps")
+    fileprivate static let allowedAuthOperations = BoostFlowContextKey<Set<BoostLoginAuthOperation>>("allowedAuthOperations")
     fileprivate static let source = BoostFlowContextKey<FlowInfo.Source>("source")
     fileprivate static let traceParent = BoostFlowContextKey<String>("traceParent")
 }
@@ -202,6 +217,14 @@ extension BoostFlowContext {
     public var ignoreLastUser: Bool? {
         get { self[BoostFlowContextKeys.ignoreLastUser] }
         set { self[BoostFlowContextKeys.ignoreLastUser] = newValue }
+    }
+
+    /// Limits the authentication operations considered by Boost Login.
+    ///
+    /// An empty set preserves the default authentication flow without filtering operations.
+    public var allowedAuthOperations: Set<BoostLoginAuthOperation> {
+        get { self[BoostFlowContextKeys.allowedAuthOperations] ?? [] }
+        set { self[BoostFlowContextKeys.allowedAuthOperations] = newValue.isEmpty ? nil : newValue }
     }
 
     internal var source: FlowInfo.Source? {
@@ -294,6 +317,14 @@ extension BoostFlowContext.Builder {
         set { self[BoostFlowContextKeys.ignoreLastUser] = newValue }
     }
 
+    /// Limits the authentication operations considered by Boost Login.
+    ///
+    /// An empty set preserves the default authentication flow without filtering operations.
+    public var allowedAuthOperations: Set<BoostLoginAuthOperation> {
+        get { self[BoostFlowContextKeys.allowedAuthOperations] ?? [] }
+        set { self[BoostFlowContextKeys.allowedAuthOperations] = newValue.isEmpty ? nil : newValue }
+    }
+
     /// Internal source label for flow-level telemetry.
     ///
     /// Intended for SDK-owned integrations. Leave `nil` to use the default explicit source.
@@ -345,5 +376,16 @@ extension BoostFlowContext.Builder {
     internal var requestedOps: [OperationType: Bool]? {
         get { self[BoostFlowContextKeys.requestedOps] }
         set { self[BoostFlowContextKeys.requestedOps] = newValue }
+    }
+}
+
+extension OperationType {
+    fileprivate var boostLoginAuthOperation: BoostLoginAuthOperation? {
+        switch self {
+        case .passkeyCreation, .passkeyAuth: return .passkey
+        case .emailVerification: return .emailVerification
+        case .phoneNumberVerification: return .phoneNumberVerification
+        default: return nil
+        }
     }
 }

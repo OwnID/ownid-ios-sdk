@@ -9,6 +9,7 @@ struct BoostLoginScreen: View {
     @State private var isSubmitting = false
     @State private var boostButtonPosition = OwnIDBoostButtonPosition.start
     @StateObject private var log = LogStore()
+    @StateObject private var emailOtpLoginViewModel = EmailOtpLoginViewModel()
 
     let onPasswordLogin: (String, String) async throws -> Void
 
@@ -66,6 +67,24 @@ struct BoostLoginScreen: View {
                     .buttonStyle(PrimaryButtonStyle())
                     .frame(maxWidth: .infinity, alignment: .center)
                     .disabled(isLoginDisabled)
+
+                    Button("Login via email OTP") {
+                        emailOtpLoginViewModel.startLoginFlow(
+                            email: email,
+                            onLogin: { response in
+                                log.add("Login via email OTP -> onLogin: \(response)")
+                            },
+                            onError: { error in
+                                log.add("Login via email OTP -> onError: \(error)")
+                            },
+                            onCancel: { reason in
+                                log.add("Login via email OTP -> onCancel: \(reason)")
+                            }
+                        )
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .disabled(email.allSatisfy(\.isWhitespace) || emailOtpLoginViewModel.isRunning)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 

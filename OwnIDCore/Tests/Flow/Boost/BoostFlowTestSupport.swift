@@ -191,6 +191,30 @@ final class FlowLoginIDCollectOperationFake: LoginIDCollectOperation, @unchecked
     }
 }
 
+final class FlowPasskeyAssertionOperationFake: PasskeyAssertionOperation, @unchecked Sendable {
+    let operationType: OperationType = .passkeyAuth
+    private let box: FlowOperationBox<PasskeyAssertionOperationParams, AccessToken, PasskeyAssertionOperationFailure>
+    private let context: Context?
+
+    init(
+        box: FlowOperationBox<PasskeyAssertionOperationParams, AccessToken, PasskeyAssertionOperationFailure>,
+        context: Context?
+    ) {
+        self.box = box
+        self.context = context
+    }
+
+    func availability(params: (any CapabilityParams)?) async -> Availability {
+        box.recordAvailability(params: params, context: context)
+    }
+
+    func start(params: PasskeyAssertionOperationParams?) -> any OperationController<
+        AccessToken, PasskeyAssertionOperationFailure
+    > {
+        box.makeController(operationType: operationType, params: params, context: context)
+    }
+}
+
 final class FlowPasskeyAttestationOperationFake: PasskeyAttestationOperation, @unchecked Sendable {
     let operationType: OperationType = .passkeyCreation
     private let box: FlowOperationBox<PasskeyAttestationOperationParams, AttestationResponse, PasskeyAttestationOperationFailure>
@@ -316,6 +340,7 @@ struct FlowTestHarness {
     let coder: JSONCoderImpl
     let login: FlowOperationBox<LoginOperationParams, LoginResponse, LoginOperationFailure>
     let loginIDCollect: FlowOperationBox<LoginIDCollectOperationParams, LoginID, LoginIDCollectOperationFailure>
+    let passkeyAssertion: FlowOperationBox<PasskeyAssertionOperationParams, AccessToken, PasskeyAssertionOperationFailure>
     let passkeyAttestation: FlowOperationBox<PasskeyAttestationOperationParams, AttestationResponse, PasskeyAttestationOperationFailure>
     let passkeyEnroll: FlowOperationBox<PasskeyEnrollOperationParams, Void, PasskeyEnrollOperationFailure>
     let emailVerification: FlowOperationBox<EmailVerificationOperationParams, AccessOrProofToken, EmailVerificationOperationFailure>
@@ -323,8 +348,12 @@ struct FlowTestHarness {
 
     init(
         loginResult: OperationResult<LoginResponse, LoginOperationFailure>,
+        additionalLoginResults: [OperationResult<LoginResponse, LoginOperationFailure>] = [],
         loginIDCollectResult: OperationResult<LoginID, LoginIDCollectOperationFailure> = .success(
             FlowFixtures.loginID("collected@example.com")
+        ),
+        passkeyAssertionResult: OperationResult<AccessToken, PasskeyAssertionOperationFailure> = .success(
+            FlowFixtures.accessToken(id: "passkey-user@example.test")
         ),
         passkeyAttestationResult: OperationResult<AttestationResponse, PasskeyAttestationOperationFailure> = .success(
             FlowFixtures.attestationResponse()
@@ -341,10 +370,17 @@ struct FlowTestHarness {
         taskScope = TaskScope(shutdownToken: ShutdownToken())
         validator = FlowLoginIDValidatorFake()
         coder = JSONCoderImpl()
-        let loginBox = FlowOperationBox<LoginOperationParams, LoginResponse, LoginOperationFailure>(startResults: [loginResult])
+        let loginBox = FlowOperationBox<LoginOperationParams, LoginResponse, LoginOperationFailure>(
+            startResults: [loginResult] + additionalLoginResults
+        )
         let loginIDCollectBox = FlowOperationBox<LoginIDCollectOperationParams, LoginID, LoginIDCollectOperationFailure>(
             startResults: [loginIDCollectResult]
         )
+        let passkeyAssertionBox = FlowOperationBox<
+            PasskeyAssertionOperationParams,
+            AccessToken,
+            PasskeyAssertionOperationFailure
+        >(startResults: [passkeyAssertionResult])
         let passkeyAttestationBox = FlowOperationBox<
             PasskeyAttestationOperationParams,
             AttestationResponse,
@@ -365,6 +401,7 @@ struct FlowTestHarness {
         >(startResults: [phoneVerificationResult])
         login = loginBox
         loginIDCollect = loginIDCollectBox
+        passkeyAssertion = passkeyAssertionBox
         passkeyAttestation = passkeyAttestationBox
         passkeyEnroll = passkeyEnrollBox
         emailVerification = emailVerificationBox
@@ -379,6 +416,9 @@ struct FlowTestHarness {
         }
         container.registerFactory((any LoginIDCollectOperation).self, dependencies: []) { resolver in
             FlowLoginIDCollectOperationFake(box: loginIDCollectBox, context: resolver.getOrNil(type: Context.self))
+        }
+        container.registerFactory((any PasskeyAssertionOperation).self, dependencies: []) { resolver in
+            FlowPasskeyAssertionOperationFake(box: passkeyAssertionBox, context: resolver.getOrNil(type: Context.self))
         }
         container.registerFactory((any PasskeyAttestationOperation).self, dependencies: []) { resolver in
             FlowPasskeyAttestationOperationFake(box: passkeyAttestationBox, context: resolver.getOrNil(type: Context.self))

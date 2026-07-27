@@ -21,19 +21,10 @@ internal final class SignInWithAppleOperationImpl: SignInWithAppleOperation, @un
     @MainActor @BroadcastedState private var state: SignInWithAppleOperationState = .created
     @MainActor internal func stateStream() -> AsyncStream<SignInWithAppleOperationState> { _state.stream() }
 
-    private let stream = OperationEventStream<Event>()
+    private let stream: OperationEventStream<Event>
     private enum TaskRefKey { case timeout, ui }
     private let taskRefs = OperationTaskRefs<TaskRefKey>()
-
-    private lazy var controllerImpl: OperationControllerImpl<AccessTokenWithUserInfo, SignInWithAppleOperationFailure> = {
-        let controller = OperationControllerImpl<AccessTokenWithUserInfo, SignInWithAppleOperationFailure>(operationID: operationID) {
-            [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let controllerImpl: OperationControllerImpl<AccessTokenWithUserInfo, SignInWithAppleOperationFailure>
 
     internal var controller: SignInWithAppleOperationController { controllerImpl }
 
@@ -47,8 +38,16 @@ internal final class SignInWithAppleOperationImpl: SignInWithAppleOperation, @un
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = OperationControllerImpl<AccessTokenWithUserInfo, SignInWithAppleOperationFailure>(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.ui = ui
         self.api = api
@@ -56,6 +55,10 @@ internal final class SignInWithAppleOperationImpl: SignInWithAppleOperation, @un
         self.context = context
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controllerImpl = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

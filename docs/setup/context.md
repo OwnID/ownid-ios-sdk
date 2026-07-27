@@ -5,6 +5,7 @@ OwnID context keeps user or session input available to related SDK calls. Use it
 Context is optional. Many widgets, flow contexts, operations, and APIs can also receive the same values directly through their own parameters, but context is often the clearer way to keep one OwnID sequence scoped to the right user or session.
 
 For how context attaches to namespace handles, see [Namespace Handles](namespace-handles.md).
+For token usage, storage, and lifecycle guidance, see [OwnID Access Token](access-token.md).
 
 ## Context Values
 
@@ -34,9 +35,9 @@ The returned handle stays bound to that context. Keep using it for the related s
 
 The child context is built only from the `withContext` block. Unset context fields do not inherit values from a previously set parent context. If a child needs both `authz` and `accountDisplayName`, set both in the same block.
 
-## Current Context
+## Top-Level Context
 
-Use `setContext` only when future calls from the current handle should reuse the same context.
+Use `OwnID.setContext` only when subsequent calls through top-level `OwnID` entry points should reuse the same context.
 
 ```swift
 OwnID.setContext { context in
@@ -44,16 +45,16 @@ OwnID.setContext { context in
 }
 ```
 
-`setContext` updates the current handle in place:
+`OwnID.setContext` updates the top-level context in place:
 
 - Fields assigned in the block replace existing values.
 - Fields not assigned keep their current values.
 - Assigning `nil` clears that field.
 
-Use `clearContext` when the user signs out, switches account, switches tenant, or the app no longer wants calls from that handle to inherit the previous context.
+Use `OwnID.clearContext` when the user signs out, switches account, switches tenant, or later top-level calls should no longer inherit the previous context.
 
 ```swift
 OwnID.clearContext()
 ```
 
-For login screens, one-off actions, and WebBridge instances, prefer `withContext` unless shared current context is intentional.
+Concrete `flows`, `headless`, and `webBridge` namespace handles expose `withContext`, not in-place `setContext` or `clearContext`. For login screens, one-off actions, and WebBridge sessions, prefer a derived handle unless shared top-level context is intentional.

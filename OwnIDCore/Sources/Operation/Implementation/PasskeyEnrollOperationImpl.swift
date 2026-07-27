@@ -25,16 +25,8 @@ internal final class PasskeyEnrollOperationImpl: PasskeyEnrollOperation, @unchec
     @MainActor @BroadcastedState private var state: PasskeyEnrollOperationState = .created
     @MainActor internal func stateStream() -> AsyncStream<PasskeyEnrollOperationState> { _state.stream() }
 
-    private let stream = OperationEventStream<Event>()
-
-    private lazy var controllerImpl: OperationControllerImpl<Void, PasskeyEnrollOperationFailure> = {
-        let controller = OperationControllerImpl<Void, PasskeyEnrollOperationFailure>(operationID: operationID) { [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let stream: OperationEventStream<Event>
+    private let controllerImpl: OperationControllerImpl<Void, PasskeyEnrollOperationFailure>
 
     internal var controller: PasskeyEnrollOperationController { controllerImpl }
 
@@ -47,14 +39,26 @@ internal final class PasskeyEnrollOperationImpl: PasskeyEnrollOperation, @unchec
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = OperationControllerImpl<Void, PasskeyEnrollOperationFailure>(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.api = api
         self.taskScope = taskScope
         self.context = context
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controllerImpl = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

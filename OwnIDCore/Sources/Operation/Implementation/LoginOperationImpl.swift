@@ -21,16 +21,8 @@ internal final class LoginOperationImpl: LoginOperation, @unchecked Sendable {
     @MainActor @BroadcastedState private var state: LoginOperationState = .created
     @MainActor internal func stateStream() -> AsyncStream<LoginOperationState> { _state.stream() }
 
-    private let stream = OperationEventStream<Event>()
-
-    private lazy var controllerImpl: OperationControllerImpl<LoginResponse, LoginOperationFailure> = {
-        let controller = OperationControllerImpl<LoginResponse, LoginOperationFailure>(operationID: operationID) { [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let stream: OperationEventStream<Event>
+    private let controllerImpl: OperationControllerImpl<LoginResponse, LoginOperationFailure>
 
     internal var controller: LoginOperationController { controllerImpl }
 
@@ -45,8 +37,16 @@ internal final class LoginOperationImpl: LoginOperation, @unchecked Sendable {
         taskScope: TaskScope,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = OperationControllerImpl<LoginResponse, LoginOperationFailure>(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.loginIDValidator = loginIDValidator
         self.loginAPI = loginAPI
@@ -55,6 +55,10 @@ internal final class LoginOperationImpl: LoginOperation, @unchecked Sendable {
         self.logger = logger
         self.taskScope = taskScope
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controllerImpl = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

@@ -11,13 +11,13 @@ After initialization, use top-level `OwnID` entry points to access SDK namespace
 
 A handle returned by `withContext` or `withProviders` keeps the context and provider bindings that were attached to it. Keep using the returned handle for the sequence it starts.
 
-After destroying or reinitializing the same SDK instance, reacquire namespace handles from `OwnID` before starting more work.
+Concrete `flows`, `headless`, and `webBridge` namespace handles expose scoped `withContext` and `withProviders` methods. They do not expose the in-place `setContext`, `clearContext`, or `setProviders` methods.
 
 ## How to Place Context and Providers
 
 Attach context as close as possible to the concrete flow, operation, API run, or WebBridge session that needs it.
 
-Register providers on the shared or top-level namespace handle unless one SDK request or session needs an override. Use `withProviders { ... }` only for that override case.
+Register shared providers through top-level `OwnID.setProviders` unless one SDK request or session needs an override. Use `withProviders { ... }` only for that override case.
 
 Build the derived handle before checking availability, running preflight, starting, or creating the SDK feature.
 
@@ -47,13 +47,13 @@ let bridge = OwnID.webBridge
     .create()
 ```
 
-## Current Instance Updates
+## Top-Level Updates
 
-Use current instance updates only when future calls from that SDK instance should inherit the change:
+Use top-level updates only when subsequent calls through top-level `OwnID` entry points should inherit the change:
 
-- `setContext { ... }` updates context on the current SDK instance.
-- `clearContext()` clears context from the current SDK instance.
-- `setProviders { ... }` updates provider bindings on the current SDK instance.
+- `OwnID.setContext { ... }` updates the top-level context.
+- `OwnID.clearContext()` clears the top-level context.
+- `OwnID.setProviders { ... }` updates top-level provider bindings.
 
 Set shared context when future calls should reuse it; clear it when that shared context should stop applying:
 
@@ -65,11 +65,11 @@ OwnID.setContext { context in
 OwnID.clearContext()
 ```
 
-`setContext` merge semantics:
+`OwnID.setContext` merge semantics:
 
 - Fields assigned in the block replace existing values.
 - Fields not assigned keep their current values.
 - Assigning `nil` clears that field.
 
-`setProviders` replaces provider bindings of the types registered in the block.
+`OwnID.setProviders` replaces provider bindings of the types registered in the block.
 Existing bindings for provider types not declared in the block remain unchanged.

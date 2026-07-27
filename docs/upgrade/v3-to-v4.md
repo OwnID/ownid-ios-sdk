@@ -8,13 +8,13 @@ This page is a migration overview for moving an iOS app from OwnID SDK version 3
 - [Dependency Name Changes](#dependency-name-changes)
 - [Update SDK Dependencies](#update-sdk-dependencies)
 - [Initialize and Configure OwnID](#initialize-and-configure-ownid)
-- [Migrate Integration to Providers](#migrate-integration-to-providers)
+- [Migrate Integration Responsibilities](#migrate-integration-responsibilities)
 - [Migrate User Journeys](#migrate-user-journeys)
 - [Update UI Customization](#update-ui-customization)
 
 ## Key Differences Between Version 3 and Version 4
 
-Version 4 keeps the main product flows, but changes the SDK boundary. The SDK now focuses on OwnID runtime, flows, widgets, WebBridge, and provider contracts. Identity-platform integrations are app-owned and are wired through providers.
+Version 4 keeps the main product flows, but changes the SDK boundary. The SDK now focuses on OwnID runtime, flows, widgets, WebBridge, and provider contracts. Identity-platform work remains app-owned and is wired through flow callbacks or optional providers.
 
 | Area | Version 3 | Version 4 |
 | --- | --- | --- |
@@ -68,20 +68,21 @@ Do not reuse a version 3 configuration file as-is; recreate it using the version
 
 See [SDK Configuration](../setup/configuration.md) for the supported initialization APIs and configuration keys.
 
-## Migrate Integration to Providers
+## Migrate Integration Responsibilities
 
-Version 4 moves identity-platform work to providers. Instead of using an OwnID Integration Component or packaged Gigya SDK, the app registers the capabilities that the OwnID experience needs for its product journeys:
+Version 3 exposed two separate app-integration boundaries: Boost could delegate login and registration to `LoginPerformer` and `RegistrationPerformer`, while the Elite provider DSL exposed app-owned capabilities to the hosted flow. Version 4 does not merge these boundaries into one universal provider replacement. Choose the version 4 flow first, then migrate only the responsibilities that flow uses.
 
-- [`sessionCreate`](../setup/providers.md#session-create) creates or restores the app session from the authenticated login ID, OwnID Access Token, and session payload.
-- [`passwordAuthenticate`](../setup/providers.md#password-authenticate) verifies the user's password through the app's authentication system or identity provider; passwords are not sent to OwnID.
-- social sign-in capabilities connect the OwnID SDK experience to app-owned social setup. [Sign in with Google](../setup/providers.md#sign-in-with-google) is registered as a provider; [Sign in with Apple](../setup/providers.md#sign-in-with-apple) is built into `OwnIDCore` by default and requires Apple capability and tenant setup.
-- source-only provider helpers, such as Gigya, register common provider sets for a specific identity platform.
+| Version 3 boundary | Version 4 migration |
+| --- | --- |
+| Boost `LoginPerformer.login(...)` | Handle the authenticated result in the Boost `onLogin` callback. Register [`sessionCreate`](../setup/providers.md#session-create) only when OwnID should turn that result into an app-defined session; otherwise create or restore the session from the callback response. |
+| Boost `RegistrationPerformer.register(...)` | Use the Boost `onNewPasskey` registration handoff and keep account creation in the app and its backend. The same widget can call `onLogin` for an existing account. There is no version 4 account provider. |
+| Elite `session { ... }` / `SessionProviderProtocol` | Migrate the responsibility to [`sessionCreate`](../setup/providers.md#session-create). This is a semantic replacement, not a callback-signature replacement: version 3 returned `OwnID.AuthResult`, while version 4 returns `Result<SessionOutput, any Error & Sendable>`. |
+| Elite `auth { password { ... } }` / `PasswordProviderProtocol` | Register [`passwordAuthenticate`](../setup/providers.md#password-authenticate) only when an OwnID-hosted surface delegates password authentication to the app. The app's ordinary native password submission remains app-owned. |
+| Elite `account { ... }` / `AccountProviderProtocol` | There is no direct version 4 provider. Keep registration app-owned through the callback or handoff of the selected version 4 flow. |
 
-Register providers after OwnID initialization and before starting functionality that needs them. Because providers are usually shared app capabilities, most apps should register them on the top-level `OwnID` namespace handle, typically during startup. For detailed provider setup, including Google, Sign in with Apple, and SAP Customer Data Cloud (Gigya), see [Providers](../setup/providers.md).
+Do not derive the version 4 provider set from every authentication function in the app. Register a provider only when the selected OwnID flow or feature calls that capability, after OwnID initialization and before that functionality starts. For exact provider parameters and result contracts, see [Providers](../setup/providers.md); for the native login and registration handoffs, see [Boost Flow](../flows/boost-flow.md).
 
-Version 3 account-registration providers and integration registration hooks do not have a direct version 4 provider equivalent. Keep account creation in the app-owned registration path for the version 4 flow or feature you choose.
-
-Providers replace the app-owned identity-platform integration hooks from version 3, not the whole user journey. If the version 3 integration owned custom UI or state-machine behavior, choose the version 4 flow or feature that matches that journey: [Boost Flow](../flows/boost-flow.md), [Elite Flow](../flows/elite-flow.md), [WebBridge](../integration/webbridge.md), or [Headless](../flows/headless.md).
+If the version 3 integration also owned custom UI or state-machine behavior, choose the version 4 flow or feature that matches that journey: [Boost Flow](../flows/boost-flow.md), [Elite Flow](../flows/elite-flow.md), [WebBridge](../integration/webbridge.md), or [Headless](../flows/headless.md).
 
 ## Migrate User Journeys
 

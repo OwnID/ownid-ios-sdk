@@ -12,6 +12,7 @@ Use this page as a compact map of the public iOS SDK documentation.
 - [Enable Passkeys](../README.md#enable-passkeys): Associated Domains, Apple App Site Association, signing, and platform prerequisites.
 - [Data Safety](setup/data-safety.md): SDK data safety notes.
 - [Namespace Handles](setup/namespace-handles.md): how context values and provider bindings attach to SDK namespace handles.
+- [OwnID Access Token](setup/access-token.md): token usage, lifecycle, storage, and security practices.
 - [Context](setup/context.md): login ID, Access Token, account display name, `withContext`, `setContext`, and `clearContext`.
 - [Providers](setup/providers.md): app-owned authentication providers, social sign-in setup, and provider bindings used by SDK flows.
 

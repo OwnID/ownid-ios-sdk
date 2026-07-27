@@ -31,17 +31,9 @@ internal final class WebBridgeOperationImpl: WebBridgeOperation, @unchecked Send
     private let logger: OwnIDLogRouter?
     private let unsatisfiedDependencies: [String]?
 
-    private let stream = OperationEventStream<Event>()
+    private let stream: OperationEventStream<Event>
     @MainActor private var shouldSuppressDetachAbort = false
-
-    internal lazy var controller: WebBridgeOperationControllerImpl = {
-        let controller = WebBridgeOperationControllerImpl(operationID: operationID) { [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    internal let controller: WebBridgeOperationControllerImpl
 
     init(
         operationType: OperationType,
@@ -55,8 +47,16 @@ internal final class WebBridgeOperationImpl: WebBridgeOperation, @unchecked Send
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = WebBridgeOperationControllerImpl(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.configuration = configuration
         self.appConfigProvider = appConfigProvider
@@ -66,6 +66,10 @@ internal final class WebBridgeOperationImpl: WebBridgeOperation, @unchecked Send
         self.taskScope = taskScope
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controller = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

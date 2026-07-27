@@ -853,6 +853,7 @@ private actor BoostLoginFlowActor {
         if passedOperations.keys.contains(.passkeyCreation) {
             nextOpTypes.removeAll { $0 != .emailVerification && $0 != .phoneNumberVerification }
         } else if passedOperations.isEmpty || passedOperations.keys.contains(.passkeyAuth),
+            context.isAuthOperationAllowed(.passkeyCreation),
             !nextOpTypes.contains(.passkeyAuth),
             !nextOpTypes.contains(.passkeyCreation)
         {

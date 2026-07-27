@@ -33,16 +33,8 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
     private let taskRefs = OperationTaskRefs<TaskRefKey>()
     private var errorStrings: ErrorStrings = .default
 
-    private let stream = OperationEventStream<Event>()
-
-    private lazy var controller: PhoneVerificationOperationControllerImpl = {
-        let controller = PhoneVerificationOperationControllerImpl(operationID: operationID) { [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let stream: OperationEventStream<Event>
+    private let controller: PhoneVerificationOperationControllerImpl
 
     internal init(
         operationType: OperationType,
@@ -56,8 +48,16 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = PhoneVerificationOperationControllerImpl(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.ui = ui
         self.api = api
@@ -67,6 +67,10 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
         self.loginIDValidator = loginIDValidator
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controller = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

@@ -120,11 +120,11 @@ Configure Elite Flow callbacks with `EliteFlowContext.events`.
 | Callback | When it runs | App handling |
 | --- | --- | --- |
 | `onNativeAction` | The hosted page asks the native app to complete an app-owned native step, often registration. | Complete the app-owned native step. For registration, store the pending `loginID` and opaque `ownIdData`; submit and save `ownIdData` exactly as returned after registration succeeds. |
-| `onFinish` | Hosted authentication completed successfully. | Complete the app authentication handoff at the app boundary. Use the optional Access Token only if your integration needs it. |
+| `onFinish` | Hosted authentication completed successfully. | Complete the app authentication handoff at the app boundary. Use the optional [OwnID Access Token](../setup/access-token.md) only if your integration needs it. |
 | `onError` | The hosted page reported an error. | Show an app-owned error or fallback state. Treat the optional error string as hosted-page context, not a native SDK failure. |
 | `onClose` | The hosted page reported a close event. | Clear transient state and return to idle UI. Native user close or controller cancellation is reported through the controller result instead. |
 
-All hosted event callbacks run on the main actor and are terminal after they return successfully. Then the SDK closes the WebView and the native controller settles successfully. If a handler fails, the hosted page receives a bridge error and the native run does not settle successfully from that event.
+All hosted event callbacks run on the main actor and are terminal after they return successfully. Then the SDK closes the WebView and the native controller settles successfully. If the SDK cannot process the hosted event, the hosted page receives a bridge error and the native run does not settle successfully from that event.
 
 ### Controller Result
 

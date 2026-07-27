@@ -37,17 +37,9 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
     private let taskRefs = OperationTaskRefs<TaskRefKey>()
     private var errorStrings: ErrorStrings = .default
 
-    private let stream = OperationEventStream<Event>()
+    private let stream: OperationEventStream<Event>
     private static let collectableLoginIDTypes: Set<LoginIDType> = [.email, .phoneNumber, .userName]
-
-    private lazy var controller: LoginIDCollectOperationControllerImpl = {
-        let controller = LoginIDCollectOperationControllerImpl(operationID: operationID) { [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let controller: LoginIDCollectOperationControllerImpl
 
     internal init(
         operationType: OperationType,
@@ -61,8 +53,16 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = LoginIDCollectOperationControllerImpl(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.loginIDConfig = loginIDConfig
         self.loginIDValidator = loginIDValidator
@@ -72,6 +72,10 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
         self.context = context
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controller = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

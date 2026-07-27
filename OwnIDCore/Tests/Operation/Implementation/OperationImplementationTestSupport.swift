@@ -353,8 +353,11 @@ final class FakeDiscoverAPI: DiscoverAPI, @unchecked Sendable {
 
 final class FakeLoginIDCollectUI: LoginIDCollectUI, @unchecked Sendable {
     let startCount = Locked(0)
+    let controller = MainActorCapturedValue<any LoginIDCollectOperationController>()
+
     @MainActor func start(controller: any LoginIDCollectOperationController) -> LoginIDCollectOperationFailure.Integration? {
         startCount.mutate { $0 += 1 }
+        self.controller.set(controller)
         return nil
     }
 }

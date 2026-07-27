@@ -22,7 +22,7 @@ Some integrations can use OwnID-provided source-only helpers instead of writing 
 
 ## How Providers Work
 
-Register providers after SDK initialization and before starting functionality that needs them. Because providers are usually shared app capabilities, such as session creation, password authentication, and social sign-in, most apps should register them on the top-level `OwnID` namespace handle, typically once during startup:
+Register providers after SDK initialization and before starting functionality that needs them. Because providers are usually shared app capabilities, such as session creation, password authentication, and social sign-in, most apps should register them through top-level `OwnID.setProviders`, typically once during startup:
 
 ```swift
 import OwnIDCore
@@ -37,19 +37,23 @@ OwnID.setProviders { registrar in
 }
 ```
 
-Use `setProviders` to update provider bindings on the current namespace handle so the SDK can use the same app-owned capabilities. Provider types declared in the block replace existing providers of the same type; other provider bindings remain unchanged.
+Use `OwnID.setProviders` to update top-level provider bindings so subsequent top-level SDK calls can use the same app-owned capabilities. Provider types declared in the block replace existing providers of the same type; other provider bindings remain unchanged.
 
-Use `withProviders` only when one specific SDK request or session needs provider overrides without changing global behavior; it is a special-case override tool, not the default setup pattern. See [Namespace Handles](namespace-handles.md) for handle behavior.
+Use `withProviders` only when one specific SDK request or session needs provider overrides without changing top-level bindings; it is a special-case override tool, not the default setup pattern. See [Namespace Handles](namespace-handles.md) for handle behavior.
+
+Concrete `flows`, `headless`, and `webBridge` namespace handles expose `withProviders`, not in-place `setProviders`.
 
 Provider bindings are materialized when the providers block returns; do not retain the registrar or provider builders outside that block.
+
+`isAvailable` describes whether a registered provider can handle the current request. Providers are available by default. Add the callback when support depends on the request parameters, and return `true` for the cases supported by the app's authentication or session backend. For example, a provider backed by an email-only endpoint checks for an email login ID.
 
 Provider failures are reported by the SDK feature that called the provider. Handle them in that result or event callback rather than treating provider errors as a separate global channel.
 
 ## Session Create
 
-Use `sessionCreate` when the OwnID experience should create or restore the app session after authentication. The provider receives the authenticated login ID, OwnID Access Token, authentication method, and session payload; use those values at your app's session boundary.
+Use `sessionCreate` when the OwnID experience should create or restore the app session after authentication. The provider receives the authenticated login ID, [OwnID Access Token](access-token.md), authentication method, and session payload; use those values at your app's session boundary.
 
-Implement `create`; add `isAvailable` only when this provider cannot handle every request. `create` returns Swift `Result<SessionOutput, any Error & Sendable>`. The SDK requires `create` during provider registration and stops execution if it is missing.
+Implement `create`; it returns Swift `Result<SessionOutput, any Error & Sendable>`. The SDK requires `create` during provider registration and stops execution if it is missing.
 
 Treat `accessToken` and `sessionPayload` as sensitive session material. OwnID invokes `create` and `isAvailable` on the main actor. The callback must return after the app-owned session work finishes; if that work uses blocking APIs, dispatch it away from the main actor inside the callback. For exact parameters and return values, see [`SessionCreate`](../../OwnIDCore/Sources/Provider/SessionCreate.swift).
 
@@ -61,7 +65,7 @@ import OwnIDCore
 OwnID.setProviders { registrar in
     registrar.sessionCreate { provider in
         provider.isAvailable { params in
-            !params.loginID.id.isEmpty
+            params.loginID.type == .email
         }
 
         provider.create { params in
@@ -81,7 +85,7 @@ OwnID.setProviders { registrar in
 
 Use `passwordAuthenticate` when the OwnID experience should support password login through the existing app authentication system. Verify passwords through your app's authentication system or identity provider; do not send passwords to OwnID.
 
-Implement `authenticate`; add `isAvailable` only when this provider cannot handle every request. `authenticate` returns Swift `Result<SessionOutput, any Error & Sendable>`. The SDK requires `authenticate` during provider registration and stops execution if it is missing.
+Implement `authenticate`; it returns Swift `Result<SessionOutput, any Error & Sendable>`. The SDK requires `authenticate` during provider registration and stops execution if it is missing.
 
 OwnID invokes `authenticate` and `isAvailable` on the main actor. The callback must return after the app-owned authentication work finishes; if that work uses blocking APIs, dispatch it away from the main actor inside the callback. For exact parameters and return values, see [`PasswordAuthenticate`](../../OwnIDCore/Sources/Provider/PasswordAuthenticate.swift).
 

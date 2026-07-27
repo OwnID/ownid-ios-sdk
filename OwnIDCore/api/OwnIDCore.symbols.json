@@ -4492,6 +4492,30 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:9OwnIDCore23BoostLoginAuthOperationO",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore23BoostLoginAuthOperationO",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore23BoostLoginAuthOperationO",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore23BoostLoginAuthOperationO",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:9OwnIDCore23LoginIDCollectOperationP",
       "target": "s:9OwnIDCore10CapabilityP"
     },
@@ -10204,6 +10228,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore16BoostFlowContextV21allowedAuthOperationsShyAA0c5LoginG9OperationOGvp",
+      "target": "s:9OwnIDCore16BoostFlowContextV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore16BoostFlowContextV5emptyACvpZ",
       "target": "s:9OwnIDCore16BoostFlowContextV"
     },
@@ -10215,6 +10244,11 @@
     {
       "kind": "memberOf",
       "source": "s:9OwnIDCore16BoostFlowContextV7BuilderV14ignoreLastUserSbSgvp",
+      "target": "s:9OwnIDCore16BoostFlowContextV7BuilderV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore16BoostFlowContextV7BuilderV21allowedAuthOperationsShyAA0c5LoginH9OperationOGvp",
       "target": "s:9OwnIDCore16BoostFlowContextV7BuilderV"
     },
     {
@@ -12346,6 +12380,21 @@
         "identifier": "s:SY8rawValuexSg03RawB0Qz_tcfc"
       },
       "target": "s:9OwnIDCore23AuthenticatorAttachmentO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore23BoostLoginAuthOperationO17emailVerificationyA2CmF",
+      "target": "s:9OwnIDCore23BoostLoginAuthOperationO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore23BoostLoginAuthOperationO23phoneNumberVerificationyA2CmF",
+      "target": "s:9OwnIDCore23BoostLoginAuthOperationO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore23BoostLoginAuthOperationO7passkeyyA2CmF",
+      "target": "s:9OwnIDCore23BoostLoginAuthOperationO"
     },
     {
       "kind": "memberOf",
@@ -49829,6 +49878,72 @@
       "declaration": [
         {
           "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "allowedAuthOperations"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sh",
+          "spelling": "Set"
+        },
+        {
+          "kind": "text",
+          "spelling": "<"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore23BoostLoginAuthOperationO",
+          "spelling": "BoostLoginAuthOperation"
+        },
+        {
+          "kind": "text",
+          "spelling": "> { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "set"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "BoostFlowContext",
+        "allowedAuthOperations"
+      ],
+      "precise": "s:9OwnIDCore16BoostFlowContextV21allowedAuthOperationsShyAA0c5LoginG9OperationOGvp",
+      "swiftExtension": {
+        "extendedModule": "OwnIDCore",
+        "typeKind": "swift.struct"
+      },
+      "title": "allowedAuthOperations"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
           "spelling": "static"
         },
         {
@@ -49946,6 +50061,73 @@
         "typeKind": "swift.struct"
       },
       "title": "ignoreLastUser"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "allowedAuthOperations"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sh",
+          "spelling": "Set"
+        },
+        {
+          "kind": "text",
+          "spelling": "<"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore23BoostLoginAuthOperationO",
+          "spelling": "BoostLoginAuthOperation"
+        },
+        {
+          "kind": "text",
+          "spelling": "> { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "set"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "BoostFlowContext",
+        "Builder",
+        "allowedAuthOperations"
+      ],
+      "precise": "s:9OwnIDCore16BoostFlowContextV7BuilderV21allowedAuthOperationsShyAA0c5LoginH9OperationOGvp",
+      "swiftExtension": {
+        "extendedModule": "OwnIDCore",
+        "typeKind": "swift.struct"
+      },
+      "title": "allowedAuthOperations"
     },
     {
       "access": "public",
@@ -80337,6 +80519,101 @@
       ],
       "precise": "s:9OwnIDCore23AuthenticatorAttachmentO8rawValueACSgSS_tcfc",
       "title": "init(rawValue:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "enum"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "BoostLoginAuthOperation"
+        }
+      ],
+      "kind": "swift.enum",
+      "path": [
+        "BoostLoginAuthOperation"
+      ],
+      "precise": "s:9OwnIDCore23BoostLoginAuthOperationO",
+      "title": "BoostLoginAuthOperation"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "emailVerification"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "BoostLoginAuthOperation",
+        "emailVerification"
+      ],
+      "precise": "s:9OwnIDCore23BoostLoginAuthOperationO17emailVerificationyA2CmF",
+      "title": "BoostLoginAuthOperation.emailVerification"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "phoneNumberVerification"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "BoostLoginAuthOperation",
+        "phoneNumberVerification"
+      ],
+      "precise": "s:9OwnIDCore23BoostLoginAuthOperationO23phoneNumberVerificationyA2CmF",
+      "title": "BoostLoginAuthOperation.phoneNumberVerification"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "passkey"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "BoostLoginAuthOperation",
+        "passkey"
+      ],
+      "precise": "s:9OwnIDCore23BoostLoginAuthOperationO7passkeyyA2CmF",
+      "title": "BoostLoginAuthOperation.passkey"
     },
     {
       "access": "public",

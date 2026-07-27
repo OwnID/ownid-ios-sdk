@@ -150,6 +150,71 @@ struct OperationInfrastructureContractTests {
         #expect(instanceRecorder.snapshot().controllerRuntimeIDs == [1])
     }
 
+    @Test func `Real operation reuses one controller across concurrent start registration UI and settlement`() async throws {
+        let registry = OperationRegistryImpl(logger: nil)
+        let ui = FakeLoginIDCollectUI()
+        let taskScope = testTaskScope()
+        defer { taskScope.shutdown() }
+        let operation = LoginIDCollectOperationImpl(
+            operationType: .loginIDCollect,
+            operationRegistry: registry,
+            loginIDConfig: FakeLoginIDConfigurationProvider(
+                configuration: LoginIDConfiguration(
+                    supportedTypes: [.email],
+                    validationRegexes: [.email: nil]
+                )
+            ),
+            loginIDValidator: FakeLoginIDValidator(),
+            ui: ui,
+            taskScope: taskScope,
+            errorStringsProvider: nil,
+            context: nil,
+            logger: nil
+        )
+        let startGate = ConcurrentStartGate()
+
+        async let firstStart = startAfterGate(operation, gate: startGate)
+        async let secondStart = startAfterGate(operation, gate: startGate)
+        let (firstAny, secondAny) = await (firstStart, secondStart)
+        let first = try #require(firstAny as? LoginIDCollectOperationControllerImpl)
+        let second = try #require(secondAny as? LoginIDCollectOperationControllerImpl)
+
+        try #require(first === second)
+
+        let presentedAny = try await withOperationTimeout("real operation controller presentation") {
+            try await ui.controller.waitUnlessCancelled()
+        }
+        let presented = try #require(presentedAny as? LoginIDCollectOperationControllerImpl)
+        let registered = await MainActor.run {
+            registry.operations[operation.operationID] as? LoginIDCollectOperationControllerImpl
+        }
+
+        try #require(registered === first)
+        try #require(presented === first)
+        #expect(ui.startCount.get() == 1)
+
+        let onCancel = try await MainActor.run {
+            guard case .active(let state) = presented.state else {
+                return try #require(nil as (@Sendable () -> Void)?, "Expected active login ID collection state")
+            }
+            return state.onCancel
+        }
+        onCancel()
+
+        let settlement = CapturedValue<OperationResult<LoginID, LoginIDCollectOperationFailure>>()
+        let settlementTask = Task {
+            await settlement.set(await first.whenSettled())
+        }
+        defer { settlementTask.cancel() }
+        let result = try await withOperationTimeout("real operation controller settlement") {
+            try await settlement.waitUnlessCancelled()
+        }
+        let reason = try requireOperationCancellation(result)
+
+        #expect(reason.description == Reason.userClose().description)
+        #expect(await MainActor.run { registry.operations[operation.operationID] == nil })
+    }
+
     @Test func `Scoped entries create operation local scope while plain entries use bound scope`() throws {
         let plainRecorder = OperationEntryRecorder()
         let scopedRecorder = OperationEntryRecorder()
@@ -402,6 +467,27 @@ private actor AwaiterGate {
             self.continuation = continuation
         }
     }
+}
+
+private actor ConcurrentStartGate {
+    private var firstWaiter: CheckedContinuation<Void, Never>?
+
+    func wait() async {
+        if let firstWaiter {
+            self.firstWaiter = nil
+            firstWaiter.resume()
+            return
+        }
+        await withCheckedContinuation { firstWaiter = $0 }
+    }
+}
+
+private func startAfterGate(
+    _ operation: LoginIDCollectOperationImpl,
+    gate: ConcurrentStartGate
+) async -> any OperationController<LoginID, LoginIDCollectOperationFailure> {
+    await gate.wait()
+    return operation.start()
 }
 
 private struct TestOperationParams: CapabilityParams, Sendable {

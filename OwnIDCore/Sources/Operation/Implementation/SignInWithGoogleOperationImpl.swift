@@ -21,19 +21,10 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
     @MainActor @BroadcastedState private var state: SignInWithGoogleOperationState = .created
     @MainActor internal func stateStream() -> AsyncStream<SignInWithGoogleOperationState> { _state.stream() }
 
-    private let stream = OperationEventStream<Event>()
+    private let stream: OperationEventStream<Event>
     private enum TaskRefKey { case timeout, ui }
     private let taskRefs = OperationTaskRefs<TaskRefKey>()
-
-    private lazy var controllerImpl: OperationControllerImpl<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure> = {
-        let controller = OperationControllerImpl<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>(operationID: operationID) {
-            [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let controllerImpl: OperationControllerImpl<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>
 
     internal var controller: SignInWithGoogleOperationController { controllerImpl }
 
@@ -47,8 +38,16 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = OperationControllerImpl<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.ui = ui
         self.api = api
@@ -56,6 +55,10 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
         self.context = context
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controllerImpl = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

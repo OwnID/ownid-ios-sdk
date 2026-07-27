@@ -3167,29 +3167,10 @@ components:
                 documentData:
                   type: object
                   additionalProperties: true
-                documentFile:
-                  $ref: '#/components/schemas/FilePayload'
-                selfieImage:
-                  $ref: '#/components/schemas/FilePayload'
               required:
                 - documentData
-                - documentFile
-                - selfieImage
       required:
         - status
-    FilePayload:
-      type: object
-      description: Represents a file payload with its contents and MIME type.
-      properties:
-        fileContents:
-          type: string
-          description: The raw contents of a file.
-        contentType:
-          type: string
-          description: The MIME type of the file.
-      required:
-        - fileContents
-        - contentType
     AppAuthConfig:
       type: object
       required:

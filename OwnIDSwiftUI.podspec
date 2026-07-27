@@ -1,7 +1,7 @@
 # OwnIDSwiftUI.podspec
 Pod::Spec.new do |spec|
   spec.name             = "OwnIDSwiftUI"
-  spec.version          = "4.0.0"
+  spec.version          = "4.1.0"
   spec.summary          = "OwnID iOS SwiftUI SDK"
   spec.description      = "OwnID SwiftUI provides polished SwiftUI components for integrating OwnID user journeys. It includes UI for login ID collection and verification, plus reusable login and create-passkey widgets that work with OwnID Core."
   spec.homepage         = "https://ownid.com"

@@ -33,16 +33,8 @@ internal final class EmailVerificationOperationImpl: EmailVerificationOperation,
     private let taskRefs = OperationTaskRefs<TaskRefKey>()
     private var errorStrings: ErrorStrings = .default
 
-    private let stream = OperationEventStream<Event>()
-
-    private lazy var controller: EmailVerificationOperationControllerImpl = {
-        let controller = EmailVerificationOperationControllerImpl(operationID: operationID) { [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let stream: OperationEventStream<Event>
+    private let controller: EmailVerificationOperationControllerImpl
 
     internal init(
         operationType: OperationType,
@@ -56,8 +48,16 @@ internal final class EmailVerificationOperationImpl: EmailVerificationOperation,
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = EmailVerificationOperationControllerImpl(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.ui = ui
         self.api = api
@@ -67,6 +67,10 @@ internal final class EmailVerificationOperationImpl: EmailVerificationOperation,
         self.loginIDValidator = loginIDValidator
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controller = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

@@ -28,19 +28,10 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
     @MainActor @BroadcastedState private var state: PasskeyAttestationOperationState = .created
     @MainActor internal func stateStream() -> AsyncStream<PasskeyAttestationOperationState> { _state.stream() }
 
-    private let stream = OperationEventStream<Event>()
+    private let stream: OperationEventStream<Event>
     private enum TaskRefKey { case timeout, ui }
     private let taskRefs = OperationTaskRefs<TaskRefKey>()
-
-    private lazy var controllerImpl: OperationControllerImpl<AttestationResponse, PasskeyAttestationOperationFailure> = {
-        let controller = OperationControllerImpl<AttestationResponse, PasskeyAttestationOperationFailure>(operationID: operationID) {
-            [weak self] reason in
-            guard let self else { return }
-            taskScope.spawn { await self.stream.yield(.abort(reason)) }
-        }
-        controller._attachOwner(self)
-        return controller
-    }()
+    private let controllerImpl: OperationControllerImpl<AttestationResponse, PasskeyAttestationOperationFailure>
 
     internal var controller: PasskeyAttestationOperationController { controllerImpl }
 
@@ -55,8 +46,16 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
         logger: OwnIDLogRouter?,
         unsatisfiedDependencies: [String]? = nil
     ) {
+        let operationID = operationType.createOperationID()
+        let stream = OperationEventStream<Event>()
+        let controller = OperationControllerImpl<AttestationResponse, PasskeyAttestationOperationFailure>(operationID: operationID) {
+            [weak stream, weak taskScope] reason in
+            guard let stream, let taskScope else { return }
+            taskScope.spawn { await stream.yield(.abort(reason)) }
+        }
+
         self.operationType = operationType
-        self.operationID = operationType.createOperationID()
+        self.operationID = operationID
         self.operationRegistry = operationRegistry
         self.ui = ui
         self.api = api
@@ -65,6 +64,10 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
         self.loginIDValidator = loginIDValidator
         self.logger = logger
         self.unsatisfiedDependencies = unsatisfiedDependencies
+        self.stream = stream
+        self.controllerImpl = controller
+
+        controller._attachOwner(self)
 
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()

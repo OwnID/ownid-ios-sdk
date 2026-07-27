@@ -3,7 +3,7 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: FLOW-010, FLOW-020, FLOW-030, FLOW-040, FLOW-120, FLOW-130, FLOW-140, FLOW-150, FLOW-170, FLOW-180
+// Covers: FLOW-010, FLOW-020, FLOW-030, FLOW-040, FLOW-120, FLOW-130, FLOW-140, FLOW-150, FLOW-170, FLOW-180, FLOW-200
 struct BoostFlowContractTests {
 
     @Test func `Boost context and result descriptions redact sensitive values`() {
@@ -17,6 +17,7 @@ struct BoostFlowContractTests {
         context.ownIdData = secret
         context.sessionPayload = secret
         context.ignoreLastUser = true
+        context.allowedAuthOperations = [.emailVerification]
         context.source = .widgetButton
         context.traceParent = traceParent
         context.authMethod = .otp
@@ -44,6 +45,8 @@ struct BoostFlowContractTests {
             "ownIdData=12345678..[4]...CDEFGHIJ",
             "sessionPayload=12345678..[4]...CDEFGHIJ",
             "ignoreLastUser=true",
+            "allowedAuthOperations=",
+            "BoostLoginAuthOperation.emailVerification",
             "source=widgetButton",
             "traceParent=\(traceParent)",
             "authMethod=otp",
@@ -62,6 +65,10 @@ struct BoostFlowContractTests {
             contains: expectedContextFragments,
             excludes: [secret, authChannel]
         )
+
+        var contextWithEmptyAllowList = BoostFlowContext()
+        contextWithEmptyAllowList.allowedAuthOperations = []
+        #expect(!contextWithEmptyAllowList.description.contains("allowedAuthOperations"))
 
         let loginResponse = BoostFlowLoginResponse(
             loginID: LoginID(id: "person@example.test", type: .email),
@@ -812,6 +819,165 @@ struct BoostFlowContractTests {
         #expect(phoneHarness.emailVerification.startParams.isEmpty)
     }
 
+    @Test(
+        arguments: [
+            AllowedAuthDefaultCase(name: "allow-list absent", context: .empty),
+            AllowedAuthDefaultCase(
+                name: "allow-list explicitly empty",
+                context: BoostFlowContext { $0.allowedAuthOperations = [] }
+            ),
+        ]
+    )
+    func `Boost login absent or empty authentication allow-list preserves default selection`(
+        _ testCase: AllowedAuthDefaultCase
+    ) async throws {
+        let loginID = FlowFixtures.loginID("default-auth-selection", type: .userName)
+        let harness = FlowTestHarness(
+            loginResult: .success(
+                authRequiredLoginResponse(
+                    operations: [
+                        authRequirement(.emailVerification, channelID: "default-email-channel"),
+                        authRequirement(.phoneNumberVerification, channelID: "default-phone-channel"),
+                        authRequirement(.passkeyAuth),
+                    ]
+                )
+            ),
+            additionalLoginResults: [.success(FlowFixtures.loginSuccess(id: loginID.id, type: .userName))],
+            loginIDCollectResult: .success(loginID)
+        )
+        let flow = makeBoostLoginFlow(harness: harness)
+
+        _ = try await requireSuccess(flow.start(testCase.context).whenSettled())
+
+        #expect(harness.emailVerification.startParams.count == 1, "\(testCase.name)")
+        #expect(harness.phoneVerification.startParams.isEmpty, "\(testCase.name)")
+        #expect(harness.passkeyAssertion.startParams.isEmpty, "\(testCase.name)")
+        #expect(harness.passkeyAttestation.startParams.isEmpty, "\(testCase.name)")
+    }
+
+    @Test func `Boost login authentication allow-list starts only permitted verification`() async throws {
+        let loginID = FlowFixtures.loginID("verification-allow-list", type: .userName)
+        let emailHarness = FlowTestHarness(
+            loginResult: .success(
+                authRequiredLoginResponse(
+                    operations: [
+                        authRequirement(.phoneNumberVerification, channelID: "excluded-phone-channel"),
+                        authRequirement(.passkeyAuth),
+                        authRequirement(.emailVerification, channelID: "allowed-email-channel"),
+                    ]
+                )
+            ),
+            additionalLoginResults: [.success(FlowFixtures.loginSuccess(id: loginID.id, type: .userName))],
+            loginIDCollectResult: .success(loginID)
+        )
+        let emailFlow = makeBoostLoginFlow(harness: emailHarness)
+        let emailContext = BoostFlowContext { $0.allowedAuthOperations = [.emailVerification] }
+
+        _ = try await requireSuccess(emailFlow.start(emailContext).whenSettled())
+
+        let emailParams = try requireRecordedValue(
+            emailHarness.emailVerification.startParams,
+            "Expected allowed email verification start params"
+        )
+        #expect(emailParams.loginIDHintID == "allowed-email-channel")
+        #expect(emailHarness.phoneVerification.startParams.isEmpty)
+        #expect(emailHarness.passkeyAssertion.startParams.isEmpty)
+        #expect(emailHarness.passkeyAttestation.startParams.isEmpty)
+
+        let phoneHarness = FlowTestHarness(
+            loginResult: .success(
+                authRequiredLoginResponse(
+                    operations: [
+                        authRequirement(.emailVerification, channelID: "excluded-email-channel"),
+                        authRequirement(.passkeyAuth),
+                        authRequirement(.phoneNumberVerification, channelID: "allowed-phone-channel"),
+                    ]
+                )
+            ),
+            additionalLoginResults: [.success(FlowFixtures.loginSuccess(id: loginID.id, type: .userName))],
+            loginIDCollectResult: .success(loginID)
+        )
+        let phoneFlow = makeBoostLoginFlow(harness: phoneHarness)
+        let phoneContext = BoostFlowContext { $0.allowedAuthOperations = [.phoneNumberVerification] }
+
+        _ = try await requireSuccess(phoneFlow.start(phoneContext).whenSettled())
+
+        let phoneParams = try requireRecordedValue(
+            phoneHarness.phoneVerification.startParams,
+            "Expected allowed phone verification start params"
+        )
+        #expect(phoneParams.loginIDHintID == "allowed-phone-channel")
+        #expect(phoneHarness.emailVerification.startParams.isEmpty)
+        #expect(phoneHarness.passkeyAssertion.startParams.isEmpty)
+        #expect(phoneHarness.passkeyAttestation.startParams.isEmpty)
+    }
+
+    @Test func `Boost login passkey allow-list permits authentication and creation fallback`() async throws {
+        let loginID = FlowFixtures.loginID("passkey-allow-list", type: .userName)
+        let authHarness = FlowTestHarness(
+            loginResult: .success(
+                authRequiredLoginResponse(
+                    operations: [
+                        authRequirement(.passkeyAuth),
+                        authRequirement(.emailVerification, channelID: "excluded-email-channel"),
+                    ]
+                )
+            ),
+            additionalLoginResults: [.success(FlowFixtures.loginSuccess(id: loginID.id, type: .userName))],
+            loginIDCollectResult: .success(loginID),
+            passkeyAssertionResult: .success(FlowFixtures.accessToken(id: loginID.id, type: .userName))
+        )
+        let authFlow = makeBoostLoginFlow(harness: authHarness)
+        let context = BoostFlowContext { $0.allowedAuthOperations = [.passkey] }
+
+        _ = try await requireSuccess(authFlow.start(context).whenSettled())
+
+        #expect(authHarness.passkeyAssertion.startParams.count == 1)
+        #expect(authHarness.passkeyAttestation.startParams.isEmpty)
+        #expect(authHarness.emailVerification.startParams.isEmpty)
+        #expect(authHarness.phoneVerification.startParams.isEmpty)
+
+        let creationHarness = FlowTestHarness(
+            loginResult: .success(
+                authRequiredLoginResponse(
+                    operations: [authRequirement(.emailVerification, channelID: "excluded-fallback-email-channel")]
+                )
+            ),
+            loginIDCollectResult: .success(loginID)
+        )
+        let creationFlow = makeBoostLoginFlow(harness: creationHarness)
+
+        let failure = try await requireFailure(creationFlow.start(context).whenSettled())
+
+        try requireLoginInsufficientAuthFailure(failure, expectedMessageFragment: nil)
+        #expect(creationHarness.passkeyAttestation.startParams.count == 1)
+        #expect(creationHarness.passkeyAssertion.startParams.isEmpty)
+        #expect(creationHarness.emailVerification.startParams.isEmpty)
+        #expect(creationHarness.phoneVerification.startParams.isEmpty)
+    }
+
+    @Test func `Boost login unmatched authentication allow-list fails without starting excluded operations`() async throws {
+        let loginID = FlowFixtures.loginID("unmatched-allow-list", type: .userName)
+        let harness = FlowTestHarness(
+            loginResult: .success(
+                authRequiredLoginResponse(
+                    operations: [authRequirement(.phoneNumberVerification, channelID: "excluded-phone-channel")]
+                )
+            ),
+            loginIDCollectResult: .success(loginID)
+        )
+        let flow = makeBoostLoginFlow(harness: harness)
+        let context = BoostFlowContext { $0.allowedAuthOperations = [.emailVerification] }
+
+        let failure = try await requireFailure(flow.start(context).whenSettled())
+
+        try requireLoginInsufficientAuthFailure(failure, expectedMessageFragment: nil)
+        #expect(harness.emailVerification.startParams.isEmpty)
+        #expect(harness.phoneVerification.startParams.isEmpty)
+        #expect(harness.passkeyAssertion.startParams.isEmpty)
+        #expect(harness.passkeyAttestation.startParams.isEmpty)
+    }
+
     @Test func `Boost login auth-required forwards selected channel when login ID is username`() async throws {
         let username = FlowFixtures.loginID("account-handle", type: .userName)
         let emailHarness = FlowTestHarness(
@@ -1022,8 +1188,34 @@ struct SessionProviderCase: Sendable, CustomTestStringConvertible {
     }
 }
 
+struct AllowedAuthDefaultCase: Sendable, CustomTestStringConvertible {
+    let name: String
+    let context: BoostFlowContext
+
+    var testDescription: String { name }
+}
+
 private enum SessionCreateProviderFailure: Error, Sendable, Equatable {
     case rejected
+}
+
+private func authRequiredLoginResponse(operations: [OperationRequirement]) -> LoginResponse {
+    .authRequired(
+        LoginResponse.AuthRequired(
+            authRequirements: AuthRequirements(targetScore: 1, operations: operations)
+        )
+    )
+}
+
+private func authRequirement(
+    _ type: OperationType,
+    channelID: String? = nil
+) -> OperationRequirement {
+    OperationRequirement(
+        score: 1,
+        type: type,
+        channels: channelID.map { [OperationChannel(channel: "masked", id: $0)] }
+    )
 }
 
 private func expectDescription(
@@ -1072,9 +1264,10 @@ private func makeBoostCreatePasskeyFlow(
     BoostCreatePasskeyFlowImpl(
         userRepository: userRepository,
         ownIDOperation: harness.operation,
-        boostLoginFlow: boostLoginFlow ?? FlowBoostLoginFlowFake(
-            result: .failure(.unexpected(message: "child login should not start"))
-        ),
+        boostLoginFlow: boostLoginFlow
+            ?? FlowBoostLoginFlowFake(
+                result: .failure(.unexpected(message: "child login should not start"))
+            ),
         userJourney: nil,
         sessionCreate: sessionCreate,
         coder: harness.coder,
@@ -1143,12 +1336,17 @@ private func requireLoginIDCollectFailure(
 
 private func requireLoginInsufficientAuthFailure(
     _ failure: BoostLoginFlowFailure,
+    expectedMessageFragment: String? = "No operation available",
     sourceLocation: SourceLocation = SourceLocation(fileID: #fileID, filePath: #filePath, line: #line, column: #column)
 ) throws {
     switch failure {
     case .insufficientAuth(let errorCode, let message):
         #expect(errorCode == .unknown, sourceLocation: sourceLocation)
-        #expect(message.contains("No operation available"), sourceLocation: sourceLocation)
+        if let expectedMessageFragment {
+            #expect(message.contains(expectedMessageFragment), sourceLocation: sourceLocation)
+        } else {
+            #expect(!message.isEmpty, sourceLocation: sourceLocation)
+        }
     default:
         _ = try #require(nil as Void?, "Expected insufficient auth, got \(failure)", sourceLocation: sourceLocation)
     }

@@ -153,6 +153,12 @@ The full documentation map is in [Documentation](docs/README.md).
 
 These apps are examples. Use public SDK source, published products, and documentation as the integration contract.
 
+## Version Support
+
+- **v4:** Current version, recommended for all integrations.
+- **v3:** Maintenance mode. Receives only critical bug fixes and security updates; no new features.
+- **v2:** Obsolete, deprecated, and no longer supported, including security updates.
+
 ## Data Safety
 
 See [Data Safety](docs/setup/data-safety.md) for SDK data handling notes.
