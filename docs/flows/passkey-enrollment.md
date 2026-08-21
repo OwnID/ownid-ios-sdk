@@ -75,7 +75,7 @@ final class AccountViewModel: ObservableObject {
 
 ## Prerequisites
 
-- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Enable Passkeys](../../README.md#enable-passkeys).
+- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Passkey Setup](../setup/passkeys.md).
 - Start enrollment only after your app has a valid [OwnID Access Token](../setup/access-token.md) for the current user. Pass it in [`PasskeyEnrollFlowContext`](../../OwnIDCore/Sources/Flow/Passkey/PasskeyEnrollFlowContext.swift), or provide it through the current OwnID context with `withContext` or `setContext`; see [Context](../setup/context.md).
 - Keep the current app session and account/security UI available for unavailable, canceled, or failed enrollment attempts.
 

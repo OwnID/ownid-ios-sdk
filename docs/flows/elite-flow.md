@@ -84,7 +84,7 @@ final class EliteFlowCoordinator {
 
 ## Prerequisites
 
-- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Enable Passkeys](../../README.md#enable-passkeys).
+- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Passkey Setup](../setup/passkeys.md).
 - Register only the optional providers that match the hosted experience in your integration, such as [`sessionCreate`](../setup/providers.md#session-create), [`passwordAuthenticate`](../setup/providers.md#password-authenticate), and social sign-in providers like [Sign in with Google](../setup/providers.md#sign-in-with-google). [Sign in with Apple](../setup/providers.md#sign-in-with-apple) is built into `OwnIDCore` by default; complete the iOS capability and OwnID Console setup when the hosted experience should offer Apple sign-in.
 - Keep the app's existing authentication, registration, and session paths available for native handoff, hosted errors, and user close.
 

@@ -141,7 +141,7 @@ struct RegisterView: View {
 
 ## Prerequisites
 
-- Add the SwiftUI SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Enable Passkeys](../../README.md#enable-passkeys).
+- Add the SwiftUI SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Passkey Setup](../setup/passkeys.md).
 - Register [`sessionCreate`](../setup/providers.md#session-create) if Boost login should return an app-defined session as `response.session`. Without an available provider, `onLogin` still receives `accessToken` and `sessionPayload`.
 - Keep the existing password login available next to the OwnID widget. Keep manual registration as the fallback when no matching `ownIdData` is available.
 

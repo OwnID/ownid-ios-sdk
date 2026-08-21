@@ -86,46 +86,12 @@ end
 
 ## Enable Passkeys
 
-OwnID uses Apple's [AuthenticationServices](https://developer.apple.com/documentation/authenticationservices) framework for passkey creation and authentication. Platform passkeys work on iOS 16 and higher.
-
-### Associated Domains
-
-Passkeys require your app and relying party domain to be associated with Apple's `webcredentials` service.
-
-Use the same relying party domain that OwnID uses for passkey requests.
-
-In Xcode, add the Associated Domains capability to the app target, then add:
-
-```text
-webcredentials:<relying-party-domain>
-```
-
-Host an Apple App Site Association file at:
-
-```text
-https://<relying-party-domain>/.well-known/apple-app-site-association
-```
-
-The file must be publicly available over HTTPS, return `HTTP 200`, use a JSON content type, avoid redirects, stay under 128 KB, and have no `.json` extension.
-
-```json
-{
-  "webcredentials": {
-    "apps": [
-      "<APP_ID_PREFIX>.<BUNDLE_ID>"
-    ]
-  }
-}
-```
-
-Add each app target that should use passkeys as `<APP_ID_PREFIX>.<BUNDLE_ID>`. This value must match the signed app's `application-identifier` entitlement. The App ID prefix is usually the Apple Team ID; if it differs, use the prefix from the signed app or provisioning profile.
-
-See Apple's [Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains) and [Associated Domains Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.associated-domains) for the platform requirements and validation behavior.
+Passkey setup is required baseline configuration for OwnID integrations. See the complete [Passkey Setup](docs/setup/passkeys.md) guide for AuthenticationServices availability, Associated Domains, AASA hosting, verification, and cache timing.
 
 ## Start Here
 
 1. [Install the SDK](#install) for your flow or feature.
-2. [Enable Passkeys](#enable-passkeys) as baseline SDK setup.
+2. [Passkey Setup](docs/setup/passkeys.md) as baseline SDK setup.
 3. [Configure OwnID](docs/setup/configuration.md) before using the SDK.
 4. [Register providers](docs/setup/providers.md) required by the OwnID functionality and identity systems your app uses.
    Implement app-specific providers in your app; copy source-only helpers from [`Providers/`](Providers/) only when the Providers guide calls for them.

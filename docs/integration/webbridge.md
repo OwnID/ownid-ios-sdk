@@ -51,7 +51,7 @@ final class LoginWebViewController: UIViewController {
 
 ## Prerequisites
 
-- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Enable Passkeys](../../README.md#enable-passkeys).
+- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Passkey Setup](../setup/passkeys.md).
 - Use an app-owned `WKWebView` that loads a trusted app/tenant page with the OwnID Web SDK.
 - Provide at least one valid trusted origin through server configuration, explicit `allowedOriginRules`, or both. If the first bridged page must work before server configuration is available, pass the required origins explicitly.
 
@@ -63,7 +63,7 @@ WebBridge attaches native SDK capabilities to an app-owned web session. The brid
 | --- | --- | --- |
 | Web view session | Always. | Use an app-owned `WKWebView`, create one bridge per session, retain it while active, and attach before loading the trusted page. See [Attach and Lifecycle](#attach-and-lifecycle). |
 | Allowed origins | Always. | Provide trusted origins through server configuration, explicit `allowedOriginRules`, or both. See [Allowed Origins](#allowed-origins). |
-| Passkeys | The hosted page uses passkey web actions. | Complete [platform passkey setup](../../README.md#enable-passkeys). |
+| Passkeys | The hosted page uses passkey web actions. | Complete [platform passkey setup](../setup/passkeys.md). |
 | Stored user | The hosted page uses stored-user web actions. | Built-in SDK capability; no app setup required. |
 | Context | The hosted page requests native context. | Set context before bridge creation. See [Context](../setup/context.md) and [Namespace Handles](../setup/namespace-handles.md). |
 | Apple sign-in | The hosted page uses Apple sign-in. | Set up [Sign in with Apple](../setup/providers.md#sign-in-with-apple) for the app target and OwnID Console. |

@@ -137,6 +137,8 @@ OwnID.logger { logger in
 }
 ```
 
+The custom sink may be called from any thread. Keep it thread-safe, and do not synchronously call OwnID lifecycle or configuration APIs from it.
+
 Use `.debug` or `.verbose` only for local development. Keep production logging at `.warn`, `.error`, or `.off` unless your support process requires more detail.
 
 > [!WARNING]

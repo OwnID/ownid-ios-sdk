@@ -28,7 +28,7 @@ Use Headless when the app needs custom screens, navigation, analytics, loading s
 
 ## Prerequisites
 
-- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Enable Passkeys](../../README.md#enable-passkeys).
+- Add the Core SDK as described in [Install](../../README.md#install), initialize OwnID in [Configuration](../setup/configuration.md), and complete platform passkey setup in [Passkey Setup](../setup/passkeys.md).
 - Decide which headless steps the app will support and build the matching app-owned UI: login ID collection, loading and error states, passkey authentication, email or phone verification, fallback, and optional passkey enrollment.
 - Keep the app's existing authentication and session paths available: scope each attempt with [Context](../setup/context.md) and [Namespace Handles](../setup/namespace-handles.md), complete app login from [`LoginResponse.success`](../../OwnIDCore/Sources/Models/LoginID.swift), and route unsupported, canceled, or failed steps to fallback.
 

@@ -196,7 +196,7 @@ Custom content owns rendering, focus behavior, visible busy indicators, error di
 Supported overrides:
 
 - `withLoginIDCollectContent` replaces login ID collection content. It should update through `onLoginIDChange`, submit through `onContinue`, preserve keyboard and autofill hints from the collectable login ID types, use `strings.error` for login ID validation errors, and use `errorTextProvider` or the current `UIError.localizedMessage` for other display errors.
-- `withEmailVerificationContent` / `withPhoneVerificationContent` replace verification content. They should use the UI state's `challenge` for OTP length, resend policy, and the delivery destination shown to the user (`challenge.channel.channel`), normalize OTP input to digits, submit through `onCodeEntered` only when the required length is entered and the operation is not busy, clear input on visible errors, and invoke resend, cancel, and "not you" only from matching user actions.
+- `withEmailVerificationContent` / `withPhoneVerificationContent` replace verification content. They should use the UI state's `challenge` for OTP length, resend policy, and the delivery destination shown to the user (`challenge.channel.channel`), normalize OTP input to digits, submit through `onCodeEntered` only when the required length is entered and the operation is not busy, reset challenge-scoped input when `challenge.challengeID` changes, clear input on visible errors, and invoke resend, cancel, and "not you" only from matching user actions.
 
 ```swift
 OwnIDOperationView(operationUIController: operationUIController)

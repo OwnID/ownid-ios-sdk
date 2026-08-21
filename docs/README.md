@@ -9,7 +9,7 @@ Use this page as a compact map of the public iOS SDK documentation.
 ## Setup
 
 - [Configuration](setup/configuration.md): initialization sources, environment, region, language, and logging.
-- [Enable Passkeys](../README.md#enable-passkeys): Associated Domains, Apple App Site Association, signing, and platform prerequisites.
+- [Passkey Setup](setup/passkeys.md): Associated Domains, Apple App Site Association, signing, and platform prerequisites.
 - [Data Safety](setup/data-safety.md): SDK data safety notes.
 - [Namespace Handles](setup/namespace-handles.md): how context values and provider bindings attach to SDK namespace handles.
 - [OwnID Access Token](setup/access-token.md): token usage, lifecycle, storage, and security practices.
