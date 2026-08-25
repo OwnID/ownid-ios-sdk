@@ -55,8 +55,12 @@ extension OwnID.UISDK.IdCollect {
             
             storeCancellable = store.$value
                 .map { $0.isLoading }
+                .removeDuplicates()
                 .sink { [weak self] isLoading in
-                    self?.isLoading = isLoading
+                    self?.updateOnMain {
+                        $0.isLoading = isLoading
+                        $0.buttonState = isLoading ? .disabled : .enabled
+                    }
                 }
             
             store.send(.viewLoaded)
@@ -65,14 +69,24 @@ extension OwnID.UISDK.IdCollect {
         }
         
         func updateLoginIdPublisher(_ loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
-            loginIdPublisher.assign(to: \.loginId, on: self).store(in: &bag)
+            loginIdPublisher
+                .sink { [weak self] loginId in
+                    self?.updateOnMain { $0.loginId = loginId }
+                }
+                .store(in: &bag)
         }
         
         func updatePhoneDialCodePublisher(_ phoneDialCodePublisher: OwnID.CoreSDK.LoginIdPublisher) {
-            phoneDialCodePublisher.assign(to: \.phoneDialCode, on: self).store(in: &bag)
+            phoneDialCodePublisher
+                .sink { [weak self] phoneDialCode in
+                    self?.updateOnMain { $0.phoneDialCode = phoneDialCode }
+                }
+                .store(in: &bag)
         }
         
         func postLoginId() {
+            guard !isLoading, !store.value.isLoading else { return }
+
             let value: String
             
             switch loginIdSettings.type {
@@ -90,6 +104,17 @@ extension OwnID.UISDK.IdCollect {
             }
 
             store.send(.loginIdEntered(loginId: loginIdObject.value))
+        }
+
+        private func updateOnMain(_ update: @escaping (ViewModel) -> Void) {
+            if Thread.isMainThread {
+                update(self)
+            } else {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    update(self)
+                }
+            }
         }
     }
 }

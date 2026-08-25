@@ -23,24 +23,77 @@ The [OwnID](https://www.ownid.com/) iOS SDK is a client library offering a secur
 
    - **[OwnID Gigya](Docs/sdk-gigya.md)** - Expands Core SDK functionality by offering a prebuilt Gigya Integration, supporting Email/Password-based [Gigya Authentication](https://github.com/SAP/gigya-swift-sdk). It also includes the [OwnID WebView Bridge extension](Docs/sdk-gigya.md#add-ownid-webview-bridge), enabling native Passkeys functionality for Gigya Web Screen-Sets with OwnID Web SDK.
 
-> [!IMPORTANT]
-> When installing with CocoaPods, reference the SDK release Git tag in your Podfile. The example below uses `3.10.0`; replace it with the release tag you want to install, such as `3.10.0` or newer.
->
-> ```ruby
-> pod 'ownid-core-ios-sdk',
->     :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
->     :tag => '3.10.0'
->
-> pod 'ownid-gigya-ios-sdk',
->     :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
->     :tag => '3.10.0'
-> ```
+## Install
+
+Swift Package Manager is the recommended installation method for OwnID iOS SDK v3.
+
+Version 3 is distributed from a single repository tag, while its SDK components keep independent versions. Repository tag `3.11.0` contains OwnID Core `3.11.0` and OwnID Gigya `3.10.0`. Use the repository tag from the GitHub release when declaring the package; do not substitute an individual component's runtime version.
+
+### Swift Package Manager
+
+Add the package using the exact release version required by your app:
+
+```swift
+dependencies: [
+    .package(
+        url: "https://github.com/OwnID/ownid-ios-sdk.git",
+        exact: "<version>"
+    )
+]
+```
+
+Then add the product your app target uses.
+
+Core SDK:
+
+```swift
+.product(name: "OwnIDCoreSDK", package: "OwnID")
+```
+
+Gigya SDK:
+
+```swift
+.product(name: "OwnIDGigyaSDK", package: "OwnID")
+```
+
+`OwnIDGigyaSDK` depends on `OwnIDCoreSDK`. Add both products when your app imports both modules directly.
+
+### CocoaPods Compatibility Fallback
+
+<details>
+<summary>CocoaPods</summary>
+
+OwnID iOS SDK v3 versions through `3.10.0` may remain available from previously published CocoaPods specs. Starting with repository release `3.11.0`, new v3 podspec versions are not published to CocoaPods Trunk. For CocoaPods-only apps, use a pinned public Git tag as a compatibility fallback.
+
+```ruby
+target "YourApp" do
+  pod "ownid-core-ios-sdk",
+    :git => "https://github.com/OwnID/ownid-ios-sdk.git",
+    :tag => "<version>"
+end
+```
+
+If your app uses the Gigya SDK, declare both pods from the same repository tag so Gigya's exact Core dependency resolves from that release. For repository tag `3.11.0`, this installs OwnID Gigya `3.10.0` together with OwnID Core `3.11.0`:
+
+```ruby
+target "YourApp" do
+  pod "ownid-core-ios-sdk",
+    :git => "https://github.com/OwnID/ownid-ios-sdk.git",
+    :tag => "<version>"
+
+  pod "ownid-gigya-ios-sdk",
+    :git => "https://github.com/OwnID/ownid-ios-sdk.git",
+    :tag => "<version>"
+end
+```
+
+</details>
    
-### Additional Components:
+## Additional Components
 
 - **[OwnID WebView Bridge](Docs/sdk-webbridge-doc.md)** - A Core SDK component that introduces native Passkeys functionality to the OwnID Web SDK when running within a webview. Also, it suports the integration in Capacitor app.
 
-### Advanced Configuration
+## Advanced Configuration
 
 Explore advanced configuration options in OwnID Core iOS SDK by referring to the [Advanced Configuration](Docs/sdk-advanced-configuration.md) documentation.
 

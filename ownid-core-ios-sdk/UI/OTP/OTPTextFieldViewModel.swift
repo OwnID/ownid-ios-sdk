@@ -69,6 +69,15 @@ extension OwnID.UISDK.OneTimePassword {
         }
         
         func processTextChange(for index: Int, binding: Binding<String>) {
+            guard !store.value.isLoading else {
+                binding.wrappedValue = storage[index].isEmpty
+                    ? Constants.zeroWidthSpaceCharacter
+                    : storage[index]
+                nextUpdateAction = nil
+                codeWasPasted = false
+                return
+            }
+
             store.send(.codeEnteringStarted)
             
             let currentBindingValue = binding.wrappedValue
@@ -82,12 +91,10 @@ extension OwnID.UISDK.OneTimePassword {
             }
             
             guard !isResetting else {
-                if index == codeLength - 1 || codeWasPasted {
-                    disableTextFields = false
-                    isResetting = false
-                    codeWasPasted = false
-                    currentFocusedFieldIndex = 0
-                }
+                disableTextFields = false
+                isResetting = false
+                codeWasPasted = false
+                currentFocusedFieldIndex = 0
                 return
             }
             
@@ -135,6 +142,8 @@ extension OwnID.UISDK.OneTimePassword {
         }
         
         func resetCode() {
+            disableTextFields = false
+            isDisabled = false
             isResetting = true
             for i in 0..<codes.count {
                 codes[i] = Constants.zeroWidthSpaceCharacter
@@ -144,6 +153,10 @@ extension OwnID.UISDK.OneTimePassword {
         
         func disableCodes() {
             isDisabled = true
+        }
+
+        func handleError(flowFinished: Bool) {
+            flowFinished ? disableCodes() : resetCode()
         }
     }
 }

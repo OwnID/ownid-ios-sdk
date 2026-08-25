@@ -6,14 +6,17 @@ extension OwnID.CoreSDK {
                             userFacingSDK: SDKInformation,
                             underlyingSDKs: [SDKInformation],
                             isTestingEnvironment: Bool) -> Effect<SDKAction> {
-        let data = try! Data(contentsOf: plistUrl)
-        let decoder = PropertyListDecoder()
-        let config = try! decoder.decode(OwnID.CoreSDK.LocalConfiguration.self, from: data)
-        let action = SDKAction.configurationCreated(configuration: config,
-                                                    userFacingSDK: userFacingSDK,
-                                                    underlyingSDKs: underlyingSDKs,
-                                                    isTestingEnvironment: isTestingEnvironment)
-        return Just(action).eraseToEffect()
+        do {
+            let data = try Data(contentsOf: plistUrl)
+            let config = try PropertyListDecoder().decode(OwnID.CoreSDK.LocalConfiguration.self, from: data)
+            return Just(.configurationCreated(configuration: config,
+                                               userFacingSDK: userFacingSDK,
+                                               underlyingSDKs: underlyingSDKs,
+                                               isTestingEnvironment: isTestingEnvironment))
+                .eraseToEffect()
+        } catch {
+            return configurationError()
+        }
     }
     
     static func testConfiguration() -> Effect<SDKAction> {
@@ -39,17 +42,28 @@ extension OwnID.CoreSDK {
                                     region: String?,
                                     enableLogging: Bool?,
                                     rootURL: String?) -> Effect<SDKAction> {
-        let config = try! OwnID.CoreSDK.LocalConfiguration(appID: appID,
-                                                           redirectionURL: redirectionURL,
-                                                           environment: environment,
-                                                           region: region,
-                                                           enableLogging: enableLogging,
-                                                           rootURL: rootURL)
-        return Just(.configurationCreated(configuration: config,
-                                          userFacingSDK: userFacingSDK,
-                                          underlyingSDKs: underlyingSDKs,
-                                          isTestingEnvironment: isTestingEnvironment))
-        .eraseToEffect()
+        do {
+            let config = try OwnID.CoreSDK.LocalConfiguration(appID: appID,
+                                                              redirectionURL: redirectionURL,
+                                                              environment: environment,
+                                                              region: region,
+                                                              enableLogging: enableLogging,
+                                                              rootURL: rootURL)
+            return Just(.configurationCreated(configuration: config,
+                                              userFacingSDK: userFacingSDK,
+                                              underlyingSDKs: underlyingSDKs,
+                                              isTestingEnvironment: isTestingEnvironment))
+                .eraseToEffect()
+        } catch {
+            return configurationError()
+        }
+    }
+
+    static func configurationError() -> Effect<SDKAction> {
+        let error = OwnID.CoreSDK.Error.userError(
+            errorModel: UserErrorModel(message: ErrorMessage.SDKConfigurationError)
+        )
+        return Just(.save(configurationLoadingEvent: .error(error), userFacingSDK: nil)).eraseToEffect()
     }
     
     static func startLoggerIfNeeded(userFacingSDK: SDKInformation,
@@ -113,6 +127,12 @@ extension OwnID.CoreSDK {
         .fireAndForget {
             OwnID.CoreSDK.shared.translationsModule.SDKConfigured(supportedLanguages: supportedLanguages)
             OwnID.CoreSDK.logger.log(level: .debug, type: OwnID.CoreSDK.self)
+        }
+    }
+
+    static func reportPreviousRun() -> Effect<SDKAction> {
+        .fireAndForget {
+            OwnID.CoreSDK.RunDiagnostic.shared.reportPreviousRun()
         }
     }
     

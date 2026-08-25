@@ -54,8 +54,9 @@ extension OwnID.CoreSDK.CoreViewModel {
             }
             
             let context = state.context
+            let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
             OwnID.CoreSDK.eventService.sendMetric(.clickMetric(action: .clickContinue,
-                                                               category: .login,
+                                                               category: eventCategory,
                                                                context: context,
                                                                loginId: loginId,
                                                                source: Constants.metricName))
@@ -73,7 +74,12 @@ extension OwnID.CoreSDK.CoreViewModel {
                 .map { [self] response in
                     return handleResponse(response: response, isOnUI: true)
                 }
-                .catch { Just(.error(OwnID.CoreSDK.ErrorWrapper(error: $0, isOnUI: true, type: Self.self))) }
+                .catch {
+                    Just(.error(OwnID.CoreSDK.ErrorWrapper(error: $0,
+                                                          isOnUI: true,
+                                                          flowFinished: false,
+                                                          type: Self.self)))
+                }
                 .eraseToEffect()
             
             return [effect]

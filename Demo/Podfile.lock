@@ -32,10 +32,10 @@ PODS:
     - AppAuth/Core (~> 2.0)
     - GTMSessionFetcher/Core (< 4.0, >= 3.3)
   - GTMSessionFetcher/Core (3.5.0)
-  - ownid-core-ios-sdk (3.10.0)
+  - ownid-core-ios-sdk (3.11.0)
   - ownid-gigya-ios-sdk (3.10.0):
     - Gigya (>= 1.7.5)
-    - ownid-core-ios-sdk (= 3.10.0)
+    - ownid-core-ios-sdk (= 3.11.0)
   - PromisesObjC (2.4.1)
   - PromisesSwift (2.4.1):
     - PromisesObjC (= 2.4.1)
@@ -44,8 +44,8 @@ PODS:
 DEPENDENCIES:
   - GoogleSignIn
   - GoogleSignInSwiftSupport
-  - ownid-core-ios-sdk (from `https://github.com/OwnID/ownid-ios-sdk.git`, tag `3.10.0`)
-  - ownid-gigya-ios-sdk (from `https://github.com/OwnID/ownid-ios-sdk.git`, tag `3.10.0`)
+  - ownid-core-ios-sdk (from `https://github.com/OwnID/ownid-ios-sdk.git`, tag `3.11.0`)
+  - ownid-gigya-ios-sdk (from `https://github.com/OwnID/ownid-ios-sdk.git`, tag `3.11.0`)
 
 SPEC REPOS:
   trunk:
@@ -64,18 +64,18 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   ownid-core-ios-sdk:
     :git: https://github.com/OwnID/ownid-ios-sdk.git
-    :tag: 3.10.0
+    :tag: 3.11.0
   ownid-gigya-ios-sdk:
     :git: https://github.com/OwnID/ownid-ios-sdk.git
-    :tag: 3.10.0
+    :tag: 3.11.0
 
 CHECKOUT OPTIONS:
   ownid-core-ios-sdk:
     :git: https://github.com/OwnID/ownid-ios-sdk.git
-    :tag: 3.10.0
+    :tag: 3.11.0
   ownid-gigya-ios-sdk:
     :git: https://github.com/OwnID/ownid-ios-sdk.git
-    :tag: 3.10.0
+    :tag: 3.11.0
 
 SPEC CHECKSUMS:
   AppAuth: ef4da5a3fc2e10b90c09a0a94a9baeaedc0341d5
@@ -86,12 +86,12 @@ SPEC CHECKSUMS:
   GoogleUtilities: 4f2618a4a1e762a1ee134a1e2323bba9843e06da
   GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  ownid-core-ios-sdk: 9c36f48c16ddad3f72764da0e662f5581bd04a87
-  ownid-gigya-ios-sdk: 1fc5c7be9a7633f42667a522aa76cc72d7d79922
+  ownid-core-ios-sdk: 63e3923380ba9a058f91fb65b0c202724e2b9d3b
+  ownid-gigya-ios-sdk: f4797e7ae3f149e9372d15aff172e78f4fae38c4
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
 
-PODFILE CHECKSUM: 3de5717a894b194b5ec83b04d18d8ef523576f63
+PODFILE CHECKSUM: b074e152e12549d30590fcf8b8d100bcf6181b90
 
 COCOAPODS: 1.16.2

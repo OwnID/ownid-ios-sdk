@@ -1,10 +1,9 @@
 import AuthenticationServices
+import UIKit
 import os
 
 extension OwnID.CoreSDK {
     class AuthManager: NSObject {
-        let authenticationAnchor = ASPresentationAnchor()
-
         private let store: Store<OwnID.CoreSDK.AuthManager.State, OwnID.CoreSDK.AuthManager.Action>
         private let domain: String
         private let challenge: String
@@ -14,7 +13,20 @@ extension OwnID.CoreSDK {
         }
 
         private var currentAuthController: ASAuthorizationController?
-        private var isPerformingModalReqest = false
+        private var presentationWindow: UIWindow?
+
+        private static func foregroundWindow() -> UIWindow? {
+            let foregroundWindows = UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .filter { $0.activationState == .foregroundActive }
+                .flatMap { $0.windows }
+
+            return foregroundWindows.first(where: {
+                $0.isKeyWindow && !$0.isHidden && $0.alpha > 0 && $0.windowLevel == .normal
+            }) ?? foregroundWindows.first(where: {
+                !$0.isHidden && $0.alpha > 0 && $0.windowLevel == .normal
+            })
+        }
 
         init(
             store: Store<OwnID.CoreSDK.AuthManager.State, OwnID.CoreSDK.AuthManager.Action>,
@@ -28,7 +40,15 @@ extension OwnID.CoreSDK {
 
         @available(iOS 16.0, *)
         func signIn(credsIds: [String]) {
-            currentAuthController?.cancel()
+            cancel()
+            guard let presentationWindow = Self.foregroundWindow() else {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.store.send(.error(error: .authManagerPresentationError, context: self.challenge))
+                }
+                return
+            }
+            self.presentationWindow = presentationWindow
             let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
             let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challengeData)
 
@@ -41,9 +61,8 @@ extension OwnID.CoreSDK {
             let authController = ASAuthorizationController(authorizationRequests: [assertionRequest])
             authController.delegate = self
             authController.presentationContextProvider = self
-            authController.performRequests(options: [.preferImmediatelyAvailableCredentials])
             currentAuthController = authController
-            isPerformingModalReqest = true
+            authController.performRequests(options: [.preferImmediatelyAvailableCredentials])
         }
 
         @available(iOS 16.0, *)
@@ -52,7 +71,15 @@ extension OwnID.CoreSDK {
             userID: String? = nil,
             credsIds: [String]
         ) {
-            currentAuthController?.cancel()
+            cancel()
+            guard let presentationWindow = Self.foregroundWindow() else {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.store.send(.error(error: .authManagerPresentationError, context: self.challenge))
+                }
+                return
+            }
+            self.presentationWindow = presentationWindow
 
             let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
 
@@ -78,14 +105,16 @@ extension OwnID.CoreSDK {
             let authController = ASAuthorizationController(authorizationRequests: [registrationRequest])
             authController.delegate = self
             authController.presentationContextProvider = self
-            authController.performRequests()
             currentAuthController = authController
-            isPerformingModalReqest = true
+            authController.performRequests()
         }
 
         @available(iOS 16.0, *)
         func cancel() {
-            currentAuthController?.cancel()
+            let authController = currentAuthController
+            currentAuthController = nil
+            presentationWindow = nil
+            authController?.cancel()
         }
 
         deinit {
@@ -102,6 +131,11 @@ extension OwnID.CoreSDK.AuthManager: ASAuthorizationControllerDelegate {
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
+        guard controller === currentAuthController else { return }
+
+        currentAuthController = nil
+        presentationWindow = nil
+
         switch authorization.credential {
         case let credentialRegistration as ASAuthorizationPlatformPublicKeyCredentialRegistration:
             guard let attestationObject = credentialRegistration.rawAttestationObject?.base64urlEncodedString()
@@ -137,11 +171,14 @@ extension OwnID.CoreSDK.AuthManager: ASAuthorizationControllerDelegate {
         default:
             store.send(.error(error: .authManagerUnknownAuthType, context: challenge))
         }
-
-        isPerformingModalReqest = false
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Swift.Error) {
+        guard controller === currentAuthController else { return }
+
+        currentAuthController = nil
+        presentationWindow = nil
+
         defer {
             OwnID.CoreSDK.logger.log(
                 level: .warning,
@@ -149,35 +186,31 @@ extension OwnID.CoreSDK.AuthManager: ASAuthorizationControllerDelegate {
                 errorMessage: error.localizedDescription,
                 type: Self.self
             )
-            currentAuthController?.cancel()
             controller.cancel()
         }
         guard let authorizationError = error as? ASAuthorizationError else {
-            isPerformingModalReqest = false
             store.send(.error(error: .authManagerGeneralError(underlying: error), context: challenge))
             return
         }
 
         if authorizationError.code == .canceled {
-            if isPerformingModalReqest {
-                if authorizationError.userInfo["NSLocalizedFailureReason"] is String {
-                    store.send(.error(error: .authManagerCredintialsNotFound(underlying: authorizationError), context: challenge))
-                } else {
-                    store.send(.error(error: .authManagerCanlelledByUser(underlying: authorizationError), context: challenge))
-                }
-            }
+            // AuthenticationServices does not expose a separate public error code
+            // for an empty immediate-credentials request. Preserve the existing
+            // fallback behavior while keeping controller cleanup safe.
+            let error: AuthManagerError = authorizationError.userInfo["NSLocalizedFailureReason"] is String
+                ? .authManagerCredintialsNotFound(underlying: authorizationError)
+                : .authManagerCanlelledByUser(underlying: authorizationError)
+            store.send(.error(error: error, context: challenge))
         } else {
             store.send(.error(error: .authManagerAuthError(underlying: error), context: challenge))
         }
-
-        isPerformingModalReqest = false
     }
 }
 
 @available(iOS 16.0, *)
 extension OwnID.CoreSDK.AuthManager: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        authenticationAnchor
+        presentationWindow!
     }
 }
 
@@ -196,6 +229,7 @@ extension OwnID.CoreSDK.AuthManager {
         case authManagerCanlelledByUser(underlying: ASAuthorizationError)
         case authManagerCredintialsNotFound(underlying: ASAuthorizationError)
         case authManagerAuthError(underlying: Swift.Error)
+        case authManagerPresentationError
         case authManagerDataMissing
         case authManagerUnknownAuthType
 

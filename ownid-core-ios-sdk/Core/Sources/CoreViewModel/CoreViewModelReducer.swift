@@ -9,16 +9,25 @@ extension OwnID.CoreSDK.CoreViewModel {
             let effect = step.run(state: &state)
             return effect
         case let .initialRequestLoaded(response):
-            state.stopUrl = URL(string: response.stopUrl)
-            state.finalUrl = URL(string: response.finalStatusUrl)
-            state.context = response.context
-            
             let baseStep = BaseStep()
-            if let step = response.step {
-                let action = baseStep.nextStepAction(step)
-                return [Just(action).eraseToEffect()]
+            guard !response.stopUrl.isEmpty,
+                  !response.finalStatusUrl.isEmpty,
+                  let stopUrl = URL(string: response.stopUrl),
+                  let finalUrl = URL(string: response.finalStatusUrl) else {
+                let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "stopUrl/finalStatusUrl")
+                return baseStep.errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
+                                            type: Self.self)
             }
-            return []
+            state.stopUrl = stopUrl
+            state.finalUrl = finalUrl
+            state.context = response.context
+
+            guard let step = response.step else {
+                let message = OwnID.CoreSDK.ErrorMessage.requestError
+                return baseStep.errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)),
+                                            type: Self.self)
+            }
+            return [Just(baseStep.nextStepAction(step)).eraseToEffect()]
         case .idCollect(let step):
             let idCollectStep = IdCollectStep(step: step)
             state.idCollectStep = idCollectStep

@@ -3,7 +3,7 @@ import OwnIDCoreSDK
 
 extension IntegrationDemoApp {
     static let clientName = "Integration"
-    static let version = "3.10.0"
+    static let version = "3.11.0"
 }
 
 @main

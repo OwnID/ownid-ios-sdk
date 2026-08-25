@@ -14,6 +14,7 @@ extension OwnID.UISDK.OneTimePassword {
         var isDisplayingDidNotGetCode = false
         var isFlowFinished = false
         var attempts = 0
+        var didNotGetCodeRequest = 0
     }
     
     enum Action {
@@ -24,7 +25,7 @@ extension OwnID.UISDK.OneTimePassword {
         case notYouCancel(operationType: OwnID.UISDK.OneTimePassword.OperationType)
         case emailIsNotRecieved(operationType: OwnID.UISDK.OneTimePassword.OperationType, flowFinished: Bool)
         case resendCode(operationType: OwnID.UISDK.OneTimePassword.OperationType)
-        case displayDidNotGetCode
+        case displayDidNotGetCode(Int)
         case error(OwnID.CoreSDK.UserErrorModel, flowFinished: Bool)
         case success
         case stopLoading
@@ -43,8 +44,9 @@ extension OwnID.UISDK.OneTimePassword {
             state.isDisplayingDidNotGetCode = false
             state.error = nil
             state.isFlowFinished = false
+            state.didNotGetCodeRequest += 1
             
-            return [Just(OwnID.UISDK.OneTimePassword.Action.displayDidNotGetCode)
+            return [Just(OwnID.UISDK.OneTimePassword.Action.displayDidNotGetCode(state.didNotGetCodeRequest))
                 .delay(for: .seconds(Constants.didNotGetCodeDelay), scheduler: DispatchQueue.main)
                 .eraseToEffect()]
         case .codeEnteringStarted:
@@ -52,7 +54,8 @@ extension OwnID.UISDK.OneTimePassword {
         case .resendCode:
             state.isDisplayingDidNotGetCode = false
             state.isLoading = true
-            return [Just(OwnID.UISDK.OneTimePassword.Action.displayDidNotGetCode)
+            state.didNotGetCodeRequest += 1
+            return [Just(OwnID.UISDK.OneTimePassword.Action.displayDidNotGetCode(state.didNotGetCodeRequest))
                 .delay(for: .seconds(Constants.didNotGetCodeDelay), scheduler: DispatchQueue.main)
                 .eraseToEffect()]
         case .codeEntered:
@@ -90,8 +93,10 @@ extension OwnID.UISDK.OneTimePassword {
             state.isLoading = false
             return []
             
-        case .displayDidNotGetCode:
-            state.isDisplayingDidNotGetCode = true
+        case .displayDidNotGetCode(let request):
+            if request == state.didNotGetCodeRequest {
+                state.isDisplayingDidNotGetCode = true
+            }
             return []
         }
     }

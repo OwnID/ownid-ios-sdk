@@ -115,13 +115,15 @@ extension OwnID.UISDK.OneTimePassword {
         
         private func notYouView() -> some View {
             ZStack {
-                Button {
-                    store.send(.emailIsNotRecieved(operationType: operationType, flowFinished: store.value.isFlowFinished))
-                } label: {
-                    Text(localizedKey: .otpNotYou(operationType: operationType.rawValue, verificationType: verificationType.rawValue))
-                        .font(.system(size: 14))
-                        .bold()
-                        .foregroundColor(OwnID.Colors.blue)
+                if store.value.error?.code != .wrongCodeLimitReached {
+                    Button {
+                        store.send(.emailIsNotRecieved(operationType: operationType, flowFinished: store.value.isFlowFinished))
+                    } label: {
+                        Text(localizedKey: .otpNotYou(operationType: operationType.rawValue, verificationType: verificationType.rawValue))
+                            .font(.system(size: 14))
+                            .bold()
+                            .foregroundColor(OwnID.Colors.blue)
+                    }
                 }
             }
             .frame(height: 28)
@@ -182,7 +184,7 @@ extension OwnID.UISDK.OneTimePassword {
                         }
                         .onChange(of: store.value.error) { newValue in
                             if newValue != nil {
-                                viewModel.disableCodes()
+                                viewModel.handleError(flowFinished: store.value.isFlowFinished)
                             }
                         }
                     ZStack {

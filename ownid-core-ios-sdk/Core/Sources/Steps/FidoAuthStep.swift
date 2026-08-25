@@ -36,10 +36,11 @@ extension OwnID.CoreSDK.CoreViewModel {
     
     class FidoAuthStep: BaseStep {
         private let step: Step
-        private var type = OwnID.CoreSDK.RequestType.register
+        private var type: OwnID.CoreSDK.RequestType
         
         init(step: Step) {
             self.step = step
+            type = step.fidoData?.operation == .login ? .login : .register
         }
         
         override func run(state: inout State) -> [Effect<OwnID.CoreSDK.CoreViewModel.Action>] {
@@ -54,6 +55,9 @@ extension OwnID.CoreSDK.CoreViewModel {
                 let authManager = OwnID.CoreSDK.AuthManager(store: state.authManagerStore,
                                                             domain: domain,
                                                             challenge: state.context)
+                // Store the manager before starting AuthenticationServices. A
+                // no-credential callback may be delivered synchronously.
+                state.authManager = authManager
                 if let operation = step.fidoData?.operation {
                     let credsIds = step.fidoData?.credsIds ?? []
                     switch operation {
@@ -61,6 +65,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                         if credsIds.isEmpty {
                             let message = "FIDO: Login but no credentials specified, trying to register new one"
                             OwnID.CoreSDK.logger.log(level: .warning, message: message, type: Self.self)
+                            type = .register
                             authManager.signUpWith(userName: state.loginId, credsIds: credsIds)
                         } else {
                             authManager.signIn(credsIds: credsIds)
@@ -69,8 +74,6 @@ extension OwnID.CoreSDK.CoreViewModel {
                         authManager.signUpWith(userName: state.loginId, credsIds: credsIds)
                     }
                 }
-                
-                state.authManager = authManager
             }
             
             return []
@@ -79,12 +82,12 @@ extension OwnID.CoreSDK.CoreViewModel {
         func sendAuthRequest(state: inout OwnID.CoreSDK.CoreViewModel.State,
                              fido2Payload: Encodable,
                              type: OwnID.CoreSDK.RequestType) -> [Effect<Action>] {
+            self.type = type
             guard let urlString = step.fidoData?.url, let url = URL(string: urlString) else {
                 let message = OwnID.CoreSDK.ErrorMessage.dataIsMissingError(dataInfo: "url")
                 return errorEffect(.userError(errorModel: OwnID.CoreSDK.UserErrorModel(message: message)), type: Self.self)
             }
 
-            self.type = type
             let context = state.context
             let eventCategory: OwnID.CoreSDK.EventCategory = state.type == .login ? .login : .registration
             
@@ -136,6 +139,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                 if #available(iOS 16.0, *), let authManager = state.authManager {
                     let message = "FIDO: Login failed, trying to register new one"
                     OwnID.CoreSDK.logger.log(level: .information, message: message, type: Self.self)
+                    type = .register
                     authManager.signUpWith(userName: state.loginId, credsIds: [])
                     return []
                 } else {

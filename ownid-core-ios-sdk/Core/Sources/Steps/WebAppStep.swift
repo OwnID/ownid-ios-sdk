@@ -48,7 +48,10 @@ extension OwnID.CoreSDK.CoreViewModel {
             }
             urlString.append(redirectParameter)
             let url = URL(string: urlString)!
-            let vm = OwnID.CoreSDK.BrowserOpenerViewModel(store: store, url: url, redirectionURL: redirectionURLString ?? "")
+            let vm = OwnID.CoreSDK.BrowserOpenerViewModel(store: store,
+                                                          url: url,
+                                                          redirectionURL: redirectionURLString ?? "",
+                                                          context: context)
             return vm
         }
     }

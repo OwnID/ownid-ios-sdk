@@ -227,6 +227,18 @@ public extension OwnID.CoreSDK {
             }
             return nil
         }
+
+        internal static func previousRunMetric(_ previousRun: PreviousRun) -> Metric {
+            var metadata = Metadata()
+            metadata.correlationId = LoggerConstants.instanceID.uuidString
+            metadata.previousRun = previousRun
+            return Metric(
+                category: .general,
+                type: .track,
+                action: "Previous run observed",
+                metadata: metadata
+            )
+        }
         
         public static func trackMetric(action: AnalyticActionType,
                                        category: EventCategory,

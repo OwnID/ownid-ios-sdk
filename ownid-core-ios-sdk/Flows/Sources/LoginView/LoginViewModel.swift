@@ -38,10 +38,11 @@ public extension OwnID.FlowsSDK.LoginView {
         
         private var bag = Set<AnyCancellable>()
         private var coreViewModelBag = Set<AnyCancellable>()
+        private var integrationPerformerBag = Set<AnyCancellable>()
+        private lazy var buttonTapAction = OwnID.UISDK.DebouncedAction { [weak self] in self?.buttonTapped() }
         private let integrationResultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.LoginEvent, OwnID.CoreSDK.Error>, Never>()
         private let flowResultPublisher = PassthroughSubject<Result<OwnID.FlowsSDK.LoginFlowEvent, OwnID.CoreSDK.Error>, Never>()
         private let loginPerformer: LoginPerformer?
-        private var payload: OwnID.CoreSDK.Payload?
         private var loginId = ""
         private let loginType: OwnID.CoreSDK.LoginType
         var coreViewModel: OwnID.CoreSDK.CoreViewModel!
@@ -88,42 +89,38 @@ public extension OwnID.FlowsSDK.LoginView {
         }
         
         public func updateLoginIdPublisher(_ loginIdPublisher: OwnID.CoreSDK.LoginIdPublisher) {
-            loginIdPublisher.assign(to: \.loginId, on: self).store(in: &bag)
+            loginIdPublisher
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] in self?.loginId = $0 }
+                .store(in: &bag)
         }
         
         /// Reset visual state and any possible data
         public func resetDataAndState(isResettingToInitialState: Bool = true) {
-            payload = .none
             resetToInitialState(isResettingToInitialState: isResettingToInitialState)
         }
         
         /// Reset visual state
         public func resetToInitialState(isResettingToInitialState: Bool = true) {
+            buttonTapAction.cancelPending()
             if isResettingToInitialState {
                 state = .initial
             }
             coreViewModel?.cancel()
-            coreViewModelBag.forEach { $0.cancel() }
             coreViewModelBag.removeAll()
+            integrationPerformerBag.removeAll()
             coreViewModel = .none
         }
         
         func skipPasswordTapped(loginId: String) {
             switch state {
             case .initial:
-                DispatchQueue.main.async { [self] in
-                    let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(loginId: loginId, 
-                                                                                         loginType: loginType)
-                    self.coreViewModel = coreViewModel
-                    subscribe(to: coreViewModel.eventPublisher)
-                    state = .coreVM
-                    
-                    /// On iOS 13, this `asyncAfter` is required to make sure that subscription created by the time events start to
-                    /// be passed to publiser.
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        coreViewModel.start()
-                    }
-                }
+                let coreViewModel = OwnID.CoreSDK.shared.createCoreViewModelForLogIn(loginId: loginId,
+                                                                                     loginType: loginType)
+                self.coreViewModel = coreViewModel
+                subscribe(to: coreViewModel.eventPublisher)
+                state = .coreVM
+                coreViewModel.start()
                 
             case .coreVM:
                 resetToInitialState()
@@ -134,14 +131,15 @@ public extension OwnID.FlowsSDK.LoginView {
         }
         
         func subscribe(to eventsPublisher: OwnID.CoreSDK.CoreViewModel.EventPublisher) {
-            coreViewModelBag.forEach { $0.cancel() }
             coreViewModelBag.removeAll()
             eventsPublisher
-                .sink { [unowned self] completion in
+                .sink { [weak self] completion in
+                    guard let self = self else { return }
                     if case .failure(let error) = completion {
                         handle(error, context: OwnID.CoreSDK.logger.context)
                     }
-                } receiveValue: { [unowned self] event in
+                } receiveValue: { [weak self] event in
+                    guard let self = self else { return }
                     switch event {
                     case .success(let payload):
                         process(payload: payload)
@@ -162,27 +160,36 @@ public extension OwnID.FlowsSDK.LoginView {
         /// - Parameter buttonEventPublisher: publisher to subscribe to
         public func subscribe(to buttonEventPublisher: OwnID.UISDK.EventPubliser) {
             buttonEventPublisher
+                .receive(on: DispatchQueue.main)
                 .sink { _ in
-                } receiveValue: { [unowned self] event in
-                    if state == .initial {
-                        let configuration = OwnID.CoreSDK.shared.store.value.configuration
-                        var validLoginIdFormat: Bool?
-                        if let loginIdSettings = configuration?.loginIdSettings {
-                            validLoginIdFormat = OwnID.CoreSDK.LoginId(value: loginId, settings: loginIdSettings).isValid
-                        }
-                        eventService.sendMetric(.clickMetric(action: .click,
-                                                             category: .login,
-                                                             hasLoginId: !loginId.isEmpty,
-                                                             loginType: loginType,
-                                                             validLoginIdFormat: validLoginIdFormat))
-                    }
-                    var loginId = loginId
-                    if loginId.isBlank, let savedLoginId = OwnID.CoreSDK.DefaultsLoginIdSaver.loginId(), !savedLoginId.isBlank {
-                        loginId = savedLoginId
-                    }
-                    skipPasswordTapped(loginId: loginId)
+                } receiveValue: { [weak self] _ in
+                    self?.buttonTapped()
                 }
                 .store(in: &bag)
+        }
+
+        func buttonTapped() {
+            if state == .initial {
+                let configuration = OwnID.CoreSDK.shared.store.value.configuration
+                var validLoginIdFormat: Bool?
+                if let loginIdSettings = configuration?.loginIdSettings {
+                    validLoginIdFormat = OwnID.CoreSDK.LoginId(value: loginId, settings: loginIdSettings).isValid
+                }
+                eventService.sendMetric(.clickMetric(action: .click,
+                                                     category: .login,
+                                                     hasLoginId: !loginId.isEmpty,
+                                                     loginType: loginType,
+                                                     validLoginIdFormat: validLoginIdFormat))
+            }
+            var loginId = loginId
+            if loginId.isBlank, let savedLoginId = OwnID.CoreSDK.DefaultsLoginIdSaver.loginId(), !savedLoginId.isBlank {
+                loginId = savedLoginId
+            }
+            skipPasswordTapped(loginId: loginId)
+        }
+
+        func buttonTappedDebounced() {
+            buttonTapAction.send()
         }
         
         /// Initiates an OwnID login flow if no other flow is active.
@@ -203,51 +210,72 @@ public extension OwnID.FlowsSDK.LoginView {
                     return false
                 }
                 
-                skipPasswordTapped(loginId: savedLoginId)
-                return true
+                return startFlow(loginId: savedLoginId)
             } else {
-                skipPasswordTapped(loginId: loginId)
-                return true
+                return startFlow(loginId: loginId)
             }
+        }
+
+        private func startFlow(loginId: String) -> Bool {
+            if Thread.isMainThread {
+                return startIfIdle(loginId: loginId)
+            } else {
+                return DispatchQueue.main.sync { [weak self] in
+                    self?.startIfIdle(loginId: loginId) ?? false
+                }
+            }
+        }
+
+        private func startIfIdle(loginId: String) -> Bool {
+            assert(Thread.isMainThread)
+            guard state == .initial else { return false }
+            skipPasswordTapped(loginId: loginId)
+            return true
         }
     }
 }
 
 private extension OwnID.FlowsSDK.LoginView.ViewModel {
     func process(payload: OwnID.CoreSDK.Payload) {
-        self.payload = payload
+        let responseLoginId = payload.loginId ?? ""
+        loginId = responseLoginId
         
         eventService.sendMetric(.trackMetric(action: .loggedIn,
                                              category: .login,
                                              context: payload.context,
-                                             loginId: loginId,
+                                             loginId: responseLoginId,
                                              loginType: loginType,
                                              authType: payload.authType?.rawValue))
         
         if let loginPerformer {
-            let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: loginId)
+            integrationPerformerBag.removeAll()
+            let loginPerformerPublisher = loginPerformer.login(payload: payload, loginId: responseLoginId)
             loginPerformerPublisher
-                .sink { [unowned self] completion in
+                .prefix(1)
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] completion in
+                    guard let self = self else { return }
                     if case .failure(let error) = completion {
                         handle(error, context: payload.context)
                     }
-                } receiveValue: { [unowned self] loginResult in
-                    if let loginId = payload.loginId {
-                        OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId, 
+                } receiveValue: { [weak self] loginResult in
+                    guard let self = self else { return }
+                    if !responseLoginId.isBlank {
+                        OwnID.CoreSDK.LoginIdSaver.save(loginId: responseLoginId,
                                                         authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: loginResult.authType))
                     }
                     integrationResultPublisher.send(.success(.loggedIn(loginResult: loginResult.operationResult, authType: loginResult.authType, authToken: payload.authToken)))
                     resetDataAndState()
                 }
-                .store(in: &bag)
+                .store(in: &integrationPerformerBag)
         } else {
             OwnID.CoreSDK.logger.log(level: .debug, message: "Login without integration response", type: Self.self)
                         
-            if let loginId = payload.loginId {
-                OwnID.CoreSDK.LoginIdSaver.save(loginId: loginId,
+            if !responseLoginId.isBlank {
+                OwnID.CoreSDK.LoginIdSaver.save(loginId: responseLoginId,
                                                 authMethod: OwnID.CoreSDK.AuthMethod.authMethod(from: payload.authType))
             }
-            flowResultPublisher.send(.success(.response(loginId: loginId, payload: payload, authType: payload.authType, authToken: payload.authToken)))
+            flowResultPublisher.send(.success(.response(loginId: responseLoginId, payload: payload, authType: payload.authType, authToken: payload.authToken)))
             resetDataAndState()
         }
     }

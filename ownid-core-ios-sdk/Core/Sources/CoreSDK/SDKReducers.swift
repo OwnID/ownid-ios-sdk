@@ -43,6 +43,7 @@ extension OwnID.CoreSDK {
             
         case .fetchServerConfiguration:
             guard let configurationRequestData = state.configurationRequestData else {
+                if state.configuration != nil { return [] }
                 let message = OwnID.CoreSDK.ErrorMessage.SDKConfigurationError
                 let action = Just(SDKAction.save(configurationLoadingEvent: .error(.userError(errorModel: UserErrorModel(message: message))),
                                                  userFacingSDK: nil))
@@ -63,7 +64,9 @@ extension OwnID.CoreSDK {
             return [testConfiguration()]
             
         case let .configureFromDefaultConfiguration(userFacingSDK, underlyingSDKs, supportedLanguages):
-            let url = Bundle.main.url(forResource: "OwnIDConfiguration", withExtension: "plist")!
+            guard let url = Bundle.main.url(forResource: "OwnIDConfiguration", withExtension: "plist") else {
+                return [configurationError()]
+            }
             return [Just(.configureFrom(plistUrl: url, userFacingSDK: userFacingSDK, underlyingSDKs: underlyingSDKs, supportedLanguages: supportedLanguages)).eraseToEffect()]
             
         case let .configureFrom(plistUrl, userFacingSDK, underlyingSDKs, supportedLanguages):
@@ -101,6 +104,7 @@ extension OwnID.CoreSDK {
                 }
                 
                 return [
+                    reportPreviousRun(),
                     Just(SDKAction.fetchLogo(config: config)).eraseToEffect(),
                     translationsDownloaderSDKConfigured(with: state.supportedLanguages),
                     sendLoggerSDKConfigured(),
@@ -109,6 +113,7 @@ extension OwnID.CoreSDK {
                 
             case .error:
                 state.configurationRequestData?.isLoading = false
+                state.configuration = nil
                 state.configurationLoadingEventPublisher.send(configurationLoadingEvent)
                 return []
             }

@@ -37,5 +37,17 @@ extension OwnID.CoreSDK.EnrollManager {
                 return OwnID.CoreSDK.shared.apiBaseURL!.appendingPathComponent("/ownid/attestation/result")
             }
         }
+
+        mutating func removeFlowResources() {
+            loginIdPublisher = nil
+            authTokenPublisher = nil
+            loginId = nil
+            authToken = nil
+            session = nil
+            fidoCreateModel = nil
+            authManager = nil
+            enrollViewStore = nil
+            authManagerStore = nil
+        }
     }
 }

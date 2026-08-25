@@ -9,7 +9,7 @@ For more general information about OwnID SDKs, see [OwnID iOS SDK](../README.md)
 ## Table of contents
 * [Before You Begin](#before-you-begin)
 * [Add Package Dependency](#add-package-dependency)
-  + [Cocoapods](#cocoapods)
+  + [CocoaPods Compatibility Fallback](#cocoapods-compatibility-fallback)
   + [Swift Package Manager](#swift-package-manager)
 * [Enable Passkey Authentication](#enable-passkey-authentication)
 * [Add Property List File to Project](#add-property-list-file-to-project)
@@ -44,15 +44,21 @@ You should also ensure you have done everything to [integrate Gigya's service in
 
 ## Add Package Dependency
 
-### Cocoapods
+### CocoaPods Compatibility Fallback
 
-Use CocoaPods to add the following package dependency to your project. The example below uses `3.10.0`; replace it with the release tag you want to install, such as `3.10.0` or newer.
+Swift Package Manager is recommended for new integrations. New OwnID iOS SDK v3 releases are not published to CocoaPods Trunk. For CocoaPods-only apps, install Core and Gigya from the same pinned public Git tag:
 
 ```ruby
+pod 'ownid-core-ios-sdk',
+    :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
+    :tag => '<version>'
+
 pod 'ownid-gigya-ios-sdk',
     :git => 'https://github.com/OwnID/ownid-ios-sdk.git',
-    :tag => '3.10.0'
+    :tag => '<version>'
 ```
+
+The Git tag identifies the repository release, while Core and Gigya keep independent component versions. Repository tag `3.11.0` contains OwnID Core `3.11.0` and OwnID Gigya `3.10.0`.
 
 ### Swift Package Manager
 

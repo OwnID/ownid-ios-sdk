@@ -31,6 +31,7 @@ public extension OwnID.CoreSDK {
         var loginType: LoginType?
         var webViewOrigin: String?
         var widgetId: String?
+        internal var previousRun: PreviousRun?
         let applicationName = OwnID.CoreSDK.shared.store.value.configuration?.displayName
         var deviceSecurityStatus: DeviceSecurityStatus?
         var isUserVerifyingPlatformAuthenticatorAvailable = ProcessInfo().isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 16,

@@ -28,20 +28,41 @@ public final class Store<Value, Action>: ObservableObject {
     private var viewCancellable: Cancellable?
     private var globalActionCancellable: Cancellable?
     private var effectCancellables: Set<AnyCancellable> = []
+    private var cancellationGeneration = 0
+    private var acceptsActions = true
     
     public init(initialValue: Value, reducer: @escaping Reducer<Value, Action>) {
         self.reducer = reducer
         self.value = initialValue
     }
+
+    func invalidateEffects() {
+        cancellationGeneration &+= 1
+    }
+
+    func invalidateActionsAndEffects() {
+        acceptsActions = false
+        invalidateEffects()
+    }
     
     public func cancel() {
+        invalidateEffects()
+        let globalActionCancellable = globalActionCancellable
+        self.globalActionCancellable = nil
+        let viewCancellable = viewCancellable
+        self.viewCancellable = nil
+        let effectCancellables = effectCancellables
+        self.effectCancellables.removeAll()
+
         globalActionCancellable?.cancel()
         viewCancellable?.cancel()
         effectCancellables.forEach { $0.cancel() }
     }
     
     private func processEffects(_ effects: [Effect<Action>]) {
-        effects.forEach { effect in
+        let generation = cancellationGeneration
+        for effect in effects {
+            guard generation == cancellationGeneration else { break }
             var effectCancellable: AnyCancellable?
             var didComplete = false
             effectCancellable = effect.sink(
@@ -50,8 +71,15 @@ public final class Store<Value, Action>: ObservableObject {
                     guard let effectCancellable else { return }
                     self?.effectCancellables.remove(effectCancellable)
                 },
-                receiveValue: { [weak self] in self?.send($0) }
+                receiveValue: { [weak self] action in
+                    guard let self, generation == self.cancellationGeneration else { return }
+                    self.send(action)
+                }
             )
+            guard generation == cancellationGeneration else {
+                effectCancellable?.cancel()
+                break
+            }
             if !didComplete, let effectCancellable {
                 self.effectCancellables.insert(effectCancellable)
             }
@@ -59,6 +87,7 @@ public final class Store<Value, Action>: ObservableObject {
     }
     
     public func send(_ action: Action) {
+        guard acceptsActions else { return }
         actionsPublisher.send(action)
         let effects = self.reducer(&self.value, action)
         processEffects(effects)
@@ -72,7 +101,8 @@ public final class Store<Value, Action>: ObservableObject {
     ) -> Store<LocalValue, LocalAction> {
         let localStore = Store<LocalValue, LocalAction>(
             initialValue: toLocalValue(self.value),
-            reducer: { localValue, localAction in
+            reducer: { [weak self] localValue, localAction in
+                guard let self else { return [] }
                 let effects = reducer(&localValue, localAction)
                 self.send(toGlobalAction(localAction))
                 return effects
@@ -93,7 +123,8 @@ public final class Store<Value, Action>: ObservableObject {
     ) -> Store<LocalValue, LocalAction> {
         let localStore = Store<LocalValue, LocalAction>(
             initialValue: toLocalValue(self.value),
-            reducer: { localValue, localAction in
+            reducer: { [weak self] localValue, localAction in
+                guard let self else { return [] }
                 self.send(toGlobalAction(localAction))
                 localValue = toLocalValue(self.value)
                 return []

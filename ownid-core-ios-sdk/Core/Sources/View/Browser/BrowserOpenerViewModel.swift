@@ -17,9 +17,14 @@ extension OwnID.CoreSDK {
         private var store: Store<State, Action>
         private let authSessionContext = ASWebAuthenticationPresentationContext()
         private var cancellableSession: ASWebAuthenticationSession?
+        private let context: OwnID.CoreSDK.Context
         
-        init(store: Store<State, Action>, url: URL, redirectionURL: RedirectionURLString) {
+        init(store: Store<State, Action>,
+             url: URL,
+             redirectionURL: RedirectionURLString,
+             context: OwnID.CoreSDK.Context) {
             self.store = store
+            self.context = context
             startAuthSession(url: url, redirectionURL: redirectionURL)
         }
         
@@ -28,15 +33,18 @@ extension OwnID.CoreSDK {
         }
         
         private func startAuthSession(url: URL, redirectionURL: RedirectionURLString) {
-            if let schemeURL = URL(string: redirectionURL) {
+            if URL(string: redirectionURL) != nil {
                 let session = ASWebAuthenticationSession(url: url, callbackURLScheme: .none)
-                { [weak self] _, error in
+                { [weak self] callbackURL, error in
+                    guard let self else { return }
                     if let errorAuth = error as? ASWebAuthenticationSessionError,
                        case .canceledLogin = errorAuth.code {
-                        self?.store.send(.viewCancelled)
+                        store.send(.viewCancelled)
                     } else {
                         OwnID.CoreSDK.logger.log(level: .debug, message: "Session finish", type: Self.self)
-                        OwnID.CoreSDK.shared.handle(url: schemeURL)
+                        OwnID.CoreSDK.shared.handleBrowserCallback(url: callbackURL,
+                                                                  error: error,
+                                                                  context: context)
                     }
                 }
                 cancellableSession = session

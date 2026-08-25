@@ -61,6 +61,7 @@ extension OwnID.CoreSDK.EnrollManager {
                                                                category: .general,
                                                                loginId: state.loginId,
                                                                source: state.sourceMetricName))
+            state.removeFlowResources()
             return []
         case .fido2Authorize:
             fido2Authorize(state: &state)
@@ -73,6 +74,7 @@ extension OwnID.CoreSDK.EnrollManager {
                                                                loginId: state.loginId,
                                                                source: state.sourceMetricName))
             OwnID.CoreSDK.LoginIdSaver.save(loginId: state.loginId, authMethod: .passkey)
+            state.removeFlowResources()
             return []
         case .enrollView(let action):
             switch action {
@@ -107,6 +109,7 @@ extension OwnID.CoreSDK.EnrollManager {
             return []
         case .fidoUnavailable:
             OwnID.CoreSDK.logger.log(level: .warning, message: "FIDO unavailable", type: Self.self)
+            state.removeFlowResources()
             return []
         case .error(let wrapper):
             OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .enrollFailed,
@@ -114,6 +117,7 @@ extension OwnID.CoreSDK.EnrollManager {
                                                                loginId: state.loginId,
                                                                source: state.sourceMetricName))
             wrapper.log()
+            state.removeFlowResources()
             return []
         case .cancelled(let flow):
             switch flow {
@@ -127,7 +131,12 @@ extension OwnID.CoreSDK.EnrollManager {
             }
             
             OwnID.CoreSDK.logger.log(level: .information, message: "Cancel Flow \(flow)", type: Self.self)
-            return [Just(.skip(nil)).eraseToEffect()]
+            OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .enrollSkipped,
+                                                               category: .general,
+                                                               loginId: state.loginId,
+                                                               source: state.sourceMetricName))
+            state.removeFlowResources()
+            return []
         }
     }    
 }

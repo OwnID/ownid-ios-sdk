@@ -6,6 +6,8 @@ extension OwnID.CoreSDK {
         @Published var store: Store<State, Action>
         private let resultPublisher = PassthroughSubject<Event, OwnID.CoreSDK.Error>()
         private var bag = Set<AnyCancellable>()
+        private var isTerminated = false
+        private var redirectContext: OwnID.CoreSDK.Context?
         
         var eventPublisher: EventPublisher { resultPublisher.receive(on: DispatchQueue.main).eraseToAnyPublisher() }
         
@@ -80,9 +82,16 @@ extension OwnID.CoreSDK {
                                         idCollectViewStore: idCollectViewStore))
             setupEventPublisher()
         }
+
+        deinit {
+            guard let redirectContext else { return }
+            self.redirectContext = nil
+            OwnID.CoreSDK.shared.unregisterRedirectContext(redirectContext)
+        }
         
         public func start() {
             if (store.value.configuration != nil) {
+                store.send(.addToStateShouldStartInitRequest(value: false))
                 store.send(.sendInitialRequest)
             } else {
                 OwnID.CoreSDK.shared.requestConfiguration()
@@ -92,29 +101,40 @@ extension OwnID.CoreSDK {
         }
         
         public func cancel() {
+            guard Thread.isMainThread else {
+                DispatchQueue.main.async { self.cancel() }
+                return
+            }
+            guard beginTermination() else { return }
+
             if #available(iOS 16.0, *) {
                 store.value.authManager?.cancel()
             }
             store.value.browserViewModel?.cancel()
-            store.value.browserViewModelStore?.cancel()
             store.send(.cancelled)
+            finishResources()
         }
         
-        func subscribeToURL(publisher: AnyPublisher<Void, OwnID.CoreSDK.Error>) {
+        func subscribeToURL(publisher: AnyPublisher<RedirectEvent, Never>) {
             publisher
-                .sink { [unowned self] completion in
-                    if case .failure(let error) = completion {
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] event in
+                    guard let self, event.context == redirectContext else { return }
+                    switch event.result {
+                    case .success:
+                        store.send(.sendStatusRequest)
+                    case .failure(let error):
                         store.send(.error(OwnID.CoreSDK.ErrorWrapper(error: error, type: Self.self)))
                     }
-                } receiveValue: { [unowned self] url in
-                    store.send(.sendStatusRequest)
                 }
                 .store(in: &bag)
         }
         
         func subscribeToConfiguration(publisher: AnyPublisher<ConfigurationLoadingEvent, Never>) {
             publisher
-                .sink { [unowned self] event in
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] event in
+                    guard let self = self else { return }
                     switch event {
                         
                     case .loaded(let configuration):
@@ -142,15 +162,19 @@ extension OwnID.CoreSDK {
         private func setupEventPublisher() {
             store
                 .actionsPublisher
-                .sink { [unowned self] action in
+                .sink { [weak self] action in
+                    guard let self = self else { return }
                     switch action {
                     case .sendInitialRequest:
                         internalStatesChange.append(String(describing: action))
                         resultPublisher.send(.loading)
                         
-                    case .initialRequestLoaded,
-                            .idCollect,
-                            .fido2Authorize,
+                    case .initialRequestLoaded(let response):
+                        internalStatesChange.append(action.debugDescription)
+                        updateRedirectContext(response.context)
+
+                    case .idCollect,
+                            .oneTimePassword,
                             .addErrorToInternalStates,
                             .sendStatusRequest,
                             .addToState,
@@ -159,27 +183,26 @@ extension OwnID.CoreSDK {
                             .idCollectView,
                             .authManager,
                             .oneTimePasswordView,
-                            .oneTimePassword,
                             .browserVM,
                             .webApp,
-                            .success,
                             .codeResent,
                             .authManagerCancelled,
                             .cancelled,
                             .sameStep,
                             .notYouCancel:
                         internalStatesChange.append(action.debugDescription)
+
+                    case .fido2Authorize, .success:
+                        internalStatesChange.append(action.debugDescription)
+                        OwnID.UISDK.PopupManager.dismissPopup()
                         
                     case let .statusRequestLoaded(payload):
                         internalStatesChange.append(String(describing: action))
-                        finishIfNeeded(payload: payload)
+                        finish(with: .event(.success(payload)))
                         
                     case .error(let wrapper):
                         internalStatesChange.append(String(describing: action))
-                        if !wrapper.isOnUI {
-                            flowsFinished()
-                            resultPublisher.send(completion: .failure(wrapper.error))
-                        } else {
+                        if wrapper.isOnUI {
                             let category: EventCategory
                             switch store.value.type {
                             case .login:
@@ -194,24 +217,67 @@ extension OwnID.CoreSDK {
                                                                                errorMessage: wrapper.error.localizedDescription,
                                                                                errorCode: wrapper.error.metricErrorCode))
                         }
+
+                        if !wrapper.isOnUI {
+                            finish(with: .failure(wrapper.error))
+                        }
                         
                     case .stopRequestLoaded(let flow):
                         internalStatesChange.append(String(describing: action))
-                        flowsFinished()
-                        resultPublisher.send(.cancelled(flow: flow))
+                        finish(with: .event(.cancelled(flow: flow)))
                     }
                 }
                 .store(in: &bag)
         }
         
-        private func finishIfNeeded(payload: Payload) {
-            flowsFinished()
-            resultPublisher.send(.success(payload))
+        private enum FinishResult {
+            case event(Event)
+            case failure(OwnID.CoreSDK.Error)
         }
-        
-        private func flowsFinished() {
+
+        private func finish(with result: FinishResult) {
+            guard beginTermination() else { return }
+            finishResources()
+
+            switch result {
+            case .event(let event):
+                resultPublisher.send(event)
+            case .failure(let error):
+                resultPublisher.send(completion: .failure(error))
+            }
+        }
+
+        private func beginTermination() -> Bool {
+            guard !isTerminated else { return false }
+            isTerminated = true
+            return true
+        }
+
+        func updateRedirectContext(_ context: OwnID.CoreSDK.Context) {
+            assert(Thread.isMainThread)
+            guard redirectContext != context else { return }
+            if let redirectContext {
+                OwnID.CoreSDK.shared.unregisterRedirectContext(redirectContext)
+            }
+            redirectContext = context
+            OwnID.CoreSDK.shared.registerRedirectContext(context)
+        }
+
+        private func finishResources() {
             logInternalStates()
+            if let redirectContext {
+                OwnID.CoreSDK.shared.unregisterRedirectContext(redirectContext)
+                self.redirectContext = nil
+            }
+            OwnID.UISDK.PopupManager.dismissPopup()
+            if #available(iOS 16.0, *) {
+                store.value.authManager?.cancel()
+            }
             store.cancel()
+            store.value.browserViewModelStore?.cancel()
+            store.value.authManagerStore?.cancel()
+            store.value.oneTimePasswordStore?.cancel()
+            store.value.idCollectViewStore?.cancel()
             bag.removeAll()
         }
     }

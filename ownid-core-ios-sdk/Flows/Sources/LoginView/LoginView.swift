@@ -36,8 +36,8 @@ private extension OwnID.FlowsSDK.LoginView {
                                          visualConfig: visualConfig,
                                          authType: .login,
                                          shouldShowTooltip: $viewModel.shouldShowTooltip,
-                                         isLoading: viewModel.state.isLoadingBinding)
-        viewModel.subscribe(to: view.eventPublisher)
+                                         isLoading: viewModel.state.isLoadingBinding,
+                                         actionHandler: { [weak viewModel] in viewModel?.buttonTappedDebounced() })
         return view.eraseToAnyView()
     }
 }

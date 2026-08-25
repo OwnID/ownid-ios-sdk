@@ -11,7 +11,7 @@ extension OwnID.CoreSDK.CoreViewModel {
     }
 
     class OTPAuthStep: BaseStep {
-        private let step: Step
+        private var step: Step
         
         init(step: Step) {
             self.step = step
@@ -94,7 +94,12 @@ extension OwnID.CoreSDK.CoreViewModel {
                         OwnID.CoreSDK.logger.log(level: .debug, message: "Restart Code Request Finished", type: Self.self)
                     })
                     .map { [self] in handleResponse(response: $0, isOnUI: true) }
-                    .catch { Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0, isOnUI: true, type: Self.self))) }
+                    .catch {
+                        Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0,
+                                                                    isOnUI: true,
+                                                                    flowFinished: false,
+                                                                    type: Self.self)))
+                    }
                     .eraseToEffect()
                 return [effect]
             } else {
@@ -125,9 +130,10 @@ extension OwnID.CoreSDK.CoreViewModel {
                     OwnID.CoreSDK.logger.log(level: .debug, message: "Resend Code Request Finished", type: Self.self)
                 })
                 .map { [self] response in
-                    if let type = response.step?.type {
-                        switch type {
+                    if let step = response.step {
+                        switch step.type {
                         case .linkWithCode, .loginIDAuthorization, .verifyLoginID:
+                            self.step = step
                             return .sameStep
                         default:
                             return handleResponse(response: response, isOnUI: true)
@@ -136,7 +142,12 @@ extension OwnID.CoreSDK.CoreViewModel {
                         return handleResponse(response: response, isOnUI: true)
                     }
                 }
-                .catch { Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0, isOnUI: true, type: Self.self))) }
+                .catch {
+                    Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0,
+                                                                isOnUI: true,
+                                                                flowFinished: false,
+                                                                type: Self.self)))
+                }
                 .eraseToEffect()
             return [effect]
         }
@@ -168,7 +179,7 @@ extension OwnID.CoreSDK.CoreViewModel {
                                                                            context: context,
                                                                            loginId: loginId,
                                                                            source: operationType.metricName))
-                    } else if let error = response.error {
+                    } else if response.error != nil {
                         OwnID.CoreSDK.eventService.sendMetric(.trackMetric(action: .wrongOTP(name: operationType.metricName),
                                                                            category: eventCategory,
                                                                            context: context,
@@ -178,7 +189,12 @@ extension OwnID.CoreSDK.CoreViewModel {
 
                     return handleResponse(response: response, isOnUI: true)
                 })
-                .catch { Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0, isOnUI: true, type: Self.self))) }
+                .catch {
+                    Just(Action.error(OwnID.CoreSDK.ErrorWrapper(error: $0,
+                                                                isOnUI: true,
+                                                                flowFinished: false,
+                                                                type: Self.self)))
+                }
                 .eraseToEffect()
             return [effect]
         }

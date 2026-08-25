@@ -26,9 +26,6 @@ let package = Package(
             name: "OwnIDCoreSDK",
             dependencies: [],
             path: "ownid-core-ios-sdk",
-            exclude: [
-                "Tests",
-            ],
             resources: [
                 .process("Resources")
             ]

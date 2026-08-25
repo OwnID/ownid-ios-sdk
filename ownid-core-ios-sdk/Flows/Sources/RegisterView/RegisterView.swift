@@ -37,8 +37,8 @@ private extension OwnID.FlowsSDK.RegisterView {
                                          visualConfig: config,
                                          authType: .register,
                                          shouldShowTooltip: $viewModel.shouldShowTooltip,
-                                         isLoading: .constant(viewModel.state.isLoading))
-        viewModel.subscribe(to: view.eventPublisher)
+                                         isLoading: .constant(viewModel.state.isLoading),
+                                         actionHandler: { [weak viewModel] in viewModel?.buttonTappedDebounced() })
         return view.eraseToAnyView()
     }
 }
