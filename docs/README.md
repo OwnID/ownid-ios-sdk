@@ -36,5 +36,5 @@ Use this page as a compact map of the public iOS SDK documentation.
 
 ## Examples
 
-- [DemoBase](../Demo/DemoBase): standard SDK setup, Boost Flow, Elite Flow, Headless, Passkey Enrollment, and example identity-provider wiring.
-- [DemoAdvanced](../Demo/DemoAdvanced): customized Boost widgets, app-hosted operation UI, low-level API and operation scenarios, Headless, and Google provider wiring.
+- [DemoBase](../DemoBase): standard SDK setup, Boost Flow, Elite Flow, Headless, Passkey Enrollment, and example identity-provider wiring.
+- [DemoAdvanced](../DemoAdvanced): customized Boost widgets, app-hosted operation UI, low-level API and operation scenarios, Headless, and Google provider wiring.

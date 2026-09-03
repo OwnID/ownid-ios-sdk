@@ -12,8 +12,8 @@ import Foundation
 public protocol LanguageTagsProvider: Capability, Sendable {
     /// Sets the active language tags, replacing or restoring system-based language detection.
     ///
-    /// - Parameter tags: BCP 47 language tags (for example, `["en-US", "fr-FR"]`). An empty array restores system
-    /// language tracking and immediately publishes the current system languages.
+    /// - Parameter tags: Language codes with optional regions (for example, `["en", "en-US"]`). An empty array restores
+    /// automatic language selection.
     func setLanguageTags(_ tags: [String])
 
     /// Emits the current list of ``LanguageTag``s.

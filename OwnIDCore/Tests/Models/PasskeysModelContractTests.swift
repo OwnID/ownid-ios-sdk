@@ -154,6 +154,30 @@ struct PasskeysModelContractTests {
         #expect(decodedAttestation.response.transports == [.internal, .hybrid])
     }
 
+    @Test func `Attestation response is publicly constructible and Codable uses the SDK-local value shape`() throws {
+        let ownIdData = #"{"vendor":"example","nested":{"keep":true}}"#
+        let response = AttestationResponse(
+            proofToken: ProofToken(token: "proof-token"),
+            ownIdData: ownIdData
+        )
+
+        #expect(response.proofToken == ProofToken(token: "proof-token"))
+        #expect(response.ownIdData == ownIdData)
+
+        let encoded = try modelJSON.object(encoding: response)
+        let encodedProofToken = try #require(encoded["proofToken"] as? [String: Any])
+        #expect(encoded.keys.sorted() == ["ownIdData", "proofToken"])
+        #expect(encodedProofToken["token"] as? String == "proof-token")
+        #expect(encoded["ownIdData"] as? String == ownIdData)
+
+        let decoded = try modelJSON.decoder.decode(
+            AttestationResponse.self,
+            from: try modelJSON.data(encoding: response)
+        )
+        #expect(decoded.proofToken == response.proofToken)
+        #expect(decoded.ownIdData == ownIdData)
+    }
+
     @Test func `WebAuthn value descriptions are stable and redact selected opaque values`() throws {
         let opaqueValue = "1234567890ABCDEFGHIJ"
         let redactedOpaqueValue = "12345678..[4]...CDEFGHIJ"
@@ -197,13 +221,10 @@ struct PasskeysModelContractTests {
             ),
             authenticatorAttachment: .platform
         )
-        let attestationResponseJSON = """
-            {
-              "proofToken": { "token": "\(opaqueValue)" },
-              "ownIdData": "{\\"own\\":\\"secret\\"}"
-            }
-            """
-        let attestationResponse = try modelJSON.decoder.decode(AttestationResponse.self, from: Data(attestationResponseJSON.utf8))
+        let attestationResponse = AttestationResponse(
+            proofToken: ProofToken(token: opaqueValue),
+            ownIdData: #"{"own":"secret"}"#
+        )
         let assertionOptionsDescription =
             "AssertionOptions(challenge=assertion-challenge, rpID=login.example.test, " +
             "allowCredentials=[\(descriptorDescription)], userVerification=preferred, timeout=120000)"

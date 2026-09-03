@@ -4,17 +4,18 @@ import Foundation
 ///
 /// The default repository stores the record in SDK-owned storage scoped by the configured storage file name. The SDK
 /// treats the value as returning-user state only; it may contain PII, encryption is not added by this capability, and
-/// apps that replace it own equivalent protection and retention behavior.
+/// apps that replace it own equivalent protection and retention behavior. The default repository treats storage
+/// mutation failures as best effort. The default storage implementation logs those failures before rethrowing them.
 public protocol UserRepository: Capability, Sendable {
     /// Returns the last authenticated user, or `nil` if none is stored.
     ///
     /// - Returns: The last ``User``, or `nil`.
-    /// - Throws: On storage read failure.
+    /// - Throws: If the stored user cannot be decoded.
     func lastUser() async throws -> User?
 
     /// Stores `user` as the last authenticated user.
     ///
-    /// - Throws: On storage write failure.
+    /// - Throws: If `user` cannot be encoded.
     func setLastUser(_ user: User) async throws
     /// Removes the stored last-user record.
     func clearLastUser() async

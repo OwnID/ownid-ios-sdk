@@ -79,8 +79,8 @@ final class EliteFlowCoordinator {
 
 ## Examples
 
-- [Base Elite Flow ViewModel example](../../Demo/DemoBase/App/Views/Elite/EliteFlowViewModel.swift)
-- [Base Elite Flow screen example](../../Demo/DemoBase/App/Views/Elite/EliteFlowScreen.swift)
+- [Base Elite Flow ViewModel example](../../DemoBase/App/Views/Elite/EliteFlowViewModel.swift)
+- [Base Elite Flow screen example](../../DemoBase/App/Views/Elite/EliteFlowScreen.swift)
 
 ## Prerequisites
 

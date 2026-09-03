@@ -30,4 +30,17 @@ struct OwnIDUIModuleInjectionContractTests {
             } == true
         )
     }
+
+    @Test func `Direct UI module injection releases a discarded bare container`() throws {
+        let containerReleased = try Self.injectBareContainerAndDropHandle()
+
+        #expect(containerReleased(), "Expected the discarded UI module container to be released")
+    }
+
+    private static func injectBareContainerAndDropHandle() throws -> @Sendable () -> Bool {
+        let container = DIContainerImpl(scopeName: "ui-module-release")
+        container.register((any UIContextProvider).self, instance: ModuleTestUIContextProvider())
+        try OwnIDUIModule.injectIntoInstanceContainer(container: container)
+        return { [weak container] in container == nil }
+    }
 }

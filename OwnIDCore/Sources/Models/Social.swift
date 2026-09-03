@@ -58,7 +58,7 @@ public struct SocialChallenge: Codable, Sendable, Equatable, Hashable, CustomStr
     }
 
     public var description: String {
-        "SocialChallenge(challengeId: \(challengeID), timeout: \(timeout), clientId: \(clientID), challengeUrl: \(String(describing: challengeURL)))"
+        "SocialChallenge(challengeId: '*', timeout: \(timeout), clientId: \(clientID), challengeUrl: \(String(describing: challengeURL)))"
     }
 }
 

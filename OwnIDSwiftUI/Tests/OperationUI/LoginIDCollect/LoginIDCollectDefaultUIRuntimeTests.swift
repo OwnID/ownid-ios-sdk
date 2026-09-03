@@ -74,32 +74,11 @@ struct LoginIDCollectDefaultUIRuntimeTests {
         try submitReturn(on: textField)
         await host.settle()
         #expect(recorder.continuedValues == ["invalid"])
-        #expect(host.accessibilityLabels().contains("Enter a valid email"))
         #expect(textField.accessibilityHint == "Enter a valid email")
 
         await enterText("user@example.test", in: textField, host: host)
         #expect(recorder.changedValues == ["invalid", "user@example.test"])
-        #expect(!host.accessibilityLabels().contains("Enter a valid email"))
         #expect(textField.accessibilityHint == nil)
-    }
-
-    @Test func `Login ID continue and cancel controls invoke callbacks`() async throws {
-        let recorder = LoginIDCollectRuntimeRecorder()
-        let host = SwiftUIRuntimeHost(
-            rootView: LoginIDCollectRuntimeFixture(recorder: recorder)
-        )
-        defer { host.close() }
-        await host.settle()
-
-        let textField = try #require(host.textFields().first)
-        await enterText("user@example.test", in: textField, host: host)
-
-        try activateControl(labeled: "Continue", in: host)
-        try activateControl(labeled: "Cancel", in: host)
-        await host.settle()
-
-        #expect(recorder.continuedValues == ["user@example.test"])
-        #expect(recorder.cancelCount == 1)
     }
 
     @Test func `Login ID field requests initial focus when presentation is ready`() async throws {

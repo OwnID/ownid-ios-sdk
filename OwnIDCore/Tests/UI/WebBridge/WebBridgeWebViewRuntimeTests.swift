@@ -6,12 +6,11 @@ import WebKit
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: WB-BRIDGE-130, WB-BRIDGE-140, WB-BRIDGE-170, WB-BRIDGE-180, WB-BRIDGE-190
+// Covers: WB-BRIDGE-130, WB-BRIDGE-140, WB-BRIDGE-170, WB-BRIDGE-180, WB-BRIDGE-190, WB-BRIDGE-200, WB-BRIDGE-310, WB-BRIDGE-320
 @MainActor
 @Suite(.serialized)
 struct WebBridgeWebViewRuntimeTests {
 
-    // Covers: WB-BRIDGE-200
     @Test func `Coordinator blocks unsafe navigation schemes in both delegate paths and keeps OwnID callbacks internal`() async throws {
         let openedURLs = FlowLocked<[URL]>([])
         let coordinator = WebBridgeWebViewCoordinator(
@@ -360,7 +359,7 @@ struct WebBridgeWebViewRuntimeTests {
         URL(string: "data:text/html;base64,PGh0bWw+")!,
         URL(string: "file:///private/var/tmp/ownid.html")!,
         URL(string: "content://com.example.provider/ownid")!,
-        URL(string: "intent://login.example.test/#Intent;scheme=https;end")!
+        URL(string: "intent://login.example.test/#Intent;scheme=https;end")!,
     ]
 }
 
@@ -621,7 +620,8 @@ struct WebBridgePresenterRuntimeTests {
 
     @Test func `Presenter reports startup failure when no host is available`() async throws {
         WebBridgePresenterImpl.__testResetLaunchFlag()
-        let presenter = WebBridgePresenterImpl(uiContextProvider: FixedWebBridgeUIContextProvider(host: nil), logger: nil)
+        let contextProvider = FixedWebBridgeUIContextProvider(host: nil)
+        let presenter = WebBridgePresenterImpl(uiContextProvider: contextProvider, logger: nil)
         let controller = makePresenterController(id: "startup-failure")
         let failureSink = CapturedFlowValue<WebBridgeOperationFailure.UI>()
         let detachCount = FlowLocked(0)
@@ -642,6 +642,7 @@ struct WebBridgePresenterRuntimeTests {
         }
         #expect(delayedFailure.message.contains("Top view controller not found"))
         #expect(detachCount.get() == 0)
+        #expect(contextProvider.topMostCallCount == 4)
     }
 
     @Test func `Presenter enforces one active launch until dismissed`() {
@@ -711,6 +712,22 @@ struct WebBridgePresenterRuntimeTests {
 @MainActor
 @Suite(.serialized)
 struct WebBridgeViewControllerRuntimeTests {
+
+    @Test func `Initial presentation gives the hosted document focus`() async throws {
+        let viewController = makeViewController(abortOperation: { _ in })
+        let window = makeWebBridgeHostWindow(rootViewController: viewController)
+        defer { tearDownWebBridgeHostWindow(window) }
+        viewController.beginAppearanceTransition(true, animated: false)
+        viewController.endAppearanceTransition()
+
+        let webView = try requireHostedWebBridgeWKWebView(in: viewController.view)
+        let documentHasFocus = try await evaluateWebBridgeTestJavaScript(
+            "String(document.hasFocus())",
+            in: webView
+        )
+
+        #expect(documentHasFocus == "true")
+    }
 
     @Test func `Dismiss attempt without back stack cancels active UI state`() async throws {
         let cancelSink = CapturedFlowValue<String>()
@@ -868,6 +885,7 @@ private struct HostedWebBridgeWebViewHarness: View {
 
 private final class FixedWebBridgeUIContextProvider: UIContextProvider, @unchecked Sendable {
     weak var host: UIViewController?
+    private(set) var topMostCallCount = 0
 
     init(host: UIViewController?) {
         self.host = host
@@ -880,7 +898,8 @@ private final class FixedWebBridgeUIContextProvider: UIContextProvider, @uncheck
 
     @MainActor
     func topMostViewController(_ window: UIWindow?) -> UIViewController? {
-        host
+        topMostCallCount += 1
+        return host
     }
 }
 

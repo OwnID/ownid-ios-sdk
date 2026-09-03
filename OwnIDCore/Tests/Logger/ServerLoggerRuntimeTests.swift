@@ -7,6 +7,84 @@ import Testing
 @Suite(.serialized)
 struct ServerLoggerRuntimeTests {
 
+    @Test func `Production routers isolate two real instances and keep root diagnostics local`() async throws {
+        try await withOwnIDRootStateTestLock {
+            let firstName = InstanceName(value: "ServerLoggerRuntimeTests-A-\(UUID().uuidString)")
+            let secondName = InstanceName(value: "ServerLoggerRuntimeTests-B-\(UUID().uuidString)")
+            let firstRootURL = try #require(URL(string: "https://server-logger-runtime.ownid.test/production-a-\(UUID().uuidString)"))
+            let secondRootURL = try #require(URL(string: "https://server-logger-runtime.ownid.test/production-b-\(UUID().uuidString)"))
+            defer {
+                OwnID.destroy(instanceName: firstName)
+                OwnID.destroy(instanceName: secondName)
+            }
+
+            OwnID.initialize(instanceName: firstName) { configuration in
+                configuration.appID = "DiagA\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+                configuration.rootURL = "https://127.0.0.1:9/production-a"
+            }
+            OwnID.initialize(instanceName: secondName) { configuration in
+                configuration.appID = "DiagB\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+                configuration.rootURL = "https://127.0.0.1:9/production-b"
+            }
+
+            let firstContainer = try #require(OwnID.getInstanceContainer(firstName))
+            let secondContainer = try #require(OwnID.getInstanceContainer(secondName))
+            let firstHarness = try makeRoutedServerLoggerHarness(
+                instanceName: firstName,
+                rootURL: firstRootURL,
+                taskScope: #require(firstContainer.getOrNil(type: TaskScope.self))
+            )
+            let secondHarness = try makeRoutedServerLoggerHarness(
+                instanceName: secondName,
+                rootURL: secondRootURL,
+                taskScope: #require(secondContainer.getOrNil(type: TaskScope.self))
+            )
+            ServerLoggerTestURLProtocol.register(.http(statusCode: 202, body: "{}"), for: firstHarness.eventsURL)
+            ServerLoggerTestURLProtocol.register(.http(statusCode: 202, body: "{}"), for: secondHarness.eventsURL)
+            defer {
+                ServerLoggerTestURLProtocol.unregister(firstHarness.eventsURL)
+                ServerLoggerTestURLProtocol.unregister(secondHarness.eventsURL)
+            }
+            firstContainer.register(ServerLogger.self, instance: firstHarness.logger)
+            secondContainer.register(ServerLogger.self, instance: secondHarness.logger)
+            await firstHarness.enableDebug()
+            await secondHarness.enableDebug()
+
+            let firstRouter = try #require(firstContainer.getOrNil(type: OwnIDLogRouter.self))
+            let secondRouter = try #require(secondContainer.getOrNil(type: OwnIDLogRouter.self))
+            let rootRouter = try #require(OwnIDRootDIContainer.shared.getOrNil(type: OwnIDLogRouter.self))
+            let rootMarker = "root-marker-\(UUID().uuidString)"
+            let firstMarker = "first-marker-\(UUID().uuidString)"
+            let secondMarker = "second-marker-\(UUID().uuidString)"
+
+            rootRouter.logE(source: Self.self, prefix: "productionRouter", message: rootMarker)
+            firstRouter.logE(source: Self.self, prefix: "productionRouter", message: firstMarker)
+            secondRouter.logE(source: Self.self, prefix: "productionRouter", message: secondMarker)
+
+            let firstRequest = try await withTestTimeout("first instance diagnostic") {
+                try await ServerLoggerTestURLProtocol.waitForRequest(to: firstHarness.eventsURL) {
+                    serverLoggerRequestBodyData($0).map { String(decoding: $0, as: UTF8.self).contains(firstMarker) } == true
+                }
+            }
+            let secondRequest = try await withTestTimeout("second instance diagnostic") {
+                try await ServerLoggerTestURLProtocol.waitForRequest(to: secondHarness.eventsURL) {
+                    serverLoggerRequestBodyData($0).map { String(decoding: $0, as: UTF8.self).contains(secondMarker) } == true
+                }
+            }
+
+            let firstPayload = try Self.payload(from: firstRequest)
+            let secondPayload = try Self.payload(from: secondRequest)
+            let allFirstBodies = ServerLoggerTestURLProtocol.requests(for: firstHarness.eventsURL).compactMap(serverLoggerRequestBodyData)
+            let allSecondBodies = ServerLoggerTestURLProtocol.requests(for: secondHarness.eventsURL).compactMap(serverLoggerRequestBodyData)
+
+            #expect(firstPayload["codeInitiator"] as? String == "[\(firstName.description)]ServerLoggerRuntimeTests:productionRouter")
+            #expect(secondPayload["codeInitiator"] as? String == "[\(secondName.description)]ServerLoggerRuntimeTests:productionRouter")
+            #expect(allFirstBodies.allSatisfy { !String(decoding: $0, as: UTF8.self).contains(secondMarker) })
+            #expect(allSecondBodies.allSatisfy { !String(decoding: $0, as: UTF8.self).contains(firstMarker) })
+            #expect((allFirstBodies + allSecondBodies).allSatisfy { !String(decoding: $0, as: UTF8.self).contains(rootMarker) })
+        }
+    }
+
     @Test func `Server logger waits for app config before posting diagnostics`() async throws {
         let harness = try Self.makeHarness(path: "waits-for-config")
         defer { harness.shutdown() }
@@ -102,6 +180,53 @@ struct ServerLoggerRuntimeTests {
         #expect(metadata["isFingerprintHardwarePresent"] as? Bool == false)
         #expect(metadata["isFaceHardwarePresent"] as? Bool == true)
         #expect(metadata["isStrongBiometricEnabled"] as? Bool == true)
+        #expect(metadata["previousRun"] == nil)
+    }
+
+    @Test func `Previous run metadata is attached only to its owning diagnostic`() async throws {
+        let harness = try Self.makeHarness(path: "previous-run")
+        defer { harness.shutdown() }
+
+        ServerLoggerTestURLProtocol.register(.http(statusCode: 202, body: "{}"), for: harness.eventsURL)
+        defer { ServerLoggerTestURLProtocol.unregister(harness.eventsURL) }
+
+        let logger = harness.makeLogger()
+        await harness.appConfigProvider.resolve(Self.appConfig(logLevel: .debug))
+        logger.log(
+            level: .warn,
+            className: "RunDiagnostic",
+            message: "Previous run observed",
+            cause: nil,
+            previousRun: PreviousRun(
+                correlationId: "previous-correlation",
+                processId: 4_242,
+                exit: PreviousRun.Exit(
+                    diagnosticType: "crash",
+                    terminationReason: "namespace SIGNAL, code 0xb",
+                    signal: 11,
+                    exceptionType: 1,
+                    exceptionCode: "0xdeadbeef"
+                )
+            )
+        )
+
+        try await withTestTimeout("server logger previous run request") {
+            await ServerLoggerTestURLProtocol.waitForRequest(to: harness.eventsURL)
+        }
+
+        let request = try #require(ServerLoggerTestURLProtocol.requests(for: harness.eventsURL).first)
+        let payload = try Self.payload(from: request)
+        let metadata = try #require(payload["metadata"] as? [String: Any])
+        let previousRun = try #require(metadata["previousRun"] as? [String: Any])
+        let exit = try #require(previousRun["exit"] as? [String: Any])
+
+        #expect(previousRun["correlationId"] as? String == "previous-correlation")
+        #expect(previousRun["processId"] as? Int == 4_242)
+        #expect(exit["diagnosticType"] as? String == "crash")
+        #expect(exit["terminationReason"] as? String == "namespace SIGNAL, code 0xb")
+        #expect(exit["signal"] as? Int == 11)
+        #expect(exit["exceptionType"] as? Int == 1)
+        #expect(exit["exceptionCode"] as? String == "0xdeadbeef")
     }
 
     @Test func `Server logger suppresses HTTP logging on diagnostics network requests`() async throws {
@@ -136,7 +261,12 @@ struct ServerLoggerRuntimeTests {
         let configuration = try OwnIDConfigurationImpl(appID: "Diag123", env: .uat, region: .eu, rootURL: rootURL.absoluteString)
         let sessionConfiguration = URLSessionConfiguration.ephemeral
         sessionConfiguration.protocolClasses = [ServerLoggerTestURLProtocol.self]
-        let network = NetworkImpl(urlSession: URLSession(configuration: sessionConfiguration), retryConfig: nil, httpLogger: nil)
+        let network = NetworkImpl(
+            urlSession: URLSession(configuration: sessionConfiguration),
+            shutdownToken: ShutdownToken(),
+            retryConfig: nil,
+            httpLogger: nil
+        )
         let provider = ScriptedAppConfigProvider()
         let localInfo = ServerLoggerLocalInfo()
         let taskScope = TaskScope(shutdownToken: ShutdownToken())
@@ -169,20 +299,7 @@ struct ServerLoggerRuntimeTests {
     }
 
     private static func bodyData(from request: URLRequest) -> Data? {
-        if let body = request.httpBody { return body }
-        guard let stream = request.httpBodyStream else { return nil }
-
-        stream.open()
-        defer { stream.close() }
-
-        var data = Data()
-        var buffer = [UInt8](repeating: 0, count: 1024)
-        while stream.hasBytesAvailable {
-            let read = stream.read(&buffer, maxLength: buffer.count)
-            if read <= 0 { break }
-            data.append(buffer, count: read)
-        }
-        return data
+        serverLoggerRequestBodyData(request)
     }
 
 }
@@ -233,6 +350,63 @@ private struct ServerLoggerRuntimeHarness {
     func shutdown() {
         taskScope.shutdown()
     }
+}
+
+struct RoutedServerLoggerHarness {
+    let logger: ServerLogger
+    let eventsURL: URL
+    private let appConfigProvider: ScriptedAppConfigProvider
+
+    fileprivate init(logger: ServerLogger, eventsURL: URL, appConfigProvider: ScriptedAppConfigProvider) {
+        self.logger = logger
+        self.eventsURL = eventsURL
+        self.appConfigProvider = appConfigProvider
+    }
+
+    func enableDebug() async {
+        await appConfigProvider.resolve(
+            AppConfig(
+                loginIdConfig: AppConfig.default.loginIdConfig,
+                displayName: nil,
+                webView: nil,
+                ui: nil,
+                logLevel: .debug
+            )
+        )
+    }
+}
+
+func makeRoutedServerLoggerHarness(
+    instanceName: InstanceName,
+    rootURL: URL,
+    taskScope: TaskScope
+) throws -> RoutedServerLoggerHarness {
+    let configuration = try OwnIDConfigurationImpl(
+        appID: "Diag\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))",
+        env: .uat,
+        region: .eu,
+        rootURL: rootURL.absoluteString
+    )
+    let sessionConfiguration = URLSessionConfiguration.ephemeral
+    sessionConfiguration.protocolClasses = [ServerLoggerTestURLProtocol.self]
+    let network = NetworkImpl(
+        urlSession: URLSession(configuration: sessionConfiguration),
+        shutdownToken: ShutdownToken(),
+        retryConfig: nil,
+        httpLogger: nil
+    )
+    let appConfigProvider = ScriptedAppConfigProvider()
+    let eventsURL = rootURL.appendingPathComponent("events")
+    let logger = ServerLogger(
+        instanceName: instanceName,
+        configuration: configuration,
+        localInfo: ServerLoggerLocalInfo(),
+        appConfigProvider: appConfigProvider,
+        network: network,
+        coder: JSONCoderImpl(),
+        taskScope: taskScope
+    )
+    return RoutedServerLoggerHarness(logger: logger, eventsURL: eventsURL, appConfigProvider: appConfigProvider)
 }
 
 private actor ScriptedAppConfigProvider: AppConfigProvider {
@@ -299,7 +473,7 @@ private struct ServerLoggerLocalInfo: LocalInfo {
     let isStrongBiometricEnabled = true
 }
 
-private enum ServerLoggerTestURLProtocolRoute: Sendable {
+enum ServerLoggerTestURLProtocolRoute: Sendable {
     case http(statusCode: Int, body: String)
 }
 
@@ -381,7 +555,7 @@ private final class ServerLoggerURLProtocolRegistry: @unchecked Sendable {
     }
 }
 
-private final class ServerLoggerTestURLProtocol: URLProtocol {
+final class ServerLoggerTestURLProtocol: URLProtocol {
     private static let registry = ServerLoggerURLProtocolRegistry()
 
     static func register(_ route: ServerLoggerTestURLProtocolRoute, for url: URL) {
@@ -398,6 +572,18 @@ private final class ServerLoggerTestURLProtocol: URLProtocol {
 
     static func waitForRequest(to url: URL) async {
         await registry.waitForRequest(to: url)
+    }
+
+    static func waitForRequest(
+        to url: URL,
+        where predicate: @escaping @Sendable (URLRequest) -> Bool
+    ) async throws -> URLRequest {
+        while true {
+            if let request = requests(for: url).first(where: predicate) {
+                return request
+            }
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
@@ -429,4 +615,21 @@ private final class ServerLoggerTestURLProtocol: URLProtocol {
     }
 
     override func stopLoading() {}
+}
+
+func serverLoggerRequestBodyData(_ request: URLRequest) -> Data? {
+    if let body = request.httpBody { return body }
+    guard let stream = request.httpBodyStream else { return nil }
+
+    stream.open()
+    defer { stream.close() }
+
+    var data = Data()
+    var buffer = [UInt8](repeating: 0, count: 1024)
+    while stream.hasBytesAvailable {
+        let read = stream.read(&buffer, maxLength: buffer.count)
+        if read <= 0 { break }
+        data.append(buffer, count: read)
+    }
+    return data
 }

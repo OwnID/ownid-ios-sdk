@@ -446,7 +446,7 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
     }
 }
 
-#if DEBUG
+#if DEBUG || OWNID_RELEASE_TESTING
     extension WebBridgePresenterImpl {
         @MainActor
         internal static func __testResetLaunchFlag() {

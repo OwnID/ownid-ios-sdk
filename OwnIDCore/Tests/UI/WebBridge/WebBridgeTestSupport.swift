@@ -232,7 +232,7 @@ enum WebBridgeFactoryError: Error {
     case expected
 }
 
-struct EmptyWebBridgeResolver: DIContainerResolver {
+final class EmptyWebBridgeResolver: DIContainerResolver {
     let scopeName = "webbridge-plugin-store-tests"
 
     func canResolve(_ type: Any.Type) -> Bool {

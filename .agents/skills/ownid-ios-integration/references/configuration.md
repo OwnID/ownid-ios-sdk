@@ -28,8 +28,8 @@ Primary public docs: `../../../../docs/setup/configuration.md`.
   `../../../../docs/README.md`, and
   `../../../../docs/setup/configuration.md`.
 - Working startup/provider/theme composition:
-  `../../../../Demo/DemoBase/App/DemoBaseApp.swift` and
-  `../../../../Demo/DemoAdvanced/App/DemoAdvancedApp.swift`.
+  `../../../../DemoBase/App/DemoBaseApp.swift` and
+  `../../../../DemoAdvanced/App/DemoAdvancedApp.swift`.
 
 Use setup docs for configuration flows and terminology, production API/source
 for exact builders and behavior, and DemoBase/DemoAdvanced for working startup
@@ -119,12 +119,11 @@ Use one configuration source for the app startup path.
   JSON and plist accept `rootURL` or `rootUrl`. The SDK strips query and
   fragment values and appends its own paths. Configure the root as the HTTPS
   routing base, without SDK-owned path segments.
-- `languages`: Optional explicit BCP 47 language-tag list. Omit it to keep the
-  current language mode; on fresh startup this means automatic system language
-  tracking.
+- `languages`: Optional explicit language-code list with optional regions, such
+  as `en` or `en-US`. Omit it to keep the current language mode; on fresh
+  startup this means automatic system language tracking.
 
-Unknown JSON and plist keys are ignored. Invalid builders, invalid or empty
-JSON, missing or unreadable files, empty files, and invalid values are logged and
+Unknown JSON and plist keys are ignored. Initialization failures are logged and
 leave the current SDK runtime unchanged.
 
 ## Environment And Tenant Setup
@@ -173,7 +172,7 @@ OwnID.setLanguage([])
 
 Rules:
 
-- Tags should be BCP 47 language tags.
+- Use language codes with optional regions, such as `en` or `en-US`.
 - Passing a non-empty `languages` array during initialization or calling
   `OwnID.setLanguage(...)` with a non-empty array switches the process from
   automatic system language tracking to the explicit list.
@@ -214,6 +213,11 @@ OwnID.logger { logger in
 Rules:
 
 - The most recent `OwnID.logger { ... }` call replaces the previous logger.
+- The custom sink is `@Sendable` and may run on any thread. Capture only
+  concurrency-safe state, keep the sink thread-safe, and do not synchronously
+  call OwnID lifecycle or configuration APIs from it.
+- Errors from a throwing custom sink are reported through OSLog and are not
+  rethrown.
 - Use `.debug` or `.verbose` only for a local diagnostic run or a time-boxed
   diagnostic task.
 - Keep production logging at `.warn`, `.error`, or `.off` unless the app's

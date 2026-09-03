@@ -63,6 +63,34 @@ struct VerificationModelContractTests {
         )
     }
 
+    @Test func `Verification challenge public initializers keep supplied values`() {
+        let resendPolicy = VerificationChallenge.ResendPolicy(allow: false, attempts: -1, debounce: 0)
+        let otp = VerificationChallenge.Methods.Otp(length: 2)
+        let magicLink = VerificationChallenge.Methods.MagicLink()
+        let methods = VerificationChallenge.Methods(otp: otp, magicLink: magicLink)
+        let challenge = VerificationChallenge(
+            challengeID: ChallengeID("verification-challenge"),
+            resendPolicy: resendPolicy,
+            timeout: Timeout(milliseconds: 1_000),
+            attempts: -2,
+            methods: methods,
+            channel: OperationChannel(channel: "person@example.com", id: "email-main")
+        )
+        let emptyMethods = VerificationChallenge.Methods(otp: nil, magicLink: nil)
+
+        #expect(challenge.challengeID == ChallengeID("verification-challenge"))
+        #expect(challenge.resendPolicy.allow == false)
+        #expect(challenge.resendPolicy.attempts == -1)
+        #expect(challenge.resendPolicy.debounce == 0)
+        #expect(challenge.timeout == Timeout(milliseconds: 1_000))
+        #expect(challenge.attempts == -2)
+        #expect(challenge.methods.otp?.length == 2)
+        #expect(challenge.methods.magicLink != nil)
+        #expect(challenge.channel == OperationChannel(channel: "person@example.com", id: "email-main"))
+        #expect(emptyMethods.otp == nil)
+        #expect(emptyMethods.magicLink == nil)
+    }
+
     @Test func `Verification method wire values are stable and strict`() throws {
         #expect(VerificationMethod.magicLink.rawValue == "MagicLink")
         #expect(VerificationMethod.otp.rawValue == "Otp")

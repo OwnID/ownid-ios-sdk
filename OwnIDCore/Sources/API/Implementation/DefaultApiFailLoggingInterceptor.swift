@@ -5,10 +5,10 @@ import Foundation
 /// Only SDK-detected API contract mismatches are reported. Business failures, transport failures, and local runtime
 /// failures pass through unchanged without server logging. Logging is best-effort and never changes the API result
 /// returned to the caller.
-internal final class DefaultApiFailLoggingInterceptor: APICallInterceptor, @unchecked Sendable {
-    private let serverLoggerProvider: () -> ServerLogger?
+internal final class DefaultApiFailLoggingInterceptor: APICallInterceptor {
+    private let serverLoggerProvider: @Sendable () -> ServerLogger?
 
-    internal init(serverLoggerProvider: @escaping () -> ServerLogger?) {
+    internal init(serverLoggerProvider: @escaping @Sendable () -> ServerLogger?) {
         self.serverLoggerProvider = serverLoggerProvider
     }
 

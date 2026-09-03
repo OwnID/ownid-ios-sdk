@@ -61,10 +61,6 @@ internal final class BoostLoginFlowImpl: BoostLoginFlow, @unchecked Sendable {
         self.context = context
         self.loginIDValidator = loginIDValidator
         self.logger = logger
-
-        taskScope.onShutdown { [weak self] in
-            self?.handleShutdown()
-        }
     }
 
     deinit {
@@ -91,6 +87,7 @@ internal final class BoostLoginFlowImpl: BoostLoginFlow, @unchecked Sendable {
         guard controller._acceptStart() else { return controller }
 
         activeAbortLock.withLock { activeAbort = nil }
+        guard taskScope.onShutdown({ [weak self] in self?.handleShutdown() }) != nil else { return controller }
         taskScope.spawn { [actor = self.actor] in
             await actor.send(event: .start(context))
         }

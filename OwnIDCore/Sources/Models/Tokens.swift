@@ -17,6 +17,10 @@ public enum AccessOrProofToken: Sendable, Equatable, Hashable {
 /// This model is publicly `Codable` with the ``token`` property. ``description`` returns a shortened value for
 /// diagnostics and must not be used when the full token is required.
 public struct AccessToken: Codable, Sendable, Equatable, Hashable, CustomStringConvertible {
+    private static let unpaddedBase64URLSegmentCharacters = CharacterSet(
+        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    )
+
     public let token: String
 
     public init(token: String) {
@@ -37,7 +41,7 @@ public struct AccessToken: Codable, Sendable, Equatable, Hashable, CustomStringC
             return json["sub"]?.stringValue
         }()
 
-        guard let subject, subject.isEmpty == false else {
+        guard let subject, subject.isEmpty == false, subject.allSatisfy(\.isWhitespace) == false else {
             throw TokenError(errorCode: .invalidArgument, message: "JWT subject is missing")
         }
 
@@ -45,8 +49,12 @@ public struct AccessToken: Codable, Sendable, Equatable, Hashable, CustomStringC
     }
 
     private func decodeJwtPayload(_ token: String) -> String? {
-        let parts = token.split(separator: ".")
-        guard parts.count >= 2 else { return nil }
+        let parts = token.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 3,
+            parts.allSatisfy({ part in
+                !part.isEmpty && part.unicodeScalars.allSatisfy { Self.unpaddedBase64URLSegmentCharacters.contains($0) }
+            })
+        else { return nil }
         let payloadPart = String(parts[1])
         guard let data = payloadPart.decodeBase64UrlSafe() else { return nil }
         return String(data: data, encoding: .utf8)

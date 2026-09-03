@@ -38,8 +38,8 @@ extension LogLevel {
 /// for local SDK log events. Instance-scoped server diagnostics are a separate sink and are filtered by remote
 /// ``AppConfig``.
 ///
-/// If you never configure a logger, local SDK logging is silent. The SDK uses ``OwnIDDefaultLogger`` only as a temporary
-/// fallback for early configuration failures before a configured SDK instance can provide local logging.
+/// If you never configure a logger, routine local SDK logging is silent. At selected SDK failure boundaries where no
+/// logger is configured, the SDK uses ``OwnIDDefaultLogger`` as a temporary fallback.
 public protocol OwnIDLogger: Sendable {
     /// Logging threshold; messages below this level are ignored.
     var level: LogLevel { get }
@@ -63,8 +63,7 @@ extension OwnIDLogger {
 
 /// Default fallback logger backed by OSLog.
 ///
-/// The SDK uses this logger only for early configuration failures before a configured SDK instance can provide local
-/// logging. It is not installed globally unless you register it yourself.
+/// The SDK uses this logger as a temporary fallback at selected failure boundaries when no logger is configured.
 public final class OwnIDDefaultLogger: OwnIDLogger {
     /// Creates a default logger with the given level and category.
     ///
@@ -112,7 +111,10 @@ public class OwnIDLoggerBuilder {
 
     /// Sets a custom sink for log events that can throw.
     ///
-    /// The sink is invoked only for messages accepted by ``level``. Thrown errors are caught and reported through OSLog.
+    /// The sink is invoked only for messages accepted by ``level``. The SDK invokes it synchronously on the thread that
+    /// emits the log, which may be any thread. Keep the sink thread-safe and return promptly; offload blocking I/O or
+    /// other long-running work to app-owned background execution. Do not synchronously call OwnID lifecycle or
+    /// configuration APIs from the sink. Thrown errors are caught and reported through OSLog.
     ///
     /// - Parameter block: Callback invoked for each log event: (level, className, message, cause).
     public func log(_ block: @escaping @Sendable (LogLevel, String, String, (any Error)?) throws -> Void) {
@@ -121,7 +123,10 @@ public class OwnIDLoggerBuilder {
 
     /// Sets a custom sink for log events.
     ///
-    /// The sink is invoked only for messages accepted by ``level``.
+    /// The sink is invoked only for messages accepted by ``level``. The SDK invokes it synchronously on the thread that
+    /// emits the log, which may be any thread. Keep the sink thread-safe and return promptly; offload blocking I/O or
+    /// other long-running work to app-owned background execution. Do not synchronously call OwnID lifecycle or
+    /// configuration APIs from the sink.
     ///
     /// - Parameter block: Callback invoked for each log event: (level, className, message, cause).
     public func log(_ block: @escaping @Sendable (LogLevel, String, String, (any Error)?) -> Void) {

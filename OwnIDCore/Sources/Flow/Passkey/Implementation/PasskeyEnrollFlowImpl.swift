@@ -50,10 +50,6 @@ internal final class PasskeyEnrollFlowImpl: PasskeyEnrollFlow, @unchecked Sendab
         self.taskScope = taskScope
         self.context = context
         self.logger = logger
-
-        taskScope.onShutdown { [weak self] in
-            self?.handleShutdown()
-        }
     }
 
     deinit {
@@ -83,6 +79,7 @@ internal final class PasskeyEnrollFlowImpl: PasskeyEnrollFlow, @unchecked Sendab
             if builder.traceParent == nil { builder.traceParent = TraceContext.generateTraceParent() }
         }
         activeAbortLock.withLock { activeAbort = nil }
+        guard taskScope.onShutdown({ [weak self] in self?.handleShutdown() }) != nil else { return controller }
         taskScope.spawn { [actor = self.actor] in
             await actor.send(event: .start(normalized))
         }

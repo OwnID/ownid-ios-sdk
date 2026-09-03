@@ -133,7 +133,7 @@ To use it:
 
 Sign in with Google setup has two parts: app-side provider wiring in your iOS app and Google Sign-In configuration in the OwnID Console. OwnID's source-only Google provider helper connects OwnID Google sign-in to GoogleSignIn-iOS; copy it into your app target.
 
-The Google provider implements `signIn`; it returns `SocialResult.success`, `canceled`, or `fail`. OwnID invokes `signIn`, `cancel`, and `signOut` on the main actor. For exact parameters and return values, see [`SignInWithSocial`](../../OwnIDCore/Sources/Capability/SignInWithSocial.swift).
+The Google provider implements `signIn`; it returns `SocialResult.success`, `canceled`, or `fail`. OwnID invokes `signIn`, `cancel`, and `signOut` on the main actor. The helper returns `fail` before presenting Google UI when the server or iOS client ID is empty or the reversed iOS-client callback URL scheme is missing. An already-canceled Swift task does not start sign-in. Canceling a task during an active provider attempt does not dismiss provider UI immediately; the helper returns `canceled` after that attempt completes. For exact parameters and return values, see [`SignInWithSocial`](../../OwnIDCore/Sources/Capability/SignInWithSocial.swift).
 
 To use it:
 
@@ -184,7 +184,7 @@ The source-only helper:
 - Must be copied into your app target.
 - Depends on the SAP Customer Data Cloud Swift SDK version owned by the app.
 
-The helper expects the OwnID-provided SAP Customer Data Cloud session payload shape: `sessionInfo` for successful session creation or `errorJson` for SAP Customer Data Cloud errors. Password-login cancellation is best-effort because SAP Customer Data Cloud does not expose a cancellation handle.
+The helper expects the OwnID-provided SAP Customer Data Cloud session payload shape: `sessionInfo` with non-empty `sessionToken` and `sessionSecret` for successful session creation, or `errorJson` for SAP Customer Data Cloud errors. It rejects missing or empty session credentials before assignment and returns failure if SAP Customer Data Cloud does not expose an active session after assignment. Password-login cancellation is best-effort because SAP Customer Data Cloud does not expose a cancellation handle.
 
 To use it:
 

@@ -114,8 +114,8 @@ The full documentation map is in [Documentation](docs/README.md).
 
 ## Examples
 
-- [DemoBase](Demo/DemoBase) shows standard SDK setup, Boost Flow, Elite Flow, Headless, Passkey Enrollment, and example identity-provider wiring.
-- [DemoAdvanced](Demo/DemoAdvanced) shows customized Boost widgets, app-hosted operation UI, low-level API and operation scenarios, Headless, and Google provider wiring.
+- [DemoBase](DemoBase) shows standard SDK setup, Boost Flow, Elite Flow, Headless, Passkey Enrollment, and example identity-provider wiring.
+- [DemoAdvanced](DemoAdvanced) shows customized Boost widgets, app-hosted operation UI, low-level API and operation scenarios, Headless, and Google provider wiring.
 
 These apps are examples. Use public SDK source, published products, and documentation as the integration contract.
 

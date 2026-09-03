@@ -86,6 +86,7 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
         configuration: any OwnIDConfiguration,
         loginIdConfigurationProvider: (any LoginIDConfigurationProvider)?,
         taskScope: TaskScope,
+        shutdownToken: ShutdownToken,
         logger: OwnIDLogRouter?,
         interceptor: (any APICallInterceptor)?,
         networkOverride: (any NetworkProtocol)? = nil,
@@ -110,6 +111,7 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
                     delegate: NoRedirectDelegate(),
                     delegateQueue: nil
                 ),
+                shutdownToken: shutdownToken,
                 requestAdapters: NetworkRequest.AdapterChain(adapters: [
                     NetworkRequest.DefaultHeadersAdapter(
                         localInfo: localInfo,

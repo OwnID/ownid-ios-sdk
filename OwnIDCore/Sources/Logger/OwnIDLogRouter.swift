@@ -1,24 +1,25 @@
 import Foundation
 
-/// Internal fan-out point for local SDK logs and instance-scoped server diagnostics.
+/// Internal routing point for local SDK logs and instance-scoped server diagnostics.
 ///
 /// Local logging and server diagnostics are independent sinks. Each log call is offered to the currently configured
-/// ``OwnIDLogger`` and to every active ``ServerLogger``. The local logger applies the app-configured threshold; each
-/// server logger applies the instance diagnostics threshold from remote ``AppConfig`` before sending.
+/// ``OwnIDLogger`` and to this router's optional ``ServerLogger``. The local logger applies the app-configured threshold;
+/// the server logger applies its instance diagnostics threshold from remote ``AppConfig`` before sending. The process
+/// root router has no server logger.
 ///
 /// A missing message is normalized to an empty string. Callers may pass an optional ``Error`` when the diagnostic is tied
 /// to a failure. Logging must remain a best-effort side effect: callers do not observe delivery success, server
 /// acceptance, or local sink failures through this API.
 @_spi(OwnIDInternal) public final class OwnIDLogRouter: Sendable {
     private let ownIDLoggerProvider: @Sendable () -> (any OwnIDLogger)?
-    private let serverLoggersProvider: @Sendable () -> [ServerLogger]
+    private let serverLoggerProvider: @Sendable () -> ServerLogger?
 
     internal init(
         ownIDLoggerProvider: @escaping @Sendable () -> (any OwnIDLogger)?,
-        serverLoggersProvider: @escaping @Sendable () -> [ServerLogger]
+        serverLoggerProvider: @escaping @Sendable () -> ServerLogger?
     ) {
         self.ownIDLoggerProvider = ownIDLoggerProvider
-        self.serverLoggersProvider = serverLoggersProvider
+        self.serverLoggerProvider = serverLoggerProvider
     }
 
     /// Logs a verbose message to local and server loggers.
@@ -56,9 +57,6 @@ import Foundation
 
         ownIDLoggerProvider()?.log(level: level, className: classNameLocal, message: message ?? "", cause: cause)
 
-        let serverLoggers = serverLoggersProvider()
-        for serverLogger in serverLoggers {
-            serverLogger.log(level: level, className: "\(typeName):\(prefix)", message: message ?? "", cause: cause)
-        }
+        serverLoggerProvider()?.log(level: level, className: "\(typeName):\(prefix)", message: message ?? "", cause: cause)
     }
 }

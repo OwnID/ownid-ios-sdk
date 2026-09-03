@@ -6,7 +6,7 @@ import Foundation
 /// operation or flow. Direct API entries make one API request and return ``APIResult``; operation lifecycle, UI, and
 /// settlement controllers belong to ``OwnIDOperation`` instead.
 ///
-/// Namespace handles are bound to the SDK scope they were obtained from.
+/// Namespace handles remain associated with the SDK instance state from which they were obtained.
 /// After ``OwnID/destroy(instanceName:)`` or same-name reinitialization, previously returned namespace handles are
 /// invalid and should be reacquired from the current ``OwnIDInstance``.
 ///
@@ -15,8 +15,9 @@ import Foundation
 /// Entries whose parameter type is optional support the zero-argument `start()` overload; enrollment entries require
 /// explicit params.
 ///
-/// Entries resolve their runtime from the bound scope when ``APIEntry/start(params:)`` is called. See ``APIEntry`` for
-/// missing-dependency and cancellation behavior.
+/// Each ``APIEntry/start(params:)`` call returns the endpoint-specific result. Surrounding-task cancellation before
+/// completion returns ``APIResult/canceled``. If the SDK cannot prepare the selected API for another reason, the result
+/// contains that endpoint's `unexpected` failure.
 public struct OwnIDAPI: Sendable, OwnIDNamespace {
     internal let container: any DIContainer
 
@@ -40,6 +41,7 @@ public struct OwnIDAPI: Sendable, OwnIDNamespace {
         self.oidc = apiEntry(
             container: container,
             runtimeType: (any OIDCAPI).self,
+            unexpectedFailure: OIDCStartAPIFailure.unexpected,
             start: { runtime, params in
                 await runtime.start(params: params)
             }
@@ -70,6 +72,7 @@ extension OwnIDAPI {
             self.discover = apiEntry(
                 container: container,
                 runtimeType: (any DiscoverAPI).self,
+                unexpectedFailure: DiscoverAPIFailure.unexpected,
                 start: { runtime, params in
                     await runtime.start(params: params)
                 }
@@ -77,6 +80,7 @@ extension OwnIDAPI {
             self.login = apiEntry(
                 container: container,
                 runtimeType: (any LoginAPI).self,
+                unexpectedFailure: LoginAPIFailure.unexpected,
                 start: { runtime, params in
                     await runtime.start(params: params)
                 }
@@ -99,11 +103,13 @@ extension OwnIDAPI {
             self.attestation = apiEntry(
                 container: container,
                 runtimeType: (any PasskeyAttestationAPI).self,
+                unexpectedFailure: PasskeyAttestationStartAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
             self.assertion = apiEntry(
                 container: container,
                 runtimeType: (any PasskeyAssertionAPI).self,
+                unexpectedFailure: PasskeyAssertionStartAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
         }
@@ -123,11 +129,13 @@ extension OwnIDAPI {
             self.email = apiEntry(
                 container: container,
                 runtimeType: (any EmailVerificationAPI).self,
+                unexpectedFailure: EmailVerificationStartAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
             self.phone = apiEntry(
                 container: container,
                 runtimeType: (any PhoneVerificationAPI).self,
+                unexpectedFailure: PhoneVerificationStartAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
         }
@@ -151,16 +159,19 @@ extension OwnIDAPI {
             self.passkey = apiEntry(
                 container: container,
                 runtimeType: (any PasskeyEnrollAPI).self,
+                unexpectedFailure: PasskeyEnrollAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
             self.email = apiEntry(
                 container: container,
                 runtimeType: (any EmailEnrollAPI).self,
+                unexpectedFailure: EmailEnrollAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
             self.phone = apiEntry(
                 container: container,
                 runtimeType: (any PhoneEnrollAPI).self,
+                unexpectedFailure: PhoneEnrollAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
         }

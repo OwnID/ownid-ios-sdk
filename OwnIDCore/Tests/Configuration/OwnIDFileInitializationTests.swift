@@ -57,10 +57,20 @@ struct OwnIDFileInitializationTests {
             )
             let invalidURL = try Self.temporaryPlistURL(
                 containing: [
-                    "appID": "",
+                    "appId": 7,
+                    "appID": "ValidAlias123",
                     "env": "uat",
                     "region": "EU",
                     "rootURL": "https://127.0.0.1:9/mutated",
+                    "languages": ["ja-JP"],
+                ]
+            )
+            let invalidBackslashURL = try Self.temporaryPlistURL(
+                containing: [
+                    "appId": Self.uniqueAppID("InvalidRoot"),
+                    "env": "uat",
+                    "region": "EU",
+                    "rootUrl": #"https://127.0.0.1\mutated"#,
                     "languages": ["ja-JP"],
                 ]
             )
@@ -69,24 +79,27 @@ struct OwnIDFileInitializationTests {
                 OwnID.setLanguage([])
                 try? FileManager.default.removeItem(at: originalURL)
                 try? FileManager.default.removeItem(at: invalidURL)
+                try? FileManager.default.removeItem(at: invalidBackslashURL)
             }
 
             OwnID.initializeFromFile(instanceName: instanceName) { configuration in
                 configuration.fileURL = originalURL
             }
 
-            OwnID.initializeFromFile(instanceName: instanceName) { configuration in
-                configuration.fileURL = invalidURL
+            for rejectedURL in [invalidURL, invalidBackslashURL] {
+                OwnID.initializeFromFile(instanceName: instanceName) { configuration in
+                    configuration.fileURL = rejectedURL
+                }
+
+                let instance = OwnID.instance(instanceName: instanceName)
+
+                #expect(instance.configuration.appID == appID)
+                #expect(instance.configuration.env == .prod)
+                #expect(instance.configuration.region == .us)
+                #expect(instance.configuration.rootURL == "https://127.0.0.1:9/base")
+                let languageTags = try await Self.currentLanguageTags(for: instanceName)
+                #expect(languageTags == ["de-DE"])
             }
-
-            let instance = OwnID.instance(instanceName: instanceName)
-
-            #expect(instance.configuration.appID == appID)
-            #expect(instance.configuration.env == .prod)
-            #expect(instance.configuration.region == .us)
-            #expect(instance.configuration.rootURL == "https://127.0.0.1:9/base")
-            let languageTags = try await Self.currentLanguageTags(for: instanceName)
-            #expect(languageTags == ["de-DE"])
         }
     }
 

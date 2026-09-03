@@ -41,6 +41,26 @@ struct OwnIDProgrammaticConfigurationBuilderTests {
         try requireDataCorruptedContext(error)
     }
 
+    @Test func `Programmatic configuration builder accepts highest valid root URL port`() throws {
+        let result = try build { builder in
+            builder.appID = "App123"
+            builder.rootURL = "https://edge.example.com:65535/root"
+        }
+
+        #expect(result.configuration.rootURL == "https://edge.example.com:65535/root")
+    }
+
+    @Test(arguments: [0, 65536])
+    func `Programmatic configuration builder rejects out-of-range root URL ports`(_ port: Int) throws {
+        let error = try #require(throws: (any Error).self) {
+            try build { builder in
+                builder.appID = "App123"
+                builder.rootURL = "https://edge.example.com:\(port)/root"
+            }
+        }
+        try requireDataCorruptedContext(error)
+    }
+
     @Test func `Programmatic configuration builder strips root URL query and fragment`() throws {
         let result = try build { builder in
             builder.appID = "App123"

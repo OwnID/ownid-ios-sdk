@@ -20,6 +20,20 @@ internal struct InternalOperationRequirement: Sendable, Codable, Hashable {
         case channels = "channels"
     }
 
+    internal init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.type = try container.decode(InternalOperationType.self, forKey: .type)
+        self.score = try container.decode(Int.self, forKey: .score)
+        guard score >= 0 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .score,
+                in: container,
+                debugDescription: "Operation score must be non-negative."
+            )
+        }
+        self.channels = try container.decodeIfPresent([InternalOperationChannel].self, forKey: .channels)
+    }
+
     internal func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)

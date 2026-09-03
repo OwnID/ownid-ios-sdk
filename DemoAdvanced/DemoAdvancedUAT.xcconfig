@@ -1,3 +1,6 @@
+#include "../sdk-version.xcconfig"
+
+MARKETING_VERSION = $(SDK_VERSION)
 PRODUCT_BUNDLE_IDENTIFIER = com.ownid.demo.uat
 OWNID_CONFIG_JSON = {"appID":"4usvqc0dt3k7ol","env":"uat"}
 DEMO_IDENTITY_BASE_URL = https:/$()/node-mongo.custom.demo.staging.ownid.com/api/auth/

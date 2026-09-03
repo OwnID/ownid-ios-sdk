@@ -1,5 +1,5 @@
 import Foundation
-import OwnIDCore
+@testable import OwnIDCore
 import Testing
 
 // Covers: MODEL-080, MODEL-090, MODEL-100
@@ -31,6 +31,38 @@ struct CoreValueModelContractTests {
     @Test(arguments: JSONValuePrimitiveDecodeCase.allCases)
     func `JSON value decodes primitive value to matching case`(_ testCase: JSONValuePrimitiveDecodeCase) throws {
         #expect(try modelJSON.decoder.decode(JSONValue.self, from: Data(testCase.json.utf8)) == testCase.value)
+    }
+
+    @Test func `JSON value distinguishes Foundation booleans from numbers`() {
+        let value = JSONValue(from: [
+            "values": [
+                "swiftTrue": true,
+                "swiftFalse": false,
+                "numberTrue": NSNumber(value: true),
+                "numberFalse": NSNumber(value: false),
+                "zero": NSNumber(value: 0),
+                "one": NSNumber(value: 1),
+                "integer": NSNumber(value: 42),
+                "integralDouble": NSNumber(value: 7.0),
+                "fractionalDouble": NSNumber(value: 7.5),
+                "unsupported": NSDate(timeIntervalSince1970: 0),
+            ] as [String: Any],
+        ] as [String: Any])
+
+        #expect(value == .dictionary([
+            "values": .dictionary([
+                "swiftTrue": .bool(true),
+                "swiftFalse": .bool(false),
+                "numberTrue": .bool(true),
+                "numberFalse": .bool(false),
+                "zero": .int(0),
+                "one": .int(1),
+                "integer": .int(42),
+                "integralDouble": .int(7),
+                "fractionalDouble": .double(7.5),
+                "unsupported": .null,
+            ]),
+        ]))
     }
 
     @Test func `JSON value encodes and accesses nested arrays and dictionaries`() throws {

@@ -15,7 +15,7 @@ internal struct ContextKey<Value: Sendable>: Hashable, Sendable {
 ///
 /// ``Authz`` has no public coding contract. The SDK may forward selected context fields, including authz, to supported
 /// SDK surfaces.
-public struct Authz: Sendable {
+public struct Authz: Sendable, CustomStringConvertible {
     internal let wrapper: AuthzWrapper
 
     private init(wrapper: AuthzWrapper) {
@@ -56,6 +56,8 @@ public struct Authz: Sendable {
     public static func start(_ loginID: LoginID) -> Authz {
         Authz(wrapper: .typedLoginIDAuthz(loginID))
     }
+
+    public var description: String { "Authz" }
 }
 
 internal enum AuthzWrapper: Sendable {
@@ -79,7 +81,7 @@ internal enum AuthzWrapper: Sendable {
 /// Treat context values as scoped inputs, not durable storage. The SDK keeps them in the active context scope until that
 /// scope is cleared, replaced, or discarded, and callers remain responsible for handling identifiers and tokens as
 /// sensitive app-owned data.
-public struct Context: @unchecked Sendable {
+public struct Context: @unchecked Sendable, CustomStringConvertible {
     private var storage: [String: Any]
 
     internal init(storage: [String: Any]) {
@@ -95,13 +97,15 @@ public struct Context: @unchecked Sendable {
         Builder(storage: storage)
     }
 
+    public var description: String { "Context" }
+
     /// Builder for ``Context``.
     ///
     /// Context can hold one authz value (login ID or access token) plus optional account display name.
     /// The builder stores authz values as provided and does not normalize or validate login IDs. Mutating a builder does
     /// not change a ``Context`` that was already built. Assign `nil` through in-place context updates to clear a
     /// previously registered value.
-    public struct Builder: @unchecked Sendable {
+    public struct Builder: @unchecked Sendable, CustomStringConvertible {
         private var storage: [String: Any]
 
         public init() {
@@ -132,6 +136,8 @@ public struct Context: @unchecked Sendable {
             storage[ContextKeys.scopeName.rawValue] = scopeName
             return Context(storage: storage)
         }
+
+        public var description: String { "Context.Builder" }
     }
 }
 

@@ -312,15 +312,15 @@ extension PasskeyImpl: ASAuthorizationControllerDelegate {
             userHandle: credential.userID?.encodeToBase64UrlSafe()
         )
 
-        let attachment: AuthenticatorAttachment
+        let attachment: AuthenticatorAttachment?
         if #available(iOS 16.6, *) {
             switch credential.attachment {
             case .platform: attachment = .platform
             case .crossPlatform: attachment = .crossPlatform
-            @unknown default: attachment = .platform
+            @unknown default: attachment = nil
             }
         } else {
-            attachment = .platform
+            attachment = nil
         }
 
         let assertionResult = AssertionResult(

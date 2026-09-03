@@ -7,7 +7,7 @@ availability.
 
 Source docs:
 
-- `../../../../README.md#enable-passkeys`
+- `../../../../docs/setup/passkeys.md`
 
 Platform source of truth:
 
@@ -26,6 +26,7 @@ Platform source of truth:
 - [Apple App Site Association](#apple-app-site-association)
 - [AuthenticationServices Reality](#authenticationservices-reality)
 - [What To Verify Externally](#what-to-verify-externally)
+- [Hosted File Updates](#hosted-file-updates)
 
 ## Baseline Requirement
 
@@ -114,11 +115,14 @@ Minimum shape for passkeys:
 Add every app identity that uses passkeys as `<APP_ID_PREFIX>.<BUNDLE_ID>`.
 Include each environment or white-label target whose bundle identifier differs.
 
-The file must be public over HTTPS, return HTTP 200, use a JSON content type,
-avoid redirects, stay under 128 KB, and have no `.json` extension. The app
-identifier in the file must match the signed app's `application-identifier`
-entitlement. A UAT bundle entry does not validate a production bundle, and a
-production entry does not validate a UAT bundle with a different ID.
+The file must be public over HTTPS in every environment where passkeys are
+tested or used, return HTTP 200, use a JSON content type, avoid redirects, stay
+under 128 KB, and have no `.json` extension. It must not depend on
+authentication, cookies, VPN access, mTLS, an IP allowlist, or an interactive
+WAF or bot-protection challenge. The app identifier in the file must match the
+signed app's `application-identifier` entitlement. A UAT bundle entry does not
+validate a production bundle, and a production entry does not validate a UAT
+bundle with a different ID.
 
 When multiple targets share the relying-party domain, use one
 `webcredentials.apps` array containing each `<APP_ID_PREFIX>.<BUNDLE_ID>`. If
@@ -164,7 +168,10 @@ For each app identity/environment that should support passkeys, verify:
   Domains entitlement.
 - `https://<relying-party-domain>/.well-known/apple-app-site-association` is
   reachable as public HTTPS with HTTP 200, JSON content type, no redirect, no
-  `.json` extension, and size under 128 KB.
+  `.json` extension, size under 128 KB, and valid JSON rather than an HTML login
+  or error page.
+- The endpoint is reachable from a public network without authentication or
+  VPN access and is not restricted by client IP address, region, or User-Agent.
 - The AASA `webcredentials.apps` entry equals the signed app's
   `application-identifier`, normally
   `<APP_ID_PREFIX>.<BUNDLE_ID>`.
@@ -172,6 +179,20 @@ For each app identity/environment that should support passkeys, verify:
   repository/location that owns the relying-party domain.
 - The integration has an explicit handling plan for unavailable, canceled,
   no-credential, and error outcomes where passkeys are invoked.
+
+## Hosted File Updates
+
+Follow the public [Passkey Setup](../../../../docs/setup/passkeys.md#allow-time-for-updates)
+guidance whenever the AASA file changes. Check the public response and its
+`Cache-Control`, `Age`, `Expires`, `ETag`, and `Last-Modified` headers. Avoid a
+long cache lifetime when updates are expected; changing the origin file does
+not immediately invalidate copies held by a hosting CDN or Apple verification
+services.
+
+Apple's CDN normally requests the AASA file within 24 hours, and installed
+devices check for updates approximately once per week. After publishing an
+update, confirm that the public endpoint serves the new JSON before allowing
+time for the platform caches to refresh.
 
 Demo note: the checked-in iOS demos show the expected pattern with
 `com.apple.developer.associated-domains` in entitlements and

@@ -71,6 +71,7 @@ internal final class WebBridgeViewController: UIViewController, UIAdaptivePresen
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        findWKWebView(in: hostingController.view)?.becomeFirstResponder()
         onDidAppear?()
     }
 

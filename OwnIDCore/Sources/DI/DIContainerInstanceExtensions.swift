@@ -12,6 +12,17 @@ import Foundation
     /// Optional modules may add or replace module-owned extension bindings in this container. Core remains the owner of
     /// the baseline runtime contracts.
     @_spi(OwnIDInternal) public func injectInstanceDefaults(instanceName: InstanceName, configuration: any OwnIDConfiguration) {
+        let logRouter = OwnIDLogRouter(
+            ownIDLoggerProvider: { [weak resolver = self] in
+                resolver?.getOrNil(type: (any OwnIDLogger).self)
+            },
+            serverLoggerProvider: { [weak resolver = self] in
+                resolver?.getOrNil(type: ServerLogger.self)
+            }
+        )
+        register(OwnIDLogRouter.self, instance: logRouter)
+        (self as? DIContainerImpl)?.setLogger(DIContainerLoggerAdapter(router: logRouter))
+
         register(InstanceName.self, instance: instanceName)
 
         register((any OwnIDConfiguration).self, instance: configuration)
@@ -56,45 +67,41 @@ import Foundation
             )
         }
 
-        do {
-            let localInfo = try getOrThrow(type: (any LocalInfo).self)
-            let config = URLSessionConfiguration.default
-            config.httpAdditionalHeaders = ["User-Agent": localInfo.userAgent]
-            config.tlsMinimumSupportedProtocolVersion = .TLSv12
-            register(URLSession.self, instance: URLSession(configuration: config, delegate: NoRedirectDelegate(), delegateQueue: nil))
-        } catch {
-            getOrNil(type: OwnIDLogRouter.self)?.logW(
-                source: self,
-                prefix: "injectInstanceDefaults",
-                message: "Failed to create URLSession: \(error.localizedDescription)",
-                cause: error
-            )
-        }
-
         registerFactory { resolver -> NetworkRequest.RetryConfig in NetworkRequest.RetryConfig.default }
 
-        registerFactory(
-            dependencies: [URLSession.self, (any LocalInfo).self, (any LanguageTagsProvider).self, (any OwnIDConfiguration).self]
-        ) { resolver -> any NetworkProtocol in
+        do {
             // Http logging only logged locally, no logs send to server.
             // Http logging only works with manual log level setup before OwnID.initialize {...}, like:
             // OwnID.logger {
             //   $0.level = .verbose
             // }
             // Any server side logs level will not trigger Http logs as NetworkImpl is already created (unless DI was reset).
-            let resolvedLogger = resolver.getOrNil(type: (any OwnIDLogger).self)
+            let resolvedLogger = getOrNil(type: (any OwnIDLogger).self)
+            let localInfo = try getOrThrow(type: (any LocalInfo).self)
+            let sessionConfiguration = URLSessionConfiguration.default
+            sessionConfiguration.httpAdditionalHeaders = ["User-Agent": localInfo.userAgent]
+            sessionConfiguration.tlsMinimumSupportedProtocolVersion = .TLSv12
 
-            return NetworkImpl(
-                urlSession: try resolver.getOrThrow(type: URLSession.self),
+            let network = NetworkImpl(
+                urlSession: URLSession(configuration: sessionConfiguration, delegate: NoRedirectDelegate(), delegateQueue: nil),
+                shutdownToken: try getOrThrow(type: ShutdownToken.self),
                 requestAdapters: NetworkRequest.AdapterChain(adapters: [
                     NetworkRequest.DefaultHeadersAdapter(
-                        localInfo: try resolver.getOrThrow(type: (any LocalInfo).self),
-                        languageTagsProvider: try resolver.getOrThrow(type: (any LanguageTagsProvider).self),
-                        appURLHeaderValue: try resolver.getOrThrow(type: (any OwnIDConfiguration).self).appURLHeaderValue()
+                        localInfo: localInfo,
+                        languageTagsProvider: try getOrThrow(type: (any LanguageTagsProvider).self),
+                        appURLHeaderValue: try getOrThrow(type: (any OwnIDConfiguration).self).appURLHeaderValue()
                     )
                 ]),
-                retryConfig: resolver.getOrNil(type: NetworkRequest.RetryConfig.self) ?? NetworkRequest.RetryConfig.default,
+                retryConfig: getOrNil(type: NetworkRequest.RetryConfig.self) ?? NetworkRequest.RetryConfig.default,
                 httpLogger: (resolvedLogger?.isEnabled(.debug) == true) ? HTTPLogger(logger: resolvedLogger!) : nil
+            )
+            register((any NetworkProtocol).self, instance: network)
+        } catch {
+            getOrNil(type: OwnIDLogRouter.self)?.logW(
+                source: self,
+                prefix: "injectInstanceDefaults",
+                message: "Failed to create NetworkImpl: \(error.localizedDescription)",
+                cause: error
             )
         }
 
@@ -130,7 +137,9 @@ import Foundation
         registerFactory { resolver -> any APICallInterceptor in
             APICallPipelineInterceptor(
                 interceptors: [
-                    DefaultApiFailLoggingInterceptor(serverLoggerProvider: { resolver.getOrNil(type: ServerLogger.self) })
+                    DefaultApiFailLoggingInterceptor(
+                        serverLoggerProvider: { [weak resolver] in resolver?.getOrNil(type: ServerLogger.self) }
+                    )
                 ]
             )
         }
@@ -152,6 +161,7 @@ import Foundation
                 configuration: try getOrThrow(type: (any OwnIDConfiguration).self),
                 loginIdConfigurationProvider: getOrNil(type: (any LoginIDConfigurationProvider).self),
                 taskScope: try getOrThrow(type: TaskScope.self),
+                shutdownToken: try getOrThrow(type: ShutdownToken.self),
                 logger: getOrNil(type: OwnIDLogRouter.self),
                 interceptor: getOrNil(type: (any APICallInterceptor).self)
             )

@@ -8,18 +8,19 @@ import Foundation
 @_spi(OwnIDInternal) public protocol OwnIDModule {
     /// Registers this module's dependencies into the given container.
     ///
-    /// - Throws: If dependency registration for this module fails. The injector logs the failure and skips that module.
+    /// - Throws: If this module cannot complete registration. The injector retains completed registrations, logs the
+    ///   failure, skips this module's remaining work, and continues with later discovered modules.
     static func injectIntoInstanceContainer(container: any DIContainer) throws
 }
 
 /// Discovers and injects optional SDK modules into an instance container at runtime.
 ///
 /// This is an internal SDK module contract, not a public app integration contract. SDK-owned module classes present in
-/// the process may register dependencies for their own product boundary. Injection is best-effort: a module that
-/// cannot be found or injected is logged and skipped so the Core instance remains usable with the bindings that are
-/// available.
+/// the process may register dependencies for their own product boundary. Injection is best-effort and nontransactional:
+/// registrations completed before a thrown error remain, only that module's remaining work is skipped, the failure is
+/// logged, and later discovered modules continue.
 @_spi(OwnIDInternal) public final class OwnIDModuleInjector {
-    private static let possiblePluginClassNames = ["OwnIDSwiftUI.OwnIDUIModule"]
+    private static let possiblePluginClassNames = ["OwnIDSwiftUI.OwnIDUIModule", "OwnIDReactNativeCoreModule"]
 
     internal static func injectIntoInstanceContainer(
         container: any DIContainer,

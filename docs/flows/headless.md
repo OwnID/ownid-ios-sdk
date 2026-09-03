@@ -23,8 +23,8 @@ Use Headless when the app needs custom screens, navigation, analytics, loading s
 
 ## Examples
 
-- [Base Headless example](../../Demo/DemoBase/App/Views/Headless)
-- [Advanced Headless example](../../Demo/DemoAdvanced/App/Views/Headless)
+- [Base Headless example](../../DemoBase/App/Views/Headless)
+- [Advanced Headless example](../../DemoAdvanced/App/Views/Headless)
 
 ## Prerequisites
 

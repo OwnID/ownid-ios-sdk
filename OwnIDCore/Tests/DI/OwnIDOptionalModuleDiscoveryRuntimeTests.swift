@@ -3,11 +3,11 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: UI-PRESENT-050
+// Covers: SPI-100, UI-PRESENT-050
 @Suite(.serialized)
 struct OwnIDOptionalModuleDiscoveryRuntimeTests {
 
-    @Test func `Missing optional UI module is logged and core initialization continues`() async throws {
+    @Test func `Missing optional SDK modules are logged and core initialization continues`() async throws {
         try await withOwnIDRootStateTestLock {
             let instanceName = InstanceName(value: "OwnIDOptionalModuleDiscoveryRuntimeTests-\(UUID().uuidString)")
             let logs = LogCapture()
@@ -17,6 +17,7 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
             }
 
             #expect(NSClassFromString("OwnIDSwiftUI.OwnIDUIModule") == nil)
+            #expect(NSClassFromString("OwnIDReactNativeCoreModule") == nil)
 
             OwnID.logger { logger in
                 logger.level = .verbose
@@ -46,6 +47,8 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
             #expect(container.getOrNil(type: (any LanguageTagsProvider).self) != nil)
             #expect(container.getOrNil(type: (any JSONCoder).self) != nil)
             #expect(container.getOrNil(type: (any LoginIDCollectUI).self) != nil)
+            #expect(container.getOrNil(type: (any EmailVerificationUI).self) != nil)
+            #expect(container.getOrNil(type: (any PhoneVerificationUI).self) != nil)
             #expect(container.getOrNil(type: (any OperationUIContainer).self) == nil)
 
             let entries = logs.entries
@@ -54,6 +57,14 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
                     $0.level == .verbose
                         && $0.className.contains("moduleLookup")
                         && $0.message.contains("Module class OwnIDSwiftUI.OwnIDUIModule not found")
+                        && !$0.hasCause
+                }
+            )
+            #expect(
+                entries.contains {
+                    $0.level == .verbose
+                        && $0.className.contains("moduleLookup")
+                        && $0.message == "Module class OwnIDReactNativeCoreModule not found"
                         && !$0.hasCause
                 }
             )

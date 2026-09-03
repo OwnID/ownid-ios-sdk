@@ -11,8 +11,8 @@ internal protocol DIResolvable {
 /// Use a direct API entry from an initialized OwnID instance when you want the raw API contract instead of an operation
 /// or flow.
 /// Direct API entries return ``APIResult`` and do not create an operation or flow controller.
-/// Expected failures and Swift task cancellation are reported in the returned ``APIResult``.
-/// ``start(params:)`` resolves the bound API runtime and returns ``APIResult`` for the request outcome.
+/// Surrounding-task cancellation before completion returns ``APIResult/canceled``. If the SDK cannot prepare the
+/// selected API for another reason, the result contains the endpoint-specific `unexpected` failure.
 public struct APIEntry<Params, Success: Sendable, Failure: Sendable>: Sendable, DIResolvable {
     private let resolver: any DIContainerResolver
     private let runtimeType: Any.Type
@@ -33,8 +33,9 @@ public struct APIEntry<Params, Success: Sendable, Failure: Sendable>: Sendable, 
     /// The request runs in the caller's task. Cancel the surrounding task to cancel the request.
     ///
     /// - Parameter params: Request parameters for this API.
-    /// - Returns: ``APIResult/success(_:)`` with the API payload, ``APIResult/failure(_:)`` when the request fails,
-    ///   or ``APIResult/canceled`` if the surrounding task is canceled before completion.
+    /// - Returns: The endpoint-specific result. Surrounding-task cancellation before completion returns
+    ///   ``APIResult/canceled``. If the SDK cannot prepare this API for another reason, the result contains the
+    ///   endpoint-specific `unexpected` failure.
     public func start(params: Params) async -> APIResult<Success, Failure> {
         await startProvider(params)
     }
@@ -51,8 +52,9 @@ public struct APIEntry<Params, Success: Sendable, Failure: Sendable>: Sendable, 
 extension APIEntry {
     /// Calls the API without passing an explicit parameter object.
     ///
-    /// - Returns: ``APIResult/success(_:)`` with the API payload, ``APIResult/failure(_:)`` when the request fails,
-    ///   or ``APIResult/canceled`` if the surrounding task is canceled before completion.
+    /// - Returns: The endpoint-specific result. Surrounding-task cancellation before completion returns
+    ///   ``APIResult/canceled``. If the SDK cannot prepare this API for another reason, the result contains the
+    ///   endpoint-specific `unexpected` failure.
     public func start<Wrapped>() async -> APIResult<Success, Failure> where Params == Wrapped? {
         await start(params: nil)
     }
@@ -408,14 +410,23 @@ extension PreflightFlowEntry {
 internal func apiEntry<Runtime: Any & Sendable, Params, Success, Failure>(
     container: any DIContainer,
     runtimeType: Runtime.Type,
+    unexpectedFailure: @escaping @Sendable (ErrorCode, String, any Error & Sendable) -> Failure,
     start: @escaping @Sendable (Runtime, Params) async -> APIResult<Success, Failure>
 ) -> APIEntry<Params, Success, Failure> {
     APIEntry(
         resolver: container,
         runtimeType: runtimeType,
         startProvider: { params in
-            let runtime = try! container.getOrThrow(type: runtimeType)
-            return await start(runtime, params)
+            do {
+                let runtime = try container.getOrThrow(type: runtimeType)
+                return await start(runtime, params)
+            } catch is CancellationError {
+                return .canceled
+            } catch let error as DependencyResolutionError where error.cause is CancellationError {
+                return .canceled
+            } catch {
+                return .failure(error.toAPIUnexpectedFailure(unexpectedFailure))
+            }
         }
     )
 }

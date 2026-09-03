@@ -87,12 +87,62 @@ struct LoginIDConfigurationProviderImplementationTests {
         #expect(try validator.determineLoginIDType(loginID: "person@example.test") == .email)
     }
 
+    @Test func `Validator uses ASCII default phone rule for inference and fallback validation`() throws {
+        let provider = LoginIDConfigurationProviderImpl(
+            initialConfiguration: LoginIDConfiguration(
+                supportedTypes: [.phoneNumber],
+                validationRegexes: [.phoneNumber: nil]
+            )
+        )
+        let validator = LoginIDValidatorImpl(loginIDConfigurationProvider: provider)
+        let acceptedValues = [
+            "1234567",
+            "+1234567",
+            "123456789012345",
+            "+123456789012345",
+        ]
+        let rejectedValues = [
+            "123456",
+            "+1234567890123456",
+            "0234567",
+            "+1٢34567",
+            "١٢٣٤٥٦٧",
+            "＋1234567",
+            " 1234567",
+            "1234567 ",
+            "123 4567",
+            "123-4567",
+            "1234567\n",
+        ]
+
+        for value in acceptedValues {
+            #expect(try validator.determineLoginIDType(loginID: value) == .phoneNumber)
+            #expect(try validator.validate(LoginID(id: value, type: .phoneNumber)) == LoginID(id: value, type: .phoneNumber))
+        }
+
+        for value in rejectedValues {
+            let inferenceError = try #require(throws: (any Error).self) {
+                _ = try validator.determineLoginIDType(loginID: value)
+            }
+            #expect(try requireTypeNotSupported(inferenceError) == .loginIDTypeNotSupported)
+
+            let validationError = try #require(throws: (any Error).self) {
+                _ = try validator.validate(LoginID(id: value, type: .phoneNumber))
+            }
+            let validation = try requireValidationFailed(validationError)
+            #expect(validation.errorCode == .loginIDValidationFailed)
+            #expect(validation.loginID == LoginID(id: value, type: .phoneNumber))
+            #expect(validation.regex == LoginIDType.phoneNumber.classificationRegex.pattern)
+        }
+    }
+
     @Test func `Validator rejects unsupported typed login IDs and applies regex overrides`() throws {
         let emailExampleRegex = try regex("^[^@]+@example\\.test$")
+        let formattedPhoneRegex = try regex("^[0-9]{3}-[0-9]{4}$")
         let provider = LoginIDConfigurationProviderImpl(
             initialConfiguration: LoginIDConfiguration(
                 supportedTypes: [.email],
-                validationRegexes: [.email: emailExampleRegex, .phoneNumber: try regex("^\\+[0-9]{11}$")]
+                validationRegexes: [.email: emailExampleRegex, .phoneNumber: formattedPhoneRegex]
             )
         )
         let validator = LoginIDValidatorImpl(loginIDConfigurationProvider: provider)
@@ -118,6 +168,25 @@ struct LoginIDConfigurationProviderImplementationTests {
         )
         let fallbackAccepted = try validator.validate(LoginID(id: "person@other.test", type: .email))
         #expect(fallbackAccepted == LoginID(id: "person@other.test", type: .email))
+
+        provider.setConfiguration(
+            LoginIDConfiguration(supportedTypes: [.phoneNumber], validationRegexes: [.phoneNumber: formattedPhoneRegex])
+        )
+        #expect(try validator.determineLoginIDType(loginID: "1234567") == .phoneNumber)
+        #expect(
+            try validator.validate(LoginID(id: "123-4567", type: .phoneNumber))
+                == LoginID(id: "123-4567", type: .phoneNumber)
+        )
+
+        let overriddenValidationError = try #require(throws: (any Error).self) {
+            _ = try validator.validate(LoginID(id: "1234567", type: .phoneNumber))
+        }
+        #expect(try requireValidationFailed(overriddenValidationError).regex == formattedPhoneRegex.pattern)
+
+        let overriddenInferenceError = try #require(throws: (any Error).self) {
+            _ = try validator.determineLoginIDType(loginID: "123-4567")
+        }
+        #expect(try requireTypeNotSupported(overriddenInferenceError) == .loginIDTypeNotSupported)
     }
 
     private func regex(_ pattern: String) throws -> NSRegularExpression {

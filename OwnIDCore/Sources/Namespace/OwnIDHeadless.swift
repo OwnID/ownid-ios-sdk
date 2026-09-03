@@ -5,16 +5,18 @@ import Foundation
 /// Use this namespace when you want direct OwnID APIs, operations, and the passkey enrollment flow without starting
 /// from the higher-level flow namespace.
 ///
-/// Namespace handles are bound to the SDK scope they were obtained from.
+/// Namespace handles remain associated with the SDK instance state from which they were obtained.
 /// After ``OwnID/destroy(instanceName:)`` or same-name reinitialization, previously returned namespace handles are
 /// invalid and should be reacquired from ``OwnID/headless`` or the current ``OwnIDInstance``.
 ///
 /// Scope it with ``withContext(_:_:)`` or ``withProviders(_:_:)``, then launch the selected API, operation, or flow.
 /// Optional parameter and context types support zero-argument start/preflight overloads; the selected entry decides
 /// whether omitted values are valid and how the current ``Context`` is used.
-/// Direct API entries return ``APIResult`` for success, handled failures, and task cancellation.
-/// Operation and flow entries return caller-owned controllers that should be observed until settlement.
-/// Namespace entry properties do not resolve their underlying runtime until start or preflight availability is called.
+/// Direct API entries return endpoint-specific ``APIResult`` values. Surrounding-task cancellation before completion
+/// returns ``APIResult/canceled``. If the SDK cannot prepare the selected API for another reason, the result contains
+/// that endpoint's `unexpected` failure. Operation and flow entries return caller-owned controllers that should be
+/// observed until settlement. Reading a namespace entry property does not start work; call start or a preflight method
+/// when ready.
 ///
 /// Accessed via ``OwnID/headless`` (default instance) or ``OwnIDInstance/headless``.
 public struct OwnIDHeadless: Sendable, OwnIDNamespace {
@@ -57,6 +59,7 @@ extension OwnIDHeadless {
             self.discover = apiEntry(
                 container: container,
                 runtimeType: (any DiscoverAPI).self,
+                unexpectedFailure: DiscoverAPIFailure.unexpected,
                 start: { runtime, params in
                     await runtime.start(params: params)
                 }
@@ -64,6 +67,7 @@ extension OwnIDHeadless {
             self.login = apiEntry(
                 container: container,
                 runtimeType: (any LoginAPI).self,
+                unexpectedFailure: LoginAPIFailure.unexpected,
                 start: { runtime, params in
                     await runtime.start(params: params)
                 }
@@ -124,11 +128,13 @@ extension OwnIDHeadless {
             self.email = apiEntry(
                 container: container,
                 runtimeType: (any EmailVerificationAPI).self,
+                unexpectedFailure: EmailVerificationStartAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
             self.phone = apiEntry(
                 container: container,
                 runtimeType: (any PhoneVerificationAPI).self,
+                unexpectedFailure: PhoneVerificationStartAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
         }

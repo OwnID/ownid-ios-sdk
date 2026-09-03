@@ -28,8 +28,8 @@ public struct VerificationChallenge: Codable, Sendable, Equatable, CustomStringC
 
     /// Policy controlling whether and how often the verification code can be resent.
     ///
-    /// The SDK API mapping normalizes ``debounce`` to at least one second. `Codable` decoding keeps ``allow``,
-    /// ``attempts``, and ``debounce`` as supplied.
+    /// Values returned by OwnID APIs use a ``debounce`` of at least one second. Direct initialization and `Codable`
+    /// decoding keep ``allow``, ``attempts``, and ``debounce`` as supplied.
     public struct ResendPolicy: Codable, Sendable, Equatable {
         /// Whether resend is currently allowed.
         public let allow: Bool
@@ -39,25 +39,46 @@ public struct VerificationChallenge: Codable, Sendable, Equatable, CustomStringC
 
         /// Seconds to wait before another resend is allowed.
         public let debounce: Int
+
+        public init(allow: Bool, attempts: Int, debounce: Int) {
+            self.allow = allow
+            self.attempts = attempts
+            self.debounce = debounce
+        }
     }
 
     /// Available verification methods for this challenge.
     ///
-    /// A usable challenge is expected to include at least one non-`nil` method, but `Codable` decoding does not enforce
-    /// that requirement.
+    /// Challenges returned by OwnID APIs include at least one non-`nil` method. Direct initialization and `Codable`
+    /// decoding do not enforce that requirement.
     public struct Methods: Codable, Sendable, Equatable {
         public let otp: Otp?
 
         public let magicLink: MagicLink?
 
-        /// OTP method configuration with the expected code ``length``.
-        ///
-        /// The SDK API mapping normalizes ``length`` to at least four. `Codable` decoding keeps the supplied value.
-        public struct Otp: Codable, Sendable, Equatable {
-            public let length: Int
+        /// Creates a method set. Both methods may be `nil`.
+        public init(otp: Otp?, magicLink: MagicLink?) {
+            self.otp = otp
+            self.magicLink = magicLink
         }
 
-        public struct MagicLink: Codable, Sendable, Equatable {}
+        /// OTP method configuration with the expected code ``length``.
+        ///
+        /// Values returned by OwnID APIs use a ``length`` of at least four. Direct initialization and `Codable` decoding
+        /// keep the supplied value.
+        public struct Otp: Codable, Sendable, Equatable {
+            public let length: Int
+
+            public init(length: Int) {
+                self.length = length
+            }
+        }
+
+        /// Marks magic-link verification as available.
+        public struct MagicLink: Codable, Sendable, Equatable {
+
+            public init() {}
+        }
     }
 
     /// Creates a verification challenge.

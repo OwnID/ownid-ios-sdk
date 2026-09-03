@@ -17,9 +17,9 @@ import SwiftUI
 ///
 /// The built-in provider requests one-time initial OTP focus when allowed, normalizes accepted decimal digits to ASCII,
 /// and submits the code through ``EmailVerificationUIState/onCodeEntered`` as soon as the required length is entered
-/// while the operation is not busy. It owns the visible busy spinner, clears the OTP field when an error arrives, hides
-/// resend until the challenge debounce allows it, disables "not you" while busy, and invokes the supplied resend,
-/// cancel, and "not you" callbacks only from the matching user actions.
+/// while the operation is not busy. It owns the visible busy spinner, clears the OTP field when an error arrives or the
+/// challenge identifier changes, hides resend until the challenge debounce allows it, disables "not you" while busy,
+/// and invokes the supplied resend, cancel, and "not you" callbacks only from the matching user actions.
 public protocol EmailVerificationUIProvider: Sendable {
     /// Builds the SwiftUI view for the email verification form.
     ///

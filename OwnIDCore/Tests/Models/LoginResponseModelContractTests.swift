@@ -16,19 +16,30 @@ struct LoginResponseModelContractTests {
         #expect(try modelJSON.string(encoding: AuthMethod.magicLink) == #""magic-link""#)
     }
 
-    @Test func `User Codable includes raw login ID and auth method values`() throws {
+    @Test func `User Codable uses the common login ID key and preserves values`() throws {
         let user = User(
             loginID: LoginID(id: "person@example.com", type: .email),
             authMethod: .magicLink
         )
 
         let encoded = try modelJSON.object(encoding: user)
-        #expect((encoded["loginID"] as? [String: String]) == ["id": "person@example.com", "type": "Email"])
+        #expect((encoded["loginId"] as? [String: String]) == ["id": "person@example.com", "type": "Email"])
+        #expect(encoded["loginID"] == nil)
         #expect(encoded["authMethod"] as? String == "magic-link")
 
-        let decoded = try modelJSON.decoder.decode(User.self, from: try modelJSON.data(encoding: user))
+        let decoded = try modelJSON.decoder.decode(
+            User.self,
+            from: Data(#"{"loginId":{"id":"person@example.com","type":"Email"},"authMethod":"magic-link"}"#.utf8)
+        )
         #expect(decoded.loginID == user.loginID)
         #expect(decoded.authMethod == user.authMethod)
+
+        #expect(throws: DecodingError.self) {
+            try modelJSON.decoder.decode(
+                User.self,
+                from: Data(#"{"loginID":{"id":"person@example.com","type":"Email"},"authMethod":"magic-link"}"#.utf8)
+            )
+        }
     }
 
     @Test func `Auth requirements Codable keeps scores operation order and achievability`() throws {
@@ -43,7 +54,27 @@ struct LoginResponseModelContractTests {
         #expect(requirements.isTargetScoreAchievable())
         #expect(AuthRequirements(targetScore: 11, operations: requirements.operations).isTargetScoreAchievable() == false)
         #expect(AuthRequirements(targetScore: 0, operations: []).isTargetScoreAchievable())
+        #expect(AuthRequirements(targetScore: -1, operations: []).isTargetScoreAchievable())
         #expect(AuthRequirements(targetScore: 1, operations: []).isTargetScoreAchievable() == false)
+        #expect(
+            AuthRequirements(
+                targetScore: Int.max,
+                operations: [
+                    OperationRequirement(score: Int.max, type: .passkeyAuth, channels: nil),
+                    OperationRequirement(score: 1, type: .emailVerification, channels: nil),
+                ]
+            ).isTargetScoreAchievable()
+        )
+        #expect(
+            AuthRequirements(
+                targetScore: 10,
+                operations: [
+                    OperationRequirement(score: 3, type: .passkeyAuth, channels: nil),
+                    OperationRequirement(score: -1, type: .emailVerification, channels: nil),
+                    OperationRequirement(score: 7, type: .phoneNumberVerification, channels: nil),
+                ]
+            ).isTargetScoreAchievable()
+        )
         #expect(
             requirements.description
                 == "AuthRequirements(targetScore=10, operations=[EmailVerification(score=3, channels=[nil]), PasskeyAuth(score=7, channels=[])])"
@@ -109,5 +140,55 @@ struct LoginResponseModelContractTests {
             try modelJSON.decoder.decode(LoginResponse.self, from: try modelJSON.data(encoding: accountBlocked)).description
                 == accountBlocked.description
         )
+    }
+
+    @Test func `Login response equality uses its case and all associated values`() {
+        let success = LoginResponse.success(
+            .init(accessToken: AccessToken(token: "access-token"), sessionPayload: "session-payload")
+        )
+        #expect(
+            success
+                == .success(.init(accessToken: AccessToken(token: "access-token"), sessionPayload: "session-payload"))
+        )
+        #expect(
+            success
+                != .success(.init(accessToken: AccessToken(token: "other-token"), sessionPayload: "session-payload"))
+        )
+        #expect(
+            success
+                != .success(.init(accessToken: AccessToken(token: "access-token"), sessionPayload: "other-payload"))
+        )
+
+        let requirements = AuthRequirements(
+            targetScore: 1,
+            operations: [OperationRequirement(score: 1, type: .emailVerification, channels: nil)]
+        )
+        let authRequired = LoginResponse.authRequired(.init(authRequirements: requirements, reason: nil))
+        #expect(
+            authRequired
+                == .authRequired(
+                    .init(
+                        authRequirements: AuthRequirements(
+                            targetScore: 1,
+                            operations: [OperationRequirement(score: 1, type: .emailVerification, channels: nil)]
+                        ),
+                        reason: nil
+                    )
+                )
+        )
+        #expect(
+            authRequired
+                != .authRequired(.init(authRequirements: AuthRequirements(targetScore: 2, operations: requirements.operations), reason: nil))
+        )
+        #expect(authRequired != .authRequired(.init(authRequirements: requirements, reason: "more-auth")))
+
+        let accountNotFound = LoginResponse.accountNotFound(.init(reason: "same-reason"))
+        #expect(accountNotFound == .accountNotFound(.init(reason: "same-reason")))
+        #expect(accountNotFound != .accountNotFound(.init(reason: nil)))
+
+        let accountBlocked = LoginResponse.accountBlocked(.init(reason: "same-reason"))
+        #expect(accountBlocked == .accountBlocked(.init(reason: "same-reason")))
+        #expect(accountBlocked != .accountBlocked(.init(reason: nil)))
+        #expect(accountNotFound != accountBlocked)
     }
 }

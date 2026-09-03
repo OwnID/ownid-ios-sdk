@@ -134,10 +134,10 @@ struct RegisterView: View {
 
 ## Examples
 
-- [Base login widget](../../Demo/DemoBase/App/Views/Boost/BoostLoginTab.swift)
-- [Base create-passkey widget](../../Demo/DemoBase/App/Views/Boost/BoostCreatePasskeyTab.swift)
-- [Advanced login widget example](../../Demo/DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift)
-- [Advanced create-passkey widget example](../../Demo/DemoAdvanced/App/Views/Flows/Boost/BoostCreatePasskeyScreen.swift)
+- [Base login widget](../../DemoBase/App/Views/Boost/BoostLoginTab.swift)
+- [Base create-passkey widget](../../DemoBase/App/Views/Boost/BoostCreatePasskeyTab.swift)
+- [Advanced login widget example](../../DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift)
+- [Advanced create-passkey widget example](../../DemoAdvanced/App/Views/Flows/Boost/BoostCreatePasskeyScreen.swift)
 
 ## Prerequisites
 
@@ -365,7 +365,7 @@ final class BoostCreatePasskeyViewModel: ObservableObject {
 
 See [Widget Callbacks](#widget-callbacks) and [Common Failures](#common-failures) for response and failure handling.
 
-See the Advanced Demo's [custom login button](../../Demo/DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift) and [flow owner](../../Demo/DemoAdvanced/App/Views/Flows/Boost/EmailOtpLoginViewModel.swift) for a complete example.
+See the Advanced Demo's [custom login button](../../DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift) and [flow owner](../../DemoAdvanced/App/Views/Flows/Boost/EmailOtpLoginViewModel.swift) for a complete example.
 
 ### Limit Login Authentication Operations
 

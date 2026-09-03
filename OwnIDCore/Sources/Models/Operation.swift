@@ -27,10 +27,6 @@ public struct OperationChannel: Codable, Sendable, Hashable, CustomStringConvert
 
 /// A recommended operation that can contribute to the current authentication requirements.
 ///
-/// Operation requirements are returned by OwnID as part of ``AuthRequirements``. The SDK keeps the returned ``score`` and
-/// ``channels`` as supplied; it does not reject negative scores, duplicate channels, or empty arrays when this model is
-/// constructed directly.
-///
 /// `Codable` uses the public `score`, `type`, and `channels` keys. Unknown operation type strings fail to decode through
 /// ``OperationType``.
 public struct OperationRequirement: Codable, Sendable, Hashable, CustomStringConvertible {

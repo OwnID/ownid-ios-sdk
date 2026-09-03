@@ -8,7 +8,9 @@ import Foundation
 internal actor NetworkImpl: NetworkProtocol {
     internal typealias RetrySleeper = @Sendable (UInt64) async throws -> Void
 
+    // NetworkImpl takes exclusive ownership; callers must not share this session with another NetworkImpl.
     private let urlSession: URLSession
+    private let shutdownToken: ShutdownToken
     private let requestAdapters: NetworkRequest.AdapterChain?
     private let retryConfig: NetworkRequest.RetryConfig?
     private let httpLogger: HTTPLogger?
@@ -16,19 +18,26 @@ internal actor NetworkImpl: NetworkProtocol {
 
     internal init(
         urlSession: URLSession,
+        shutdownToken: ShutdownToken,
         requestAdapters: NetworkRequest.AdapterChain? = nil,
         retryConfig: NetworkRequest.RetryConfig? = nil,
         httpLogger: HTTPLogger? = nil,
         retrySleeper: @escaping RetrySleeper = { try await Task.sleep(nanoseconds: $0) }
     ) {
         self.urlSession = urlSession
+        self.shutdownToken = shutdownToken
         self.requestAdapters = requestAdapters
         self.retryConfig = retryConfig
         self.httpLogger = httpLogger
         self.retrySleeper = retrySleeper
     }
 
+    deinit {
+        urlSession.finishTasksAndInvalidate()
+    }
+
     internal func run(_ request: NetworkRequest) async throws -> NetworkResponse {
+        try checkAdmission()
         let baseRequest = request.buildURLRequest()
         let baseSendRequest = await requestAdapters?.adapt(baseRequest) ?? baseRequest
         let traceSeed = TraceContext.resolveSeed(baseSendRequest.value(forHTTPHeaderField: NetworkRequest.Header.traceparent.rawValue))
@@ -64,7 +73,6 @@ internal actor NetworkImpl: NetworkProtocol {
         let maxDelay = Double(retry.maxDelayMilliseconds)
 
         while true {
-            try Task.checkCancellation()
             let result = try await performRequestOnce(url: url, urlRequest: makeAttemptRequest(), suppressHttpLog: suppressHttpLog)
             switch result {
             case .success:
@@ -73,6 +81,7 @@ internal actor NetworkImpl: NetworkProtocol {
             case .fail(let error):
                 if case .networkError(let net) = error, isRetriable(urlError: net.error), attempt < retry.retries {
                     attempt += 1
+                    try checkAdmission()
                     let ns = UInt64((delayMs / 1000.0) * 1_000_000_000)
                     try await retrySleeper(ns)
                     delayMs = min(delayMs * retry.factor, maxDelay)
@@ -80,6 +89,13 @@ internal actor NetworkImpl: NetworkProtocol {
                 }
                 return result
             }
+        }
+    }
+
+    private func checkAdmission() throws {
+        try Task.checkCancellation()
+        if shutdownToken.isCanceled {
+            throw CancellationError()
         }
     }
 
@@ -103,6 +119,7 @@ internal actor NetworkImpl: NetworkProtocol {
     }
 
     private func performRequestOnce(url: URL, urlRequest: URLRequest, suppressHttpLog: Bool) async throws -> NetworkResponse {
+        try checkAdmission()
         let start = DispatchTime.now()
         if !suppressHttpLog { httpLogger?.logRequest(urlRequest) }
 

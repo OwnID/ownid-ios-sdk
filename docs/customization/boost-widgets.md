@@ -40,8 +40,8 @@ Both widgets trim whitespace and newlines from `loginID` before starting their f
 
 Advanced examples show complete screen wiring:
 
-- [Boost login example](../../Demo/DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift)
-- [Boost create-passkey example](../../Demo/DemoAdvanced/App/Views/Flows/Boost/BoostCreatePasskeyScreen.swift)
+- [Boost login example](../../DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift)
+- [Boost create-passkey example](../../DemoAdvanced/App/Views/Flows/Boost/BoostCreatePasskeyScreen.swift)
 
 ## Theme and Text
 

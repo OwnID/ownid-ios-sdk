@@ -60,5 +60,6 @@ internal struct EmailVerificationDefaultView: View {
             onNotYou: uiState.onNotYou,
             onResend: uiState.onResend
         )
+        .id(uiState.challenge.challengeID)
     }
 }

@@ -84,4 +84,8 @@ import Foundation
             handlers.removeValue(forKey: id)
         }
     }
+
+    internal var isCanceled: Bool {
+        lock.withLock { canceled }
+    }
 }

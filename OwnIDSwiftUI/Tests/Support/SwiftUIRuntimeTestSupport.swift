@@ -33,12 +33,6 @@ struct SwiftUIRuntimeFittingSizeExpectation {
         maxReportedHeight: 1_200
     )
 
-    static let compactWidget = Self(
-        width: 220,
-        maxHeight: 120,
-        maxReportedWidth: 220.5,
-        maxReportedHeight: 120
-    )
 }
 
 @MainActor
@@ -73,11 +67,17 @@ final class SwiftUIRuntimeHost<Content: View>: SwiftUIRuntimeSettlingHost {
         host = UIHostingController(rootView: rootView)
         window = UIKitRuntimeTestWindow(size: size)
 
-        window.show(root: rootViewController)
         rootViewController.addChild(host)
+        host.view.translatesAutoresizingMaskIntoConstraints = false
         rootViewController.view.addSubview(host.view)
-        host.view.frame = rootViewController.view.bounds
+        NSLayoutConstraint.activate([
+            host.view.leadingAnchor.constraint(equalTo: rootViewController.view.leadingAnchor),
+            host.view.trailingAnchor.constraint(equalTo: rootViewController.view.trailingAnchor),
+            host.view.topAnchor.constraint(equalTo: rootViewController.view.topAnchor),
+            host.view.bottomAnchor.constraint(equalTo: rootViewController.view.bottomAnchor),
+        ])
         host.didMove(toParent: rootViewController)
+        window.show(root: rootViewController)
 
         layout()
     }
@@ -128,18 +128,6 @@ final class SwiftUIRuntimeHost<Content: View>: SwiftUIRuntimeSettlingHost {
         host.view.ownIDTestDescendants().compactMap { $0 as? UITextField }
     }
 
-    func controls() -> [UIControl] {
-        host.view.ownIDTestDescendants().compactMap { $0 as? UIControl }
-    }
-
-    func accessibilityElements() -> [NSObject] {
-        host.view.ownIDTestAccessibilityElements()
-    }
-
-    func accessibilityLabels() -> [String] {
-        accessibilityElements().compactMap(\.accessibilityLabel)
-    }
-
     func close() {
         host.willMove(toParent: nil)
         host.view.removeFromSuperview()
@@ -155,9 +143,13 @@ final class RuntimeSnapshotRecorder<Snapshot: Sendable>: @unchecked Sendable {
     private var waiters: [SnapshotWaiter] = []
 
     func record(_ snapshot: Snapshot) {
+        let snapshotIndex = values.count
         values.append(snapshot)
-        let matchingWaiters = waiters.filter { $0.predicate(snapshot) }
-        waiters.removeAll { $0.predicate(snapshot) }
+        let matchingWaiters = waiters.filter {
+            snapshotIndex >= $0.minimumIndex && $0.predicate(snapshot)
+        }
+        let matchingWaiterIDs = Set(matchingWaiters.map(\.id))
+        waiters.removeAll { matchingWaiterIDs.contains($0.id) }
         for waiter in matchingWaiters {
             waiter.continuation.resume(returning: snapshot)
         }
@@ -169,15 +161,19 @@ final class RuntimeSnapshotRecorder<Snapshot: Sendable>: @unchecked Sendable {
 
     func waitForSnapshot<Host: SwiftUIRuntimeSettlingHost>(
         matching predicate: @escaping (Snapshot) -> Bool,
+        afterSnapshotCount: Int = 0,
         host: Host,
         description: String = "runtime snapshot"
     ) async throws -> Snapshot {
-        if let snapshot = values.last(where: predicate) {
+        if let snapshot = values.dropFirst(min(afterSnapshotCount, values.count)).last(where: predicate) {
             return snapshot
         }
 
         let waitTask = Task { @MainActor in
-            try await self.waitForRecordedSnapshot(matching: predicate)
+            try await self.waitForRecordedSnapshot(
+                matching: predicate,
+                afterSnapshotCount: afterSnapshotCount
+            )
         }
         defer { waitTask.cancel() }
 
@@ -193,19 +189,27 @@ final class RuntimeSnapshotRecorder<Snapshot: Sendable>: @unchecked Sendable {
     }
 
     private func waitForRecordedSnapshot(
-        matching predicate: @escaping (Snapshot) -> Bool
+        matching predicate: @escaping (Snapshot) -> Bool,
+        afterSnapshotCount: Int
     ) async throws -> Snapshot {
-        if let snapshot = values.last(where: predicate) {
+        if let snapshot = values.dropFirst(min(afterSnapshotCount, values.count)).last(where: predicate) {
             return snapshot
         }
 
         let waiterID = UUID()
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
-                if let snapshot = values.last(where: predicate) {
+                if let snapshot = values.dropFirst(min(afterSnapshotCount, values.count)).last(where: predicate) {
                     continuation.resume(returning: snapshot)
                 } else {
-                    waiters.append(SnapshotWaiter(id: waiterID, predicate: predicate, continuation: continuation))
+                    waiters.append(
+                        SnapshotWaiter(
+                            id: waiterID,
+                            minimumIndex: afterSnapshotCount,
+                            predicate: predicate,
+                            continuation: continuation
+                        )
+                    )
                 }
             }
         } onCancel: {
@@ -221,6 +225,7 @@ final class RuntimeSnapshotRecorder<Snapshot: Sendable>: @unchecked Sendable {
 
     private struct SnapshotWaiter {
         let id: UUID
+        let minimumIndex: Int
         let predicate: (Snapshot) -> Bool
         let continuation: CheckedContinuation<Snapshot, any Error>
     }
@@ -282,33 +287,6 @@ func submitReturn(on textField: UITextField) throws -> Bool {
     return delegate.textFieldShouldReturn?(textField) ?? false
 }
 
-@MainActor
-func activateControl<Content: View>(
-    labeled label: String,
-    in host: SwiftUIRuntimeHost<Content>
-) throws {
-    let didActivate = try attemptActivateControl(labeled: label, in: host)
-    #expect(didActivate, "Expected enabled control or accessibility element labeled \(label)")
-}
-
-@MainActor
-func attemptActivateControl<Content: View>(
-    labeled label: String,
-    in host: SwiftUIRuntimeHost<Content>
-) throws -> Bool {
-    if let control = host.controls().first(where: { $0.accessibilityLabel == label }) {
-        guard control.isEnabled else { return false }
-        control.sendActions(for: .touchUpInside)
-        return true
-    }
-
-    let element = try #require(
-        host.accessibilityElements().first { $0.accessibilityLabel == label },
-        "Expected control or accessibility element labeled \(label)"
-    )
-    return element.accessibilityActivate()
-}
-
 extension UIColor {
     func ownIDTestIsEqual(to other: UIColor, tolerance: CGFloat = 0.001) -> Bool {
         guard let lhs = ownIDTestRGBAComponents(), let rhs = other.ownIDTestRGBAComponents() else {
@@ -336,25 +314,5 @@ extension UIColor {
 extension UIView {
     fileprivate func ownIDTestDescendants() -> [UIView] {
         [self] + subviews.flatMap { $0.ownIDTestDescendants() }
-    }
-
-    fileprivate func ownIDTestAccessibilityElements() -> [NSObject] {
-        guard !isHidden, !accessibilityElementsHidden else {
-            return []
-        }
-
-        var elements: [NSObject] = []
-        if isAccessibilityElement {
-            elements.append(self)
-        }
-
-        if let explicitElements = accessibilityElements {
-            elements.append(contentsOf: explicitElements.compactMap { $0 as? NSObject })
-        }
-
-        for subview in subviews {
-            elements.append(contentsOf: subview.ownIDTestAccessibilityElements())
-        }
-        return elements
     }
 }

@@ -32,20 +32,19 @@ internal final class OwnIDRootDIContainer: DIContainerImpl, @unchecked Sendable 
     private init() {
         super.init(scopeName: "ROOT")
 
-        register(  //TODO Multi instance logging issue
+        register(
             OwnIDLogRouter.self,
-            instance: OwnIDLogRouter(ownIDLoggerProvider: { [weak self] in self?.getOrNil(type: (any OwnIDLogger).self) }) { [weak self] in
-                guard let self else { return [] }
-                let containers: [any DIContainer] = instanceLock.withLock { instances.values.compactMap(\.container) }
-                return containers.compactMap { container in container.getOrNil(type: ServerLogger.self) }
-            }
+            instance: OwnIDLogRouter(
+                ownIDLoggerProvider: { [weak self] in self?.getOrNil(type: (any OwnIDLogger).self) },
+                serverLoggerProvider: { nil }
+            )
         )
 
         register((any JSONCoder).self, instance: JSONCoderImpl())
     }
 
     internal func injectRootDefaults() {
-        instanceLock.withLock {
+        lifecycleLock.withLock {
             let rootLogRouter = getOrNil(type: OwnIDLogRouter.self)
 
             if rootDefaultsInjected {
@@ -53,39 +52,21 @@ internal final class OwnIDRootDIContainer: DIContainerImpl, @unchecked Sendable 
                 return
             }
 
-            struct LoggerAdapter: DIContainerLogger {
-                let router: OwnIDLogRouter?
-                let enableTrace: Bool
-
-                func trace(container: any DIContainerResolver, tag: String, msg: String?) {
-                    guard enableTrace, let router else { return }
-                    if shouldSuppress(message: msg) { return }
-                    router.logV(source: container, prefix: tag, message: msg)
-                }
-
-                func error(container: any DIContainerResolver, tag: String, msg: String?, cause: (any Error)?) {
-                    guard let router else { return }
-                    if shouldSuppress(message: msg) { return }
-                    router.logI(source: container, prefix: tag, message: msg, cause: cause)
-                }
-
-                private func shouldSuppress(message: String?) -> Bool {
-                    guard let message, !message.isEmpty else { return false }
-                    return message.contains("OwnIDLogRouter") || message.contains("OwnIDLogger") || message.contains("ServerLogger")
-                }
-            }
-
-            #if DEBUG
-                let isDebugBuild = true
-            #else
-                let isDebugBuild = false
-            #endif
-
-            setLogger(LoggerAdapter(router: rootLogRouter, enableTrace: isDebugBuild))
+            setLogger(DIContainerLoggerAdapter(router: rootLogRouter))
 
             register(UIContextProviderImpl() as any UIContextProvider)
 
-            register(LocalInfoImpl() as any LocalInfo)
+            let localInfo = LocalInfoImpl()
+            register(localInfo as any LocalInfo)
+
+            register(
+                (any RunDiagnostic).self,
+                instance: RunDiagnosticImpl(
+                    localInfo: localInfo,
+                    storageLogger: rootLogRouter,
+                    localLoggerProvider: { [weak self] in self?.getOrNil(type: (any OwnIDLogger).self) }
+                )
+            )
 
             register(LanguageTagsProviderImpl(logger: rootLogRouter) as any LanguageTagsProvider)
 
@@ -96,9 +77,29 @@ internal final class OwnIDRootDIContainer: DIContainerImpl, @unchecked Sendable 
     @discardableResult
     internal func initializeInstanceContainer(
         _ instanceName: InstanceName = .default,
-        configuration: any OwnIDConfiguration
-    ) -> any DIContainer {
-        lifecycleLock.withLock {
+        configuration: any OwnIDConfiguration,
+        languages: [String]? = nil
+    ) throws -> any DIContainer {
+        try lifecycleLock.withLock {
+            let instanceIdentity = configuration.instanceIdentity()
+            let existingInstances: [(InstanceName, any DIContainer)] = instanceLock.withLock {
+                instances.compactMap { existingInstanceName, entry in
+                    guard existingInstanceName != instanceName, let container = entry.container else { return nil }
+                    return (existingInstanceName, container)
+                }
+            }
+            let conflictingInstanceName = existingInstances.first { _, container in
+                container.getOrNil(type: (any OwnIDConfiguration).self)?.instanceIdentity() == instanceIdentity
+            }?.0
+
+            if let conflictingInstanceName {
+                throw IdentityConflictError(conflictingInstanceName: conflictingInstanceName)
+            }
+
+            if let languages {
+                getOrNil(type: (any LanguageTagsProvider).self)?.setLanguageTags(languages)
+            }
+
             let instanceScope = createScope(scopeName: instanceName.value)
             instanceScope.injectInstanceDefaults(instanceName: instanceName, configuration: configuration)
             let namespace = instanceScope.instanceNamespace
@@ -126,6 +127,9 @@ internal final class OwnIDRootDIContainer: DIContainerImpl, @unchecked Sendable 
 
             logRouter?.logD(source: Self.self, prefix: "initializeInstanceContainer", message: "Instance created: \(instanceName.value)")
             continuations.forEach { $0.yield(instanceScope) }
+            getOrNil(type: (any RunDiagnostic).self)?.reportPreviousRun(
+                serverLogger: instanceScope.getOrNil(type: ServerLogger.self)
+            )
 
             return instanceScope
         }
@@ -154,13 +158,12 @@ internal final class OwnIDRootDIContainer: DIContainerImpl, @unchecked Sendable 
                 }
             }
 
-            let currentContainer = instanceLock.withLock {
+            // Register and yield the initial value under one lock to preserve update order.
+            instanceLock.withLock {
                 let entry = getOrCreateInstanceEntry(instanceName)
                 entry.continuations[id] = continuation
-                return entry.container
+                continuation.yield(entry.container)
             }
-
-            continuation.yield(currentContainer)
         }
     }
 
@@ -193,12 +196,42 @@ internal final class OwnIDRootDIContainer: DIContainerImpl, @unchecked Sendable 
     private func destroyInstanceSideEffects(_ instance: (any DIContainer)?, instanceName: InstanceName) {
         guard let instance else { return }
 
+        let logger = instance.getOrNil(type: OwnIDLogRouter.self)
+        logger?.logD(source: Self.self, prefix: "destroyInstanceContainer", message: "Instance destroyed: \(instanceName.value)")
+
         if let token = instance.getOrNil(type: ShutdownToken.self) {
             token.cancel()
         }
+    }
+}
 
-        if let logger = instance.getOrNil(type: OwnIDLogRouter.self) {
-            logger.logD(source: Self.self, prefix: "destroyInstanceContainer", message: "Instance destroyed: \(instanceName.value)")
-        }
+internal struct DIContainerLoggerAdapter: DIContainerLogger {
+    let router: OwnIDLogRouter?
+    let enableTrace: Bool
+
+    init(router: OwnIDLogRouter?) {
+        self.router = router
+        #if DEBUG
+            self.enableTrace = true
+        #else
+            self.enableTrace = false
+        #endif
+    }
+
+    func trace(container: any DIContainerResolver, tag: String, msg: String?) {
+        guard enableTrace, let router else { return }
+        if shouldSuppress(message: msg) { return }
+        router.logV(source: container, prefix: tag, message: msg)
+    }
+
+    func error(container: any DIContainerResolver, tag: String, msg: String?, cause: (any Error)?) {
+        guard let router else { return }
+        if shouldSuppress(message: msg) { return }
+        router.logI(source: container, prefix: tag, message: msg, cause: cause)
+    }
+
+    private func shouldSuppress(message: String?) -> Bool {
+        guard let message, !message.isEmpty else { return false }
+        return message.contains("OwnIDLogRouter") || message.contains("OwnIDLogger") || message.contains("ServerLogger")
     }
 }

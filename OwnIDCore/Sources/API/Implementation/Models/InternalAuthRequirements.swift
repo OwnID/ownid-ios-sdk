@@ -16,6 +16,19 @@ internal struct InternalAuthRequirements: Sendable, Codable, Hashable {
         case operations = "operations"
     }
 
+    internal init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.targetScore = try container.decode(Int.self, forKey: .targetScore)
+        guard targetScore >= 0 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .targetScore,
+                in: container,
+                debugDescription: "Target score must be non-negative."
+            )
+        }
+        self.operations = try container.decode([InternalOperationRequirement].self, forKey: .operations)
+    }
+
     internal func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(targetScore, forKey: .targetScore)

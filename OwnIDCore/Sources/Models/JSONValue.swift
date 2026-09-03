@@ -1,3 +1,4 @@
+import CoreFoundation
 import Foundation
 
 /// A type-safe representation of an arbitrary JSON value.
@@ -108,12 +109,12 @@ extension JSONValue {
     internal init(from any: Any) {
         if let str = any as? String {
             self = .string(str)
+        } else if let number = any as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() {
+            self = .bool(number.boolValue)
         } else if let int = any as? Int {
             self = .int(int)
         } else if let double = any as? Double {
             self = .double(double)
-        } else if let bool = any as? Bool {
-            self = .bool(bool)
         } else if let array = any as? [Any] {
             let jsonArray = array.compactMap { JSONValue(from: $0) }
             self = .array(jsonArray)

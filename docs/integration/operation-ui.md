@@ -78,9 +78,9 @@ var body: some View {
 
 ## Examples
 
-- [`OperationLoginIdCollectScreen.swift`](../../Demo/DemoAdvanced/App/Views/Ops/OperationLoginIdCollectScreen.swift)
-- [`OperationVerificationScreen.swift`](../../Demo/DemoAdvanced/App/Views/Ops/OperationVerificationScreen.swift)
-- [`DemoOperationDialog.swift`](../../Demo/DemoAdvanced/App/Views/Ops/DemoOperationDialog.swift)
+- [`OperationLoginIdCollectScreen.swift`](../../DemoAdvanced/App/Views/Ops/OperationLoginIdCollectScreen.swift)
+- [`OperationVerificationScreen.swift`](../../DemoAdvanced/App/Views/Ops/OperationVerificationScreen.swift)
+- [`DemoOperationDialog.swift`](../../DemoAdvanced/App/Views/Ops/DemoOperationDialog.swift)
 
 ## Prerequisites
 

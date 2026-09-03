@@ -68,10 +68,10 @@ final class AccountViewModel: ObservableObject {
 
 ## Examples
 
-- [Current-user enrollment ViewModel](../../Demo/DemoBase/App/Views/CurrentUser/CurrentUserViewModel.swift)
-- [Current-user enrollment screen](../../Demo/DemoBase/App/Views/CurrentUser/CurrentUserScreen.swift)
-- [Headless enrollment after login](../../Demo/DemoBase/App/Views/Headless/HeadlessViewModel.swift)
-- [Advanced passkey examples](../../Demo/DemoAdvanced/App/Views/Headless/HeadlessViewModel.swift)
+- [Current-user enrollment ViewModel](../../DemoBase/App/Views/CurrentUser/CurrentUserViewModel.swift)
+- [Current-user enrollment screen](../../DemoBase/App/Views/CurrentUser/CurrentUserScreen.swift)
+- [Headless enrollment after login](../../DemoBase/App/Views/Headless/HeadlessViewModel.swift)
+- [Advanced passkey examples](../../DemoAdvanced/App/Views/Headless/HeadlessViewModel.swift)
 
 ## Prerequisites
 

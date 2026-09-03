@@ -87,13 +87,13 @@ extension OwnIDProvidersRegistrar {
     ///
     /// ``SessionCreate`` behavior:
     /// - Treats `sessionPayload` as required OwnID-provided JSON text and expects a top-level JSON object.
-    /// - When `sessionInfo` exists, reads `sessionToken`, `sessionSecret`, and an optional positive expiration from
-    ///   `expires_in` or `expirationTime`, sets Gigya session, and returns success with
-    ///   `SessionOutput(session: gigya.getSession())`.
+    /// - When `sessionInfo` contains non-empty `sessionToken` and `sessionSecret`, reads an optional positive expiration
+    ///   from `expires_in` or `expirationTime`, sets the Gigya session, and returns success only when Gigya reports an
+    ///   active session.
     /// - When non-empty `errorJson` exists, maps `errorCode` and `errorMessage` when both are present and returns
     ///   failure.
-    /// - Missing session fields, malformed JSON, failed `GigyaSession` creation, or any other payload shape return
-    ///   failure.
+    /// - Missing or empty session fields, malformed JSON, failed `GigyaSession` creation, no active Gigya session after
+    ///   assignment, or any other payload shape return failure.
     /// - Does not cancel in-progress payload parsing or Gigya session assignment.
     ///
     /// ``PasswordAuthenticate`` behavior:
@@ -128,9 +128,11 @@ extension OwnIDProvidersRegistrar {
                     if let sessionInfoDict = sessionJson["sessionInfo"] as? [String: Any] {
                         guard
                             let sessionToken = sessionInfoDict["sessionToken"] as? String,
-                            let sessionSecret = sessionInfoDict["sessionSecret"] as? String
+                            sessionToken.isEmpty == false,
+                            let sessionSecret = sessionInfoDict["sessionSecret"] as? String,
+                            sessionSecret.isEmpty == false
                         else {
-                            return .failure(GigyaException(message: "Missing sessionToken or sessionSecret"))
+                            return .failure(GigyaException(message: "Missing or empty sessionToken or sessionSecret"))
                         }
 
                         let expiresIn =
@@ -147,7 +149,12 @@ extension OwnIDProvidersRegistrar {
                         }
 
                         gigya.setSession(gigyaSession)
-                        return .success(SessionOutput(session: gigya.getSession()))
+                        guard let activeSession = gigya.getSession() else {
+                            return .failure(
+                                GigyaException(message: "sessionCreate: Failed to create an active Gigya session")
+                            )
+                        }
+                        return .success(SessionOutput(session: activeSession))
                     }
 
                     if let errorJsonString = sessionJson["errorJson"] as? String, errorJsonString.isEmpty == false {

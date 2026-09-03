@@ -6,7 +6,7 @@ import Foundation
 /// instance per suite so writes observe a single owner.
 ///
 /// Unreadable or corrupted files are logged, deleted, and replaced by an empty in-memory store. Write and remove
-/// failures are logged without throwing.
+/// failures are logged and rethrown without changing the in-memory store.
 ///
 /// !!! MUST BE SINGLETON PER FILE NAME !!!
 internal actor StorageImpl: Storage {
@@ -41,41 +41,46 @@ internal actor StorageImpl: Storage {
         store[namespaced(key)]?.string ?? defaultValue
     }
 
-    internal func putString(_ value: String, forKey key: String) async {
-        store[namespaced(key)] = StoredValue(string: value)
-        saveStore()
+    internal func putString(_ value: String, forKey key: String) async throws {
+        try updateStore { store in
+            store[namespaced(key)] = StoredValue(string: value)
+        }
     }
 
     internal func getBool(forKey key: String, defaultValue: Bool? = nil) async -> Bool? {
         store[namespaced(key)]?.bool ?? defaultValue
     }
 
-    internal func putBool(_ value: Bool, forKey key: String) async {
-        store[namespaced(key)] = StoredValue(bool: value)
-        saveStore()
+    internal func putBool(_ value: Bool, forKey key: String) async throws {
+        try updateStore { store in
+            store[namespaced(key)] = StoredValue(bool: value)
+        }
     }
 
     internal func getNumber(forKey key: String, defaultValue: Int64? = nil) async -> Int64? {
         store[namespaced(key)]?.number ?? defaultValue
     }
 
-    internal func putNumber(_ value: Int64, forKey key: String) async {
-        store[namespaced(key)] = StoredValue(number: value)
-        saveStore()
+    internal func putNumber(_ value: Int64, forKey key: String) async throws {
+        try updateStore { store in
+            store[namespaced(key)] = StoredValue(number: value)
+        }
     }
 
     internal func getDouble(forKey key: String, defaultValue: Double? = nil) async -> Double? {
         store[namespaced(key)]?.double ?? defaultValue
     }
 
-    internal func putDouble(_ value: Double, forKey key: String) async {
-        store[namespaced(key)] = StoredValue(double: value)
-        saveStore()
+    internal func putDouble(_ value: Double, forKey key: String) async throws {
+        try updateStore { store in
+            store[namespaced(key)] = StoredValue(double: value)
+        }
     }
 
-    internal func remove(forKey key: String) async {
-        store.removeValue(forKey: namespaced(key))
-        saveStore()
+    internal func remove(forKey key: String) async throws {
+        try updateStore { store in
+            store.removeValue(forKey: namespaced(key))
+        }
     }
 
     private func namespaced(_ key: String) -> String { "\(keyPrefix)\(key)" }
@@ -98,22 +103,36 @@ internal actor StorageImpl: Storage {
         }
     }
 
-    private func saveStore() {
-        do {
-            if store.isEmpty {
-                try? FileManager.default.removeItem(at: fileURL)
-                return
-            }
+    private func updateStore(_ update: (inout [String: StoredValue]) -> Void) throws {
+        var candidate = store
+        update(&candidate)
 
-            let directoryURL = fileURL.deletingLastPathComponent()
-            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
-            Self.excludeFromBackup(directoryURL, logger: logger)
-            let data = try PropertyListEncoder().encode(store)
-            try data.write(to: fileURL, options: .atomic)
-            Self.excludeFromBackup(fileURL, logger: logger)
+        do {
+            try persistStore(candidate)
         } catch {
             logger?.logW(source: Self.self, prefix: #function, message: "Failed to persist SDK storage", cause: error)
+            throw error
         }
+
+        store = candidate
+    }
+
+    private func persistStore(_ candidate: [String: StoredValue]) throws {
+        if candidate.isEmpty {
+            do {
+                try FileManager.default.removeItem(at: fileURL)
+            } catch let error as CocoaError where error.code == .fileNoSuchFile {
+                return
+            }
+            return
+        }
+
+        let data = try PropertyListEncoder().encode(candidate)
+        let directoryURL = fileURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+        Self.excludeFromBackup(directoryURL, logger: logger)
+        try data.write(to: fileURL, options: .atomic)
+        Self.excludeFromBackup(fileURL, logger: logger)
     }
 
     private static func storageDirectory(baseDirectoryURL: URL?, logger: OwnIDLogRouter?) -> URL {

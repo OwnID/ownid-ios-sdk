@@ -5,7 +5,7 @@ import Foundation
 /// Lookup starts in the bound scope and walks parent scopes. When a parent binding is a factory, the factory receives
 /// the original requester so child-scope overrides remain visible during nested resolution. Resolver calls are
 /// synchronous, do not hop actors, and do not own cancellation for resolved objects or factory-created work.
-@_spi(OwnIDInternal) public protocol DIContainerResolver: Sendable {
+@_spi(OwnIDInternal) public protocol DIContainerResolver: AnyObject, Sendable {
     /// Scope name used in diagnostic traces and resolution errors.
     var scopeName: String { get }
 
@@ -17,7 +17,9 @@ import Foundation
 
     /// Resolves the dependency for the given type or throws.
     ///
-    /// - Throws: ``MissingDependencyError`` if not registered; ``DependencyResolutionError`` on resolution failure.
+    /// - Throws: ``MissingDependencyError`` if the requested type or one of its factory dependencies is not registered.
+    ///   For a requested `A` whose factory reaches a missing `B`, the error identifies `B` as the missing dependency and
+    ///   retains `A` as its entry point. Throws ``DependencyResolutionError`` for other resolution failures.
     func getOrThrow<T: Any & Sendable>(type: T.Type) throws -> T
 
     /// Resolves the type, or returns `nil` after suppressing missing-dependency and resolution failures.
@@ -82,8 +84,6 @@ import Foundation
         registerFactory(T.self, dependencies: dependencies, factory: factory)
     }
 
-    @inlinable
-    public func remove<T: Any & Sendable>(_ type: T.Type) { remove(type) }
 }
 
 /// Internal SDK module container that can both resolve and register scoped dependencies.

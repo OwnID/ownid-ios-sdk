@@ -79,5 +79,5 @@ final class CapturingOwnIDLogger: OwnIDLogger, @unchecked Sendable {
 
 func testLogRouter(sink: LogCapture, category: String = "OwnID-Test") -> OwnIDLogRouter {
     let logger = CapturingOwnIDLogger(category: category, sink: sink)
-    return OwnIDLogRouter(ownIDLoggerProvider: { logger }, serverLoggersProvider: { [] })
+    return OwnIDLogRouter(ownIDLoggerProvider: { logger }, serverLoggerProvider: { nil })
 }

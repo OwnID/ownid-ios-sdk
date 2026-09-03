@@ -1,23 +1,10 @@
 import Compression
 import Foundation
-import Security
-
-private typealias SecTaskRef = CFTypeRef
-
-@_silgen_name("SecTaskCreateFromSelf")
-private func SecTaskCreateFromSelf(_ allocator: CFAllocator?) -> SecTaskRef?
-
-@_silgen_name("SecTaskCopyValueForEntitlement")
-private func SecTaskCopyValueForEntitlement(
-    _ task: SecTaskRef,
-    _ entitlement: CFString,
-    _ error: UnsafeMutablePointer<Unmanaged<CFError>?>?
-) -> CFTypeRef?
 
 /// Best-effort runtime diagnostics for iOS passkey relying-party configuration.
 ///
-/// Verification runs at most once per normalized RP ID. It reports entitlement, AASA, robots.txt, and app-site
-/// association findings through the SDK logger only; diagnostics do not gate or authorize passkey operations.
+/// Verification runs at most once per normalized RP ID. It reports origin and Apple CDN AASA observations through
+/// the SDK logger only; diagnostics do not gate or authorize passkey operations.
 @available(iOS 16.0, *)
 internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
     private enum Status: String {
@@ -57,15 +44,8 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         }
     }
 
-    private struct EntitlementsInfo {
-        let associatedDomains: [String]
-        let applicationIdentifier: String?
-        let teamId: String?
-    }
-
     private struct AASAInfo {
         let apps: [String]
-        let rawJSONSize: Int
     }
 
     private final class NoRedirectDelegate: NSObject, URLSessionTaskDelegate {
@@ -91,14 +71,12 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
 
     private let localInfo: any LocalInfo
     private let logger: OwnIDLogRouter?
-    private let entitlementsInfo: EntitlementsInfo
     private let sessionFactory: @Sendable (URLSessionConfiguration, (any URLSessionTaskDelegate)?) -> URLSession
     private let verifiedRpIds = VerifiedRpIds()
 
     init(
         localInfo: any LocalInfo,
         logger: OwnIDLogRouter?,
-        entitlementsOverride: (associatedDomains: [String], applicationIdentifier: String?, teamId: String?)? = nil,
         sessionFactory: @escaping @Sendable (URLSessionConfiguration, (any URLSessionTaskDelegate)?) -> URLSession = {
             URLSession(configuration: $0, delegate: $1, delegateQueue: nil)
         }
@@ -106,15 +84,6 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         self.localInfo = localInfo
         self.logger = logger
         self.sessionFactory = sessionFactory
-        if let override = entitlementsOverride {
-            self.entitlementsInfo = EntitlementsInfo(
-                associatedDomains: override.associatedDomains,
-                applicationIdentifier: override.applicationIdentifier,
-                teamId: override.teamId
-            )
-        } else {
-            self.entitlementsInfo = Self.loadEntitlements()
-        }
     }
 
     func verify(rpId: String) {
@@ -129,26 +98,6 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         }
     }
 
-    private static func loadEntitlements() -> EntitlementsInfo {
-        guard let task = SecTaskCreateFromSelf(nil) else {
-            return EntitlementsInfo(associatedDomains: [], applicationIdentifier: nil, teamId: nil)
-        }
-
-        let appId = SecTaskCopyValueForEntitlement(task, "application-identifier" as CFString, nil) as? String
-
-        var associatedDomains: [String] = []
-        if let raw = SecTaskCopyValueForEntitlement(task, "com.apple.developer.associated-domains" as CFString, nil) {
-            if let list = raw as? [String] {
-                associatedDomains = list
-            } else if let anyList = raw as? [Any] {
-                associatedDomains = anyList.compactMap { $0 as? String }
-            }
-        }
-
-        let teamId = appId?.split(separator: ".").first.map(String.init)
-        return EntitlementsInfo(associatedDomains: associatedDomains, applicationIdentifier: appId, teamId: teamId)
-    }
-
     private func runDiagnostics(rpId: String) async {
         let bundleId = localInfo.bundleID
         var steps: [Step] = []
@@ -157,16 +106,6 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         let rpResult = validateRpId(rpId)
         steps.append(rpResult.step)
         let normalizedRpId = rpResult.normalizedRpId
-
-        steps.append(buildEntitlementsStep(info: entitlementsInfo))
-        let expectedAppId = entitlementsInfo.teamId.map { "\($0).\(bundleId)" }
-
-        if let domain = normalizedRpId, !entitlementsInfo.associatedDomains.isEmpty {
-            steps.append(checkAssociatedDomains(domain: domain, entries: entitlementsInfo.associatedDomains))
-        } else {
-            let reason = normalizedRpId == nil ? "rpId validation failed" : "Associated domains missing"
-            steps.append(.skip("Associated domains", reason: reason))
-        }
 
         var aasaPayload: (data: Data, response: HTTPURLResponse)?
         if let domain = normalizedRpId {
@@ -186,24 +125,23 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
             steps.append(.skip("Parse AASA", reason: "AASA not fetched"))
         }
 
-        if let info = aasaInfo, let appId = entitlementsInfo.applicationIdentifier, let expected = expectedAppId {
-            steps.append(checkConsistency(expected: expected, appId: appId, apps: info.apps))
+        if let info = aasaInfo {
+            steps.append(checkBundleIdentifierMembership(name: "Origin AASA", apps: info.apps, bundleId: bundleId))
         } else {
-            steps.append(.skip("Consistency", reason: "Missing entitlement or AASA data"))
+            steps.append(.skip("Origin AASA", reason: "AASA data unavailable"))
         }
 
-        if let domain = normalizedRpId, let expected = entitlementsInfo.applicationIdentifier ?? expectedAppId {
-            let cdn = await fetchCDN(domain: domain, expectedAppId: expected)
+        if let domain = normalizedRpId {
+            let cdn = await fetchCDN(domain: domain, bundleId: bundleId)
             steps.append(cdn.step)
             cdnApps = cdn.apps
         } else {
-            steps.append(.skip("Apple CDN", reason: "Missing rpId or application identifier"))
+            steps.append(.skip("Apple CDN", reason: "rpId validation failed"))
         }
 
         let report = buildReport(
             steps: steps,
             bundleId: bundleId,
-            entitlements: entitlementsInfo,
             aasaApps: aasaInfo?.apps ?? [],
             cdnApps: cdnApps
         )
@@ -212,9 +150,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         }
     }
 
-    private func buildReport(steps: [Step], bundleId: String, entitlements: EntitlementsInfo, aasaApps: [String], cdnApps: [String])
-        -> String
-    {
+    private func buildReport(steps: [Step], bundleId: String, aasaApps: [String], cdnApps: [String]) -> String {
         let summary: Status
         if steps.contains(where: { $0.status == .fail }) {
             summary = .fail
@@ -228,8 +164,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
 
         var builder = "\nPasskeyDiagnostics: \(summary.rawValue)\n"
         builder += "Env: Application bundleId=\(bundleId), version=\(localInfo.appVersion), debuggable=\(localInfo.isDebuggable)\n"
-        builder +=
-            "Env: AppID=\(entitlements.applicationIdentifier ?? "n/a"), teamId=\(entitlements.teamId ?? "n/a"), correlationId=\(localInfo.correlationId)\n"
+        builder += "Env: correlationId=\(localInfo.correlationId)\n"
         builder +=
             "Env: isSystemFidoCapable=\(localInfo.isSystemFidoCapable), isDeviceSecured=\(localInfo.isDeviceSecured), isStrongBiometricEnabled=\(localInfo.isStrongBiometricEnabled)\n"
         if !aasaApps.isEmpty || !cdnApps.isEmpty {
@@ -292,47 +227,6 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         return (.pass("Validate rpId", details: ["rpId": normalized]), normalized)
     }
 
-    private func buildEntitlementsStep(info: EntitlementsInfo) -> Step {
-        var details: [String: String] = [:]
-        details["associatedDomains"] = info.associatedDomains.joined(separator: ";")
-        if let appId = info.applicationIdentifier { details["appId"] = appId }
-        if let teamId = info.teamId { details["teamId"] = teamId }
-
-        if info.applicationIdentifier == nil {
-            return .fail("Entitlements", reason: "application-identifier missing", details: details)
-        }
-        if info.associatedDomains.isEmpty {
-            return .fail("Entitlements", reason: "No associated domains", details: details)
-        }
-        if let appId = info.applicationIdentifier, !appId.hasSuffix(".\(localInfo.bundleID)") {
-            details["bundleId"] = localInfo.bundleID
-            return .fail("Entitlements", reason: "AppID does not match bundle", details: details)
-        }
-        return .pass("Entitlements", details: details)
-    }
-
-    private func checkAssociatedDomains(domain: String, entries: [String]) -> Step {
-        let match = entries.first(where: { matches(domain: domain, entry: $0) })
-        if let matched = match {
-            return .pass("Associated domains", details: ["match": matched])
-        }
-        return .fail("Associated domains", reason: "webcredentials entry missing", details: ["domain": domain])
-    }
-
-    private func matches(domain: String, entry: String) -> Bool {
-        let prefix = "webcredentials:"
-        guard entry.hasPrefix(prefix) else { return false }
-        let value = entry.dropFirst(prefix.count)
-        if value.hasPrefix("*.") {
-            let base = value.dropFirst(2)
-            guard !base.isEmpty else { return false }
-            let suffix = "." + base
-            return domain.count > suffix.count && domain.hasSuffix(suffix)
-        } else {
-            return domain == value
-        }
-    }
-
     private func fetchAASA(for domain: String) async -> (step: Step, payload: (data: Data, response: HTTPURLResponse)?) {
         guard let url = URL(string: "https://\(domain)/.well-known/apple-app-site-association") else {
             return (.fail("Fetch AASA", reason: "Invalid URL", details: ["domain": domain]), nil)
@@ -340,7 +234,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         return await fetch(url: url, name: "Fetch AASA", enforceJSON: true, checkSize: true)
     }
 
-    private func fetchCDN(domain: String, expectedAppId: String) async -> (step: Step, apps: [String]) {
+    private func fetchCDN(domain: String, bundleId: String) async -> (step: Step, apps: [String]) {
         guard let url = URL(string: "https://app-site-association.cdn-apple.com/a/v1/\(domain)") else {
             return (.fail("Apple CDN", reason: "Invalid CDN URL", details: ["domain": domain]), [])
         }
@@ -354,18 +248,11 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         guard let payload = fetch.payload else { return (fetch.step, []) }
         do {
             let json = try JSONSerialization.jsonObject(with: payload.data, options: [])
-            let apps = extractApps(from: json)
-            if apps.contains(expectedAppId) {
-                return (.pass("Apple CDN", details: ["code": "\(payload.response.statusCode)"]), apps)
-            } else {
-                return (
-                    .fail(
-                        "Apple CDN",
-                        reason: "AppID missing in CDN view",
-                        details: ["code": "\(payload.response.statusCode)", "apps": apps.joined(separator: ";")]
-                    ), apps
-                )
+            guard let apps = extractApps(from: json), !apps.isEmpty else {
+                return (.fail("Apple CDN", reason: "webcredentials.apps missing"), [])
             }
+            let membership = checkBundleIdentifierMembership(name: "Apple CDN", apps: apps, bundleId: bundleId)
+            return (membership, apps)
         } catch {
             return (.fail("Apple CDN", reason: "JSON parse error", details: ["error": error.localizedDescription]), [])
         }
@@ -437,9 +324,13 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
             return (.pass(name, details: details), (finalData, http))
         } catch {
             if let urlError = error as? URLError {
-                return (
-                    .fail(name, reason: "Network error", details: ["code": "\(urlError.code.rawValue)", "url": url.absoluteString]), nil
-                )
+                let details = ["code": "\(urlError.code.rawValue)", "url": url.absoluteString]
+                switch urlError.code {
+                case .timedOut, .networkConnectionLost, .notConnectedToInternet:
+                    return (.warn(name, reason: "Network unavailable", details: details), nil)
+                default:
+                    return (.fail(name, reason: "Network error", details: details), nil)
+                }
             }
             return (.fail(name, reason: "Error", details: ["error": error.localizedDescription]), nil)
         }
@@ -487,46 +378,52 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
     private func parseAASA(payload: (data: Data, response: HTTPURLResponse)) -> (step: Step, info: AASAInfo?) {
         do {
             let json = try JSONSerialization.jsonObject(with: payload.data, options: [])
-            let apps = extractApps(from: json)
-            if apps.isEmpty {
+            guard let apps = extractApps(from: json), !apps.isEmpty else {
                 return (.fail("Parse AASA", reason: "webcredentials.apps missing"), nil)
             }
             return (
                 .pass("Parse AASA", details: ["apps": apps.joined(separator: ";")]),
-                AASAInfo(apps: apps, rawJSONSize: payload.data.count)
+                AASAInfo(apps: apps)
             )
         } catch {
             return (.fail("Parse AASA", reason: "JSON parse error", details: ["error": error.localizedDescription]), nil)
         }
     }
 
-    private func extractApps(from json: Any) -> [String] {
-        guard let dict = json as? [String: Any] else { return [] }
-        if let webcredentials = dict["webcredentials"] as? [String: Any], let apps = webcredentials["apps"] as? [Any] {
-            return apps.compactMap { $0 as? String }
+    private func extractApps(from json: Any) -> [String]? {
+        guard let dict = json as? [String: Any],
+            let webcredentials = dict["webcredentials"] as? [String: Any],
+            let apps = webcredentials["apps"] as? [String]
+        else {
+            return nil
         }
-        // Some CDN responses wrap domains
-        for value in dict.values {
-            if let nested = value as? [String: Any], let apps = nested["apps"] as? [String] {
-                return apps
-            }
-            if let array = value as? [Any] {
-                for element in array {
-                    let apps = extractApps(from: element)
-                    if !apps.isEmpty { return apps }
-                }
-            }
-        }
-        return []
+        return apps
     }
 
-    private func checkConsistency(expected: String, appId: String, apps: [String]) -> Step {
-        if appId != expected {
-            return .fail("Consistency", reason: "application-identifier mismatch", details: ["appId": appId, "expected": expected])
+    private func checkBundleIdentifierMembership(name: String, apps: [String], bundleId: String) -> Step {
+        if let match = apps.first(where: { appEntryMatchesBundleIdentifier($0, bundleId: bundleId) }) {
+            return .pass(name, details: ["bundleId": bundleId, "matchedAppEntry": match])
         }
-        if apps.contains(expected) {
-            return .pass("Consistency", details: ["appId": expected])
+        return .fail(
+            name,
+            reason: "No webcredentials.apps entry matches the application Bundle ID",
+            details: ["bundleId": bundleId, "apps": apps.joined(separator: ";")]
+        )
+    }
+
+    private func appEntryMatchesBundleIdentifier(_ appEntry: String, bundleId: String) -> Bool {
+        guard let separator = appEntry.firstIndex(of: "."), separator != appEntry.startIndex else { return false }
+        let candidateStart = appEntry.index(after: separator)
+        let candidate = appEntry[candidateStart...]
+        guard !candidate.isEmpty, candidate.utf8.count == bundleId.utf8.count else { return false }
+
+        return zip(candidate.utf8, bundleId.utf8).allSatisfy { lhs, rhs in
+            guard lhs < 128, rhs < 128 else { return false }
+            return asciiLowercased(lhs) == asciiLowercased(rhs)
         }
-        return .fail("Consistency", reason: "AppID missing in AASA", details: ["expected": expected, "apps": apps.joined(separator: ";")])
+    }
+
+    private func asciiLowercased(_ byte: UInt8) -> UInt8 {
+        (UInt8(ascii: "A")...UInt8(ascii: "Z")).contains(byte) ? byte + 32 : byte
     }
 }

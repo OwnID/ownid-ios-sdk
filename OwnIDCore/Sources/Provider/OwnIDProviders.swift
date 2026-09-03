@@ -48,7 +48,9 @@ public struct OwnIDProvidersRegistrar {
     ///
     /// - Parameter type: Dependency type to resolve. Defaults to `T.self`.
     /// - Returns: The resolved dependency.
-    /// - Throws: ``MissingDependencyError`` when the dependency is not registered in the current provider scope;
+    /// - Throws: ``MissingDependencyError`` when the requested dependency or one of its factory dependencies is not
+    ///   registered in the current provider scope. For a requested `A` whose factory reaches a missing `B`, the error
+    ///   identifies `B` as the missing dependency and retains `A` as its entry point. Throws
     ///   ``DependencyResolutionError`` when resolution fails for another reason.
     public func getOrThrow<T: Sendable>(type: T.Type = T.self) throws -> T {
         try resolver.getOrThrow(type: type)

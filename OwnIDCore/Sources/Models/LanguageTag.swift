@@ -1,12 +1,9 @@
 import Foundation
 
-/// An IETF BCP 47 language tag with a ``language`` code and optional ``country`` code.
+/// A language tag with a ``language`` code and optional ``country`` code.
 ///
 /// Encodes and decodes to and from its ``tagString`` representation (e.g. "en", "en-US"). Decoded values that do not
 /// resolve to a usable language fall back to ``default``.
-///
-/// App code usually supplies raw BCP 47 strings through configuration or ``OwnID/setLanguage(_:)``; the SDK normalizes
-/// those strings into ``LanguageTag`` values.
 public struct LanguageTag: Codable, Hashable, Sendable, CustomStringConvertible {
     public let language: String
     public let country: String

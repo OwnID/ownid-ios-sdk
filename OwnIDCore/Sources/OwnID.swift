@@ -9,8 +9,11 @@ import Foundation
 /// Initialize an instance from programmatic values, a JSON string, or a plist file before using instance-bound
 /// namespaces. Successful initialization creates or replaces the named instance, stops work owned by the previous
 /// same-name instance, and requires callers to reacquire instance and namespace handles. These entry-point calls are
-/// synchronous and do not expose a cancellation callback. Configuration build failures are logged and leave the current
-/// named instance unchanged.
+/// synchronous and do not expose a cancellation callback. Different names cannot use the same app ID, environment, and
+/// region at the same time. Initialization failures are logged and leave existing instances unchanged.
+/// After destroying or replacing an instance, discard and release its old handles. When your app holds no other
+/// reference to them, associated provider callbacks become releasable after cleanup completes, which may occur after
+/// the lifecycle call returns.
 ///
 /// Logging and explicit language tags are process-wide SDK settings. Configure logging before initialization when you
 /// need startup or initial HTTP setup logs.
@@ -18,8 +21,8 @@ public enum OwnID: Sendable {
 
     /// Configures SDK-wide logging behavior.
     ///
-    /// The most recent call replaces the previous logger. If you never call this, the SDK stays silent and uses a
-    /// temporary ``OwnIDDefaultLogger`` only for configuration build failures.
+    /// The most recent call replaces the previous logger. If you never call this, routine SDK logging stays silent;
+    /// selected failure boundaries use a temporary ``OwnIDDefaultLogger`` fallback.
     ///
     /// Configure logging before ``OwnID/initialize(instanceName:block:)``,
     /// ``OwnID/initializeFromJSON(instanceName:block:)``, or ``OwnID/initializeFromFile(instanceName:block:)`` if you
@@ -34,7 +37,7 @@ public enum OwnID: Sendable {
     /// and creates the named instance. If an instance with the same name already exists, it is replaced and its
     /// instance-scoped work is stopped; fetch new ``OwnIDInstance`` and namespace handles after replacement.
     ///
-    /// Invalid builders are logged and leave the current named instance unchanged.
+    /// Initialization failures are logged and leave existing instances unchanged.
     ///
     /// Example:
     ///
@@ -60,7 +63,7 @@ public enum OwnID: Sendable {
     /// creates the named instance. If an instance with the same name already exists, it is replaced and its
     /// instance-scoped work is stopped; fetch new ``OwnIDInstance`` and namespace handles after replacement.
     ///
-    /// Invalid or malformed JSON is logged and leaves the current named instance unchanged.
+    /// Initialization failures are logged and leave existing instances unchanged.
     ///
     /// Example:
     ///
@@ -82,8 +85,8 @@ public enum OwnID: Sendable {
 
     /// Creates or replaces an OwnID instance from file configuration.
     ///
-    /// The default file is `OwnIDConfig.plist` located in the main bundle. Missing, empty, unreadable, or invalid
-    /// files are logged and leave the current named instance unchanged.
+    /// The default file is `OwnIDConfig.plist` located in the main bundle. Initialization failures are logged and leave
+    /// existing instances unchanged.
     ///
     /// A successful call installs SDK runtime services if needed, applies the optional "languages" value from the file, and
     /// creates the named instance. If an instance with the same name already exists, it is replaced and its
@@ -239,7 +242,8 @@ public enum OwnID: Sendable {
     /// The root ``LanguageTagsProvider`` is installed during successful initialization. Calling this before
     /// initialization is a no-op; language tags supplied by initialization builders are applied during initialization.
     ///
-    /// - Parameter tags: A list of BCP 47 language tags (e.g. `["en-US", "fr-FR"]`).
+    /// - Parameter tags: Language codes with optional regions (for example, `["en", "en-US"]`). An empty array restores
+    /// automatic language selection.
     public static func setLanguage(_ tags: [String]) {
         guard let provider = OwnIDRootDIContainer.shared.getOrNil(type: (any LanguageTagsProvider).self) else {
             return
@@ -300,11 +304,22 @@ public enum OwnID: Sendable {
         }
 
         OwnIDRootDIContainer.shared.injectRootDefaults()
-        if let languages = result.languages {
-            OwnID.setLanguage(languages)
-        }
 
-        OwnIDRootDIContainer.shared.initializeInstanceContainer(instanceName, configuration: result.configuration)
+        do {
+            try OwnIDRootDIContainer.shared.initializeInstanceContainer(
+                instanceName,
+                configuration: result.configuration,
+                languages: result.languages
+            )
+        } catch {
+            let logger = OwnIDRootDIContainer.shared.getOrNil(type: (any OwnIDLogger).self) ?? OwnIDDefaultLogger.make()
+            logger.log(
+                level: .error,
+                className: buildName,
+                message: "Instance initialization failed: \(error.localizedDescription)",
+                cause: error
+            )
+        }
     }
 
     /// Returns the current ``OwnIDInstance`` for the given name if it exists.
@@ -335,8 +350,7 @@ public enum OwnID: Sendable {
     ///
     /// This is an internal SDK module contract, not a public app integration contract. Use it when a module should
     /// rebind to instance creation, replacement, or destruction instead of keeping a stale container view from
-    /// ``getInstanceContainer(_:)``. The stream yields `nil` while the instance is unavailable and the current
-    /// container when it is available.
+    /// ``getInstanceContainer(_:)``. It yields the current state when subscribed, followed by instance lifecycle updates.
     @_spi(OwnIDInternal)
     public static func getInstanceContainerStream(_ instanceName: InstanceName = .default) -> AsyncStream<(any DIContainer)?> {
         OwnIDRootDIContainer.shared.getInstanceContainerStream(instanceName)

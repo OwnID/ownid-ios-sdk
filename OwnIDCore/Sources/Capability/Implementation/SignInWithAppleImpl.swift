@@ -1,20 +1,97 @@
 import AuthenticationServices
 import UIKit
 
+internal struct SignInWithAppleAuthorization: Sendable {
+    let user: String
+    let state: String?
+    let identityToken: Data?
+}
+
+@MainActor
+internal protocol SignInWithAppleAuthorizationControllerDelegate: AnyObject {
+    func authorizationController(
+        _ controller: any SignInWithAppleAuthorizationController,
+        didCompleteWithAuthorization authorization: SignInWithAppleAuthorization?
+    )
+    func authorizationController(
+        _ controller: any SignInWithAppleAuthorizationController,
+        didCompleteWithError error: any Error
+    )
+}
+
+@MainActor
+internal protocol SignInWithAppleAuthorizationController: AnyObject {
+    var delegate: (any SignInWithAppleAuthorizationControllerDelegate)? { get set }
+    var presentationContextProvider: (any ASAuthorizationControllerPresentationContextProviding)? { get set }
+
+    func performRequests()
+    func cancel()
+}
+
+@MainActor
+private final class ASAuthorizationControllerAdapter: NSObject, SignInWithAppleAuthorizationController, ASAuthorizationControllerDelegate {
+    private let controller: ASAuthorizationController
+
+    init(request: ASAuthorizationAppleIDRequest) {
+        controller = ASAuthorizationController(authorizationRequests: [request])
+    }
+
+    weak var delegate: (any SignInWithAppleAuthorizationControllerDelegate)?
+
+    var presentationContextProvider: (any ASAuthorizationControllerPresentationContextProviding)? {
+        get { controller.presentationContextProvider }
+        set { controller.presentationContextProvider = newValue }
+    }
+
+    func performRequests() {
+        controller.delegate = self
+        controller.performRequests()
+    }
+
+    func cancel() {
+        if #available(iOS 16.0, *) {
+            controller.cancel()
+        }
+    }
+
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
+        let credential = (authorization.credential as? ASAuthorizationAppleIDCredential).map {
+            SignInWithAppleAuthorization(user: $0.user, state: $0.state, identityToken: $0.identityToken)
+        }
+        delegate?.authorizationController(self, didCompleteWithAuthorization: credential)
+    }
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
+        delegate?.authorizationController(self, didCompleteWithError: error)
+    }
+}
+
 @objc(OwnIDSignInWithAppleImpl)
 internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked Sendable {
     private let uiContextProvider: any UIContextProvider
     private let logger: OwnIDLogRouter?
+    private let authorizationControllerFactory: @MainActor (ASAuthorizationAppleIDRequest) -> any SignInWithAppleAuthorizationController
 
     private var window: UIWindow?
-    private var authController: ASAuthorizationController?
+    private var authController: (any SignInWithAppleAuthorizationController)?
     private var continuation: CheckedContinuation<SocialResult, Never>?
     private var cancelRequested = false
     private var expectedState: String?
 
-    init(uiContextProvider: any UIContextProvider, logger: OwnIDLogRouter?) {
+    init(
+        uiContextProvider: any UIContextProvider,
+        logger: OwnIDLogRouter?,
+        authorizationControllerFactory: @escaping @MainActor (ASAuthorizationAppleIDRequest) -> any SignInWithAppleAuthorizationController =
+            {
+                ASAuthorizationControllerAdapter(request: $0)
+            }
+    ) {
         self.uiContextProvider = uiContextProvider
         self.logger = logger
+        self.authorizationControllerFactory = authorizationControllerFactory
     }
 
     @MainActor
@@ -44,7 +121,7 @@ internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked 
             let requestState = Data.secureRandom(count: 32).encodeToBase64UrlSafe()
             request.state = requestState
 
-            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+            let authorizationController = authorizationControllerFactory(request)
             authorizationController.delegate = self
             authorizationController.presentationContextProvider = self
 
@@ -64,9 +141,12 @@ internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked 
     }
 }
 
-extension SignInWithAppleImpl: ASAuthorizationControllerDelegate {
+extension SignInWithAppleImpl: SignInWithAppleAuthorizationControllerDelegate {
     @MainActor
-    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+    func authorizationController(
+        _ controller: any SignInWithAppleAuthorizationController,
+        didCompleteWithAuthorization authorization: SignInWithAppleAuthorization?
+    ) {
         guard controller === authController else { return }
 
         defer {
@@ -82,28 +162,27 @@ extension SignInWithAppleImpl: ASAuthorizationControllerDelegate {
             return
         }
 
-        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
-            let identityTokenData = appleIDCredential.identityToken
+        guard let authorization, let identityToken = authorization.identityToken
         else {
             continuation?.resume(returning: .fail(error: SocialResult.Error.general("Data missing")))
             return
         }
 
-        guard appleIDCredential.state == expectedState else {
+        guard authorization.state == expectedState else {
             continuation?.resume(returning: .fail(error: SocialResult.Error.general("Apple authorization response state mismatch")))
             return
         }
 
         continuation?.resume(
             returning: .success(
-                id: appleIDCredential.user,
-                idToken: String(decoding: identityTokenData, as: UTF8.self)
+                id: authorization.user,
+                idToken: String(decoding: identityToken, as: UTF8.self)
             )
         )
     }
 
     @MainActor
-    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
+    func authorizationController(_ controller: any SignInWithAppleAuthorizationController, didCompleteWithError error: any Error) {
         guard controller === authController else { return }
 
         defer {

@@ -1064,6 +1064,12 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore13LoginResponseO",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore13LoginResponseO",
       "target": "s:Se",
       "targetFallback": "Swift.Decodable"
     },
@@ -2179,6 +2185,12 @@
       "source": "s:9OwnIDCore16AssertionOptionsV",
       "target": "s:SE",
       "targetFallback": "Swift.Encodable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore16AssertionOptionsV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
     },
     {
       "kind": "conformsTo",
@@ -5364,6 +5376,12 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore29PublicKeyCredentialDescriptorV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore29PublicKeyCredentialDescriptorV",
       "target": "s:Se",
       "targetFallback": "Swift.Decodable"
     },
@@ -7188,6 +7206,12 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore5AuthzV",
+      "target": "s:s23CustomStringConvertibleP",
+      "targetFallback": "Swift.CustomStringConvertible"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore5AuthzV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -7218,6 +7242,12 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore7ContextV",
+      "target": "s:s23CustomStringConvertibleP",
+      "targetFallback": "Swift.CustomStringConvertible"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore7ContextV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -7226,6 +7256,12 @@
       "source": "s:9OwnIDCore7ContextV7BuilderV",
       "target": "s:s16SendableMetatypeP",
       "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore7ContextV7BuilderV",
+      "target": "s:s23CustomStringConvertibleP",
+      "targetFallback": "Swift.CustomStringConvertible"
     },
     {
       "kind": "conformsTo",
@@ -11078,6 +11114,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore19AttestationResponseV10proofToken9ownIdDataAcA05ProofF0V_SStcfc",
+      "target": "s:9OwnIDCore19AttestationResponseV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore19AttestationResponseV10proofTokenAA05ProofF0Vvp",
       "target": "s:9OwnIDCore19AttestationResponseV"
     },
@@ -11893,6 +11934,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore21VerificationChallengeV12ResendPolicyV5allow8attempts8debounceAESb_S2itcfc",
+      "target": "s:9OwnIDCore21VerificationChallengeV12ResendPolicyV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore21VerificationChallengeV12ResendPolicyV5allowSbvp",
       "target": "s:9OwnIDCore21VerificationChallengeV12ResendPolicyV"
     },
@@ -11941,8 +11987,18 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV6lengthAGSi_tcfc",
+      "target": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV6lengthSivp",
       "target": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore21VerificationChallengeV7MethodsV3otp9magicLinkA2E3OtpVSg_AE05MagicH0VSgtcfc",
+      "target": "s:9OwnIDCore21VerificationChallengeV7MethodsV"
     },
     {
       "kind": "memberOf",
@@ -11970,6 +12026,11 @@
         "displayName": "Decodable.init(from:)",
         "identifier": "s:Se4fromxs7Decoder_p_tKcfc"
       },
+      "target": "s:9OwnIDCore21VerificationChallengeV7MethodsV9MagicLinkV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore21VerificationChallengeV7MethodsV9MagicLinkVAGycfc",
       "target": "s:9OwnIDCore21VerificationChallengeV7MethodsV9MagicLinkV"
     },
     {
@@ -15667,6 +15728,15 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore5AuthzV11descriptionSSvp",
+      "sourceOrigin": {
+        "displayName": "CustomStringConvertible.description",
+        "identifier": "s:s23CustomStringConvertibleP11descriptionSSvp"
+      },
+      "target": "s:9OwnIDCore5AuthzV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore5AuthzV5start_4typeACSS_AA11LoginIDTypeOSgtFZ",
       "target": "s:9OwnIDCore5AuthzV"
     },
@@ -15726,8 +15796,26 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore7ContextV11descriptionSSvp",
+      "sourceOrigin": {
+        "displayName": "CustomStringConvertible.description",
+        "identifier": "s:s23CustomStringConvertibleP11descriptionSSvp"
+      },
+      "target": "s:9OwnIDCore7ContextV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore7ContextV7BuilderV",
       "target": "s:9OwnIDCore7ContextV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore7ContextV7BuilderV11descriptionSSvp",
+      "sourceOrigin": {
+        "displayName": "CustomStringConvertible.description",
+        "identifier": "s:s23CustomStringConvertibleP11descriptionSSvp"
+      },
+      "target": "s:9OwnIDCore7ContextV7BuilderV"
     },
     {
       "kind": "memberOf",
@@ -17046,7 +17134,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore7StorageP6remove6forKeyySS_tYaF",
+      "source": "s:9OwnIDCore7StorageP6remove6forKeyySS_tYaKF",
       "target": "s:9OwnIDCore7StorageP"
     },
     {
@@ -17056,7 +17144,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore7StorageP7putBool_6forKeyySb_SStYaF",
+      "source": "s:9OwnIDCore7StorageP7putBool_6forKeyySb_SStYaKF",
       "target": "s:9OwnIDCore7StorageP"
     },
     {
@@ -17076,17 +17164,17 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore7StorageP9putDouble_6forKeyySd_SStYaF",
+      "source": "s:9OwnIDCore7StorageP9putDouble_6forKeyySd_SStYaKF",
       "target": "s:9OwnIDCore7StorageP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore7StorageP9putNumber_6forKeyys5Int64V_SStYaF",
+      "source": "s:9OwnIDCore7StorageP9putNumber_6forKeyys5Int64V_SStYaKF",
       "target": "s:9OwnIDCore7StorageP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore7StorageP9putString_6forKeyySS_SStYaF",
+      "source": "s:9OwnIDCore7StorageP9putString_6forKeyySS_SStYaKF",
       "target": "s:9OwnIDCore7StorageP"
     },
     {
@@ -62269,6 +62357,100 @@
       "declaration": [
         {
           "kind": "keyword",
+          "spelling": "init"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "proofToken"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore10ProofTokenV",
+          "spelling": "ProofToken"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "ownIdData"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "proofToken"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore10ProofTokenV",
+                "spelling": "ProofToken"
+              }
+            ],
+            "name": "proofToken"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "ownIdData"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:SS",
+                "spelling": "String"
+              }
+            ],
+            "name": "ownIdData"
+          }
+        ]
+      },
+      "kind": "swift.init",
+      "path": [
+        "AttestationResponse",
+        "init(proofToken:ownIdData:)"
+      ],
+      "precise": "s:9OwnIDCore19AttestationResponseV10proofToken9ownIdDataAcA05ProofF0V_SStcfc",
+      "title": "init(proofToken:ownIdData:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
           "spelling": "let"
         },
         {
@@ -75155,6 +75337,136 @@
       "declaration": [
         {
           "kind": "keyword",
+          "spelling": "init"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "allow"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sb",
+          "spelling": "Bool"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "attempts"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Si",
+          "spelling": "Int"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "debounce"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Si",
+          "spelling": "Int"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "allow"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:Sb",
+                "spelling": "Bool"
+              }
+            ],
+            "name": "allow"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "attempts"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:Si",
+                "spelling": "Int"
+              }
+            ],
+            "name": "attempts"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "debounce"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:Si",
+                "spelling": "Int"
+              }
+            ],
+            "name": "debounce"
+          }
+        ]
+      },
+      "kind": "swift.init",
+      "path": [
+        "VerificationChallenge",
+        "ResendPolicy",
+        "init(allow:attempts:debounce:)"
+      ],
+      "precise": "s:9OwnIDCore21VerificationChallengeV12ResendPolicyV5allow8attempts8debounceAESb_S2itcfc",
+      "title": "init(allow:attempts:debounce:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
           "spelling": "let"
         },
         {
@@ -75494,6 +75806,67 @@
       "declaration": [
         {
           "kind": "keyword",
+          "spelling": "init"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "length"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Si",
+          "spelling": "Int"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "length"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:Si",
+                "spelling": "Int"
+              }
+            ],
+            "name": "length"
+          }
+        ]
+      },
+      "kind": "swift.init",
+      "path": [
+        "VerificationChallenge",
+        "Methods",
+        "Otp",
+        "init(length:)"
+      ],
+      "precise": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV6lengthAGSi_tcfc",
+      "title": "init(length:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
           "spelling": "let"
         },
         {
@@ -75523,6 +75896,181 @@
       ],
       "precise": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV6lengthSivp",
       "title": "length"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "init"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "otp"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV",
+          "spelling": "VerificationChallenge"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV",
+          "spelling": "Methods"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV",
+          "spelling": "Otp"
+        },
+        {
+          "kind": "text",
+          "spelling": "?, "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "magicLink"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV",
+          "spelling": "VerificationChallenge"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV",
+          "spelling": "Methods"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV9MagicLinkV",
+          "spelling": "MagicLink"
+        },
+        {
+          "kind": "text",
+          "spelling": "?)"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "otp"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV",
+                "spelling": "VerificationChallenge"
+              },
+              {
+                "kind": "text",
+                "spelling": "."
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV",
+                "spelling": "Methods"
+              },
+              {
+                "kind": "text",
+                "spelling": "."
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV3OtpV",
+                "spelling": "Otp"
+              },
+              {
+                "kind": "text",
+                "spelling": "?"
+              }
+            ],
+            "name": "otp"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "magicLink"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV",
+                "spelling": "VerificationChallenge"
+              },
+              {
+                "kind": "text",
+                "spelling": "."
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV",
+                "spelling": "Methods"
+              },
+              {
+                "kind": "text",
+                "spelling": "."
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore21VerificationChallengeV7MethodsV9MagicLinkV",
+                "spelling": "MagicLink"
+              },
+              {
+                "kind": "text",
+                "spelling": "?"
+              }
+            ],
+            "name": "magicLink"
+          }
+        ]
+      },
+      "kind": "swift.init",
+      "path": [
+        "VerificationChallenge",
+        "Methods",
+        "init(otp:magicLink:)"
+      ],
+      "precise": "s:9OwnIDCore21VerificationChallengeV7MethodsV3otp9magicLinkA2E3OtpVSg_AE05MagicH0VSgtcfc",
+      "title": "init(otp:magicLink:)"
     },
     {
       "access": "public",
@@ -75751,6 +76299,29 @@
       ],
       "precise": "s:9OwnIDCore21VerificationChallengeV7MethodsV9MagicLinkV4fromAGs7Decoder_p_tKcfc",
       "title": "init(from:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "init"
+        },
+        {
+          "kind": "text",
+          "spelling": "()"
+        }
+      ],
+      "functionSignature": {},
+      "kind": "swift.init",
+      "path": [
+        "VerificationChallenge",
+        "Methods",
+        "MagicLink",
+        "init()"
+      ],
+      "precise": "s:9OwnIDCore21VerificationChallengeV7MethodsV9MagicLinkVAGycfc",
+      "title": "init()"
     },
     {
       "access": "public",
@@ -122502,6 +123073,51 @@
       "declaration": [
         {
           "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "description"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": " { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "Authz",
+        "description"
+      ],
+      "precise": "s:9OwnIDCore5AuthzV11descriptionSSvp",
+      "title": "description"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
           "spelling": "static"
         },
         {
@@ -123219,6 +123835,51 @@
       "declaration": [
         {
           "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "description"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": " { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "Context",
+        "description"
+      ],
+      "precise": "s:9OwnIDCore7ContextV11descriptionSSvp",
+      "title": "description"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
           "spelling": "struct"
         },
         {
@@ -123237,6 +123898,52 @@
       ],
       "precise": "s:9OwnIDCore7ContextV7BuilderV",
       "title": "Context.Builder"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "description"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": " { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "Context",
+        "Builder",
+        "description"
+      ],
+      "precise": "s:9OwnIDCore7ContextV7BuilderV11descriptionSSvp",
+      "title": "description"
     },
     {
       "access": "public",
@@ -124007,6 +124714,14 @@
         {
           "kind": "keyword",
           "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "throws"
         }
       ],
       "functionSignature": {
@@ -124043,7 +124758,7 @@
         "Storage",
         "remove(forKey:)"
       ],
-      "precise": "s:9OwnIDCore7StorageP6remove6forKeyySS_tYaF",
+      "precise": "s:9OwnIDCore7StorageP6remove6forKeyySS_tYaKF",
       "title": "remove(forKey:)"
     },
     {
@@ -124261,6 +124976,14 @@
         {
           "kind": "keyword",
           "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "throws"
         }
       ],
       "functionSignature": {
@@ -124315,7 +125038,7 @@
         "Storage",
         "putBool(_:forKey:)"
       ],
-      "precise": "s:9OwnIDCore7StorageP7putBool_6forKeyySb_SStYaF",
+      "precise": "s:9OwnIDCore7StorageP7putBool_6forKeyySb_SStYaKF",
       "title": "putBool(_:forKey:)"
     },
     {
@@ -124819,6 +125542,14 @@
         {
           "kind": "keyword",
           "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "throws"
         }
       ],
       "functionSignature": {
@@ -124873,7 +125604,7 @@
         "Storage",
         "putDouble(_:forKey:)"
       ],
-      "precise": "s:9OwnIDCore7StorageP9putDouble_6forKeyySd_SStYaF",
+      "precise": "s:9OwnIDCore7StorageP9putDouble_6forKeyySd_SStYaKF",
       "title": "putDouble(_:forKey:)"
     },
     {
@@ -124948,6 +125679,14 @@
         {
           "kind": "keyword",
           "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "throws"
         }
       ],
       "functionSignature": {
@@ -125002,7 +125741,7 @@
         "Storage",
         "putNumber(_:forKey:)"
       ],
-      "precise": "s:9OwnIDCore7StorageP9putNumber_6forKeyys5Int64V_SStYaF",
+      "precise": "s:9OwnIDCore7StorageP9putNumber_6forKeyys5Int64V_SStYaKF",
       "title": "putNumber(_:forKey:)"
     },
     {
@@ -125077,6 +125816,14 @@
         {
           "kind": "keyword",
           "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "throws"
         }
       ],
       "functionSignature": {
@@ -125131,7 +125878,7 @@
         "Storage",
         "putString(_:forKey:)"
       ],
-      "precise": "s:9OwnIDCore7StorageP9putString_6forKeyySS_SStYaF",
+      "precise": "s:9OwnIDCore7StorageP9putString_6forKeyySS_SStYaKF",
       "title": "putString(_:forKey:)"
     },
     {

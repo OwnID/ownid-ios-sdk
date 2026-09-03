@@ -3,7 +3,7 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: STORAGE-RUNTIME-030, STORAGE-RUNTIME-040, STORAGE-RUNTIME-050
+// Covers: STORAGE-RUNTIME-030, STORAGE-RUNTIME-040, STORAGE-RUNTIME-050, STORAGE-RUNTIME-060
 struct StorageImplementationRuntimeTests {
 
     @Test func `Stored values persist after recreating storage actor`() async throws {
@@ -13,10 +13,10 @@ struct StorageImplementationRuntimeTests {
         let suiteName = "persist-\(UUID().uuidString)"
         var storage: StorageImpl? = StorageImpl(suiteName: suiteName, baseDirectoryURL: directoryURL, logger: nil)
 
-        await storage?.putString("person@example.test", forKey: "LAST_USER")
-        await storage?.putBool(true, forKey: "FLAG")
-        await storage?.putNumber(42, forKey: "COUNT")
-        await storage?.putDouble(3.25, forKey: "RATIO")
+        try await storage?.putString("person@example.test", forKey: "LAST_USER")
+        try await storage?.putBool(true, forKey: "FLAG")
+        try await storage?.putNumber(42, forKey: "COUNT")
+        try await storage?.putDouble(3.25, forKey: "RATIO")
 
         storage = nil
 
@@ -50,7 +50,7 @@ struct StorageImplementationRuntimeTests {
         #expect(entry.message.contains("corrupted file"))
         #expect(entry.hasCause)
 
-        await storage?.putString("replacement", forKey: "LAST_USER")
+        try await storage?.putString("replacement", forKey: "LAST_USER")
         storage = nil
 
         let recreatedStorage = StorageImpl(suiteName: suiteName, baseDirectoryURL: directoryURL, logger: router)
@@ -65,7 +65,7 @@ struct StorageImplementationRuntimeTests {
         let suiteName = "app/id:with spaces.and/slashes?"
         var storage: StorageImpl? = StorageImpl(suiteName: suiteName, baseDirectoryURL: directoryURL, logger: nil)
 
-        await storage?.putString("value", forKey: "KEY")
+        try await storage?.putString("value", forKey: "KEY")
         storage = nil
 
         let contents = try FileManager.default.contentsOfDirectory(atPath: directoryURL.path)
@@ -82,13 +82,48 @@ struct StorageImplementationRuntimeTests {
         let fileURL = storageFileURL(in: directoryURL, suiteName: suiteName)
         let storage = StorageImpl(suiteName: suiteName, baseDirectoryURL: directoryURL, logger: nil)
 
-        await storage.putString("value", forKey: "LAST_USER")
+        try await storage.putString("value", forKey: "LAST_USER")
 
         let directoryValues = try directoryURL.resourceValues(forKeys: [.isExcludedFromBackupKey])
         let fileValues = try fileURL.resourceValues(forKeys: [.isExcludedFromBackupKey])
 
         #expect(directoryValues.isExcludedFromBackup == true)
         #expect(fileValues.isExcludedFromBackup == true)
+    }
+
+    @Test func `Failed put and remove keep the last committed actor state`() async throws {
+        let fixtureURL = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: fixtureURL) }
+
+        let storageDirectoryURL = fixtureURL.appendingPathComponent("storage", isDirectory: true)
+        let logs = LogCapture()
+        let storage = StorageImpl(
+            suiteName: "rollback",
+            baseDirectoryURL: storageDirectoryURL,
+            logger: testLogRouter(sink: logs)
+        )
+
+        try await storage.putString("committed", forKey: "VALUE")
+        try await storage.putString("keep-persistence-nonempty", forKey: "SENTINEL")
+
+        try FileManager.default.removeItem(at: storageDirectoryURL)
+        try Data("blocks directory recreation".utf8).write(to: storageDirectoryURL)
+
+        await #expect(throws: (any Error).self) {
+            try await storage.putString("uncommitted", forKey: "VALUE")
+        }
+        await #expect(throws: (any Error).self) {
+            try await storage.remove(forKey: "VALUE")
+        }
+
+        #expect(await storage.getString(forKey: "VALUE", defaultValue: nil) == "committed")
+        #expect(await storage.getString(forKey: "SENTINEL", defaultValue: nil) == "keep-persistence-nonempty")
+        #expect(logs.entries.count == 2)
+        #expect(
+            logs.entries.allSatisfy { entry in
+                entry.level == .warn && entry.message.contains("Failed to persist SDK storage") && entry.hasCause
+            }
+        )
     }
 }
 

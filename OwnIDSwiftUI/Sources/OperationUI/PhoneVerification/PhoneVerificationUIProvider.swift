@@ -13,9 +13,9 @@ import SwiftUI
 /// The built-in provider requests one-time initial OTP focus when allowed, normalizes accepted decimal digits to ASCII,
 /// and submits the code through ``PhoneVerificationUIState/onCodeEntered`` as soon as the required length is entered
 /// while the operation is not busy. It displays the operation busy state, maps errors through the supplied error text
-/// provider when present, clears the OTP field when an error arrives, hides resend until the challenge debounce allows
-/// it, disables "not you" while busy, and invokes the supplied resend, cancel, and "not you" callbacks only from the
-/// matching user actions.
+/// provider when present, clears the OTP field when an error arrives or the challenge identifier changes, hides resend
+/// until the challenge debounce allows it, disables "not you" while busy, and invokes the supplied resend, cancel, and
+/// "not you" callbacks only from the matching user actions.
 public protocol PhoneVerificationUIProvider: Sendable {
     /// Builds the SwiftUI view for the phone verification form.
     ///

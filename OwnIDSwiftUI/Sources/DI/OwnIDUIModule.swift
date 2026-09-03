@@ -19,7 +19,7 @@ import Foundation
         container.registerFactory(dependencies: [(any UIContextProvider).self]) { resolver -> any BottomSheetPresenter in
             BottomSheetPresenterImpl(
                 uiContextProvider: try resolver.getOrThrow(type: (any UIContextProvider).self),
-                logger: container.getOrNil(type: OwnIDLogRouter.self)
+                logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
 

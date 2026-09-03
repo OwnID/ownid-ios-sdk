@@ -7,7 +7,7 @@ import Foundation
 /// accepted events to OwnID diagnostics using the instance configuration. If diagnostics cannot be configured for the
 /// instance, server diagnostics are disabled for that instance.
 ///
-/// Delivery is best effort. Calls to ``log(level:className:message:cause:)`` never suspend or report success to the
+/// Delivery is best effort. Calls to ``log(level:className:message:cause:previousRun:)`` never suspend or report success to the
 /// caller. Diagnostics can be dropped when the instance is shutting down, remote logging is disabled, payload preparation
 /// fails, or delivery cannot complete. Transport failures may be retried internally. Local logging may receive summaries
 /// of diagnostics delivery failures, but those failures do not affect the SDK operation that emitted the diagnostic.
@@ -25,6 +25,7 @@ internal final class ServerLogger: @unchecked Sendable {
         fileprivate let message: String
         fileprivate let exception: String?
         fileprivate let resendCount: Int
+        fileprivate let previousRun: PreviousRun?
     }
 
     private struct Metadata: Encodable, Sendable {
@@ -35,6 +36,20 @@ internal final class ServerLogger: @unchecked Sendable {
         fileprivate let isFingerprintHardwarePresent: Bool
         fileprivate let isFaceHardwarePresent: Bool
         fileprivate let isStrongBiometricEnabled: Bool
+        fileprivate let previousRun: PreviousRun?
+
+        fileprivate func with(previousRun: PreviousRun?) -> Metadata {
+            Metadata(
+                correlationId: correlationId,
+                bundleId: bundleId,
+                isUserVerifyingPlatformAuthenticatorAvailable: isUserVerifyingPlatformAuthenticatorAvailable,
+                isDeviceSecured: isDeviceSecured,
+                isFingerprintHardwarePresent: isFingerprintHardwarePresent,
+                isFaceHardwarePresent: isFaceHardwarePresent,
+                isStrongBiometricEnabled: isStrongBiometricEnabled,
+                previousRun: previousRun
+            )
+        }
     }
 
     private let instanceName: InstanceName
@@ -90,7 +105,8 @@ internal final class ServerLogger: @unchecked Sendable {
             isDeviceSecured: localInfo.isDeviceSecured,
             isFingerprintHardwarePresent: localInfo.isFingerprintHardwarePresent,
             isFaceHardwarePresent: localInfo.isFaceHardwarePresent,
-            isStrongBiometricEnabled: localInfo.isStrongBiometricEnabled
+            isStrongBiometricEnabled: localInfo.isStrongBiometricEnabled,
+            previousRun: nil
         )
 
         if let rootURL = configuration.rootURL, let baseURL = URL(string: rootURL) {
@@ -131,7 +147,15 @@ internal final class ServerLogger: @unchecked Sendable {
     }
 
     /// Records a best-effort server diagnostic unless `level` is ``LogLevel/off``.
-    internal func log(level: LogLevel, className: String, message: String, cause: (any Error)?) {
+    ///
+    /// The optional `previousRun` value is attached only to this diagnostic and is preserved across its internal retries.
+    internal func log(
+        level: LogLevel,
+        className: String,
+        message: String,
+        cause: (any Error)?,
+        previousRun: PreviousRun? = nil
+    ) {
         guard level != .off else { return }
         guard eventsURL != nil else { return }
 
@@ -140,7 +164,8 @@ internal final class ServerLogger: @unchecked Sendable {
             codeInitiator: "[\(instanceName.description)]\(className)",
             message: "\(className) => \(message)",
             exception: cause?.localizedDescription,
-            resendCount: 0
+            resendCount: 0,
+            previousRun: previousRun
         )
 
         continuation.yield(item)
@@ -202,7 +227,8 @@ internal final class ServerLogger: @unchecked Sendable {
                     codeInitiator: log.codeInitiator,
                     message: log.message,
                     exception: log.exception,
-                    resendCount: nextCount
+                    resendCount: nextCount,
+                    previousRun: log.previousRun
                 )
             )
             self.ownIdLogger?.log(
@@ -244,7 +270,7 @@ internal final class ServerLogger: @unchecked Sendable {
             codeInitiator: log.codeInitiator,
             message: log.message,
             exception: log.exception,
-            metadata: self.metadata,
+            metadata: self.metadata.with(previousRun: log.previousRun),
             userAgent: localInfo.userAgent,
             version: localInfo.appVersion,
             sourceTimestamp: String(Int64(Date().timeIntervalSince1970 * 1000))

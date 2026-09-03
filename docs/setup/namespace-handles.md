@@ -13,6 +13,9 @@ A handle returned by `withContext` or `withProviders` keeps the context and prov
 
 Concrete `flows`, `headless`, and `webBridge` namespace handles expose scoped `withContext` and `withProviders` methods. They do not expose the in-place `setContext`, `clearContext`, or `setProviders` methods.
 
+> [!IMPORTANT]
+> After destroying or replacing an instance, its old handles are invalid. Discard and release them, and reacquire handles from `OwnID` before further use. When your app holds no other reference to them, associated provider callbacks become releasable after cleanup completes, which may occur after the lifecycle call returns.
+
 ## How to Place Context and Providers
 
 Attach context as close as possible to the concrete flow, operation, API run, or WebBridge session that needs it.

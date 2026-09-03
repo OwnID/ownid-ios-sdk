@@ -3,7 +3,7 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: API-010, API-020, OPS-010, OPS-020, OPS-030, OPS-040, OPS-050, OPS-060, OPS-070
+// Covers: API-010, API-020, API-230, OPS-010, OPS-020, OPS-030, OPS-040, OPS-050, OPS-060, OPS-070
 struct OperationInfrastructureContractTests {
 
     @Test func `Direct API entry starts only while operation entry owns availability preflight`() async throws {
@@ -13,6 +13,7 @@ struct OperationInfrastructureContractTests {
         let apiEntry = apiEntry(
             container: apiContainer,
             runtimeType: (any TestAPIRuntime).self,
+            unexpectedFailure: DiscoverAPIFailure.unexpected,
             start: { runtime, params in await runtime.start(params: params) }
         )
 
@@ -28,6 +29,34 @@ struct OperationInfrastructureContractTests {
         let snapshot = operationRecorder.snapshot()
         #expect(snapshot.availabilityParams == ["preflight"])
         #expect(snapshot.startParams == ["launch"])
+    }
+
+    @Test func `Direct API entry maps missing and failing resolution to endpoint unexpected failure`() async throws {
+        let missingContainer = DIContainerImpl(scopeName: "api-entry-missing-resolution")
+        let missingResult = await OwnIDAPI(container: missingContainer).auth.discover.start()
+        try assertDiscoverResolutionFailure(missingResult)
+
+        let failingContainer = DIContainerImpl(scopeName: "api-entry-failing-resolution")
+        failingContainer.registerFactory((any DiscoverAPI).self, dependencies: []) { _ -> any DiscoverAPI in
+            throw APIEntryResolutionFixtureError.expected
+        }
+        let failingResult = await OwnIDAPI(container: failingContainer).auth.discover.start()
+        try assertDiscoverResolutionFailure(failingResult)
+    }
+
+    @Test func `Direct API entry maps resolution cancellation to canceled`() async {
+        let container = DIContainerImpl(scopeName: "api-entry-canceling-resolution")
+        container.registerFactory((any TestAPIRuntime).self, dependencies: []) { _ -> any TestAPIRuntime in
+            throw CancellationError()
+        }
+        let entry = apiEntry(
+            container: container,
+            runtimeType: (any TestAPIRuntime).self,
+            unexpectedFailure: DiscoverAPIFailure.unexpected,
+            start: { runtime, params in await runtime.start(params: params) }
+        )
+
+        #expect(await entry.start(params: TestAPIParams(value: "unused")).isCanceled)
     }
 
     @Test func `Availability preflight resolves runtime but does not start operation`() async throws {
@@ -498,6 +527,10 @@ private struct TestAPIParams: Sendable {
     let value: String
 }
 
+private enum APIEntryResolutionFixtureError: Error {
+    case expected
+}
+
 private struct ScopeMarker: Sendable, Equatable {
     let value: String
 }
@@ -512,7 +545,7 @@ private func paramValue(_ params: (any CapabilityParams)?) -> String {
 }
 
 private protocol TestAPIRuntime: APICapability, AnyObject {
-    func start(params: TestAPIParams) async -> APIResult<String, TestAPIFailure>
+    func start(params: TestAPIParams) async -> APIResult<String, DiscoverAPIFailure>
 }
 
 private final class RecordingAPIRuntime: TestAPIRuntime, @unchecked Sendable {
@@ -522,7 +555,7 @@ private final class RecordingAPIRuntime: TestAPIRuntime, @unchecked Sendable {
         self.recorder = recorder
     }
 
-    func start(params: TestAPIParams) async -> APIResult<String, TestAPIFailure> {
+    func start(params: TestAPIParams) async -> APIResult<String, DiscoverAPIFailure> {
         recorder.record(params.value)
         return .success("api:\(params.value)")
     }
@@ -545,4 +578,18 @@ private final class APIEntryRecorder: @unchecked Sendable {
     }
 }
 
-private struct TestAPIFailure: Sendable {}
+private func assertDiscoverResolutionFailure(
+    _ result: APIResult<LoginResponse, DiscoverAPIFailure>,
+    sourceLocation: SourceLocation = SourceLocation(fileID: #fileID, filePath: #filePath, line: #line, column: #column)
+) throws {
+    guard case .failure(.unexpected(let errorCode, let message, let underlyingError)) = result else {
+        return try #require(nil as Void?, "Expected DiscoverAPIFailure.unexpected, got \(result)", sourceLocation: sourceLocation)
+    }
+
+    #expect(errorCode == .unknown, sourceLocation: sourceLocation)
+    #expect(!message.isEmpty, sourceLocation: sourceLocation)
+    let unexpectedError = try #require(underlyingError as? APIUnexpectedError, sourceLocation: sourceLocation)
+    guard case .runtime = unexpectedError.cause else {
+        return try #require(nil as Void?, "Expected runtime unexpected cause", sourceLocation: sourceLocation)
+    }
+}

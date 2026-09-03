@@ -25,9 +25,9 @@ SDK-hosted UI needs a published theme to reuse your app theme. App-hosted UI res
 
 ## Examples
 
-- [Advanced app root example](../../Demo/DemoAdvanced/App/DemoAdvancedApp.swift): publishes the app theme for SDK-hosted OwnID UI with `.ownIDTheme(...)`.
-- [Advanced Boost login screen](../../Demo/DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift): renders a Boost widget inside the app SwiftUI hierarchy with an explicit widget theme.
-- [Advanced Boost create-passkey screen](../../Demo/DemoAdvanced/App/Views/Flows/Boost/BoostCreatePasskeyScreen.swift): renders a create-passkey widget inside the app SwiftUI hierarchy with an explicit widget theme.
+- [Advanced app root example](../../DemoAdvanced/App/DemoAdvancedApp.swift): publishes the app theme for SDK-hosted OwnID UI with `.ownIDTheme(...)`.
+- [Advanced Boost login screen](../../DemoAdvanced/App/Views/Flows/Boost/BoostLoginScreen.swift): renders a Boost widget inside the app SwiftUI hierarchy with an explicit widget theme.
+- [Advanced Boost create-passkey screen](../../DemoAdvanced/App/Views/Flows/Boost/BoostCreatePasskeyScreen.swift): renders a create-passkey widget inside the app SwiftUI hierarchy with an explicit widget theme.
 
 ## SDK-Hosted UI
 

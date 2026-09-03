@@ -23,10 +23,10 @@ internal actor UserRepositoryImpl: UserRepository {
 
     func setLastUser(_ user: User) async throws {
         let string = try coder.encodeToString(user)
-        await storage.putString(string, forKey: Self.keyLastUser)
+        try? await storage.putString(string, forKey: Self.keyLastUser)
     }
 
     func clearLastUser() async {
-        await storage.remove(forKey: Self.keyLastUser)
+        try? await storage.remove(forKey: Self.keyLastUser)
     }
 }

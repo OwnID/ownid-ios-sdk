@@ -3,7 +3,7 @@ import Testing
 
 @testable import OwnIDCore
 
-// Covers: CTX-010, CTX-020, MODEL-010, MODEL-020
+// Covers: CTX-010, CTX-020, CTX-030, MODEL-010, MODEL-020
 struct LoginIDContextContractTests {
     private let modelJSON = ModelJSON()
 
@@ -68,6 +68,31 @@ struct LoginIDContextContractTests {
 
         #expect(missingValidator.errorCode == .missingCapabilityProvider)
         #expect(missingValidator.message == "Context.loginID(): LoginIDValidator required")
+    }
+
+    @Test func `Authz Context and Builder descriptions are type only`() {
+        let rawLoginID = "sentinel-raw-login-id"
+        let accountDisplayName = "sentinel-account-display-name"
+        let authz = Authz.start(rawLoginID)
+        var builder = Context.Builder()
+        builder.authz = authz
+        builder.accountDisplayName = accountDisplayName
+        let context = builder.build(scopeName: "sentinel-scope-name")
+
+        let outputs = [
+            String(describing: authz),
+            String(reflecting: authz),
+            String(describing: context),
+            String(reflecting: context),
+            String(describing: builder),
+            String(reflecting: builder),
+        ]
+
+        #expect(outputs == ["Authz", "Authz", "Context", "Context", "Context.Builder", "Context.Builder"])
+        for output in outputs {
+            #expect(!output.contains(rawLoginID))
+            #expect(!output.contains(accountDisplayName))
+        }
     }
 
     @Test func `Typed login ID authz context preserves typed ID and does not require validator`() throws {
@@ -247,9 +272,19 @@ struct LoginIDDescriptionExpectation: Sendable, CustomTestStringConvertible {
 
     static let allCases = [
         LoginIDDescriptionExpectation(
-            loginID: LoginID(id: "person@example.test", type: .email),
-            expectedDescription: "LoginID(id: 'p****n@example.test', type: email)",
-            testDescription: "valid email is masked"
+            loginID: LoginID(id: "a@example.test", type: .email),
+            expectedDescription: "LoginID(id: '***@example.test', type: email)",
+            testDescription: "recognized minimum-length email local part is fully masked"
+        ),
+        LoginIDDescriptionExpectation(
+            loginID: LoginID(id: "abc@example.test", type: .email),
+            expectedDescription: "LoginID(id: '***@example.test', type: email)",
+            testDescription: "recognized short email local part is fully masked"
+        ),
+        LoginIDDescriptionExpectation(
+            loginID: LoginID(id: "abcd@example.test", type: .email),
+            expectedDescription: "LoginID(id: 'a**d@example.test', type: email)",
+            testDescription: "recognized longer email boundary keeps partial masking"
         ),
         LoginIDDescriptionExpectation(
             loginID: LoginID(id: "not-an-email", type: .email),
@@ -257,9 +292,19 @@ struct LoginIDDescriptionExpectation: Sendable, CustomTestStringConvertible {
             testDescription: "invalid email is unchanged"
         ),
         LoginIDDescriptionExpectation(
-            loginID: LoginID(id: "+15551234567", type: .phoneNumber),
-            expectedDescription: "LoginID(id: '+15*****4567', type: phoneNumber)",
-            testDescription: "valid phone is masked"
+            loginID: LoginID(id: "12", type: .phoneNumber),
+            expectedDescription: "LoginID(id: '***', type: phoneNumber)",
+            testDescription: "recognized minimum-length phone is fully masked"
+        ),
+        LoginIDDescriptionExpectation(
+            loginID: LoginID(id: "+123456", type: .phoneNumber),
+            expectedDescription: "LoginID(id: '+***', type: phoneNumber)",
+            testDescription: "recognized short phone is fully masked"
+        ),
+        LoginIDDescriptionExpectation(
+            loginID: LoginID(id: "+1234567", type: .phoneNumber),
+            expectedDescription: "LoginID(id: '+12*4567', type: phoneNumber)",
+            testDescription: "recognized longer phone boundary keeps partial masking"
         ),
         LoginIDDescriptionExpectation(
             loginID: LoginID(id: "555-1234", type: .phoneNumber),

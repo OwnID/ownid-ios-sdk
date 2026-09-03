@@ -36,8 +36,7 @@ public struct BoostWidgetStrings: StringsData {
 
 /// Provides resolved strings for Boost widgets.
 ///
-/// Default SDK providers read Boost widget keys from server locale data and use ``BoostWidgetStrings/default`` for any
-/// missing key.
+/// A `nil` emission means the provider does not provide a replacement value and is not a reset request.
 public protocol BoostWidgetStringsProvider: StringsProvider, Sendable
 where D == BoostWidgetStrings, P == BoostWidgetStringsParams {}
 

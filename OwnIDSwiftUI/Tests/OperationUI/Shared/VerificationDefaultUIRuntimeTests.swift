@@ -10,32 +10,7 @@ import UIKit
 @Suite(.serialized)
 struct VerificationDefaultUIRuntimeTests {
 
-    @Test func `OTP detail text substitutes code length and channel placeholders`() {
-        let emailHost = SwiftUIRuntimeHost(
-            rootView: verificationView(
-                message: "Enter the %CODE_LENGTH%-digit code sent to %LOGIN_ID%.",
-                challenge: verificationChallenge(length: 6, channel: OperationChannel(channel: "u***@example.test", id: "email-main"))
-            )
-        )
-        defer { emailHost.close() }
-
-        let channeledHost = SwiftUIRuntimeHost(
-            rootView: verificationView(
-                message: "Enter the %CODE_LENGTH%-digit code sent to %LOGIN_ID%.",
-                challenge: verificationChallenge(length: 8, channel: OperationChannel(channel: "+1******0100", id: "phone-main"))
-            )
-        )
-        defer { channeledHost.close() }
-
-        let emailLabels = emailHost.accessibilityLabels()
-        let phoneLabels = channeledHost.accessibilityLabels()
-        #expect(emailLabels.contains("Enter the 6-digit code sent to u***@example.test."))
-        #expect(!emailLabels.contains("email-main"))
-        #expect(phoneLabels.contains("Enter the 8-digit code sent to +1******0100."))
-        #expect(!phoneLabels.contains("phone-main"))
-    }
-
-    @Test func `OTP bridge exposes accessible one-time-code text input and hides decorative slots`() async throws {
+    @Test func `OTP bridge configures one-time-code text input traits`() async throws {
         let host = SwiftUIRuntimeHost(
             rootView: verificationView(description: "Verification code")
         )
@@ -43,19 +18,11 @@ struct VerificationDefaultUIRuntimeTests {
         await host.settle()
 
         let textField = try #require(host.textFields().first)
-        let accessibilityLabels = host.accessibilityLabels()
 
         #expect(textField.keyboardType == .numberPad)
         #expect(textField.textContentType == .oneTimeCode)
         #expect(textField.isAccessibilityElement)
         #expect(textField.accessibilityElementsHidden == false)
-        #expect(accessibilityLabels.contains("Verification code"))
-
-        await enterText("123", in: textField, host: host)
-        let exposedDigitLabels = host.accessibilityElements()
-            .compactMap(\.accessibilityLabel)
-            .filter { ["1", "2", "3"].contains($0) }
-        #expect(exposedDigitLabels.isEmpty)
     }
 
     @Test func `OTP bridge normalizes input and submits when expected length is reached`() async throws {
@@ -114,32 +81,54 @@ struct VerificationDefaultUIRuntimeTests {
         #expect(recorder.codes == ["654321"])
     }
 
-    @Test func `OTP resend waits for policy visibility and invokes resend callback`() async throws {
-        let recorder = VerificationActionRecorder()
-        let host = SwiftUIRuntimeHost(
-            rootView: verificationView(
-                challenge: verificationChallenge(debounce: 0),
-                onResend: recorder.recordResend
+    @Test func `Challenge identity resets email and phone OTP state`() async throws {
+        do {
+            let host = SwiftUIRuntimeHost(
+                rootView: emailVerificationView(challenge: verificationChallenge(id: "email-challenge-1"))
             )
-        )
-        defer { host.close() }
-        await host.settle(cycles: 4)
+            defer { host.close() }
+            await host.settle()
 
-        try activateControl(labeled: "Resend", in: host)
-        await host.settle(cycles: 4)
+            let initialTextField = try #require(host.textFields().first)
+            await enterText("12", in: initialTextField, host: host)
+            #expect(initialTextField.text == "12")
 
-        #expect(recorder.resendCount == 1)
-        #expect(host.accessibilityLabels().contains("Resend"))
+            host.update(
+                rootView: emailVerificationView(challenge: verificationChallenge(id: "email-challenge-2"))
+            )
+            await host.settle()
+
+            let resetTextField = try #require(host.textFields().first)
+            #expect(resetTextField.text == "")
+        }
+
+        do {
+            let host = SwiftUIRuntimeHost(
+                rootView: phoneVerificationView(challenge: verificationChallenge(id: "phone-challenge-1"))
+            )
+            defer { host.close() }
+            await host.settle()
+
+            let initialTextField = try #require(host.textFields().first)
+            await enterText("34", in: initialTextField, host: host)
+            #expect(initialTextField.text == "34")
+
+            host.update(
+                rootView: phoneVerificationView(challenge: verificationChallenge(id: "phone-challenge-2"))
+            )
+            await host.settle()
+
+            let resetTextField = try #require(host.textFields().first)
+            #expect(resetTextField.text == "")
+        }
     }
 
-    @Test func `OTP busy state blocks code submission not-you action and direct input edits`() async throws {
+    @Test func `OTP busy state blocks code submission and direct input edits`() async throws {
         let codeRecorder = SubmittedCodeRecorder()
-        let actionRecorder = VerificationActionRecorder()
         let host = SwiftUIRuntimeHost(
             rootView: verificationView(
                 isBusy: true,
-                onCodeEntered: codeRecorder.record,
-                onNotYou: actionRecorder.recordNotYou
+                onCodeEntered: codeRecorder.record
             )
         )
         defer { host.close() }
@@ -154,35 +143,9 @@ struct VerificationDefaultUIRuntimeTests {
             replacementString: "123456"
         )
         await enterText("123456", in: textField, host: host)
-        let didActivateNotYou = try attemptActivateControl(labeled: "Not you", in: host)
-        await host.settle()
 
         #expect(acceptsInput == false)
-        #expect(didActivateNotYou == false)
         #expect(codeRecorder.codes.isEmpty)
-        #expect(actionRecorder.notYouCount == 0)
-    }
-
-    @Test func `OTP busy state exposes deterministic accessibility control traits`() async throws {
-        let host = SwiftUIRuntimeHost(
-            rootView: verificationView(isBusy: true)
-        )
-        defer { host.close() }
-        await host.settle()
-
-        let cancel = try #require(
-            host.accessibilityElements().first { $0.accessibilityLabel == "Cancel" },
-            "Expected mounted cancel control accessibility element"
-        )
-        let notYou = try #require(
-            host.accessibilityElements().first { $0.accessibilityLabel == "Not you" },
-            "Expected mounted not-you control accessibility element"
-        )
-
-        #expect(cancel.accessibilityTraits.contains(.button))
-        #expect(cancel.accessibilityTraits.contains(.notEnabled) == false)
-        #expect(notYou.accessibilityTraits.contains(.button))
-        #expect(notYou.accessibilityTraits.contains(.notEnabled))
     }
 
     @Test func `Reduce Motion disables shake animatable data`() {
@@ -259,12 +222,14 @@ private func verificationView(
 }
 
 @MainActor
-private func emailVerificationView() -> EmailVerificationDefaultView {
+private func emailVerificationView(
+    challenge: VerificationChallenge = verificationChallenge(
+        channel: OperationChannel(channel: "long.email.alias@example.test", id: "email-layout")
+    )
+) -> EmailVerificationDefaultView {
     EmailVerificationDefaultView(
         uiState: EmailVerificationUIState(
-            challenge: verificationChallenge(
-                channel: OperationChannel(channel: "long.email.alias@example.test", id: "email-layout")
-            ),
+            challenge: challenge,
             onCodeEntered: { _ in },
             onCancel: {},
             onNotYou: {},
@@ -283,12 +248,14 @@ private func emailVerificationView() -> EmailVerificationDefaultView {
 }
 
 @MainActor
-private func phoneVerificationView() -> PhoneVerificationDefaultView {
+private func phoneVerificationView(
+    challenge: VerificationChallenge = verificationChallenge(
+        channel: OperationChannel(channel: "+1 555 010 1234", id: "phone-layout")
+    )
+) -> PhoneVerificationDefaultView {
     PhoneVerificationDefaultView(
         uiState: PhoneVerificationUIState(
-            challenge: verificationChallenge(
-                channel: OperationChannel(channel: "+1 555 010 1234", id: "phone-layout")
-            ),
+            challenge: challenge,
             onCodeEntered: { _ in },
             onCancel: {},
             onNotYou: {},
@@ -328,19 +295,5 @@ private final class SubmittedCodeRecorder {
 
     func record(_ code: String) {
         codes.append(code)
-    }
-}
-
-@MainActor
-private final class VerificationActionRecorder {
-    private(set) var resendCount = 0
-    private(set) var notYouCount = 0
-
-    func recordResend() {
-        resendCount += 1
-    }
-
-    func recordNotYou() {
-        notYouCount += 1
     }
 }

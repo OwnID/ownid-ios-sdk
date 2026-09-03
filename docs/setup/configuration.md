@@ -9,10 +9,8 @@ Initialize OwnID once during app startup before using SDK features.
 - `appID` (**required**): OwnID application ID from the OwnID Console.
 - `env` (**optional**): OwnID environment. Defaults to `.prod`; use `.uat` for UAT tenants.
 - `region` (**optional**): OwnID data-residency region. Defaults to `.us`; use `.eu` for EU tenants.
-- `rootURL` (**optional**): Custom HTTPS routing root provided by OwnID. Use it only when OwnID gives you a custom routing URL.
+- `rootURL` (**optional**): Custom HTTPS routing root provided by OwnID; it must not contain backslashes. Use it only when OwnID gives you a custom routing URL.
 - `languages` (**optional**): Explicit SDK language list. Omit it to keep the current language mode; on fresh startup this means automatic system language tracking.
-
-JSON and plist configuration accept both platform casing variants, such as `appID`/`appId` and `rootURL`/`rootUrl`. `env` and `region` values are case-insensitive. Unknown keys are ignored.
 
 If configuration fails, the SDK logs the error and keeps the current runtime unchanged. If initialization later succeeds, reacquire namespace handles before starting more work.
 
@@ -44,7 +42,7 @@ OwnID.initialize { configuration in
 ```swift
 let ownIDConfigJSON = """
 {
-  "appID": "<OWNID_APP_ID>",
+  "appId": "<OWNID_APP_ID>",
   "env": "prod",
   "region": "us"
 }
@@ -57,14 +55,14 @@ OwnID.initializeFromJSON { configuration in
 
 ## From File
 
-`initializeFromFile` reads the configured plist URL. When `fileURL` is omitted, the SDK reads `OwnIDConfig.plist` from the main bundle.
+`initializeFromFile` reads the supplied `fileURL` directly. If no URL is supplied, it uses `OwnIDConfig.plist` from the app bundle.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>appID</key>
+    <key>appId</key>
     <string>&lt;OWNID_APP_ID&gt;</string>
     <key>env</key>
     <string>prod</string>
@@ -76,7 +74,7 @@ OwnID.initializeFromJSON { configuration in
 
 ```swift
 OwnID.initializeFromFile { configuration in
-    // Optional. The default bundle file is OwnIDConfig.plist.
+    // Optional. The default file name is OwnIDConfig.plist.
     configuration.fileURL = Bundle.main.url(
         forResource: "OwnIDConfig",
         withExtension: "plist"
@@ -103,7 +101,7 @@ You can also update language later:
 OwnID.setLanguage(["en-US", "fr-FR"])
 ```
 
-Use BCP 47 language tags such as `en-US` or `fr-FR`. Pass an empty array to restore automatic system language tracking.
+Use language codes with optional regions, such as `en` or `en-US`. Pass an empty array to restore automatic language selection.
 
 For UI text customization, see [Localization](../customization/localization.md).
 
@@ -137,7 +135,9 @@ OwnID.logger { logger in
 }
 ```
 
-The custom sink may be called from any thread. Keep it thread-safe, and do not synchronously call OwnID lifecycle or configuration APIs from it.
+Custom sinks are invoked synchronously on the thread that emits each log and may run on any thread. Keep the sink
+thread-safe and return promptly; offload blocking I/O or other long-running work to app-owned background execution. Do
+not synchronously call OwnID lifecycle or configuration APIs from the sink.
 
 Use `.debug` or `.verbose` only for local development. Keep production logging at `.warn`, `.error`, or `.off` unless your support process requires more detail.
 

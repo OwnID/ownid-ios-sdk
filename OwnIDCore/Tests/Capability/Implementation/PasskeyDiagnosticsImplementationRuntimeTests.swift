@@ -12,25 +12,27 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
         PasskeyDiagnosticsTestURLProtocol.reset()
 
         let sink = PasskeyDiagnosticsLogSink()
-        let diagnostics = Self.makeDiagnostics(domain: "example.test", logger: sink)
+        let diagnostics = Self.makeDiagnostics(logger: sink)
 
         diagnostics.verify(rpId: "https://example.test")
 
         let report = try await Self.waitForReport(in: sink)
         #expect(report.message.contains("FAIL - Validate rpId - Contains scheme"))
         #expect(report.message.contains("SKIP - Fetch AASA - rpId validation failed"))
-        #expect(report.message.contains("SKIP - Apple CDN - Missing rpId or application identifier"))
+        #expect(report.message.contains("SKIP - Apple CDN - rpId validation failed"))
         #expect(PasskeyDiagnosticsTestURLProtocol.allRequests.isEmpty)
     }
 
     @available(iOS 16.0, *)
-    @Test func `Valid entitlements AASA and CDN report pass and duplicate RP ID is skipped`() async throws {
+    @Test func `Origin and CDN accept arbitrary App ID prefixes and duplicate normalized RP ID is skipped`() async throws {
         PasskeyDiagnosticsTestURLProtocol.reset()
 
         let domain = Self.uniqueDomain()
-        Self.registerValidAASAAndCDN(for: domain)
+        let originEntry = "ORIGINPREFIX.\(Self.bundleID)"
+        let cdnEntry = "DIFFERENTPREFIX.\(Self.bundleID)"
+        Self.registerAASAAndCDN(for: domain, originApps: [originEntry], cdnApps: [cdnEntry])
         let sink = PasskeyDiagnosticsLogSink()
-        let diagnostics = Self.makeDiagnostics(domain: domain, logger: sink)
+        let diagnostics = Self.makeDiagnostics(logger: sink)
 
         diagnostics.verify(rpId: domain.uppercased())
         diagnostics.verify(rpId: domain)
@@ -43,40 +45,59 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
         #expect(duplicate.message.contains("Skipping duplicate passkey diagnostics"))
         #expect(report.message.contains("PasskeyDiagnostics: PASS"))
         #expect(report.message.contains("PASS - Validate rpId"))
-        #expect(report.message.contains("PASS - Entitlements"))
-        #expect(report.message.contains("PASS - Associated domains"))
         #expect(report.message.contains("PASS - Fetch AASA"))
         #expect(report.message.contains("PASS - Parse AASA"))
-        #expect(report.message.contains("PASS - Consistency"))
+        #expect(report.message.contains("PASS - Origin AASA"))
         #expect(report.message.contains("PASS - Apple CDN"))
+        #expect(report.message.contains("AASA.apps=\(originEntry)"))
+        #expect(report.message.contains("CDN.apps=\(cdnEntry)"))
         #expect(PasskeyDiagnosticsTestURLProtocol.requests(to: Self.aasaURL(for: domain)).count == 1)
         #expect(PasskeyDiagnosticsTestURLProtocol.requests(to: Self.cdnURL(for: domain)).count == 1)
     }
 
     @available(iOS 16.0, *)
-    @Test func `Missing application identifier reports entitlement failure and skips CDN`() async throws {
+    @Test func `Origin and CDN Bundle ID candidate matching is ASCII case insensitive`() async throws {
         PasskeyDiagnosticsTestURLProtocol.reset()
 
         let domain = Self.uniqueDomain()
-        PasskeyDiagnosticsTestURLProtocol.register(
-            .http(statusCode: 200, headers: Self.jsonHeaders, body: Self.validAASAData),
-            for: Self.aasaURL(for: domain)
+        let caseVariedBundleID = Self.bundleID.uppercased()
+        Self.registerAASAAndCDN(
+            for: domain,
+            originApps: ["PREFIX.\(caseVariedBundleID)"],
+            cdnApps: ["OTHER.\(caseVariedBundleID)"]
         )
         let sink = PasskeyDiagnosticsLogSink()
-        let diagnostics = Self.makeDiagnostics(
-            domain: domain,
-            logger: sink,
-            applicationIdentifier: nil,
-            teamId: nil
-        )
+        let diagnostics = Self.makeDiagnostics(logger: sink)
 
         diagnostics.verify(rpId: domain)
 
         let report = try await Self.waitForReport(in: sink)
-        #expect(report.message.contains("FAIL - Entitlements - application-identifier missing"))
-        #expect(report.message.contains("SKIP - Apple CDN - Missing rpId or application identifier"))
-        #expect(PasskeyDiagnosticsTestURLProtocol.requests(to: Self.aasaURL(for: domain)).count == 1)
-        #expect(PasskeyDiagnosticsTestURLProtocol.requests(to: Self.cdnURL(for: domain)).isEmpty)
+        #expect(report.message.contains("PASS - Origin AASA"))
+        #expect(report.message.contains("PASS - Apple CDN"))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(arguments: [
+        BundleCandidateFailureCase(appEntry: "PREFIX.com.example.other", description: "different Bundle ID"),
+        BundleCandidateFailureCase(
+            appEntry: "PREFIX.\(PasskeyDiagnosticsLocalInfo.bundleIdentifier).deceptive",
+            description: "deceptive longer Bundle ID"
+        ),
+    ])
+    func `Origin and CDN reject nonmatching Bundle ID candidates`(_ testCase: BundleCandidateFailureCase) async throws {
+        PasskeyDiagnosticsTestURLProtocol.reset()
+
+        let domain = Self.uniqueDomain()
+        Self.registerAASAAndCDN(for: domain, originApps: [testCase.appEntry], cdnApps: [testCase.appEntry])
+        let sink = PasskeyDiagnosticsLogSink()
+        let diagnostics = Self.makeDiagnostics(logger: sink)
+
+        diagnostics.verify(rpId: domain)
+
+        let report = try await Self.waitForReport(in: sink)
+        #expect(report.message.contains("FAIL - Origin AASA - No webcredentials.apps entry matches the application Bundle ID"))
+        #expect(report.message.contains("FAIL - Apple CDN - No webcredentials.apps entry matches the application Bundle ID"))
+        #expect(report.message.contains(testCase.appEntry))
     }
 
     @available(iOS 16.0, *)
@@ -88,9 +109,15 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
             expectedReportFragment: "FAIL - Fetch AASA - Redirect not allowed"
         ),
         AASAFailureCase(
+            statusCode: 503,
+            headers: Self.jsonHeaders,
+            body: Data(),
+            expectedReportFragment: "FAIL - Fetch AASA - HTTP 503"
+        ),
+        AASAFailureCase(
             statusCode: 200,
             headers: ["Content-Type": "text/plain"],
-            body: Self.validAASAData,
+            body: Self.aasaData(apps: [Self.validAppEntry]),
             expectedReportFragment: "FAIL - Fetch AASA - Wrong Content-Type"
         ),
         AASAFailureCase(
@@ -102,7 +129,25 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
         AASAFailureCase(
             statusCode: 200,
             headers: Self.jsonHeaders,
+            body: Data("not-json".utf8),
+            expectedReportFragment: "FAIL - Parse AASA - JSON parse error"
+        ),
+        AASAFailureCase(
+            statusCode: 200,
+            headers: Self.jsonHeaders,
             body: Data(#"{"webcredentials":{"apps":[]}}"#.utf8),
+            expectedReportFragment: "FAIL - Parse AASA - webcredentials.apps missing"
+        ),
+        AASAFailureCase(
+            statusCode: 200,
+            headers: Self.jsonHeaders,
+            body: Data(#"{"webcredentials":{"apps":"PREFIX.com.ownid.passkey.diagnostics.tests"}}"#.utf8),
+            expectedReportFragment: "FAIL - Parse AASA - webcredentials.apps missing"
+        ),
+        AASAFailureCase(
+            statusCode: 200,
+            headers: Self.jsonHeaders,
+            body: Data(#"{"applinks":{"apps":["PREFIX.com.ownid.passkey.diagnostics.tests"]}}"#.utf8),
             expectedReportFragment: "FAIL - Parse AASA - webcredentials.apps missing"
         ),
     ])
@@ -115,11 +160,11 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
             for: Self.aasaURL(for: domain)
         )
         PasskeyDiagnosticsTestURLProtocol.register(
-            .http(statusCode: 200, headers: Self.jsonHeaders, body: Self.validCDNData),
+            .http(statusCode: 200, headers: Self.jsonHeaders, body: Self.aasaData(apps: [Self.validAppEntry])),
             for: Self.cdnURL(for: domain)
         )
         let sink = PasskeyDiagnosticsLogSink()
-        let diagnostics = Self.makeDiagnostics(domain: domain, logger: sink)
+        let diagnostics = Self.makeDiagnostics(logger: sink)
 
         diagnostics.verify(rpId: domain)
 
@@ -129,50 +174,120 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
     }
 
     @available(iOS 16.0, *)
-    @Test func `CDN JSON parse failure is reported without live CDN access`() async throws {
+    @Test func `Non HTTP origin response is reported as failure`() async throws {
         PasskeyDiagnosticsTestURLProtocol.reset()
 
         let domain = Self.uniqueDomain()
+        PasskeyDiagnosticsTestURLProtocol.register(.nonHTTP(body: Data()), for: Self.aasaURL(for: domain))
         PasskeyDiagnosticsTestURLProtocol.register(
-            .http(statusCode: 200, headers: Self.jsonHeaders, body: Self.validAASAData),
-            for: Self.aasaURL(for: domain)
-        )
-        PasskeyDiagnosticsTestURLProtocol.register(
-            .http(statusCode: 200, headers: Self.jsonHeaders, body: Data("not-json".utf8)),
+            .http(statusCode: 200, headers: Self.jsonHeaders, body: Self.aasaData(apps: [Self.validAppEntry])),
             for: Self.cdnURL(for: domain)
         )
         let sink = PasskeyDiagnosticsLogSink()
-        let diagnostics = Self.makeDiagnostics(domain: domain, logger: sink)
+        let diagnostics = Self.makeDiagnostics(logger: sink)
 
         diagnostics.verify(rpId: domain)
 
         let report = try await Self.waitForReport(in: sink)
-        #expect(report.message.contains("FAIL - Apple CDN - JSON parse error"))
+        #expect(report.message.contains("FAIL - Fetch AASA - Non-HTTP response"))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(arguments: [
+        TransportFailureCase(code: .timedOut, expectedStatus: "WARN", description: "timeout"),
+        TransportFailureCase(code: .notConnectedToInternet, expectedStatus: "WARN", description: "offline"),
+        TransportFailureCase(code: .networkConnectionLost, expectedStatus: "WARN", description: "lost connection"),
+        TransportFailureCase(code: .serverCertificateUntrusted, expectedStatus: "FAIL", description: "certificate trust"),
+    ])
+    func `Transport failures use scoped warning and failure statuses`(_ testCase: TransportFailureCase) async throws {
+        PasskeyDiagnosticsTestURLProtocol.reset()
+
+        let domain = Self.uniqueDomain()
+        PasskeyDiagnosticsTestURLProtocol.register(.failure(testCase.code), for: Self.aasaURL(for: domain))
+        PasskeyDiagnosticsTestURLProtocol.register(.failure(testCase.code), for: Self.cdnURL(for: domain))
+        let sink = PasskeyDiagnosticsLogSink()
+        let diagnostics = Self.makeDiagnostics(logger: sink)
+
+        diagnostics.verify(rpId: domain)
+
+        let report = try await Self.waitForReport(in: sink)
+        #expect(report.message.contains("\(testCase.expectedStatus) - Fetch AASA"))
+        #expect(report.message.contains("\(testCase.expectedStatus) - Apple CDN"))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(arguments: [
+        CDNBodyFailureCase(body: Data("not-json".utf8), expectedReason: "JSON parse error"),
+        CDNBodyFailureCase(
+            body: Data(#"{"domain":{"apps":["PREFIX.com.ownid.passkey.diagnostics.tests"]}}"#.utf8),
+            expectedReason: "webcredentials.apps missing"
+        ),
+    ])
+    func `Malformed CDN responses are reported without accepting nested apps`(_ testCase: CDNBodyFailureCase) async throws {
+        PasskeyDiagnosticsTestURLProtocol.reset()
+
+        let domain = Self.uniqueDomain()
+        PasskeyDiagnosticsTestURLProtocol.register(
+            .http(statusCode: 200, headers: Self.jsonHeaders, body: Self.aasaData(apps: [Self.validAppEntry])),
+            for: Self.aasaURL(for: domain)
+        )
+        PasskeyDiagnosticsTestURLProtocol.register(
+            .http(statusCode: 200, headers: Self.jsonHeaders, body: testCase.body),
+            for: Self.cdnURL(for: domain)
+        )
+        let sink = PasskeyDiagnosticsLogSink()
+        let diagnostics = Self.makeDiagnostics(logger: sink)
+
+        diagnostics.verify(rpId: domain)
+
+        let report = try await Self.waitForReport(in: sink)
+        #expect(report.message.contains("FAIL - Apple CDN - \(testCase.expectedReason)"))
         #expect(PasskeyDiagnosticsTestURLProtocol.requests(to: Self.cdnURL(for: domain)).count == 1)
     }
 
-    private static let appIdentifier = "TEAMID.com.ownid.passkey.diagnostics.tests"
-    private static let teamId = "TEAMID"
+    @available(iOS 16.0, *)
+    @Test func `CDN HTTP failure reports Apple diagnostic headers`() async throws {
+        PasskeyDiagnosticsTestURLProtocol.reset()
+
+        let domain = Self.uniqueDomain()
+        PasskeyDiagnosticsTestURLProtocol.register(
+            .http(statusCode: 200, headers: Self.jsonHeaders, body: Self.aasaData(apps: [Self.validAppEntry])),
+            for: Self.aasaURL(for: domain)
+        )
+        PasskeyDiagnosticsTestURLProtocol.register(
+            .http(
+                statusCode: 404,
+                headers: [
+                    "Apple-Failure-Reason": "SWCERR00101 Bad HTTP Response",
+                    "Apple-Failure-Details": "status 404",
+                    "Apple-From": "origin",
+                ],
+                body: Data()
+            ),
+            for: Self.cdnURL(for: domain)
+        )
+        let sink = PasskeyDiagnosticsLogSink()
+        let diagnostics = Self.makeDiagnostics(logger: sink)
+
+        diagnostics.verify(rpId: domain)
+
+        let report = try await Self.waitForReport(in: sink)
+        #expect(report.message.contains("FAIL - Apple CDN - HTTP 404"))
+        #expect(report.message.contains("Apple-Failure-Reason=SWCERR00101 Bad HTTP Response"))
+        #expect(report.message.contains("Apple-Failure-Details=status 404"))
+        #expect(report.message.contains("Apple-From=origin"))
+    }
+
+    private static let bundleID = PasskeyDiagnosticsLocalInfo.bundleIdentifier
+    private static let validAppEntry = "PREFIX.\(bundleID)"
     private static let jsonHeaders = ["Content-Type": "application/json"]
-    private static let validAASAData = Data(#"{"webcredentials":{"apps":["TEAMID.com.ownid.passkey.diagnostics.tests"]}}"#.utf8)
-    private static let validCDNData = Data(#"{"domain":{"apps":["TEAMID.com.ownid.passkey.diagnostics.tests"]}}"#.utf8)
 
     @available(iOS 16.0, *)
-    private static func makeDiagnostics(
-        domain: String,
-        logger: PasskeyDiagnosticsLogSink,
-        applicationIdentifier: String? = appIdentifier,
-        teamId: String? = teamId
-    ) -> PasskeyDiagnosticsImpl {
-        let router = OwnIDLogRouter(ownIDLoggerProvider: { logger }, serverLoggersProvider: { [] })
+    private static func makeDiagnostics(logger: PasskeyDiagnosticsLogSink) -> PasskeyDiagnosticsImpl {
+        let router = OwnIDLogRouter(ownIDLoggerProvider: { logger }, serverLoggerProvider: { nil })
         return PasskeyDiagnosticsImpl(
             localInfo: PasskeyDiagnosticsLocalInfo(),
             logger: router,
-            entitlementsOverride: (
-                associatedDomains: ["webcredentials:\(domain)"],
-                applicationIdentifier: applicationIdentifier,
-                teamId: teamId
-            ),
             sessionFactory: { configuration, delegate in
                 configuration.protocolClasses = [PasskeyDiagnosticsTestURLProtocol.self]
                 return URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
@@ -180,15 +295,19 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
         )
     }
 
-    private static func registerValidAASAAndCDN(for domain: String) {
+    private static func registerAASAAndCDN(for domain: String, originApps: [String], cdnApps: [String]) {
         PasskeyDiagnosticsTestURLProtocol.register(
-            .http(statusCode: 200, headers: jsonHeaders, body: validAASAData),
+            .http(statusCode: 200, headers: jsonHeaders, body: aasaData(apps: originApps)),
             for: aasaURL(for: domain)
         )
         PasskeyDiagnosticsTestURLProtocol.register(
-            .http(statusCode: 200, headers: jsonHeaders, body: validCDNData),
+            .http(statusCode: 200, headers: jsonHeaders, body: aasaData(apps: cdnApps)),
             for: cdnURL(for: domain)
         )
+    }
+
+    private static func aasaData(apps: [String]) -> Data {
+        try! JSONSerialization.data(withJSONObject: ["webcredentials": ["apps": apps]])
     }
 
     private static func uniqueDomain() -> String {
@@ -220,9 +339,33 @@ struct AASAFailureCase: Sendable, CustomTestStringConvertible {
     var testDescription: String { expectedReportFragment }
 }
 
+struct BundleCandidateFailureCase: Sendable, CustomTestStringConvertible {
+    let appEntry: String
+    let description: String
+
+    var testDescription: String { description }
+}
+
+struct TransportFailureCase: Sendable, CustomTestStringConvertible {
+    let code: URLError.Code
+    let expectedStatus: String
+    let description: String
+
+    var testDescription: String { description }
+}
+
+struct CDNBodyFailureCase: Sendable, CustomTestStringConvertible {
+    let body: Data
+    let expectedReason: String
+
+    var testDescription: String { expectedReason }
+}
+
 private struct PasskeyDiagnosticsLocalInfo: LocalInfo {
+    static let bundleIdentifier = "com.ownid.passkey.diagnostics.tests"
+
     let modules: [(name: String, version: String)] = [("OwnIDCore", "0.0.0")]
-    let bundleID = "com.ownid.passkey.diagnostics.tests"
+    let bundleID = Self.bundleIdentifier
     let appVersion = "4.5.6"
     let userAgent = "OwnIDPasskeyDiagnosticsTests/4.5.6"
     let correlationId = "passkey-diagnostics-correlation-id"
@@ -236,6 +379,8 @@ private struct PasskeyDiagnosticsLocalInfo: LocalInfo {
 
 private enum PasskeyDiagnosticsRoute: Sendable {
     case http(statusCode: Int, headers: [String: String], body: Data)
+    case nonHTTP(body: Data)
+    case failure(URLError.Code)
 }
 
 private final class PasskeyDiagnosticsURLProtocolRegistry: @unchecked Sendable {
@@ -319,6 +464,18 @@ private final class PasskeyDiagnosticsTestURLProtocol: URLProtocol {
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: body)
             client?.urlProtocolDidFinishLoading(self)
+        case .nonHTTP(let body):
+            let response = URLResponse(
+                url: url,
+                mimeType: "application/json",
+                expectedContentLength: body.count,
+                textEncodingName: "utf-8"
+            )
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: body)
+            client?.urlProtocolDidFinishLoading(self)
+        case .failure(let code):
+            client?.urlProtocol(self, didFailWithError: URLError(code))
         }
     }
 

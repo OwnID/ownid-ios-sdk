@@ -21,7 +21,7 @@ Version 4 keeps the main product flows, but changes the SDK boundary. The SDK no
 | Core SDK | iOS 14+; Swift 5.1+; runtime plus flow UI | iOS 13+; Swift 6; runtime, providers, flows, Passkey Enrollment, WebBridge |
 | Flow UI | `OwnID.FlowsSDK.*View`, ViewModels, publishers | Use `OwnIDSwiftUI` |
 | SwiftUI integration | Part of Core/Gigya flow UI | Separate `OwnIDSwiftUI` product; iOS 13+; Swift 6; native SwiftUI UI |
-| UIKit integration | Demo/injection patterns around v3 flow views | Use `OwnIDSwiftUI` or app-owned hosting |
+| UIKit integration | Demo integration patterns around v3 flow views | Use `OwnIDSwiftUI` or app-owned hosting |
 | Boost Flow | Flow views, ViewModels, publishers | Boost Flow widgets and callbacks; see [Migrate Boost Flow](#migrate-boost-flow) |
 | Elite Flow | Start/page-action APIs | Elite Flow context, callbacks, and app-owned controller; see [Migrate Elite Flow](#migrate-elite-flow) |
 | Passkey Enrollment | Credential Enrollment APIs | Passkey Enrollment; see [Migrate Passkey Enrollment](#migrate-passkey-enrollment) |

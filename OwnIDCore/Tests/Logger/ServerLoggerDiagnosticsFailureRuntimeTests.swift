@@ -87,7 +87,13 @@ struct ServerLoggerDiagnosticsFailureRuntimeTests {
             retrySleeper: { try await retrySleeper.sleep(nanoseconds: $0) }
         )
 
-        logger.log(level: .error, className: "Transport", message: "bounded retry", cause: nil)
+        logger.log(
+            level: .error,
+            className: "Transport",
+            message: "bounded retry",
+            cause: nil,
+            previousRun: PreviousRun(correlationId: "retry-correlation", processId: 9_001, exit: nil)
+        )
 
         try await withTestTimeout("first diagnostics attempt") {
             await network.waitForRequestCount(1)
@@ -122,6 +128,17 @@ struct ServerLoggerDiagnosticsFailureRuntimeTests {
 
         #expect(await network.requestCount == 3)
         #expect(await retrySleeper.recordedDelays == [1_000, 2_000])
+
+        let requests = await network.requests
+        #expect(requests.count == 3)
+        for request in requests {
+            let payload = try Self.payload(from: request)
+            let metadata = try #require(payload["metadata"] as? [String: Any])
+            let previousRun = try #require(metadata["previousRun"] as? [String: Any])
+            #expect(previousRun["correlationId"] as? String == "retry-correlation")
+            #expect(previousRun["processId"] as? Int == 9_001)
+            #expect(previousRun["exit"] == nil)
+        }
     }
 
     @Test func `Non-network diagnostics failures log once without retry scheduling`() async throws {
@@ -161,6 +178,12 @@ struct ServerLoggerDiagnosticsFailureRuntimeTests {
 
     private static func networkFailure() -> NetworkResponse {
         .fail(.networkError(.init(url: Self.eventsURL, error: URLError(.cannotConnectToHost))))
+    }
+
+    private static func payload(from request: NetworkRequest) throws -> [String: Any] {
+        let data = try #require(request.buildURLRequest().httpBody)
+        let object = try JSONSerialization.jsonObject(with: data)
+        return try #require(object as? [String: Any])
     }
 
     private static func makeLogger(

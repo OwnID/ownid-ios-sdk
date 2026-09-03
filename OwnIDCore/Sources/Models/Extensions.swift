@@ -23,7 +23,7 @@ extension String {
         guard let atIndex = self.firstIndex(of: "@") else { return self }
         let localPart = String(self[..<atIndex])
         let domainPart = String(self[atIndex...])
-        if localPart.count <= 3 { return self }
+        if localPart.count <= 3 { return localPart.isEmpty ? self : "***\(domainPart)" }
         let firstChar = localPart.prefix(1)
         let lastChar = localPart.suffix(1)
         let middlePart = String(repeating: "*", count: localPart.count - 2)
@@ -36,7 +36,7 @@ extension String {
 
         let hasPlusPrefix = self.hasPrefix("+")
         let digits = hasPlusPrefix ? String(self.dropFirst()) : self
-        guard digits.count > 6 else { return self }
+        guard digits.count > 6 else { return hasPlusPrefix ? "+***" : "***" }
 
         let firstPart = digits.prefix(2)
         let lastPart = digits.suffix(4)

@@ -27,10 +27,10 @@ struct LoggerBoundaryContractTests {
         #expect(sink.entries == [LogEntry(level: .info, className: "Source", message: "visible", hasCause: true)])
     }
 
-    @Test func `Log router fans out to current local logger and normalizes missing message`() throws {
+    @Test func `Log router uses the current local logger and normalizes missing message`() throws {
         let sink = LogSink()
         let logger = CapturingLogger(level: .verbose, category: "OwnID-Test", sink: sink)
-        let router = OwnIDLogRouter(ownIDLoggerProvider: { logger }, serverLoggersProvider: { [] })
+        let router = OwnIDLogRouter(ownIDLoggerProvider: { logger }, serverLoggerProvider: { nil })
 
         router.logW(source: self, prefix: "prefix", message: nil)
 

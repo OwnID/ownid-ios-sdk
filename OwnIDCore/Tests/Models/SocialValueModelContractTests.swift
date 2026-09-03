@@ -26,10 +26,13 @@ struct SocialValueModelContractTests {
         )
 
         #expect(challenge.timeout == Timeout(milliseconds: 0))
+        #expect(challenge.challengeID.value == "social-challenge")
+        let description = String(describing: challenge)
         #expect(
-            challenge.description
-                == "SocialChallenge(challengeId: social-challenge, timeout: 0, clientId: client-id, challengeUrl: Optional(\"https://login.example.test/challenge\"))"
+            description
+                == "SocialChallenge(challengeId: '*', timeout: 0, clientId: client-id, challengeUrl: Optional(\"https://login.example.test/challenge\"))"
         )
+        #expect(!description.contains(challenge.challengeID.value))
 
         let encoded = try modelJSON.object(encoding: challenge)
         #expect(encoded["challengeId"] as? String == "social-challenge")

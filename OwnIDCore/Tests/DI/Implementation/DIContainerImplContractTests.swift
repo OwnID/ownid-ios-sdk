@@ -73,6 +73,23 @@ struct DIContainerImplContractTests {
         #expect(child.getOrNil(type: MissingService.self) == nil)
     }
 
+    @Test func `Transitive missing dependency reports missing leaf and requested entry point`() throws {
+        let container = DIContainerImpl(scopeName: "transitive-scope")
+
+        container.registerFactory(ComposedService.self, dependencies: [TestService.self]) { resolver in
+            ComposedService(service: try resolver.getOrThrow(type: TestService.self))
+        }
+
+        let error = try #require(throws: (any Error).self) {
+            try container.getOrThrow(type: ComposedService.self)
+        }
+        let missing = try #require(error as? MissingDependencyError)
+
+        #expect(missing.dependencyName == String(describing: TestService.self))
+        #expect(missing.scopeName == "transitive-scope")
+        #expect(missing.entryPoint == String(describing: ComposedService.self))
+    }
+
     @Test func `Factory failures are wrapped as dependency resolution errors and suppressed by get or nil`() throws {
         let container = DIContainerImpl(scopeName: "factory-scope")
 

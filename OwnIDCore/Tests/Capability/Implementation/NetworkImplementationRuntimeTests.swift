@@ -1,11 +1,11 @@
 import Foundation
 import Testing
 
-@testable import OwnIDCore
+@_spi(OwnIDInternal) @testable import OwnIDCore
 
 extension HTTPLogger: @unchecked Sendable {}
 
-// Covers: NET-TRANSPORT-010, NET-TRANSPORT-020, NET-TRANSPORT-030, NET-TRANSPORT-040, NET-TRANSPORT-050
+// Covers: CFG-RUNTIME-120, NET-TRANSPORT-010, NET-TRANSPORT-020, NET-TRANSPORT-030, NET-TRANSPORT-040, NET-TRANSPORT-050
 @Suite(.serialized)
 struct NetworkImplementationRuntimeTests {
 
@@ -98,23 +98,100 @@ struct NetworkImplementationRuntimeTests {
         #expect(error.error.code == .timedOut)
     }
 
-    @Test func `Task cancellation remains cancellation`() async throws {
-        let url = try Self.makeURL(path: "network/cancel")
+    @Test func `Same network runs concurrent requests with isolated task cancellation`() async throws {
+        let canceledURL = try Self.makeURL(path: "network/concurrent-canceled")
+        let successfulURL = try Self.makeURL(path: "network/concurrent-success")
+        let responseGate = NetworkImplResponseGate()
+        NetworkImplTestURLProtocol.register(.stallUntilCancelled, for: canceledURL)
+        NetworkImplTestURLProtocol.register(
+            .gatedHTTP(gate: responseGate, statusCode: 200, headers: [:], body: #"{"completed":true}"#),
+            for: successfulURL
+        )
+
+        defer {
+            responseGate.open()
+            NetworkImplTestURLProtocol.unregister(canceledURL)
+            NetworkImplTestURLProtocol.unregister(successfulURL)
+        }
+
+        let network = makeNetwork()
+        let canceledTask = Task { try await network.run(NetworkRequest(url: canceledURL)) }
+        defer { canceledTask.cancel() }
+        try await NetworkImplTestURLProtocol.waitForStart(of: canceledURL)
+
+        let successfulTask = Task { try await network.run(NetworkRequest(url: successfulURL)) }
+        defer { successfulTask.cancel() }
+        try await NetworkImplTestURLProtocol.waitForStart(of: successfulURL)
+
+        canceledTask.cancel()
+        await #expect(throws: CancellationError.self) {
+            try await canceledTask.value
+        }
+        try await NetworkImplTestURLProtocol.waitForStop(of: canceledURL)
+        #expect(NetworkImplTestURLProtocol.stopCount(for: successfulURL) == 0)
+
+        responseGate.open()
+        let success = try requireSuccess(try await successfulTask.value)
+        #expect(success.body == #"{"completed":true}"#)
+    }
+
+    @Test func `Shutdown before run prevents URLSession task creation`() async throws {
+        let url = try Self.makeURL(path: "lifecycle/shutdown-before-run")
         NetworkImplTestURLProtocol.register(.stallUntilCancelled, for: url)
         defer { NetworkImplTestURLProtocol.unregister(url) }
 
-        let network = makeNetwork()
-        let task = Task {
+        let shutdownToken = ShutdownToken()
+        let network = makeNetwork(shutdownToken: shutdownToken)
+        shutdownToken.cancel()
+        await #expect(throws: CancellationError.self) {
             try await network.run(NetworkRequest(url: url))
         }
 
-        await NetworkImplTestURLProtocol.waitForStart(of: url)
-        task.cancel()
+        #expect(NetworkImplTestURLProtocol.startCount(for: url) == 0)
+    }
 
-        await #expect(throws: CancellationError.self) {
-            try await task.value
+    @Test func `Admitted request completes normally after shutdown`() async throws {
+        let url = try Self.makeURL(path: "lifecycle/admitted-before-shutdown")
+        let responseGate = NetworkImplResponseGate()
+        NetworkImplTestURLProtocol.register(
+            .gatedHTTP(gate: responseGate, statusCode: 200, headers: [:], body: #"{"completed":true}"#),
+            for: url
+        )
+        defer { NetworkImplTestURLProtocol.unregister(url) }
+
+        let shutdownToken = ShutdownToken()
+        let network = makeNetwork(shutdownToken: shutdownToken)
+        let task = Task { try await network.run(NetworkRequest(url: url)) }
+
+        try await NetworkImplTestURLProtocol.waitForStart(of: url)
+        shutdownToken.cancel()
+        responseGate.open()
+
+        let response = try await task.value
+        let success = try requireSuccess(response)
+        #expect(success.body == #"{"completed":true}"#)
+    }
+
+    @Test func `Network deinit gracefully invalidates its exclusively owned session`() async throws {
+        let invalidations = AsyncSignalRecorder<Void>()
+        let delegateReference: NetworkImplWeakReference<NetworkImplSessionDelegate>
+        do {
+            let delegate = NetworkImplSessionDelegate(invalidations: invalidations)
+            delegateReference = NetworkImplWeakReference(delegate)
+            let session = URLSession(configuration: .ephemeral, delegate: delegate, delegateQueue: nil)
+            var network: NetworkImpl? = NetworkImpl(urlSession: session, shutdownToken: ShutdownToken())
+            withExtendedLifetime(network) {
+                #expect(delegateReference.value != nil)
+            }
+            network = nil
         }
-        await NetworkImplTestURLProtocol.waitForStop(of: url)
+
+        _ = try await invalidations.waitForFirst("Network session graceful invalidation") { _ in true }
+        try await withTestTimeout("Network session delegate release") {
+            while delegateReference.value != nil {
+                try await Task.sleep(nanoseconds: 10_000_000)
+            }
+        }
     }
 
     @Test func `Default headers are sent through URLSession transport`() async throws {
@@ -268,6 +345,41 @@ struct NetworkImplementationRuntimeTests {
         #expect(NetworkImplTestURLProtocol.requests(for: url).count == 1)
     }
 
+    @Test func `Shutdown during retry delay prevents the next URLSession attempt`() async throws {
+        let url = try Self.makeURL(path: "retry/shutdown-delay")
+        NetworkImplTestURLProtocol.register(
+            [
+                .fail(URLError(.networkConnectionLost)),
+                .http(statusCode: 200, headers: [:], body: #"{"shouldNotLoad":true}"#),
+            ],
+            for: url
+        )
+        defer { NetworkImplTestURLProtocol.unregister(url) }
+
+        let shutdownToken = ShutdownToken()
+        let retryDelay = NetworkImplRetryDelayProbe()
+        let network = makeNetwork(
+            shutdownToken: shutdownToken,
+            retryConfig: NetworkRequest.RetryConfig(
+                retries: 1,
+                initialDelayMilliseconds: 10_000,
+                factor: 1.0,
+                maxDelayMilliseconds: 10_000
+            ),
+            retrySleeper: { try await retryDelay.sleep(nanoseconds: $0) }
+        )
+        let task = Task { try await network.run(NetworkRequest(url: url)) }
+
+        await retryDelay.waitForSleep()
+        shutdownToken.cancel()
+        retryDelay.resumeSleep()
+
+        await #expect(throws: CancellationError.self) {
+            try await task.value
+        }
+        #expect(NetworkImplTestURLProtocol.startCount(for: url) == 1)
+    }
+
     @Test func `Transport cancelled error remains task cancellation and is not retried`() async throws {
         let url = try Self.makeURL(path: "retry/cancelled-error")
         NetworkImplTestURLProtocol.register(.fail(URLError(.cancelled)), for: url)
@@ -356,6 +468,7 @@ struct NetworkImplementationRuntimeTests {
     }
 
     private func makeNetwork(
+        shutdownToken: ShutdownToken = ShutdownToken(),
         requestAdapters: NetworkRequest.AdapterChain? = nil,
         additionalHeaders: [String: String] = [:],
         retryConfig: NetworkRequest.RetryConfig? = nil,
@@ -368,6 +481,7 @@ struct NetworkImplementationRuntimeTests {
         if let retrySleeper {
             return NetworkImpl(
                 urlSession: URLSession(configuration: configuration),
+                shutdownToken: shutdownToken,
                 requestAdapters: requestAdapters,
                 retryConfig: retryConfig,
                 httpLogger: httpLogger,
@@ -376,6 +490,7 @@ struct NetworkImplementationRuntimeTests {
         } else {
             return NetworkImpl(
                 urlSession: URLSession(configuration: configuration),
+                shutdownToken: shutdownToken,
                 requestAdapters: requestAdapters,
                 retryConfig: retryConfig,
                 httpLogger: httpLogger
@@ -437,9 +552,15 @@ struct NetworkImplementationRuntimeTests {
 
 private enum NetworkImplTestURLProtocolRoute: Sendable {
     case http(statusCode: Int, headers: [String: String], body: String)
+    case gatedHTTP(gate: NetworkImplResponseGate, statusCode: Int, headers: [String: String], body: String)
     case nonHTTP(body: String)
     case fail(URLError)
     case stallUntilCancelled
+}
+
+private enum NetworkImplTestURLProtocolEvent: Sendable {
+    case started(URL)
+    case stopped(URL)
 }
 
 // Synchronization is protected by `lock`; continuations are resumed outside the critical section.
@@ -493,6 +614,15 @@ private final class NetworkImplRetryDelayProbe: @unchecked Sendable {
         return result
     }
 
+    func resumeSleep() {
+        let continuation = lock.withLock {
+            let continuation = sleepContinuation
+            sleepContinuation = nil
+            return continuation
+        }
+        continuation?.resume(returning: ())
+    }
+
     private func cancelSleep() {
         lock.lock()
         isCancelled = true
@@ -529,9 +659,8 @@ private final class NetworkImplURLProtocolRegistry: @unchecked Sendable {
     private var routes: [URL: [NetworkImplTestURLProtocolRoute]] = [:]
     private var requests: [URL: [URLRequest]] = [:]
     private var starts: [URL: Int] = [:]
-    private var startWaiters: [URL: [CheckedContinuation<Void, Never>]] = [:]
     private var stops: [URL: Int] = [:]
-    private var stopWaiters: [URL: [CheckedContinuation<Void, Never>]] = [:]
+    private let events = AsyncSignalRecorder<NetworkImplTestURLProtocolEvent>()
 
     func register(_ route: NetworkImplTestURLProtocolRoute, for url: URL) {
         register([route], for: url)
@@ -542,9 +671,7 @@ private final class NetworkImplURLProtocolRegistry: @unchecked Sendable {
         routes[url] = scriptedRoutes
         requests[url] = []
         starts[url] = 0
-        startWaiters[url] = []
         stops[url] = 0
-        stopWaiters[url] = []
         lock.unlock()
     }
 
@@ -553,9 +680,7 @@ private final class NetworkImplURLProtocolRegistry: @unchecked Sendable {
         routes[url] = nil
         requests[url] = nil
         starts[url] = nil
-        startWaiters[url] = nil
         stops[url] = nil
-        stopWaiters[url] = nil
         lock.unlock()
     }
 
@@ -573,7 +698,6 @@ private final class NetworkImplURLProtocolRegistry: @unchecked Sendable {
         lock.lock()
         requests[url, default: []].append(request)
         starts[url, default: 0] += 1
-        let waiters = startWaiters.removeValue(forKey: url) ?? []
         let route: NetworkImplTestURLProtocolRoute?
         if var scriptedRoutes = routes[url], !scriptedRoutes.isEmpty {
             route = scriptedRoutes[0]
@@ -585,10 +709,7 @@ private final class NetworkImplURLProtocolRegistry: @unchecked Sendable {
             route = nil
         }
         lock.unlock()
-
-        for waiter in waiters {
-            waiter.resume()
-        }
+        events.append(.started(url))
 
         return route
     }
@@ -605,74 +726,38 @@ private final class NetworkImplURLProtocolRegistry: @unchecked Sendable {
 
         lock.lock()
         stops[url, default: 0] += 1
-        let waiters = stopWaiters.removeValue(forKey: url) ?? []
         lock.unlock()
+        events.append(.stopped(url))
+    }
 
-        for waiter in waiters {
-            waiter.resume()
+    func waitForStart(of url: URL) async throws {
+        if startCount(for: url) > 0 { return }
+        _ = try await events.waitForFirst("URLProtocol start for \(url)") {
+            if case .started(url) = $0 { return true }
+            return false
         }
     }
 
-    func waitForStart(of url: URL) async {
-        if hasStarted(url) { return }
-
-        await withCheckedContinuation { continuation in
-            if shouldResumeImmediatelyOrRegisterStartWaiter(continuation, for: url) {
-                continuation.resume()
-            }
+    func waitForStop(of url: URL) async throws {
+        if stopCount(for: url) > 0 { return }
+        _ = try await events.waitForFirst("URLProtocol stop for \(url)") {
+            if case .stopped(url) = $0 { return true }
+            return false
         }
     }
 
-    func waitForStop(of url: URL) async {
-        if hasStopped(url) { return }
-
-        await withCheckedContinuation { continuation in
-            if shouldResumeImmediatelyOrRegisterStopWaiter(continuation, for: url) {
-                continuation.resume()
-            }
-        }
-    }
-
-    private func hasStarted(_ url: URL) -> Bool {
+    func startCount(for url: URL) -> Int {
         lock.lock()
-        let result = (starts[url] ?? 0) > 0
+        let result = starts[url] ?? 0
         lock.unlock()
         return result
     }
 
-    private func hasStopped(_ url: URL) -> Bool {
+    func stopCount(for url: URL) -> Int {
         lock.lock()
-        let result = (stops[url] ?? 0) > 0
+        let result = stops[url] ?? 0
         lock.unlock()
         return result
-    }
-
-    private func shouldResumeImmediatelyOrRegisterStartWaiter(
-        _ continuation: CheckedContinuation<Void, Never>,
-        for url: URL
-    ) -> Bool {
-        lock.lock()
-        if (starts[url] ?? 0) > 0 {
-            lock.unlock()
-            return true
-        }
-        startWaiters[url, default: []].append(continuation)
-        lock.unlock()
-        return false
-    }
-
-    private func shouldResumeImmediatelyOrRegisterStopWaiter(
-        _ continuation: CheckedContinuation<Void, Never>,
-        for url: URL
-    ) -> Bool {
-        lock.lock()
-        if (stops[url] ?? 0) > 0 {
-            lock.unlock()
-            return true
-        }
-        stopWaiters[url, default: []].append(continuation)
-        lock.unlock()
-        return false
     }
 }
 
@@ -695,12 +780,20 @@ private final class NetworkImplTestURLProtocol: URLProtocol {
         registry.requests(for: url)
     }
 
-    static func waitForStart(of url: URL) async {
-        await registry.waitForStart(of: url)
+    static func waitForStart(of url: URL) async throws {
+        try await registry.waitForStart(of: url)
     }
 
-    static func waitForStop(of url: URL) async {
-        await registry.waitForStop(of: url)
+    static func waitForStop(of url: URL) async throws {
+        try await registry.waitForStop(of: url)
+    }
+
+    static func startCount(for url: URL) -> Int {
+        registry.startCount(for: url)
+    }
+
+    static func stopCount(for url: URL) -> Int {
+        registry.stopCount(for: url)
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
@@ -719,15 +812,12 @@ private final class NetworkImplTestURLProtocol: URLProtocol {
 
         switch route {
         case .http(let statusCode, let headers, let body):
-            let response = HTTPURLResponse(
-                url: url,
-                statusCode: statusCode,
-                httpVersion: "HTTP/1.1",
-                headerFields: headers
-            )!
-            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: Data(body.utf8))
-            client?.urlProtocolDidFinishLoading(self)
+            respond(statusCode: statusCode, headers: headers, body: body, url: url)
+
+        case .gatedHTTP(let gate, let statusCode, let headers, let body):
+            gate.wait { [weak self] in
+                self?.respond(statusCode: statusCode, headers: headers, body: body, url: url)
+            }
 
         case .nonHTTP(let body):
             let response = URLResponse(
@@ -750,7 +840,71 @@ private final class NetworkImplTestURLProtocol: URLProtocol {
 
     override func stopLoading() {
         Self.registry.stop(request)
-        client?.urlProtocol(self, didFailWithError: URLError(.cancelled))
+    }
+
+    private func respond(statusCode: Int, headers: [String: String], body: String, url: URL) {
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: statusCode,
+            httpVersion: "HTTP/1.1",
+            headerFields: headers
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+}
+
+private final class NetworkImplResponseGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var isOpen = false
+    private var waiters: [() -> Void] = []
+
+    func wait(_ onOpen: @escaping () -> Void) {
+        lock.lock()
+        if isOpen {
+            lock.unlock()
+            onOpen()
+        } else {
+            waiters.append(onOpen)
+            lock.unlock()
+        }
+    }
+
+    func open() {
+        lock.lock()
+        guard !isOpen else {
+            lock.unlock()
+            return
+        }
+        isOpen = true
+        let waiters = waiters
+        self.waiters.removeAll()
+        lock.unlock()
+
+        for waiter in waiters {
+            waiter()
+        }
+    }
+}
+
+private final class NetworkImplSessionDelegate: NSObject, URLSessionDelegate, @unchecked Sendable {
+    private let invalidations: AsyncSignalRecorder<Void>
+
+    init(invalidations: AsyncSignalRecorder<Void>) {
+        self.invalidations = invalidations
+    }
+
+    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: (any Error)?) {
+        invalidations.append(())
+    }
+}
+
+private final class NetworkImplWeakReference<Value: AnyObject>: @unchecked Sendable {
+    weak var value: Value?
+
+    init(_ value: Value) {
+        self.value = value
     }
 }
 

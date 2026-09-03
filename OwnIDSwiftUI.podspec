@@ -1,7 +1,11 @@
 # OwnIDSwiftUI.podspec
+sdk_version_file = File.join(__dir__, "sdk-version.xcconfig")
+sdk_version = File.read(sdk_version_file)[/^\s*SDK_VERSION\s*=\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$/, 1]
+raise "SDK_VERSION is missing or invalid in #{sdk_version_file}" unless sdk_version
+
 Pod::Spec.new do |spec|
   spec.name             = "OwnIDSwiftUI"
-  spec.version          = "4.1.0"
+  spec.version          = sdk_version
   spec.summary          = "OwnID iOS SwiftUI SDK"
   spec.description      = "OwnID SwiftUI provides polished SwiftUI components for integrating OwnID user journeys. It includes UI for login ID collection and verification, plus reusable login and create-passkey widgets that work with OwnID Core."
   spec.homepage         = "https://ownid.com"

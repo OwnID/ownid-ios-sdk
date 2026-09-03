@@ -81,8 +81,26 @@ struct LoginDiscoverAPIImplementationMappingTests {
         assertLoginAccountNotFound(loginCall.mapHttpSuccess(success(code: 206, body: accountNotFoundBody)))
 
         let malformedNoSessionBody = #"{"reason":"missing no-session branch"}"#
-        assertDiscoverUnexpected(discoverCall.mapHttpSuccess(success(code: 206, body: malformedNoSessionBody)))
-        assertLoginUnexpected(loginCall.mapHttpSuccess(success(code: 206, body: malformedNoSessionBody)))
+        try assertDiscoverUnexpected(discoverCall.mapHttpSuccess(success(code: 206, body: malformedNoSessionBody)))
+        try assertLoginUnexpected(loginCall.mapHttpSuccess(success(code: 206, body: malformedNoSessionBody)))
+    }
+
+    @Test func `Discover and login reject negative auth requirement scores and allow zero`() throws {
+        let discoverCall = try makeDiscoverCall()
+        let loginCall = try makeLoginCall()
+        let invalidBodies = [
+            #"{"authRequirements":{"targetScore":1,"operations":[{"type":"EmailVerification","score":-1}]}}"#,
+            #"{"authRequirements":{"targetScore":-1,"operations":[{"type":"EmailVerification","score":0}]}}"#,
+        ]
+
+        for body in invalidBodies {
+            try assertDiscoverUnexpected(discoverCall.mapHttpSuccess(success(code: 206, body: body)))
+            try assertLoginUnexpected(loginCall.mapHttpSuccess(success(code: 206, body: body)))
+        }
+
+        let zeroBody = #"{"authRequirements":{"targetScore":0,"operations":[{"type":"EmailVerification","score":0}]}}"#
+        assertDiscoverZeroAuthRequirements(discoverCall.mapHttpSuccess(success(code: 206, body: zeroBody)))
+        assertLoginZeroAuthRequirements(loginCall.mapHttpSuccess(success(code: 206, body: zeroBody)))
     }
 
     @Test func `Discover and login map bad-request HTTP failures`() throws {
@@ -485,12 +503,12 @@ struct LoginDiscoverAPIImplementationMappingTests {
         _ result: APIResult<LoginResponse, DiscoverAPIFailure>,
         file: StaticString = #filePath,
         line: UInt = #line
-    ) {
-        guard case .failure(.unexpected(let errorCode, _, _)) = result else {
+    ) throws {
+        guard case .failure(.unexpected(let errorCode, _, let underlyingError)) = result else {
             Issue.record("Expected discover unexpected failure, got \(result)")
             return
         }
-        #expect(errorCode == .unknown)
+        try assertAPIUnexpectedResponseError(errorCode: errorCode, underlyingError: underlyingError, statusCode: 206)
     }
 
     private func assertDiscoverUnexpectedFailure(
@@ -510,12 +528,38 @@ struct LoginDiscoverAPIImplementationMappingTests {
         _ result: APIResult<LoginResponse, LoginAPIFailure>,
         file: StaticString = #filePath,
         line: UInt = #line
-    ) {
-        guard case .failure(.unexpected(let errorCode, _, _)) = result else {
+    ) throws {
+        guard case .failure(.unexpected(let errorCode, _, let underlyingError)) = result else {
             Issue.record("Expected login unexpected failure, got \(result)")
             return
         }
-        #expect(errorCode == .unknown)
+        try assertAPIUnexpectedResponseError(errorCode: errorCode, underlyingError: underlyingError, statusCode: 206)
+    }
+
+    private func assertDiscoverZeroAuthRequirements(
+        _ result: APIResult<LoginResponse, DiscoverAPIFailure>,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        guard case .success(.authRequired(let authRequired)) = result else {
+            Issue.record("Expected discover auth required response, got \(result)")
+            return
+        }
+        #expect(authRequired.authRequirements.targetScore == 0)
+        #expect(authRequired.authRequirements.operations.map(\.score) == [0])
+    }
+
+    private func assertLoginZeroAuthRequirements(
+        _ result: APIResult<LoginResponse, LoginAPIFailure>,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        guard case .success(.authRequired(let authRequired)) = result else {
+            Issue.record("Expected login auth required response, got \(result)")
+            return
+        }
+        #expect(authRequired.authRequirements.targetScore == 0)
+        #expect(authRequired.authRequirements.operations.map(\.score) == [0])
     }
 
     private func assertLoginUnexpectedFailure(

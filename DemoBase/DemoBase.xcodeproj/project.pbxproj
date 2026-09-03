@@ -113,7 +113,7 @@
 			mainGroup = 32E5DECA2F68301600B2BEDD;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				325637CF2F8E4E9800A16E52 /* XCLocalSwiftPackageReference "../.." */,
+				325637CF2F8E4E9800A16E52 /* XCLocalSwiftPackageReference ".." */,
 				32B900012FA4000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -229,7 +229,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -334,7 +333,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -374,9 +372,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		325637CF2F8E4E9800A16E52 /* XCLocalSwiftPackageReference "../.." */ = {
+		325637CF2F8E4E9800A16E52 /* XCLocalSwiftPackageReference ".." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../..;
+			relativePath = ..;
 		};
 /* End XCLocalSwiftPackageReference section */
 

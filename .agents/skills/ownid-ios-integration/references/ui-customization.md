@@ -13,8 +13,8 @@ Primary source docs:
 
 Working examples:
 
-- `../../../../Demo/DemoAdvanced/App/Views/Flows/Boost/`
-- `../../../../Demo/DemoAdvanced/App/Views/Ops/`
+- `../../../../DemoAdvanced/App/Views/Flows/Boost/`
+- `../../../../DemoAdvanced/App/Views/Ops/`
 
 ## Contents
 
@@ -33,7 +33,7 @@ Pick the narrowest SDK integration layer that matches the app requirement.
 | --- | --- | --- |
 | Make SDK SwiftUI match app appearance | `OwnIDTheme`, `OwnIDColors`, `theme:` parameters, `.ownIDTheme(...)` for SDK-hosted UI | Use semantic color tokens and OwnID theme APIs. |
 | Change Boost widget text for one screen | `BoostWidgetStrings` on the widget | Prefer SDK localization for global language behavior. |
-| Force SDK UI language | `languages` during initialization or `OwnID.setLanguage(...)` | BCP 47 tags. This switches from automatic system language tracking to explicit tags. |
+| Force SDK UI language | `languages` during initialization or `OwnID.setLanguage(...)` | Language codes with optional regions. This switches from automatic system language tracking to explicit values. |
 | Replace widget icon/checkmark/spinner/trailing text | Boost widget modifiers/slots | The widget still owns throttling, flow state, callbacks, and accessibility label source. |
 | Put supported operation UI inside app layout/dialog/sheet | `appHostedComponent` plus `OwnIDOperationView` | Supported for login ID collection, email verification, and phone verification. |
 
@@ -191,8 +191,9 @@ Preserve these behavior contracts when replacing built-in content:
   UI errors from `errorTextProvider` or the current SDK UI error.
 - Email/phone verification: accept/normalize OTP digits, submit through the UI
   state's `onCodeEntered` only when required length is reached and the operation
-  is not busy, clear input on visible errors, and invoke resend, cancel, and
-  "not you" only from the matching user action.
+  is not busy, reset challenge-scoped input when `state.challenge.challengeID`
+  changes, clear input on visible errors, and invoke resend, cancel, and "not
+  you" only from the matching user action.
 - Initial focus: request it only when `isReadyForInitialFocus` is true,
   especially in sheets/dialogs.
 

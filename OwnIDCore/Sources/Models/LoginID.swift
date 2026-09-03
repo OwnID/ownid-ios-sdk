@@ -19,10 +19,12 @@ public struct LoginID: Codable, Sendable, Equatable, Hashable {
 }
 
 extension LoginID: CustomStringConvertible {
-    /// A debug description with the identifier masked according to ``type``.
+    /// A diagnostic description with the identifier masked according to ``type``.
     ///
-    /// Email and phone-number values are masked only when they match the helper's expected shape. Other identifiers are
-    /// trimmed before masking. Use ``id`` when the exact value is required.
+    /// Recognized email local parts of one to three characters and phone numbers of two to six digits are replaced with
+    /// `***`; the email domain and an optional leading `+` remain visible. Longer recognized values are partially
+    /// masked, while unrecognized values are returned unchanged. Other identifier types are trimmed before masking.
+    /// Use ``id`` when the exact value is required.
     public var description: String {
         var maskedId = id
         switch type {
@@ -48,7 +50,7 @@ public enum LoginIDType: String, Codable, Sendable, CaseIterable {
 
     private static let classificationRegexes: [LoginIDType: NSRegularExpression] = [
         .email: try! NSRegularExpression(pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"),
-        .phoneNumber: try! NSRegularExpression(pattern: "^\\+?[1-9]\\d{1,14}$"),
+        .phoneNumber: try! NSRegularExpression(pattern: "^\\+?[1-9][0-9]{6,14}$"),
         .userName: try! NSRegularExpression(pattern: "^(?=.*\\S).*$"),
         .credentialID: try! NSRegularExpression(pattern: "^(?=.*\\S).*$"),
         .anonymous: try! NSRegularExpression(pattern: "^(?=.*\\S).*$"),
@@ -60,6 +62,10 @@ public enum LoginIDType: String, Codable, Sendable, CaseIterable {
     /// The regex is used to infer a type from a raw login ID and as the validation fallback when
     /// ``LoginIDConfiguration/validationRegexes`` has no override for this type. Types without type-specific syntax use
     /// a non-blank value check.
+    ///
+    /// For `.phoneNumber`, the default accepts an optional ASCII `+` followed by 7–15 ASCII digits whose first digit is
+    /// `1` through `9`. Classification does not trim or normalize input. Configured regexes override typed validation,
+    /// but not raw type inference.
     public var classificationRegex: NSRegularExpression {
         Self.classificationRegexes[self]!
     }
@@ -106,6 +112,11 @@ public struct User: Codable, Sendable {
     public let loginID: LoginID
     public let authMethod: AuthMethod
 
+    private enum CodingKeys: String, CodingKey {
+        case loginID = "loginId"
+        case authMethod
+    }
+
     public init(loginID: LoginID, authMethod: AuthMethod) {
         self.loginID = loginID
         self.authMethod = authMethod
@@ -150,7 +161,7 @@ public struct LoginIDConfiguration: Sendable {
 ///
 /// `Codable` uses Swift's synthesized enum representation for app-owned serialization. It is not the backend wire
 /// response shape used by SDK network calls.
-public enum LoginResponse: Codable, Sendable, CustomStringConvertible {
+public enum LoginResponse: Codable, Sendable, Equatable, CustomStringConvertible {
     case success(Success)
     case authRequired(AuthRequired)
     case accountNotFound(AccountNotFound)
@@ -239,8 +250,6 @@ public enum LoginResponse: Codable, Sendable, CustomStringConvertible {
 }
 
 /// Describes the operations required to reach the authentication target score.
-///
-/// The initializer stores values as supplied and does not enforce non-negative scores or sort ``operations``.
 public struct AuthRequirements: Codable, Sendable, Hashable, CustomStringConvertible {
     public let targetScore: Int
     public let operations: [OperationRequirement]
@@ -255,11 +264,17 @@ public struct AuthRequirements: Codable, Sendable, Hashable, CustomStringConvert
         self.operations = operations
     }
 
-    /// Returns `true` when the sum of all operation scores meets or exceeds the ``targetScore``.
+    /// Returns whether the available authentication operations satisfy the authentication requirements.
     public func isTargetScoreAchievable() -> Bool {
         if targetScore <= 0 { return true }
-        if operations.isEmpty { return false }
-        return operations.reduce(0) { $0 + $1.score } >= targetScore
+
+        var remaining = targetScore
+        for operation in operations {
+            if operation.score <= 0 { continue }
+            if operation.score >= remaining { return true }
+            remaining -= operation.score
+        }
+        return false
     }
 
     public var description: String {

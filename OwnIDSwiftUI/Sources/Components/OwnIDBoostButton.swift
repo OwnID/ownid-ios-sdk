@@ -64,7 +64,8 @@ public struct OwnIDBoostButton<IconButton: View, OrText: View, Checkmark: View>:
     ///   - theme: Optional OwnID theme for this button. When `nil`, the button uses the current OwnID theme.
     ///   - widgetStrings: Optional explicit strings used for the button label, the "or" text, and accessibility.
     ///     When `nil`, the button starts from ``BoostWidgetStrings/default`` and automatically uses localized widget
-    ///     strings for `instanceName` when they become available.
+    ///     strings for `instanceName` when they become available. A provider `nil` update keeps the latest strings;
+    ///     reinitializing or destroying the instance resets the button to the default until new strings arrive.
     ///   - iconButton: Custom interactive button content. Apply the received accessibility label to the control.
     ///   - orText: Custom "or" separator content.
     ///   - checkmark: Custom completion badge content.
@@ -176,7 +177,8 @@ extension OwnIDBoostButton where IconButton == OwnIDIconButtonView<RoundedRectan
     ///     ``EnvironmentValues/ownIDTheme`` or captures the current SwiftUI color scheme and primary accent color.
     ///   - widgetStrings: Optional explicit strings. When omitted, the button starts from
     ///     ``BoostWidgetStrings/default`` and then uses localized widget strings for `instanceName` when they become
-    ///     available.
+    ///     available. A provider `nil` update keeps the latest strings; reinitializing or destroying the instance
+    ///     resets the button to the default until new strings arrive.
     public init(
         onClick: @escaping () -> Void,
         isBusy: Bool,
@@ -299,14 +301,13 @@ extension View {
 
                     activeStringsTask?.cancel()
                     activeStringsTask = nil
+                    resolvedWidgetStrings.wrappedValue = nil
 
                     guard let instanceContainer else {
-                        resolvedWidgetStrings.wrappedValue = nil
                         continue
                     }
 
                     guard let stringsProvider = instanceContainer.getOrNil(type: (any BoostWidgetStringsProvider).self) else {
-                        resolvedWidgetStrings.wrappedValue = nil
                         instanceContainer.getOrNil(type: OwnIDLogRouter.self)?.logW(
                             source: Self.self,
                             prefix: "body",

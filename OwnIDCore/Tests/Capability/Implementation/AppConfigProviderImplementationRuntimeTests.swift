@@ -3,7 +3,7 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: CACHE-RUNTIME-010, CACHE-RUNTIME-020, CACHE-RUNTIME-030, CACHE-RUNTIME-050, CACHE-RUNTIME-070
+// Covers: CACHE-RUNTIME-010, CACHE-RUNTIME-020, CACHE-RUNTIME-030, CACHE-RUNTIME-050, CACHE-RUNTIME-070, CFG-RUNTIME-130
 @Suite(.serialized)
 struct AppConfigProviderImplementationRuntimeTests {
 
@@ -161,7 +161,7 @@ struct AppConfigProviderImplementationRuntimeTests {
         #expect(await network.requestCount == 1)
     }
 
-    @Test func `Shutdown cancels active network monitor and background timers`() async throws {
+    @Test func `Instance task-scope shutdown cancels active network monitor`() async throws {
         let failureURL = try #require(URL(string: "https://app-config-runtime.ownid.test/shutdown-network-monitor"))
         let monitor = RecordingAppConfigPathMonitor()
         let harness = try Self.makeHarness(
@@ -189,36 +189,53 @@ struct AppConfigProviderImplementationRuntimeTests {
         #expect(await harness.provider.isNetworkMonitoringActiveForTest() == false)
     }
 
-    @Test func `Deinit cancels active network monitor and background timers`() async throws {
-        let failureURL = try #require(URL(string: "https://app-config-runtime.ownid.test/deinit-network-monitor"))
-        let monitor = RecordingAppConfigPathMonitor()
-        var harness: AppConfigProviderRuntimeHarness? = try Self.makeHarness(
-            network: ScriptedAppConfigNetwork([
-                .failure(.networkError(NetworkResponse.Fail.NetworkError(url: failureURL, error: URLError(.notConnectedToInternet))))
-            ]),
-            bootstrapTimeoutNanoseconds: 0,
-            retryScheduleSeconds: [300],
-            pathMonitorFactory: { monitor }
+    @Test func `AppConfig releases an externally supplied network without invalidating its app owned session`() async throws {
+        let externalDelegate = AppConfigSessionInvalidationProbe()
+        let externalSession = URLSession(configuration: .ephemeral, delegate: externalDelegate, delegateQueue: nil)
+        let shutdownToken = ShutdownToken()
+        let externalTaskScope = TaskScope(shutdownToken: shutdownToken)
+        var externalNetwork: ExternalAppConfigNetwork? = ExternalAppConfigNetwork(session: externalSession)
+        let externalNetworkReference = WeakReference(externalNetwork)
+        var externalProvider: AppConfigProviderImpl? = try Self.makeSessionOwnershipProvider(
+            taskScope: externalTaskScope,
+            shutdownToken: shutdownToken,
+            networkOverride: externalNetwork
         )
-        let cacheFileURL = try #require(harness?.cacheFileURL)
-        let providerReference = WeakReference(harness?.provider)
-        defer { try? FileManager.default.removeItem(at: cacheFileURL) }
+        let externalProviderReference = WeakReference(externalProvider)
 
-        do {
-            let provider = try #require(harness?.provider)
-            let config = try await provider.getOrFetchConfig()
-            #expect(config == .default)
-        }
-        try await withTestTimeout("app config monitor start before deinit") {
-            await monitor.waitForStart()
-        }
+        externalTaskScope.shutdown()
+        externalTaskScope.shutdown()
 
-        harness = nil
+        #expect(externalProviderReference.value != nil)
+        #expect(externalNetworkReference.value != nil)
+        #expect(externalDelegate.invalidationCount == 0)
+        #expect((externalSession.delegate as AnyObject?) === externalDelegate)
 
-        try await withTestTimeout("app config monitor cancel on deinit") {
-            await monitor.waitForCancelCount(1)
+        externalProvider = nil
+
+        try await withTestTimeout("externally supplied AppConfig provider release") {
+            while externalProviderReference.value != nil {
+                try await Task.sleep(nanoseconds: 10_000_000)
+            }
         }
-        #expect(providerReference.value == nil)
+        #expect(externalProviderReference.value == nil)
+        #expect(externalNetworkReference.value != nil)
+        #expect(externalDelegate.invalidationCount == 0)
+        #expect((externalSession.delegate as AnyObject?) === externalDelegate)
+
+        externalNetwork = nil
+
+        try await withTestTimeout("externally supplied AppConfig network release") {
+            while externalNetworkReference.value != nil {
+                try await Task.sleep(nanoseconds: 10_000_000)
+            }
+        }
+        #expect(externalNetworkReference.value == nil)
+        #expect(externalDelegate.invalidationCount == 0)
+
+        externalSession.invalidateAndCancel()
+        try await externalDelegate.waitForInvalidation()
+        #expect(externalDelegate.invalidationCount == 1)
     }
 
     private static func makeHarness(
@@ -233,7 +250,8 @@ struct AppConfigProviderImplementationRuntimeTests {
         let rootURL = try #require(URL(string: "https://app-config-runtime.ownid.test/\(appID)"), sourceLocation: sourceLocation)
         let configuration = try OwnIDConfigurationImpl(appID: appID, env: .uat, region: .eu, rootURL: rootURL.absoluteString)
         let loginIDConfiguration = LoginIDConfigurationProviderImpl(initialConfiguration: .default)
-        let taskScope = TaskScope(shutdownToken: ShutdownToken())
+        let shutdownToken = ShutdownToken()
+        let taskScope = TaskScope(shutdownToken: shutdownToken)
         let cacheFileURL = Self.cacheFileURL(for: configuration)
         try? FileManager.default.removeItem(at: cacheFileURL)
 
@@ -247,6 +265,7 @@ struct AppConfigProviderImplementationRuntimeTests {
                 configuration: configuration,
                 loginIdConfigurationProvider: loginIDConfiguration,
                 taskScope: taskScope,
+                shutdownToken: shutdownToken,
                 logger: logger,
                 interceptor: nil,
                 networkOverride: network,
@@ -264,6 +283,7 @@ struct AppConfigProviderImplementationRuntimeTests {
                 configuration: configuration,
                 loginIdConfigurationProvider: loginIDConfiguration,
                 taskScope: taskScope,
+                shutdownToken: shutdownToken,
                 logger: logger,
                 interceptor: nil,
                 networkOverride: network,
@@ -279,6 +299,34 @@ struct AppConfigProviderImplementationRuntimeTests {
             loginIDConfiguration: loginIDConfiguration,
             taskScope: taskScope,
             cacheFileURL: cacheFileURL
+        )
+    }
+
+    private static func makeSessionOwnershipProvider(
+        taskScope: TaskScope,
+        shutdownToken: ShutdownToken,
+        networkOverride: (any NetworkProtocol)? = nil
+    ) throws -> AppConfigProviderImpl {
+        let appID = "SessionOwnership\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+        let configuration = try OwnIDConfigurationImpl(
+            appID: appID,
+            env: .uat,
+            region: .eu,
+            rootURL: "https://app-config-runtime.ownid.test/\(appID)"
+        )
+        return AppConfigProviderImpl(
+            apiBaseURL: try APIBaseURLImpl(configuration: configuration),
+            localInfo: AppConfigProviderLocalInfo(),
+            languageTagsProvider: AppConfigProviderLanguageTagsProvider(),
+            coder: JSONCoderImpl(),
+            configuration: configuration,
+            loginIdConfigurationProvider: nil,
+            taskScope: taskScope,
+            shutdownToken: shutdownToken,
+            logger: nil,
+            interceptor: nil,
+            networkOverride: networkOverride,
+            startBackgroundWork: false
         )
     }
 
@@ -359,11 +407,42 @@ private struct AppConfigProviderRuntimeHarness {
     }
 }
 
-private final class WeakReference<Value: AnyObject> {
+private final class WeakReference<Value: AnyObject>: @unchecked Sendable {
     weak var value: Value?
 
     init(_ value: Value?) {
         self.value = value
+    }
+}
+
+private final class AppConfigSessionInvalidationProbe: NSObject, URLSessionDelegate, @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    private let invalidations = AsyncSignalRecorder<Void>()
+
+    var invalidationCount: Int {
+        lock.withLock { count }
+    }
+
+    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: (any Error)?) {
+        lock.withLock { count += 1 }
+        invalidations.append(())
+    }
+
+    func waitForInvalidation() async throws {
+        _ = try await invalidations.waitForFirst("external AppConfig session invalidation") { _ in true }
+    }
+}
+
+private final class ExternalAppConfigNetwork: NetworkProtocol, @unchecked Sendable {
+    private let session: URLSession
+
+    init(session: URLSession) {
+        self.session = session
+    }
+
+    func run(_ request: NetworkRequest) async throws -> NetworkResponse {
+        .fail(.networkError(.init(url: request.url, error: URLError(.notConnectedToInternet))))
     }
 }
 
@@ -437,7 +516,8 @@ private actor ScriptedAppConfigNetwork: NetworkProtocol {
     private var routes: [ScriptedAppConfigNetworkRoute]
     private var requests: [URLRequest] = []
     private var requestWaiters: [(Int, CheckedContinuation<Void, Never>)] = []
-    private var stalledContinuations: [CheckedContinuation<NetworkResponse, any Error>] = []
+    private var stalledContinuationOrder: [UUID] = []
+    private var stalledContinuations: [UUID: CheckedContinuation<NetworkResponse, any Error>] = [:]
 
     init(_ routes: [ScriptedAppConfigNetworkRoute]) {
         self.routes = routes
@@ -468,8 +548,18 @@ private actor ScriptedAppConfigNetwork: NetworkProtocol {
             return .fail(failure)
 
         case .stallUntilResolved:
-            return try await withCheckedThrowingContinuation { continuation in
-                stalledContinuations.append(continuation)
+            let stallID = UUID()
+            return try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { continuation in
+                    guard !Task.isCancelled else {
+                        continuation.resume(throwing: CancellationError())
+                        return
+                    }
+                    stalledContinuationOrder.append(stallID)
+                    stalledContinuations[stallID] = continuation
+                }
+            } onCancel: {
+                Task { await self.cancelStall(stallID) }
             }
         }
     }
@@ -482,8 +572,9 @@ private actor ScriptedAppConfigNetwork: NetworkProtocol {
     }
 
     func resolveNextStall(with route: ScriptedAppConfigNetworkRoute) {
-        guard !stalledContinuations.isEmpty else { return }
-        let continuation = stalledContinuations.removeFirst()
+        guard let stallID = stalledContinuationOrder.first else { return }
+        stalledContinuationOrder.removeFirst()
+        guard let continuation = stalledContinuations.removeValue(forKey: stallID) else { return }
         switch route {
         case .success(let body):
             continuation.resume(
@@ -501,8 +592,15 @@ private actor ScriptedAppConfigNetwork: NetworkProtocol {
             continuation.resume(returning: .fail(failure))
 
         case .stallUntilResolved:
-            stalledContinuations.insert(continuation, at: 0)
+            stalledContinuationOrder.insert(stallID, at: 0)
+            stalledContinuations[stallID] = continuation
         }
+    }
+
+    private func cancelStall(_ stallID: UUID) {
+        guard let continuation = stalledContinuations.removeValue(forKey: stallID) else { return }
+        stalledContinuationOrder.removeAll { $0 == stallID }
+        continuation.resume(throwing: CancellationError())
     }
 
     private func notifyRequestWaiters() {

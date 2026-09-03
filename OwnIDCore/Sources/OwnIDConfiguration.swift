@@ -16,7 +16,7 @@ public protocol OwnIDConfiguration: Sendable {
     var env: OwnIDEnv { get }
     /// Data-residency region. Defaults to ``OwnIDRegion/us``.
     var region: OwnIDRegion { get }
-    /// Custom HTTPS root URL for OwnID servers.
+    /// Custom HTTPS root URL for OwnID servers; must not contain backslashes.
     var rootURL: String? { get }
 }
 
@@ -103,22 +103,32 @@ internal struct OwnIDConfigurationImpl: OwnIDConfiguration, Decodable, Sendable 
 
     internal init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let appID =
-            try container.decodeIfPresent(String.self, forKey: .appID)
-            ?? container.decodeIfPresent(String.self, forKey: .appId)
-            ?? {
-                let context = DecodingError.Context(codingPath: [], debugDescription: "Required 'appID' or 'appId' key not found.")
-                throw DecodingError.keyNotFound(CodingKeys.appID, context)
-            }()
+        let appID: String
+        if container.contains(.appId), try !container.decodeNil(forKey: .appId) {
+            appID = try container.decode(String.self, forKey: .appId)
+        } else if container.contains(.appID), try !container.decodeNil(forKey: .appID) {
+            appID = try container.decode(String.self, forKey: .appID)
+        } else {
+            let context = DecodingError.Context(codingPath: [], debugDescription: "Required 'appID' or 'appId' key not found.")
+            throw DecodingError.keyNotFound(CodingKeys.appID, context)
+        }
         let env = try container.decodeIfPresent(OwnIDEnv.self, forKey: .env) ?? .prod
         let region = try container.decodeIfPresent(OwnIDRegion.self, forKey: .region) ?? .us
         let rootURL =
-            try container.decodeIfPresent(String.self, forKey: .rootURL)
-            ?? container.decodeIfPresent(String.self, forKey: .rootUrl)
+            if container.contains(.rootUrl), try !container.decodeNil(forKey: .rootUrl) {
+                try container.decodeIfPresent(String.self, forKey: .rootUrl)
+            } else {
+                try container.decodeIfPresent(String.self, forKey: .rootURL)
+            }
         try self.init(appID: appID, env: env, region: region, rootURL: rootURL)
     }
 
     private static func normalizeRootURL(_ rootURL: String) throws -> String {
+        guard !rootURL.contains("\\") else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(codingPath: [], debugDescription: "Root URL must not contain backslashes")
+            )
+        }
         guard var components = URLComponents(string: rootURL) else {
             throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Invalid root URL"))
         }
@@ -130,6 +140,9 @@ internal struct OwnIDConfigurationImpl: OwnIDConfiguration, Decodable, Sendable 
         }
         guard components.host != nil else {
             throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Invalid root URL"))
+        }
+        if let port = components.port, !(1...65535).contains(port) {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Invalid root URL port"))
         }
         components.query = nil
         components.fragment = nil
@@ -154,13 +167,13 @@ public final class OwnIDConfigurationBuilder {
     public var env: OwnIDEnv = .prod
     /// Data-residency region (``OwnIDRegion/us`` or ``OwnIDRegion/eu``). Defaults to ``OwnIDRegion/us``.
     public var region: OwnIDRegion = .us
-    /// Custom HTTPS root URL for OwnID servers.
+    /// Custom HTTPS root URL for OwnID servers; must not contain backslashes.
     public var rootURL: String? = nil
     /// Optional root SDK language override applied during initialization.
     ///
-    /// When set to a non-empty array, these BCP 47 tags replace system language tracking for the process until
-    /// ``OwnID/setLanguage(_:)`` is called or the process restarts. An empty array keeps or restores system language
-    /// tracking. Leaving this `nil` keeps the current root language mode unchanged.
+    /// When set to a non-empty array, these language codes with optional regions replace automatic language selection
+    /// for the process until ``OwnID/setLanguage(_:)`` is called or the process restarts. An empty array restores
+    /// automatic language selection. Leaving this `nil` keeps the current root language mode unchanged.
     public var languages: [String]? = nil
 
     internal init() {}
@@ -180,16 +193,7 @@ public final class OwnIDConfigurationBuilder {
 
 /// Builder that creates ``OwnIDConfiguration`` from a JSON string.
 ///
-/// Use this when configuration is provided at runtime. Empty JSON, malformed JSON, or invalid values make
-/// ``OwnID/initializeFromJSON(instanceName:block:)`` log the build failure and leave any current named instance
-/// unchanged.
-///
-/// The JSON object accepts "appID" or "appId" for the app ID, "env", "region", and "rootURL" or "rootUrl". Values
-/// for ``OwnIDEnv`` and ``OwnIDRegion`` are decoded case-insensitively. Unknown keys are ignored.
-///
-/// The optional "languages" key must be an array of BCP 47 language-tag strings. A non-empty array sets an explicit
-/// root language override, an empty array keeps or restores system language tracking, and omitting the key keeps the
-/// current root language mode unchanged.
+/// Use this when configuration is provided at runtime.
 public final class OwnIDJSONConfigurationBuilder {
     /// JSON string containing the configuration.
     public var json = ""
@@ -231,16 +235,8 @@ public final class OwnIDJSONConfigurationBuilder {
 
 /// Builder that creates ``OwnIDConfiguration`` from a configuration file.
 ///
-/// Use this for plist-backed configuration, for example per-scheme files packaged with your app bundle. The default
-/// file name is OwnIDConfig.plist located in the main bundle. Missing, empty, unreadable, or invalid files make
-/// ``OwnID/initializeFromFile(instanceName:block:)`` log the build failure and leave any current named instance
-/// unchanged.
-///
-/// The plist must contain "appID" or "appId" for the app ID. It accepts "env", "region", and "rootURL" or "rootUrl";
-/// values for ``OwnIDEnv`` and ``OwnIDRegion`` are decoded case-insensitively, and unknown keys are ignored. The
-/// optional "languages" key must be an array of BCP 47 language-tag strings. A non-empty languages array sets an
-/// explicit root language override, an empty array keeps or restores system language tracking, and omitting the key
-/// keeps the current root language mode unchanged.
+/// Use this for plist-backed configuration, for example per-scheme files packaged with your app bundle.
+/// The default file name is OwnIDConfig.plist located in the main bundle.
 public final class OwnIDFileConfigurationBuilder {
     /// Custom plist file URL. Defaults to OwnIDConfig.plist in the main bundle.
     public var fileURL: URL? = nil
@@ -283,6 +279,10 @@ extension OwnIDConfiguration {
         "\(appID).server\(toStringPrefix()).ownid\(region.toStringSuffix()).com"
     }
 
+    internal func instanceIdentity() -> String {
+        "\(env().rawValue)_\(region.rawValue)_\(appID)"
+    }
+
     internal func storageFileName() -> String {
         "\(env().rawValue.lowercased())_\(region.rawValue.lowercased())_\(appID)"
     }
@@ -304,7 +304,7 @@ extension Dictionary where Key == String, Value == Any {
     }
 
     fileprivate func extractLanguages() throws -> [String]? {
-        guard let rawLanguages = self["languages"] else {
+        guard let rawLanguages = self["languages"], !(rawLanguages is NSNull) else {
             return nil
         }
         guard let languages = rawLanguages as? [String] else {

@@ -20,7 +20,7 @@ import Foundation
 ///   - allowCredentials: Optional allowlist of credential descriptors; when absent, discoverable credentials may be used.
 ///   - userVerification: Preferred user-verification policy for the authenticator.
 ///   - timeout: Timeout for both the server challenge and the client UI.
-public struct AssertionOptions: Codable, Sendable, CustomStringConvertible {
+public struct AssertionOptions: Codable, Sendable, Equatable, CustomStringConvertible {
     private enum CodingKeys: String, CodingKey, Sendable {
         case challenge
         case rpID = "rpId"
@@ -389,7 +389,7 @@ public struct AttestationResult: Codable, Sendable, CustomStringConvertible {
 ///   - id: Base64url-encoded credential ID.
 ///   - type: Credential type for the descriptor.
 ///   - transports: Optional authenticator transport hints.
-public struct PublicKeyCredentialDescriptor: Codable, Sendable, CustomStringConvertible {
+public struct PublicKeyCredentialDescriptor: Codable, Sendable, Equatable, CustomStringConvertible {
     public let id: String
     public let type: CredentialType
     public let transports: [TransportType]?
@@ -407,15 +407,25 @@ public struct PublicKeyCredentialDescriptor: Codable, Sendable, CustomStringConv
 
 /// Server response after a successful attestation.
 ///
-/// This is an OwnID server response, not a WebAuthn provider payload. ``description`` masks ``ownIdData``.
-///
-/// - Parameters:
-///   - proofToken: Proof token for subsequent enrollment.
-///   - ownIdData: Value to store or forward to your vendor backend. Structured values remain JSON text. If the server
-///     returns a plain string, this property contains that string value.
+/// This is an OwnID server response, not a WebAuthn provider payload. Use ``proofToken`` for subsequent enrollment and
+/// store or forward ``ownIdData`` to your vendor backend. Structured values remain JSON text; plain strings remain
+/// unchanged.
+/// Its `Codable` conformance supports SDK-local value serialization and does not describe the OwnID HTTP response wire shape.
+/// ``description`` masks ``ownIdData``.
 public struct AttestationResponse: Codable, Sendable, CustomStringConvertible {
     public let proofToken: ProofToken
     public let ownIdData: String
+
+    /// Creates an attestation response.
+    ///
+    /// - Parameters:
+    ///   - proofToken: Proof token for subsequent enrollment.
+    ///   - ownIdData: Value to store or forward to your vendor backend. Structured values remain JSON text; plain
+    ///     strings remain unchanged.
+    public init(proofToken: ProofToken, ownIdData: String) {
+        self.proofToken = proofToken
+        self.ownIdData = ownIdData
+    }
 
     public var description: String {
         "AttestationResponse(proofToken=\(proofToken), ownIdData='*')"
