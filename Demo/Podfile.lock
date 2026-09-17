@@ -86,8 +86,8 @@ SPEC CHECKSUMS:
   GoogleUtilities: 4f2618a4a1e762a1ee134a1e2323bba9843e06da
   GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  ownid-core-ios-sdk: d0130153675de9ed6ce7575ca1a61a89f4eaf0b7
-  ownid-gigya-ios-sdk: 731ce21fce92e9a6242db773563ecaa274a40a97
+  ownid-core-ios-sdk: e01eb1da72984f535f61a376d114e50e64875952
+  ownid-gigya-ios-sdk: ceaf90d1daf7ad13f35ec83890ddbd5f13b01a04
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
