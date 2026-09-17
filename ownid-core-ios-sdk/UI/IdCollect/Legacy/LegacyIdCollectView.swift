@@ -26,7 +26,7 @@ extension OwnID.UISDK.IdCollect {
         @ObservedObject var store: Store<ViewState, Action>
         @ObservedObject private var viewModel: ViewModel
         @State private var focusedField: FocusField?
-        @State private var loginId = ""
+        @State private var loginId: String
         @State var presentList = false
         @State var selectedPhoneCode: OwnID.CoreSDK.PhoneCode?
         private let loginIdSettings: OwnID.CoreSDK.LoginIdSettings

@@ -27,7 +27,7 @@ The [OwnID](https://www.ownid.com/) iOS SDK is a client library offering a secur
 
 Swift Package Manager is the recommended installation method for OwnID iOS SDK v3.
 
-Version 3 is distributed from a single repository tag, while its SDK components keep independent versions. Repository tag `3.11.0` contains OwnID Core `3.11.0` and OwnID Gigya `3.10.0`. Use the repository tag from the GitHub release when declaring the package; do not substitute an individual component's runtime version.
+Version 3 is distributed from a single repository tag, while its SDK components keep independent versions. Repository tag `3.11.1` contains OwnID Core `3.11.1` and OwnID Gigya `3.10.0`. Use the repository tag from the GitHub release when declaring the package; do not substitute an individual component's runtime version.
 
 ### Swift Package Manager
 
@@ -73,7 +73,7 @@ target "YourApp" do
 end
 ```
 
-If your app uses the Gigya SDK, declare both pods from the same repository tag so Gigya's exact Core dependency resolves from that release. For repository tag `3.11.0`, this installs OwnID Gigya `3.10.0` together with OwnID Core `3.11.0`:
+If your app uses the Gigya SDK, declare both pods from the same repository tag so Gigya's exact Core dependency resolves from that release. For repository tag `3.11.1`, this installs OwnID Gigya `3.10.0` together with OwnID Core `3.11.1`:
 
 ```ruby
 target "YourApp" do

@@ -58,7 +58,7 @@ pod 'ownid-gigya-ios-sdk',
     :tag => '<version>'
 ```
 
-The Git tag identifies the repository release, while Core and Gigya keep independent component versions. Repository tag `3.11.0` contains OwnID Core `3.11.0` and OwnID Gigya `3.10.0`.
+The Git tag identifies the repository release, while Core and Gigya keep independent component versions. Repository tag `3.11.1` contains OwnID Core `3.11.1` and OwnID Gigya `3.10.0`.
 
 ### Swift Package Manager
 
