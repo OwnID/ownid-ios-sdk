@@ -20,5 +20,5 @@ Pod::Spec.new do |spec|
 
   # Sources & resources
   spec.source_files     = "OwnIDCore/Sources/**/*"
-  spec.resource_bundles = { "OwnIDCore" => ["OwnIDCore/Resources/**/*"] }
+  spec.resource_bundles = { "OwnIDCore" => ["OwnIDCore/Resources/**/*", "sdk-version.xcconfig"] }
 end

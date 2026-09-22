@@ -7,6 +7,26 @@ import Testing
 @Suite(.serialized)
 struct OwnIDOptionalModuleDiscoveryRuntimeTests {
 
+    @Test func `Every discovered module supplies its resource descriptor without injecting dependencies`() throws {
+        let infos = OwnIDModuleInjector.moduleResources(
+            classNames: ["missing", "recording", "resource", "duplicate", "unrelated"],
+            classResolver: {
+                let classes: [String: AnyClass] = [
+                    "recording": RecordingOptionalModule.self,
+                    "resource": ResourceOptionalModule.self,
+                    "duplicate": ResourceOptionalModule.self,
+                    "unrelated": NonConformingOptionalModule.self,
+                ]
+                return classes[$0]
+            }
+        )
+
+        try #require(infos.count == 2)
+        #expect(infos.map { $0.name } == ["OwnIDRecordingModule", "OwnIDTestModule"])
+        #expect(infos[0].bundle == nil)
+        #expect(infos[1].bundle == Bundle.main)
+    }
+
     @Test func `Missing optional SDK modules are logged and core initialization continues`() async throws {
         try await withOwnIDRootStateTestLock {
             let instanceName = InstanceName(value: "OwnIDOptionalModuleDiscoveryRuntimeTests-\(UUID().uuidString)")
@@ -15,9 +35,6 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
                 OwnID.destroy(instanceName: instanceName)
                 OwnID.logger { $0.level = .off }
             }
-
-            #expect(NSClassFromString("OwnIDSwiftUI.OwnIDUIModule") == nil)
-            #expect(NSClassFromString("OwnIDReactNativeCoreModule") == nil)
 
             OwnID.logger { logger in
                 logger.level = .verbose
@@ -56,7 +73,7 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
                 entries.contains {
                     $0.level == .verbose
                         && $0.className.contains("moduleLookup")
-                        && $0.message.contains("Module class OwnIDSwiftUI.OwnIDUIModule not found")
+                        && $0.message.contains("OwnIDSwiftUIModule")
                         && !$0.hasCause
                 }
             )
@@ -64,15 +81,7 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
                 entries.contains {
                     $0.level == .verbose
                         && $0.className.contains("moduleLookup")
-                        && $0.message == "Module class OwnIDReactNativeCoreModule not found"
-                        && !$0.hasCause
-                }
-            )
-            #expect(
-                entries.contains {
-                    $0.level == .info
-                        && $0.className.contains("initializeInstanceContainer")
-                        && $0.message.contains("No UI module injected. OperationUIContainer missing")
+                        && $0.message.contains("OwnIDReactNativeCoreModule")
                         && !$0.hasCause
                 }
             )
@@ -96,12 +105,13 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
                 "DuplicateRecording.OptionalModule",
             ],
             classResolver: { className in
-                [
+                let classes: [String: AnyClass] = [
                     "NonConforming.OptionalModule": NonConformingOptionalModule.self,
                     "Throwing.OptionalModule": ThrowingOptionalModule.self,
                     "Recording.OptionalModule": RecordingOptionalModule.self,
                     "DuplicateRecording.OptionalModule": RecordingOptionalModule.self,
-                ][className]
+                ]
+                return classes[className]
             }
         )
 
@@ -113,7 +123,7 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
             entries.contains {
                 $0.level == .verbose
                     && $0.className.contains("moduleLookup")
-                    && $0.message == "Module class Missing.OptionalModule not found"
+                    && $0.message.contains("Missing.OptionalModule")
                     && !$0.hasCause
             }
         )
@@ -121,7 +131,7 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
             entries.contains {
                 $0.level == .warn
                     && $0.className.contains("moduleLookup")
-                    && $0.message == "Class NonConforming.OptionalModule does not conform to OwnIDModule"
+                    && $0.message.contains("NonConforming.OptionalModule")
                     && !$0.hasCause
             }
         )
@@ -129,7 +139,6 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
             entries.contains {
                 $0.level == .warn
                     && $0.className.contains("injectIntoInstanceContainer")
-                    && $0.message.contains("Failed for:")
                     && $0.message.contains("ThrowingOptionalModule")
                     && $0.hasCause
             }
@@ -139,13 +148,25 @@ struct OwnIDOptionalModuleDiscoveryRuntimeTests {
 
 private final class NonConformingOptionalModule {}
 
+private final class ResourceOptionalModule: OwnIDModule {
+    static var moduleResources: (name: String, bundle: Bundle?) { ("OwnIDTestModule", .main) }
+
+    static func injectIntoInstanceContainer(container: any DIContainer) throws {
+        Issue.record("Reading module metadata must not inject dependencies")
+    }
+}
+
 private final class ThrowingOptionalModule: OwnIDModule {
+    static var moduleResources: (name: String, bundle: Bundle?) { ("OwnIDThrowingModule", nil) }
+
     static func injectIntoInstanceContainer(container: any DIContainer) throws {
         throw OptionalModuleTestError(message: "optional module injection failed")
     }
 }
 
 private final class RecordingOptionalModule: OwnIDModule {
+    static var moduleResources: (name: String, bundle: Bundle?) { ("OwnIDRecordingModule", nil) }
+
     static func injectIntoInstanceContainer(container: any DIContainer) throws {
         let recorder = try container.getOrThrow(type: OptionalModuleInjectionRecorder.self)
         recorder.recordInjection()

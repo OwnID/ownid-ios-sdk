@@ -95,11 +95,11 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
                             if let provided = params.loginID {
                                 loginID = provided
                             } else {
-                                do {
+                                do throws(LoginIDResolutionError) {
                                     loginID = try self.context?.loginID(loginIDValidator: self.loginIDValidator)
                                 } catch let error {
                                     if accessToken == nil {
-                                        let failure = (error as! LoginIDResolutionError).toPasskeyAttestationOperationFailure()
+                                        let failure = error.toPasskeyAttestationOperationFailure()
                                         guard await self.isAlive() else { return }
                                         await self.stream.yield(.complete(.failure(failure)))
                                         return

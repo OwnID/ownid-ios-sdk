@@ -2,20 +2,42 @@ import Foundation
 import UIKit
 
 internal final class SignInWithAppleUIImpl: SignInWithAppleUI, @unchecked Sendable {
+    private let uiContextProvider: @Sendable () throws -> any UIContextProvider
     private let provider: @Sendable () throws -> any SignInWithApple
-    private var cached: (any SignInWithApple)? = nil
+    private let logger: OwnIDLogRouter?
+    private var active: [(id: UUID, provider: any SignInWithApple)] = []
 
-    init(provider: @escaping @Sendable () throws -> any SignInWithApple) {
+    init(
+        uiContextProvider: @escaping @Sendable () throws -> any UIContextProvider,
+        provider: @escaping @Sendable () throws -> any SignInWithApple,
+        logger: OwnIDLogRouter?
+    ) {
+        self.uiContextProvider = uiContextProvider
         self.provider = provider
+        self.logger = logger
     }
 
     @MainActor
-    func signIn(clientID: String, nonce: String?, window: UIWindow?) async -> SocialResult {
+    func signIn(clientID: String, nonce: String?) async -> SocialResult {
         do {
             let apple = try provider()
-            self.cached = apple
-            defer { self.cached = nil }
-            return await apple.signIn(params: SignInWithSocialParams(clientID: clientID, nonce: nonce, window: window))
+            let window: UIWindow
+            do {
+                window = try uiContextProvider().current().requireWindow()
+            } catch {
+                logger?.logW(source: self, prefix: #function, message: "UI context resolution failed", cause: error)
+                return .fail(
+                    error: .general("Failed to resolve a presentation window: \(error.localizedDescription)", error.asSendableError())
+                )
+            }
+            let requestID = UUID()
+            self.active.append((requestID, apple))
+            defer {
+                if let index = self.active.firstIndex(where: { $0.id == requestID }) {
+                    self.active.remove(at: index)
+                }
+            }
+            return await apple.signIn(window: window, params: SignInWithSocialParams(clientID: clientID, nonce: nonce))
         } catch let missing as MissingDependencyError {
             return .fail(error: .general("Missing dependency: \(missing.dependencyName)", missing))
         } catch {
@@ -25,6 +47,6 @@ internal final class SignInWithAppleUIImpl: SignInWithAppleUI, @unchecked Sendab
 
     @MainActor
     func cancel() {
-        cached?.cancel()
+        active.last?.provider.cancel()
     }
 }

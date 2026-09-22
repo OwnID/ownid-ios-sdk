@@ -1,5 +1,6 @@
 import AuthenticationServices
 import Foundation
+import UIKit
 
 @available(iOS 16.0, *)
 @MainActor
@@ -49,7 +50,6 @@ private final class ASAuthorizationControllerAdapter: PasskeyAuthorizationContro
 internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable {
     private static let immediateCanceledNoPasskeyThreshold: Duration = .milliseconds(600)
 
-    private let uiContextProvider: any UIContextProvider
     private let logger: OwnIDLogRouter?
     private let diagnosticsProvider: () -> (any PasskeyDiagnostics)?
     private let now: @MainActor () -> ContinuousClock.Instant
@@ -58,6 +58,7 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
     private var continuation: CheckedContinuation<PasskeyResult<any Sendable>, Never>?
     private var authController: (any PasskeyAuthorizationController)?
     private var currentContext: RequestContext?
+    private var window: UIWindow?
 
     private struct RequestContext {
         enum Kind { case attestation, assertion }
@@ -67,14 +68,12 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
     }
 
     init(
-        uiContextProvider: any UIContextProvider,
         logger: OwnIDLogRouter?,
         diagnosticsProvider: @escaping () -> (any PasskeyDiagnostics)? = { nil },
         now: @escaping @MainActor () -> ContinuousClock.Instant = { ContinuousClock().now },
         authorizationControllerFactory: @escaping @MainActor ([ASAuthorizationRequest]) -> any PasskeyAuthorizationController =
             { ASAuthorizationControllerAdapter(authorizationRequests: $0) }
     ) {
-        self.uiContextProvider = uiContextProvider
         self.logger = logger
         self.diagnosticsProvider = diagnosticsProvider
         self.now = now
@@ -82,7 +81,7 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
     }
 
     @MainActor
-    func createCredential(attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
+    func createCredential(window: UIWindow, attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
         guard let challengeData = attestationOptions.challenge.value.decodeBase64UrlSafe() else {
             return .failure(.general("Failed to decode challenge data"))
         }
@@ -121,7 +120,7 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
             logger?.logI(source: self, prefix: #function, message: "setExcludedCredentials is not available on this iOS version")
         }
 
-        let result = await performAuthorization(request: registrationRequest)
+        let result = await performAuthorization(window: window, request: registrationRequest)
         switch result {
         case .success(let value as AttestationResult):
             return .success(value)
@@ -137,7 +136,7 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
     }
 
     @MainActor
-    func getCredential(assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
+    func getCredential(window: UIWindow, assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
         guard let challengeData = assertionOptions.challenge.value.decodeBase64UrlSafe() else {
             return .failure(.general("Failed to decode challenge data"))
         }
@@ -164,7 +163,11 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
             }
         }
 
-        let result = await performAuthorization(request: assertionRequest, options: [.preferImmediatelyAvailableCredentials])
+        let result = await performAuthorization(
+            window: window,
+            request: assertionRequest,
+            options: [.preferImmediatelyAvailableCredentials]
+        )
         switch result {
         case .success(let value as AssertionResult):
             return .success(value)
@@ -186,6 +189,7 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
 
     @MainActor
     private func performAuthorization(
+        window: UIWindow,
         request: ASAuthorizationRequest,
         options: ASAuthorizationController.RequestOptions = []
     ) async -> PasskeyResult<any Sendable> {
@@ -195,10 +199,16 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
 
         let authController = authorizationControllerFactory([request])
         let controllerWrapper = UnsafeSendableWrapper(value: authController)
-        self.authController = authController
 
         return await withTaskCancellationHandler {
-            await withCheckedContinuation { continuation in
+            guard !Task.isCancelled else {
+                return .canceled(.systemError(details: "Operation canceled"))
+            }
+
+            self.authController = authController
+            self.window = window
+
+            return await withCheckedContinuation { continuation in
                 self.continuation = continuation
                 authController.delegate = self
                 authController.presentationContextProvider = self
@@ -224,6 +234,7 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
         continuation = nil
         authController = nil
         currentContext = nil
+        window = nil
     }
 }
 
@@ -244,6 +255,7 @@ extension PasskeyImpl: ASAuthorizationControllerDelegate {
             (controller.authorizationRequests.first is ASAuthorizationPlatformPublicKeyCredentialRegistrationRequest)
             ? "createCredential" : "getCredential"
 
+        let nativeError = error as NSError
         let identifier = authorizationErrorIdentifier(from: error)
         let result: PasskeyResult<any Sendable>
         if let authError = error as? ASAuthorizationError {
@@ -260,11 +272,21 @@ extension PasskeyImpl: ASAuthorizationControllerDelegate {
                 logger?.logI(source: self, prefix: logPrefix, message: "Authorization canceled", cause: error)
                 result = .canceled(.userClose(details: "User canceled authorization"))
             } else {
-                logger?.logW(source: self, prefix: logPrefix, message: "Authorization failed", cause: error)
+                logger?.logW(
+                    source: self,
+                    prefix: logPrefix,
+                    message: "Authorization failed (domain=\(nativeError.domain), code=\(nativeError.code))",
+                    cause: error
+                )
                 result = .failure(.general(error.localizedDescription, error, identifier))
             }
         } else {
-            logger?.logW(source: self, prefix: logPrefix, message: "Authorization failed", cause: error)
+            logger?.logW(
+                source: self,
+                prefix: logPrefix,
+                message: "Authorization failed (domain=\(nativeError.domain), code=\(nativeError.code))",
+                cause: error
+            )
             result = .failure(.general(error.localizedDescription, error, identifier))
         }
         resumeContinuation(with: result)
@@ -358,6 +380,9 @@ extension PasskeyImpl: ASAuthorizationControllerDelegate {
 extension PasskeyImpl: ASAuthorizationControllerPresentationContextProviding {
     @MainActor
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        uiContextProvider.activeWindow() ?? ASPresentationAnchor()
+        guard let window else {
+            preconditionFailure("Passkey presentation requested without a resolved window")
+        }
+        return window
     }
 }

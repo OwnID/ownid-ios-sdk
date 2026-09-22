@@ -18,6 +18,8 @@ Create a fresh bridge for each `WKWebView` session, attach it to trusted origins
 
 ```swift
 import OwnIDCore
+import UIKit
+import WebKit
 
 final class LoginWebViewController: UIViewController {
     private let webView = WKWebView()
@@ -47,7 +49,7 @@ final class LoginWebViewController: UIViewController {
 }
 ```
 
-`attach(...)` returns `nil` on success and [`WebBridgeError`](../../OwnIDCore/Sources/UI/WebBridge/WebBridge.swift) on failure. A bridge instance can attach successfully only once; create a new `WebBridge` for each new `WKWebView` session.
+`attach(...)` returns `nil` on success and [`WebBridgeError`](../../OwnIDCore/Sources/UI/WebBridge/WebBridge.swift) on failure. If an attach attempt fails, correct the cause and retry with the same bridge. After an attach succeeds, that bridge is single-use: `detach()` does not make it attachable again, so create a new `WebBridge` for each new `WKWebView` session.
 
 ## Prerequisites
 
@@ -57,7 +59,7 @@ final class LoginWebViewController: UIViewController {
 
 ## Configuration Checklist
 
-WebBridge attaches native SDK capabilities to an app-owned web session. The bridge captures available plugin instances and injection metadata when it is created and attached; configure only the areas that the hosted page can use.
+WebBridge attaches native SDK capabilities to an app-owned web session. Configure namespace context, providers, and default plugin factories before creating the bridge. Configure that bridge's plugins before attaching it. Changes after those points do not update the active web session. At attachment, the bridge combines explicit origin rules with the latest available server configuration.
 
 | Area | Required when | Details |
 | --- | --- | --- |
@@ -71,7 +73,9 @@ WebBridge attaches native SDK capabilities to an app-owned web session. The brid
 | Session creation | The hosted page requests app session creation. | Register [`sessionCreate`](../setup/providers.md#session-create). |
 | Password authentication | The hosted page uses password authentication. | Register [`passwordAuthenticate`](../setup/providers.md#password-authenticate). |
 
-Provider-backed web actions use app-owned provider capabilities from the SDK scope used to create the bridge. Normally register providers globally during startup with `OwnID.setProviders` before creating the bridge. Use `withProviders` only for a WebBridge session that needs different provider bindings. See [Providers](../setup/providers.md).
+Provider-backed web actions use app-owned provider capabilities from the SDK scope used to create the bridge. Normally register providers globally during startup with `OwnID.setProviders` before creating the bridge. Use `withProviders` only for a WebBridge session that needs different provider bindings; changes to a parent scope after bridge creation do not update that bridge. See [Providers](../setup/providers.md).
+
+For a direct app-owned WebBridge, the attached `WKWebView` is the UI owner; a separately registered `uiContext` provider does not replace that bridge-local presentation context. [Elite Flow](../flows/elite-flow.md) is different because the SDK owns its WebView presentation.
 
 Set session-specific auth input close to the bridge with `withContext`:
 
@@ -85,19 +89,23 @@ let bridge = OwnID.webBridge
 
 ## Attach and Lifecycle
 
-Create a fresh bridge for each app-owned `WKWebView` session. Configure providers, context, and default plugin factories before `create()` because the bridge receives those plugin instances at creation time. Configure bridge-specific plugins through `bridge.plugins` before `attach(...)`; the bridge captures that plugin registry and the effective allowed origins during attachment.
+Create a fresh bridge for each app-owned `WKWebView` session. Configure providers, context, and default plugin factories before `create()`. Configure bridge-specific plugins through `bridge.plugins` before `attach(...)`.
 
-Attach the bridge before loading the trusted page. `attach(...)` returns `nil` on success and the attachment failure as `WebBridgeError` otherwise. A bridge instance can attach successfully only once.
+Attach the bridge before loading the trusted page. `attach(...)` returns `nil` on success and the attachment failure as `WebBridgeError` otherwise. A failed attach does not consume the bridge, so the same instance can be retried after the cause is corrected. A successful attach consumes the bridge permanently; a later attach, including after `detach()`, fails and requires a new bridge.
 
 `attach(...)` must run on the main actor. Retain the bridge while the `WKWebView` session is active, and call `detach()` when the web view is dismissed or no longer used.
 
-WebKit does not scope document-start user scripts to origins. WebBridge validates the main-frame source origin before invoking native plugins.
+WebKit does not scope document-start user scripts to origins. WebBridge validates the source origin and accepts messages only from the allowed main frame before invoking native plugins; messages from subframes or untrusted origins are rejected.
 
-Detaching removes message handlers and cancels pending native work, but it does not remove `WKUserScript` entries already added to the `WKUserContentController`. After detach, remaining scripts cannot reach native handlers. Use a fresh bridge and, when a clean content controller is required, a fresh `WKWebView`/configuration for the next session.
+`detach()` removes native message handlers and cancels pending native work, but it does not remove `WKUserScript` entries already installed in the web view's `WKUserContentController`. Those scripts cannot reach native handlers after detach. Use a fresh `WKWebView` or configuration when the next session requires a clean script list.
+
+Passkey and social requests are presented from the exact window belonging to the attached `WKWebView`. If that WebView is no longer attached to a window, the request returns a bridge error without invoking the native capability.
 
 ## Allowed Origins
 
 Allowed origins define which hosted pages can use the native bridge. During `attach(webView:allowedOriginRules:)`, the SDK builds the effective allowlist from explicit `allowedOriginRules` and the latest available server configuration `webView.allowedOrigins`, normalizes the combined set, and applies it to bridge policy and message handling.
+
+Attachment uses server origins already available to that bridge; it does not fetch or wait for configuration. A successful attachment keeps its effective allowlist for that session, so later configuration changes do not update it. Pass explicit rules when the first attachment must be deterministic.
 
 > [!WARNING]
 > Attach WebBridge only to trusted origins that you control. Avoid `*` in production unless your security review explicitly approves it.
@@ -149,4 +157,4 @@ Each factory must create a fresh plugin instance for each bridge.
 
 After a successful attach, WebBridge sends native capability results back to the hosted page. Expected runtime outcomes are reported through the hosted-page WebBridge contract when the incoming request can be handled safely. Invalid, untrusted, or incomplete requests are rejected by the bridge and should be treated as integration diagnostics.
 
-Use an app-owned recovery path only when the bridge cannot attach or the app intentionally exits the `WKWebView` flow before loading the bridged page.
+Use an app-owned recovery path when the bridge cannot attach, when a request is rejected because its origin/frame/payload is not trusted or valid, or when the app intentionally exits the `WKWebView` flow before loading the bridged page. Treat cancellation after `detach()` as a normal session-ending outcome and make page-side requests tolerant of a missing callback.

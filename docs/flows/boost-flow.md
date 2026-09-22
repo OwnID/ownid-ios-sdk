@@ -176,6 +176,7 @@ flowchart LR
 Use these rules when wiring app state to Boost callbacks:
 
 - **Login ID input:** Pass the same email, phone, or username value that the user edits in your form. The widget ignores blank values.
+- **UI host:** The standard widget supplies its current host window when it starts a new flow. A custom widget starter receives that same `UIWindow`; the widget does not start the flow until a host window is available.
 - **Returned login ID:** When `onLogin` or `onNewPasskey` returns, update the form from the response login ID. OwnID may normalize or resolve the value during the flow.
 - **Password fallback:** Keep the app's password login available. For registration, use the normal manual path when the user cancels, OwnID cannot complete, or no matching `ownIdData` is available.
 - **Create-passkey data:** Store the create-passkey response for registration submit. Read `ownIdData` with `ownIdData(forLoginID:)` so it is used only for the current form value. When it returns non-nil `ownIdData`, do not ask for, validate, or require a user-entered password. Submit `ownIdData` unchanged with the registration request. Whether the identity system creates a passwordless account, generates an internal password, or uses another supported mechanism is determined by the app's backend business logic.
@@ -203,7 +204,7 @@ Use these rules when wiring app state to Boost callbacks:
 
 The create-passkey widget can also complete successfully with a create-passkey response:
 
-- `onNewPasskey`: Called when the widget has a create-passkey response for the current form value. It receives [`BoostFlowCreatePasskeyResponse`](../../OwnIDCore/Sources/Flow/Boost/BoostFlow.swift) with these fields:
+- `onNewPasskey`: Called with the create-passkey flow response. Editing the form login ID while a flow is running does not retarget that flow or emit an intermediate `onReset`. The callback receives [`BoostFlowCreatePasskeyResponse`](../../OwnIDCore/Sources/Flow/Boost/BoostFlow.swift) with these fields:
 
   - `loginID`: Update the registration form and validate it before submit.
   - `proofToken`: Proof Token produced by passkey-related operations, or `nil` when no proof is available.
@@ -243,6 +244,11 @@ The default widgets support theme, strings, showing OwnID before or after the `o
 If the standard widgets do not fit your UI, render your own button or control and start Boost from an app-owned `@MainActor` `ObservableObject` or coordinator.
 
 The owner creates a `BoostFlowContext`, starts the corresponding flow, keeps the returned controller strongly referenced, and awaits `whenSettled()`. While the flow is active, use app-owned state to show progress and prevent duplicate starts. If the owner is torn down before settlement, abort the active controller with an appropriate `Reason`.
+
+If your custom control should reuse widget state and callback mapping, initialize the corresponding widget view model with
+`boostLoginFlowStarter` or `boostCreatePasskeyFlowStarter`. The starter receives the current host `UIWindow` and the
+widget's `BoostFlowContext`, then returns the controller to observe. A throwing starter is reported through the widget's
+`onError` callback as an integration failure, regardless of the error it throws.
 
 #### Login
 

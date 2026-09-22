@@ -3,19 +3,27 @@ import WebKit
 
 /// WKWebView-backed WebBridge implementation.
 ///
-/// A bridge instance is single-use: `attach(webView:allowedOriginRules:)` captures the currently registered plugins,
-/// merges explicit origins with the latest server WebView configuration available in this instance, normalizes the
-/// effective allowlist, and installs native bridge messaging before page content runs. Registry mutations after
-/// attachment do not affect the attached `WKWebView`.
+/// After a successful attach, a bridge instance is single-use: `attach(webView:allowedOriginRules:)` captures the
+/// currently registered plugins, merges explicit origins with the latest server WebView configuration available in
+/// this instance, normalizes the effective allowlist, and installs native bridge messaging before page content runs.
+/// Registry mutations after attachment do not affect the attached `WKWebView`.
 ///
 /// Detach removes the script message handler, cancels pending message tasks, releases bridge-owned references, and clears
 /// the associated lifecycle observer. Previously added `WKUserScript` entries remain owned by the web view's
-/// `WKUserContentController`.
+/// `WKUserContentController`. The bridge also closes its bridge-local UI context; UI actions cannot fall back to an
+/// unrelated application window after detach.
 ///
 /// Message handling validates the handler name, payload shape, main-frame source, origin policy, callback path, and
 /// plugin key before invoking a plugin. Plugin work is serialized per `WebBridgePluginKey`; tasks canceled by detach
-/// stop before evaluating callbacks.
+/// stop before evaluating callbacks. Built-in UI-requiring plugins resolve presentation from this bridge's attached
+/// WebView context.
 internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge, @unchecked Sendable {
+    private enum AttachmentState: Equatable {
+        case new
+        case attached
+        case detached
+    }
+
     private enum Constants {
         static let JS_HANDLER_NAME = "__ownidNativeBridgeHandler"
 
@@ -78,11 +86,11 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
     let plugins: any WebBridgePluginRegistry
     private let coder: any JSONCoder
     private let logger: OwnIDLogRouter?
+    private let uiContextProvider: WebBridgeUIContextProviderImpl
     private let lock = NSLock()
     private let appConfigCache: AppConfigWebViewCache
     private var appConfigObservationTask: Task<Void, Never>?
-    private var isAttached = false
-    private var hasInjected = false
+    private var attachmentState: AttachmentState = .new
     private var attachedPluginsByKey: [WebBridgePluginKey: any WebBridgePlugin] = [:]
     private weak var attachedWebView: WKWebView?
     private weak var attachedUserContentController: WKUserContentController?
@@ -95,10 +103,12 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
         plugins: any WebBridgePluginRegistry,
         appConfigProvider: any AppConfigProvider,
         coder: any JSONCoder,
+        uiContextProvider: WebBridgeUIContextProviderImpl,
         logger: OwnIDLogRouter?
     ) {
         self.plugins = plugins
         self.coder = coder
+        self.uiContextProvider = uiContextProvider
         self.logger = logger
         self.appConfigCache = AppConfigWebViewCache()
         super.init()
@@ -120,10 +130,16 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
     func attach(webView: WKWebView, allowedOriginRules: Set<String> = []) -> WebBridgeError? {
         let effectiveAllowedOriginRules = appConfigCache.effectiveAllowedOriginRules(for: allowedOriginRules)
         let error: WebBridgeError? = lock.withLock {
-            do {
-                guard !isAttached else { throw WebBridgeError.general("Already attached") }
-                guard !hasInjected else { throw WebBridgeError.general("WebBridge instance already used") }
+            switch attachmentState {
+            case .new:
+                break
+            case .attached:
+                return WebBridgeError.general("Already attached")
+            case .detached:
+                return WebBridgeError.general("WebBridge instance already used")
+            }
 
+            do {
                 let registeredPlugins = plugins.snapshot()
                 if registeredPlugins.isEmpty {
                     logger?.logW(source: self, prefix: "attach", message: "No plugins available for injection.")
@@ -141,8 +157,6 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
                 if !normalization.policy.any && normalization.policy.rules.isEmpty {
                     throw WebBridgeError.general("No valid allowedOriginRules provided")
                 }
-                originPolicy = normalization.policy
-                normalizedOriginRules = normalization.normalized
 
                 let pluginNamespaces = registeredPlugins.reduce(into: [String: [String]]()) { acc, plugin in
                     if let (id, actions) = plugin.injectionData() {
@@ -153,26 +167,32 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
                 let userContentController = webView.configuration.userContentController
                 let namespacesJson = try coder.encodeToString(pluginNamespaces)
                 let js = Constants.createNativeBridgeJS(namespaces: namespacesJson)
+
+                try uiContextProvider.bind(webView: webView)
+                defer {
+                    if attachmentState == .new {
+                        uiContextProvider.resetAfterFailedAttach()
+                    }
+                }
+
                 userContentController.addUserScript(WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: true))
                 logger?.logD(
                     source: self,
                     prefix: "attach",
                     message:
-                        "WebBridge injected for origins \(normalizedOriginRules.isEmpty ? ["*"] : normalizedOriginRules) with namespaces: \(pluginNamespaces.keys)"
+                        "WebBridge injected for origins \(normalization.normalized.isEmpty ? ["*"] : normalization.normalized) with namespaces: \(pluginNamespaces.keys)"
                 )
 
                 userContentController.add(self, name: Constants.JS_HANDLER_NAME)
+                originPolicy = normalization.policy
+                normalizedOriginRules = normalization.normalized
                 attachedPluginsByKey = registeredPlugins.reduce(into: [:]) { result, plugin in
                     result[plugin.key] = plugin
                 }
                 attachedWebView = webView
                 attachedUserContentController = userContentController
-                isAttached = true
-                hasInjected = true
+                attachmentState = .attached
             } catch {
-                attachedPluginsByKey.removeAll()
-                attachedWebView = nil
-                attachedUserContentController = nil
                 logger?.logW(source: self, prefix: "attach", message: "Injection failed", cause: error)
                 return WebBridgeError.general("Error attaching bridge", error)
             }
@@ -198,12 +218,16 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
     @MainActor
     private func shutdownBridgeState(trigger: String) {
         var tasksToCancel: [Task<Void, Never>] = []
+        var appConfigTaskToCancel: Task<Void, Never>?
 
         lock.withLock {
-            guard isAttached else {
+            guard attachmentState == .attached else {
                 logger?.logI(source: self, prefix: "detach", message: "Bridge already detached")
                 return
             }
+
+            attachmentState = .detached
+            uiContextProvider.close()
 
             let targetWebView = attachedWebView
             let targetUserContentController = attachedUserContentController ?? targetWebView?.configuration.userContentController
@@ -219,10 +243,11 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
 
             tasksToCancel = Array(pendingTasks.values)
             pendingTasks.removeAll()
+            appConfigTaskToCancel = appConfigObservationTask
+            appConfigObservationTask = nil
             attachedPluginsByKey.removeAll()
             normalizedOriginRules.removeAll()
             originPolicy = .any
-            isAttached = false
             attachedWebView = nil
             attachedUserContentController = nil
             logger?.logV(source: self, prefix: "detach", message: "WebBridge successfully detached")
@@ -231,13 +256,18 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
         for task in tasksToCancel {
             task.cancel()
         }
+        appConfigTaskToCancel?.cancel()
     }
 
+    @MainActor
     func userContentController(_ userContentController: WKUserContentController, didReceive jsMessage: WKScriptMessage) {
         guard isAttachedToWebView else {
             logger?.logI(source: self, prefix: "userContentController", message: "Message received but bridge is detached. Ignoring.")
             return
         }
+        guard let messageWebView = jsMessage.webView,
+            lock.withLock({ attachmentState == .attached && attachedWebView === messageWebView })
+        else { return }
         if jsMessage.frameInfo.isMainFrame == false {
             logger?.logI(source: self, prefix: "userContentController", message: "Ignoring message from subframe")
             return
@@ -256,7 +286,7 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
         }
 
         let taskId = UUID()
-        let task = Task { [weak self] in
+        let task = Task { @MainActor [weak self] in
             guard let self else { return }
             defer { _ = self.lock.withLock { self.pendingTasks.removeValue(forKey: taskId) } }
             if Task.isCancelled { return }
@@ -343,11 +373,18 @@ internal final class WebBridgeImpl: NSObject, WKScriptMessageHandler, WebBridge,
             }
         }
 
-        lock.withLock { pendingTasks[taskId] = task }
+        let admitted = lock.withLock {
+            guard attachmentState == .attached else { return false }
+            pendingTasks[taskId] = task
+            return true
+        }
+        if !admitted {
+            task.cancel()
+        }
     }
 
     private var isAttachedToWebView: Bool {
-        lock.withLock { self.isAttached }
+        lock.withLock { self.attachmentState == .attached }
     }
 
     private func parseAndValidate(_ message: WKScriptMessage) throws -> WebBridgePluginMessage {
@@ -445,13 +482,24 @@ private actor PluginLockRegistry {
 }
 
 extension WebBridgeImpl {
-    nonisolated internal static func create(resolver: any DIContainerResolver, initialPlugins: [any WebBridgePlugin]) -> any WebBridge {
+    nonisolated internal static func create(
+        resolver: any DIContainerResolver,
+        pluginFactoryStore: WebBridgePluginFactoryStoreImpl
+    ) -> any WebBridge {
         do {
+            guard let parentScope = resolver as? any DIContainer else {
+                throw WebBridgeError.general("WebBridge resolver must support child scopes")
+            }
+            let bridgeScope = parentScope.createScope(scopeName: "\(parentScope.scopeName).WebBridge")
+            let uiContextProvider = WebBridgeUIContextProviderImpl()
+            bridgeScope.register((any UIContextProvider).self, instance: uiContextProvider)
+
             return WebBridgeImpl(
-                plugins: WebBridgePluginRegistryImpl(initialPlugins: initialPlugins),
-                appConfigProvider: try resolver.getOrThrow(type: (any AppConfigProvider).self),
-                coder: try resolver.getOrThrow(type: (any JSONCoder).self),
-                logger: resolver.getOrNil(type: OwnIDLogRouter.self)
+                plugins: WebBridgePluginRegistryImpl(initialPlugins: pluginFactoryStore.instantiateAll(resolver: bridgeScope)),
+                appConfigProvider: try bridgeScope.getOrThrow(type: (any AppConfigProvider).self),
+                coder: try bridgeScope.getOrThrow(type: (any JSONCoder).self),
+                uiContextProvider: uiContextProvider,
+                logger: bridgeScope.getOrNil(type: OwnIDLogRouter.self)
             )
         } catch {
             return FailedWebBridge(logger: resolver.getOrNil(type: OwnIDLogRouter.self), error: error)

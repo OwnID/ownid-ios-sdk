@@ -8,32 +8,33 @@ import UIKit
 // Covers: CFG-RUNTIME-080
 struct UIContextProviderImplementationRuntimeTests {
 
-    @Test func `Top-most controller follows presented navigation tab split and page hierarchy`() throws {
-        let provider = UIContextProviderImpl()
+    @Test func `Window resolver returns the selected window and deepest supported controller`() throws {
         let window = TestWindow()
         defer { window.close() }
 
         let root = PresentingViewController()
         let navigation = UINavigationController()
         let tab = UITabBarController()
-        let split = UISplitViewController()
-        let page = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal)
-        let inactivePage = UIViewController()
+        let firstTab = UIViewController()
         let expected = UIViewController()
 
-        page.setViewControllers([expected], direction: .forward, animated: false)
-        split.viewControllers = [inactivePage, page]
-        tab.viewControllers = [UIViewController(), split]
+        tab.viewControllers = [firstTab, expected]
         tab.selectedIndex = 1
         navigation.setViewControllers([UIViewController(), tab], animated: false)
         root.presentedOverride = navigation
         window.show(root: root)
 
-        #expect(provider.topMostViewController(window) === expected)
+        let result = WindowUIContextProviderImpl(window: window).current()
+
+        guard case .windowAndController(let resolvedWindow, let controller) = result else {
+            Issue.record("Expected a window and presentation controller")
+            return
+        }
+        #expect(resolvedWindow === window)
+        #expect(controller === expected)
     }
 
-    @Test func `Presented controller is ignored while it is being dismissed`() {
-        let provider = UIContextProviderImpl()
+    @Test func `Dismissing presented controller is not returned`() {
         let window = TestWindow()
         defer { window.close() }
 
@@ -41,59 +42,182 @@ struct UIContextProviderImplementationRuntimeTests {
         root.presentedOverride = DismissingViewController()
         window.show(root: root)
 
-        #expect(provider.topMostViewController(window) === root)
+        let result = WindowUIContextProviderImpl(window: window).current()
+
+        guard case .windowAndController(_, let controller) = result else {
+            Issue.record("Expected the root controller to remain available")
+            return
+        }
+        #expect(controller === root)
     }
 
-    @Test func `Single visible content child is preferred`() {
-        let provider = UIContextProviderImpl()
+    @Test func `Resolver returns a split container instead of selecting an arbitrary child pane`() {
         let window = TestWindow()
         defer { window.close() }
 
-        let root = UIViewController()
-        let hidden = UIViewController()
-        let empty = UIViewController()
-        let detached = UIViewController()
-        let expected = UIViewController()
+        let root = PresentingViewController()
+        let split = UISplitViewController()
+        split.viewControllers = [UIViewController(), UIViewController()]
+        root.presentedOverride = split
         window.show(root: root)
 
-        root.addTestChild(hidden)
-        hidden.view.isHidden = true
+        let result = WindowUIContextProviderImpl(window: window).current()
 
-        root.addTestChild(empty)
-        empty.view.frame = .zero
-
-        root.addChild(detached)
-        detached.didMove(toParent: root)
-
-        root.addTestChild(expected)
-
-        #expect(provider.topMostViewController(window) === expected)
+        guard case .windowAndController(_, let controller) = result else {
+            Issue.record("Expected the split container to resolve as the presentation controller")
+            return
+        }
+        #expect(controller === split)
     }
 
-    @Test func `Dismissed or ambiguous content children leave the parent as top-most`() {
-        let provider = UIContextProviderImpl()
+    @Test func `Resolver returns a page container instead of selecting its current page`() {
         let window = TestWindow()
         defer { window.close() }
 
-        let root = UIViewController()
+        let root = PresentingViewController()
+        let page = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal)
+        page.setViewControllers([UIViewController()], direction: .forward, animated: false)
+        root.presentedOverride = page
         window.show(root: root)
 
-        root.addTestChild(DismissingViewController())
-        root.addTestChild(UIViewController())
-        root.addTestChild(UIViewController())
+        let result = WindowUIContextProviderImpl(window: window).current()
 
-        #expect(provider.topMostViewController(window) === root)
+        guard case .windowAndController(_, let controller) = result else {
+            Issue.record("Expected the page container to resolve as the presentation controller")
+            return
+        }
+        #expect(controller === page)
     }
 
-    @Test func `Missing root controller returns no top-most controller`() {
-        let provider = UIContextProviderImpl()
+    @Test func `Root controller mounted in another window resolves as window only`() {
+        let selectedWindow = TestWindow()
+        let foreignWindow = TestWindow()
+        defer {
+            selectedWindow.close()
+            foreignWindow.close()
+        }
+
+        let root = UIViewController()
+        selectedWindow.showWithoutMakingKey(root: root)
+        foreignWindow.show(root: UIViewController())
+        foreignWindow.addSubview(root.view)
+
+        let result = WindowUIContextProviderImpl(window: selectedWindow).current()
+
+        guard case .windowOnly(let resolvedWindow) = result else {
+            Issue.record("Expected a foreign-window root controller to be rejected")
+            return
+        }
+        #expect(resolvedWindow === selectedWindow)
+    }
+
+    @Test func `Presented controller mounted in another window is skipped`() {
+        let selectedWindow = TestWindow()
+        let foreignWindow = TestWindow()
+        defer {
+            selectedWindow.close()
+            foreignWindow.close()
+        }
+
+        let root = PresentingViewController()
+        let foreignChild = UIViewController()
+        root.presentedOverride = foreignChild
+        selectedWindow.show(root: root)
+        foreignWindow.show(root: UIViewController())
+        foreignWindow.addSubview(foreignChild.view)
+
+        let result = WindowUIContextProviderImpl(window: selectedWindow).current()
+
+        guard case .windowAndController(_, let controller) = result else {
+            Issue.record("Expected the coherent root controller to remain available")
+            return
+        }
+        #expect(controller === root)
+    }
+
+    @Test func `Resolver terminates safely when presentation chain cycles`() {
+        let window = TestWindow()
+        let root = PresentingViewController()
+        defer {
+            root.presentedOverride = nil
+            window.close()
+        }
+        window.show(root: root)
+        root.presentedOverride = root
+
+        let result = WindowUIContextProviderImpl(window: window).current()
+
+        guard case .windowAndController(_, let controller) = result else {
+            Issue.record("Expected the coherent root controller to remain available")
+            return
+        }
+        #expect(controller === root)
+    }
+
+    @Test func `Window without a root controller resolves as window only`() {
         let window = TestWindow()
         defer { window.close() }
 
-        window.makeKeyAndVisible()
+        let result = WindowUIContextProviderImpl(window: window).current()
 
-        #expect(provider.topMostViewController(window) == nil)
+        guard case .windowOnly(let resolvedWindow) = result else {
+            Issue.record("Expected a rootless window to resolve without a controller")
+            return
+        }
+        #expect(resolvedWindow === window)
     }
+
+    @Test func `Window bound provider never substitutes another window`() throws {
+        let expectedWindow = TestWindow()
+        let otherWindow = TestWindow()
+        defer {
+            expectedWindow.close()
+            otherWindow.close()
+        }
+        expectedWindow.show(root: UIViewController())
+        otherWindow.show(root: UIViewController())
+
+        let provider = WindowUIContextProviderImpl(window: expectedWindow)
+
+        guard case .windowAndController(let resolvedWindow, _) = provider.current() else {
+            Issue.record("Expected the bound window to resolve")
+            return
+        }
+        #expect(resolvedWindow === expectedWindow)
+        #expect(resolvedWindow !== otherWindow)
+    }
+
+    @Test func `Window bound provider reports owner closed after the window is released`() throws {
+        let provider: WindowUIContextProviderImpl
+        weak var weakWindow: UIWindow?
+        do {
+            let window = TestWindow()
+            weakWindow = window
+            provider = WindowUIContextProviderImpl(window: window)
+        }
+
+        #expect(weakWindow == nil)
+        guard case .failure(let error) = provider.current() else {
+            Issue.record("Expected a released bound window to fail resolution")
+            return
+        }
+        let resolutionError = try #require(error as? UIContextResolutionError)
+        #expect(resolutionError.reason == .ownerClosed)
+    }
+
+    @Test func `Resolution error preserves reason message and cause`() {
+        let cause = ContextTestError()
+        let error = UIContextResolutionError(
+            reason: .unavailable,
+            message: "No eligible window",
+            cause: cause
+        )
+
+        #expect(error.reason == .unavailable)
+        #expect(error.message == "No eligible window")
+        #expect(error.cause as? ContextTestError == cause)
+    }
+
 }
 
 private final class TestWindow: UIWindow {
@@ -118,6 +242,13 @@ private final class TestWindow: UIWindow {
         isHidden = true
         rootViewController = nil
     }
+
+    func showWithoutMakingKey(root: UIViewController) {
+        rootViewController = root
+        isHidden = false
+        root.view.frame = bounds
+        root.view.layoutIfNeeded()
+    }
 }
 
 private final class PresentingViewController: UIViewController {
@@ -132,13 +263,6 @@ private final class DismissingViewController: UIViewController {
     override var isBeingDismissed: Bool { true }
 }
 
-extension UIViewController {
-    fileprivate func addTestChild(_ child: UIViewController) {
-        loadViewIfNeeded()
-        child.loadViewIfNeeded()
-        addChild(child)
-        child.view.frame = view.bounds.isEmpty ? CGRect(x: 0, y: 0, width: 100, height: 100) : view.bounds
-        view.addSubview(child.view)
-        child.didMove(toParent: self)
-    }
+private struct ContextTestError: Error, Equatable, LocalizedError {
+    var errorDescription: String? { "Context test cause" }
 }

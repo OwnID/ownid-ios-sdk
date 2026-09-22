@@ -71,7 +71,6 @@ private final class ASAuthorizationControllerAdapter: NSObject, SignInWithAppleA
 
 @objc(OwnIDSignInWithAppleImpl)
 internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked Sendable {
-    private let uiContextProvider: any UIContextProvider
     private let logger: OwnIDLogRouter?
     private let authorizationControllerFactory: @MainActor (ASAuthorizationAppleIDRequest) -> any SignInWithAppleAuthorizationController
 
@@ -82,20 +81,22 @@ internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked 
     private var expectedState: String?
 
     init(
-        uiContextProvider: any UIContextProvider,
         logger: OwnIDLogRouter?,
         authorizationControllerFactory: @escaping @MainActor (ASAuthorizationAppleIDRequest) -> any SignInWithAppleAuthorizationController =
             {
                 ASAuthorizationControllerAdapter(request: $0)
             }
     ) {
-        self.uiContextProvider = uiContextProvider
         self.logger = logger
         self.authorizationControllerFactory = authorizationControllerFactory
     }
 
     @MainActor
-    func signIn(params: SignInWithSocialParams) async -> SocialResult {
+    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+        guard !Task.isCancelled else {
+            return .canceled(reason: .systemError(details: "Operation canceled"))
+        }
+
         let previousAuthController = authController
         authController = nil
         expectedState = nil
@@ -111,7 +112,7 @@ internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked 
             previousAuthController?.cancel()
         }
 
-        self.window = params.window
+        self.window = window
 
         return await withCheckedContinuation { continuation in
             let appleIDProvider = ASAuthorizationAppleIDProvider()
@@ -223,6 +224,9 @@ extension SignInWithAppleImpl: SignInWithAppleAuthorizationControllerDelegate {
 extension SignInWithAppleImpl: ASAuthorizationControllerPresentationContextProviding {
     @MainActor
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        window ?? uiContextProvider.activeWindow() ?? ASPresentationAnchor()
+        guard let window else {
+            preconditionFailure("Apple Sign-In presentation requested without a resolved window")
+        }
+        return window
     }
 }

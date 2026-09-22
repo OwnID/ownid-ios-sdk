@@ -41,12 +41,11 @@ func assertSwiftUIModuleRuntimeBindings(in container: any DIContainer) throws {
 
 final class ModuleTestUIContextProvider: UIContextProvider, @unchecked Sendable {
     @MainActor
-    func activeWindow() -> UIWindow? {
-        nil
+    func current() -> UIContextResult {
+        .failure(ModuleTestUIContextError.unavailable)
     }
+}
 
-    @MainActor
-    func topMostViewController(_ window: UIWindow?) -> UIViewController? {
-        nil
-    }
+private enum ModuleTestUIContextError: Error {
+    case unavailable
 }

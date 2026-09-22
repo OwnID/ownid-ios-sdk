@@ -10,6 +10,342 @@ import UIKit
 // Covers: UI-PRESENT-160, UI-PRESENT-240, UI-PRESENT-290
 struct BottomSheetRuntimeTests {
 
+    @Test func `Completed entrance makes the sheet ready for input`() async throws {
+        let containerController = OwnIDUIContainerController(closeAction: {})
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        let viewController = bottomSheetViewController(containerController: containerController, expectedWindow: window)
+        try attachForAppearanceCallbacks(viewController, in: window)
+        try #require(UIApplication.shared.applicationState == .active)
+        try #require(!containerController.isInputReady)
+        try await waitForInputReadiness(containerController)
+
+        #expect(containerController.isInputReady)
+    }
+
+    @Test func `Scene deactivation suppresses input and activation restores it`() async throws {
+        let containerController = OwnIDUIContainerController(closeAction: {})
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        let viewController = bottomSheetViewController(containerController: containerController, expectedWindow: window)
+        try attachForAppearanceCallbacks(viewController, in: window)
+        try #require(UIApplication.shared.applicationState == .active)
+
+        try await waitForInputReadiness(containerController)
+        let scene = try #require(window.windowScene)
+
+        NotificationCenter.default.post(name: UIScene.willDeactivateNotification, object: scene)
+        try await waitForInputReadiness(containerController, expected: false)
+
+        NotificationCenter.default.post(name: UIScene.didActivateNotification, object: scene)
+        try await waitForInputReadiness(containerController)
+    }
+
+    @Test func `Closing before entrance completion keeps input unavailable`() async throws {
+        let containerController = OwnIDUIContainerController(closeAction: {})
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        let viewController = bottomSheetViewController(containerController: containerController, expectedWindow: window)
+        try attachForAppearanceCallbacks(viewController, in: window)
+        try #require(UIApplication.shared.applicationState == .active)
+
+        containerController.close()
+        viewController.requestDismiss { containerController.markClosed() }
+        try await waitForInputReadiness(containerController, expected: false)
+
+        #expect(containerController.isClosing)
+    }
+
+    @Test func `Close during presenter entrance cancels watchdog without failure`() async throws {
+        let host = BottomSheetCapturingHost()
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        window.show(root: host)
+        try #require(UIApplication.shared.applicationState == .active)
+        let presenter = BottomSheetPresenterImpl(
+            uiContextProvider: BottomSheetTestUIContextProvider(results: [.windowAndController(window: window, controller: host)]),
+            logger: nil
+        )
+        var failures: [BottomSheetPresentationError] = []
+        var container: OwnIDUIContainerController?
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { controller in
+            container = controller
+            return Text("Sheet")
+        }
+        await Task.yield()
+        let sheet = try #require(host.sheet)
+        host.addChild(sheet)
+        host.view.addSubview(sheet.view)
+        sheet.didMove(toParent: host)
+        sheet.beginAppearanceTransition(true, animated: false)
+        sheet.endAppearanceTransition()
+
+        container?.close()
+        try await Task.sleep(nanoseconds: 3_200_000_000)
+
+        #expect(failures.isEmpty)
+        #expect(container?.isInputReady == false)
+        #expect(container?.isClosing == true)
+        container?.markClosed()
+    }
+
+    private func attachForAppearanceCallbacks(_ viewController: BottomSheetViewController, in window: UIKitRuntimeTestWindow) throws {
+        let host = UIViewController()
+        window.show(root: host)
+        host.present(viewController, animated: false)
+        try #require(viewController.presentingViewController === host)
+        // The package harness drives appearance explicitly; installed runtime tests own UIKit transition completion.
+        host.view.addSubview(viewController.view)
+        viewController.view.frame = host.view.bounds
+        viewController.beginPresentationLifecycle()
+        viewController.beginAppearanceTransition(true, animated: false)
+        viewController.endAppearanceTransition()
+    }
+
+    @Test func `Presenter reports one failure after host readiness retries are exhausted`() async throws {
+        let host = UIViewController()
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        let provider = BottomSheetTestUIContextProvider(
+            results: [.windowAndController(window: window, controller: host)]
+        )
+        let presenter = BottomSheetPresenterImpl(uiContextProvider: provider, logger: nil)
+        var failures: [BottomSheetPresentationError] = []
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { _ in
+            Text("Sheet")
+        }
+
+        try await waitForPresentationFailures(count: 1) { failures }
+        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(failures == [.hostNotReady])
+        #expect(provider.callCount == 5) // Initial owner pin plus four presentation attempts.
+    }
+
+    @Test func `Presenter retries with fresh context and presents when the original owner becomes ready`() async throws {
+        let unavailableHost = UIViewController()
+        let readyHost = BottomSheetCapturingHost()
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        window.show(root: readyHost)
+        let provider = BottomSheetTestUIContextProvider(
+            results: [
+                .windowAndController(window: window, controller: unavailableHost),
+                .windowAndController(window: window, controller: unavailableHost),
+                .windowAndController(window: window, controller: readyHost),
+            ]
+        )
+        let presenter = BottomSheetPresenterImpl(uiContextProvider: provider, logger: nil)
+        var failures: [BottomSheetPresentationError] = []
+        var container: OwnIDUIContainerController?
+
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { controller in
+            container = controller
+            return Text("Sheet")
+        }
+        try await waitForPresentedSheet(on: readyHost)
+
+        #expect(failures.isEmpty)
+        container?.close()
+        container?.markClosed()
+    }
+
+    @Test func `Closing a pending presentation prevents late UIKit presentation`() async throws {
+        let host = BottomSheetCapturingHost()
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        let presenter = BottomSheetPresenterImpl(
+            uiContextProvider: BottomSheetTestUIContextProvider(
+                results: [.windowAndController(window: window, controller: host)]
+            ),
+            logger: nil
+        )
+        var failures: [BottomSheetPresentationError] = []
+        var container: OwnIDUIContainerController?
+
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { controller in
+            container = controller
+            return Text("Sheet")
+        }
+        container?.close()
+        window.show(root: host)
+        try await Task.sleep(nanoseconds: 650_000_000)
+
+        #expect(container?.isClosed == true)
+        #expect(host.sheet == nil)
+        #expect(failures.isEmpty)
+    }
+
+    @Test func `Presenter rejects a different window without migrating the pending presentation`() async throws {
+        let firstHost = BottomSheetCapturingHost()
+        let secondHost = BottomSheetCapturingHost()
+        let firstWindow = makeBottomSheetTestWindow()
+        let secondWindow = makeBottomSheetTestWindow()
+        defer {
+            firstWindow.close()
+            secondWindow.close()
+        }
+        firstWindow.show(root: firstHost)
+        secondWindow.show(root: secondHost)
+        let presenter = BottomSheetPresenterImpl(
+            uiContextProvider: BottomSheetTestUIContextProvider(
+                results: [
+                    .windowAndController(window: firstWindow, controller: firstHost),
+                    .windowAndController(window: secondWindow, controller: secondHost),
+                ]
+            ),
+            logger: nil
+        )
+        var failures: [BottomSheetPresentationError] = []
+
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { _ in Text("Sheet") }
+        try await waitForPresentationFailures(count: 1) { failures }
+
+        #expect(failures == [.hostNotReady])
+        #expect(firstHost.sheet == nil)
+        #expect(secondHost.sheet == nil)
+    }
+
+    @Test func `Presenter does not nest a sheet under an existing SDK sheet`() async throws {
+        let previousContainer = OwnIDUIContainerController(closeAction: {})
+        let previousSheet = bottomSheetViewController(containerController: previousContainer)
+        let host = BottomSheetCapturingHost()
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        window.show(root: previousSheet)
+        previousSheet.addChild(host)
+        previousSheet.view.addSubview(host.view)
+        host.didMove(toParent: previousSheet)
+        let presenter = BottomSheetPresenterImpl(
+            uiContextProvider: BottomSheetTestUIContextProvider(
+                results: [.windowAndController(window: window, controller: host)]
+            ),
+            logger: nil
+        )
+        var failures: [BottomSheetPresentationError] = []
+
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { _ in Text("Sheet") }
+        try await waitForPresentationFailures(count: 1) { failures }
+
+        #expect(failures == [.hostNotReady])
+        #expect(host.sheet == nil)
+    }
+
+    @Test func `Presenter succeeds when the previous SDK sheet disappears between retries`() async throws {
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        let previousSheet = bottomSheetViewController(
+            containerController: OwnIDUIContainerController(closeAction: {}),
+            expectedWindow: window
+        )
+        let host = BottomSheetCapturingHost()
+        window.show(root: previousSheet)
+        previousSheet.addChild(host)
+        previousSheet.view.addSubview(host.view)
+        host.didMove(toParent: previousSheet)
+        let provider = BottomSheetTestUIContextProvider(
+            results: [.windowAndController(window: window, controller: host)]
+        )
+        let presenter = BottomSheetPresenterImpl(uiContextProvider: provider, logger: nil)
+        var container: OwnIDUIContainerController?
+
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { _ in }) { controller in
+            container = controller
+            return Text("Sheet")
+        }
+        for _ in 0..<100 where provider.callCount < 2 { await Task.yield() }
+        try #require(provider.callCount >= 2)
+        host.willMove(toParent: nil)
+        host.view.removeFromSuperview()
+        host.removeFromParent()
+        window.show(root: host)
+        try await waitForPresentedSheet(on: host)
+
+        #expect(host.sheet != nil)
+        container?.close()
+        container?.markClosed()
+    }
+
+    @Test func `Window-only context throws without invoking the failure callback`() throws {
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        let provider = BottomSheetTestUIContextProvider(results: [.windowOnly(window)])
+        let presenter = BottomSheetPresenterImpl(uiContextProvider: provider, logger: nil)
+        var failureCount = 0
+
+        do {
+            try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { _ in failureCount += 1 }) { _ in
+                Text("Sheet")
+            }
+            Issue.record("Expected a missing-presentation-controller error")
+        } catch let error as BottomSheetPresentationError {
+            #expect(error.rawValue == BottomSheetPresentationError.missingPresentationController.rawValue)
+        } catch {
+            Issue.record("Unexpected presentation error: \(error)")
+        }
+        #expect(failureCount == 0)
+    }
+
+    @Test func `UI context resolution errors propagate without invoking the failure callback`() throws {
+        let resolutionError = UIContextResolutionError(
+            reason: .ownerClosed,
+            message: "The WebBridge owner is no longer attached."
+        )
+        let presenter = BottomSheetPresenterImpl(
+            uiContextProvider: BottomSheetTestUIContextProvider(results: [.failure(resolutionError)]),
+            logger: nil
+        )
+        var failureCount = 0
+
+        do {
+            try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { _ in failureCount += 1 }) { _ in
+                Text("Sheet")
+            }
+            Issue.record("Expected the provider resolution error")
+        } catch let error as UIContextResolutionError {
+            #expect(error.reason == .ownerClosed)
+            #expect(error.message == "The WebBridge owner is no longer attached.")
+        } catch {
+            Issue.record("Unexpected context resolution error: \(error)")
+        }
+        #expect(failureCount == 0)
+    }
+
+    @Test func `UIKit completion without expected-window attachment fails once and ignores late acknowledgement`() async throws {
+        let host = BottomSheetCapturingHost()
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        window.show(root: host)
+        let presenter = BottomSheetPresenterImpl(
+            uiContextProvider: BottomSheetTestUIContextProvider(
+                results: [.windowAndController(window: window, controller: host)]
+            ),
+            logger: nil
+        )
+        var failures: [BottomSheetPresentationError] = []
+        var closedReasons: [String?] = []
+        var container: OwnIDUIContainerController?
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { controller in
+            container = controller
+            controller.addClosedHandler { reason in closedReasons.append(reason?.description) }
+            return Text("Sheet")
+        }
+        try await Task.sleep(nanoseconds: 3_200_000_000)
+
+        let sheet = try #require(host.sheet)
+        #expect(failures == [.presentationAcknowledgementTimedOut])
+        #expect(container?.isClosing == true)
+        #expect(container?.isClosed == true)
+        #expect(closedReasons == [nil])
+
+        sheet.acknowledgeUIKitPresentation()
+        container?.close()
+        container?.markClosed()
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(failures == [.presentationAcknowledgementTimedOut])
+        #expect(closedReasons == [nil])
+    }
+
     @Test func `View controller exposes modal accessibility and escape closes container`() {
         var closeActionCount = 0
         let containerController = OwnIDUIContainerController {
@@ -45,14 +381,10 @@ struct BottomSheetRuntimeTests {
         #expect(closeActionCount == 1)
     }
 
-    @Test func `Unexpected disappearance closes container and reports lifecycle callback`() {
-        var unexpectedDisappearCount = 0
+    @Test func `Unexpected disappearance closes container and reports user close`() {
         var closedReasons: [String?] = []
         let containerController = OwnIDUIContainerController(closeAction: {})
         let viewController = bottomSheetViewController(containerController: containerController)
-        viewController.onDidDisappearUnexpectedly = {
-            unexpectedDisappearCount += 1
-        }
         containerController.addClosedHandler { reason in
             closedReasons.append(reason?.description)
         }
@@ -63,63 +395,53 @@ struct BottomSheetRuntimeTests {
         viewController.beginAppearanceTransition(false, animated: false)
         viewController.endAppearanceTransition()
 
-        #expect(unexpectedDisappearCount == 1)
         #expect(containerController.isClosed)
         #expect(closedReasons == [Reason.userClose(details: "Operation container closed").description])
     }
 
-    @Test func `Expected dismiss closes container without unexpected disappearance callback`() async {
-        var unexpectedDisappearCount = 0
-        var dismissCompletionCount = 0
-        var closedReasons: [String?] = []
-        let containerController = OwnIDUIContainerController(closeAction: {})
-        let viewController = bottomSheetViewController(containerController: containerController)
-        viewController.onDidDisappearUnexpectedly = {
-            unexpectedDisappearCount += 1
-        }
-        containerController.addClosedHandler { reason in
-            closedReasons.append(reason?.description)
-        }
-
-        viewController.loadViewIfNeeded()
-        viewController.requestDismiss {
-            dismissCompletionCount += 1
-            containerController.markClosed()
-        }
-        await Task.yield()
-
-        #expect(dismissCompletionCount == 1)
-        #expect(unexpectedDisappearCount == 0)
-        #expect(containerController.isClosed)
-        #expect(closedReasons == [Reason.userClose(details: "Operation container closed").description])
-    }
-
-    @available(iOS 16.0, *)
-    @Test(.timeLimit(.minutes(1)))
-    func `Presenter rejects duplicate launch and reports missing host`() async throws {
-        let uiContextProvider = BottomSheetTestUIContextProvider(hosts: [nil, nil, nil, nil])
+    @Test func `Presenter throws for duplicate launch and missing presentation controller`() throws {
+        let host = BottomSheetCapturingHost()
+        let window = makeBottomSheetTestWindow()
+        defer { window.close() }
+        window.show(root: host)
+        let uiContextProvider = BottomSheetTestUIContextProvider(
+            results: [.windowAndController(window: window, controller: host)]
+        )
         let presenter = BottomSheetPresenterImpl(uiContextProvider: uiContextProvider, logger: nil)
-        let failures = BottomSheetFailureProbe()
+        var container: OwnIDUIContainerController?
 
-        presenter.show(
+        try presenter.show(
             themeStore: OwnIDThemeStore(),
-            onFailure: { reason in Task { await failures.record(reason) } }
-        ) { _ in
-            Text("First")
-        }
-        presenter.show(
-            themeStore: OwnIDThemeStore(),
-            onFailure: { reason in Task { await failures.record(reason) } }
-        ) { _ in
-            Text("Second")
+            onFailure: { _ in }
+        ) { controller in
+            container = controller
+            return Text("First")
         }
 
-        let duplicateFailure = try await failures.next("duplicate launch failure")
-        let missingHostFailure = try await failures.next("missing host failure")
+        do {
+            try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { _ in }) { _ in
+                Text("Second")
+            }
+            Issue.record("Expected duplicate-launch error")
+        } catch let error as BottomSheetPresentationError {
+            #expect(error.rawValue == BottomSheetPresentationError.launchAlreadyInProgress.rawValue)
+        } catch {
+            Issue.record("Unexpected duplicate-launch error: \(error)")
+        }
 
-        #expect(duplicateFailure.description == Reason.systemError(details: "Launch already in progress").description)
-        #expect(missingHostFailure.description == Reason.systemError(details: "Top view controller not found").description)
-        #expect(uiContextProvider.topMostViewControllerCallCount > 0)
+        container?.close()
+        container?.markClosed()
+
+        let missingProvider = BottomSheetTestUIContextProvider(results: [.windowOnly(window)])
+        let missingPresenter = BottomSheetPresenterImpl(uiContextProvider: missingProvider, logger: nil)
+        do {
+            try missingPresenter.show(themeStore: OwnIDThemeStore(), onFailure: { _ in }) { _ in Text("Missing") }
+            Issue.record("Expected missing-presentation-controller error")
+        } catch let error as BottomSheetPresentationError {
+            #expect(error.rawValue == BottomSheetPresentationError.missingPresentationController.rawValue)
+        } catch {
+            Issue.record("Unexpected missing-controller error: \(error)")
+        }
     }
 
     @available(iOS 16.0, *)
@@ -127,25 +449,16 @@ struct BottomSheetRuntimeTests {
     private func `Presenter rejects host variants that are offscreen or dismissing`(_ variant: BottomSheetOffscreenHostVariant)
         async throws
     {
-        let expectedFailure = Reason.systemError(details: "Host is dismissing or off-screen").description
         let host = variant.makeHost()
         defer { host.close() }
-        let hosts = Array<UIViewController?>(repeating: host.viewController, count: 4)
-        let uiContextProvider = BottomSheetTestUIContextProvider(hosts: hosts)
+        let uiContextProvider = BottomSheetTestUIContextProvider(results: [host.contextResult])
         let presenter = BottomSheetPresenterImpl(uiContextProvider: uiContextProvider, logger: nil)
-        let failures = BottomSheetFailureProbe()
+        var failures: [BottomSheetPresentationError] = []
 
-        presenter.show(
-            themeStore: OwnIDThemeStore(),
-            onFailure: { reason in Task { await failures.record(reason) } }
-        ) { _ in
-            Text("Sheet")
-        }
+        try presenter.show(themeStore: OwnIDThemeStore(), onFailure: { failures.append($0) }) { _ in Text("Sheet") }
+        try await waitForPresentationFailures(count: 1) { failures }
 
-        let failure = try await failures.next("bottom sheet failure for \(variant.testDescription)")
-
-        #expect(failure.description == expectedFailure)
-        #expect(uiContextProvider.topMostViewControllerCallCount > 0)
+        #expect(failures == [.hostNotReady], "Unexpected host result for \(variant.testDescription)")
     }
 
     @Test func `Layout metrics resolve keyboard overlap and top`() {
@@ -217,20 +530,80 @@ struct BottomSheetRuntimeTests {
     }
 
     private func bottomSheetViewController(
-        containerController: OwnIDUIContainerController
+        containerController: OwnIDUIContainerController,
+        expectedWindow: UIWindow? = nil
     ) -> BottomSheetViewController {
-        BottomSheetViewController(
-            content: AnyView(Text("Sheet content")),
+        let expectedWindow = expectedWindow ?? makeBottomSheetTestWindow()
+        return BottomSheetViewController(
+            expectedWindow: expectedWindow,
+            containerController: containerController,
             themeStore: OwnIDThemeStore(),
-            containerController: containerController
+            content: AnyView(Text("Sheet content"))
         )
     }
+}
+
+@MainActor
+private func waitForInputReadiness(
+    _ containerController: OwnIDUIContainerController,
+    expected: Bool = true
+) async throws {
+    for _ in 0..<100 {
+        if containerController.isInputReady == expected {
+            return
+        }
+        try await Task.sleep(nanoseconds: 10_000_000)
+    }
+
+    throw BottomSheetReadinessTimeout(expected: expected)
+}
+
+private struct BottomSheetReadinessTimeout: Error {
+    let expected: Bool
+}
+
+@MainActor
+private func waitForPresentationFailures(
+    count: Int,
+    observed: @MainActor () -> [BottomSheetPresentationError]
+) async throws {
+    for _ in 0..<100 where observed().count < count {
+        try await Task.sleep(nanoseconds: 10_000_000)
+    }
+    #expect(observed().count == count)
+}
+
+@MainActor
+private func waitForPresentedSheet(on host: BottomSheetCapturingHost) async throws {
+    for _ in 0..<100 where host.sheet == nil {
+        try await Task.sleep(nanoseconds: 10_000_000)
+    }
+    try #require(host.sheet != nil)
+}
+
+@MainActor
+private func makeBottomSheetTestWindow() -> UIKitRuntimeTestWindow {
+    let window = UIKitRuntimeTestWindow()
+    if let foregroundScene = UIApplication.shared.connectedScenes
+        .compactMap({ $0 as? UIWindowScene })
+        .first(where: { $0.activationState == .foregroundActive })
+    {
+        window.windowScene = foregroundScene
+    }
+    return window
 }
 
 private enum BottomSheetOffscreenHostVariant: CaseIterable, CustomTestStringConvertible {
     case missingWindow
     case dismissingHost
     case dismissingPresentedController
+    case hiddenHost
+    case transparentHost
+    case presentingHost
+    case movingHost
+    case hiddenWindow
+    case transparentWindow
+    case occupiedHost
 
     var testDescription: String {
         switch self {
@@ -240,6 +613,20 @@ private enum BottomSheetOffscreenHostVariant: CaseIterable, CustomTestStringConv
             "dismissing host"
         case .dismissingPresentedController:
             "dismissing presented controller"
+        case .hiddenHost:
+            "hidden host"
+        case .transparentHost:
+            "transparent host"
+        case .presentingHost:
+            "presenting host"
+        case .movingHost:
+            "moving host"
+        case .hiddenWindow:
+            "hidden window"
+        case .transparentWindow:
+            "transparent window"
+        case .occupiedHost:
+            "occupied host"
         }
     }
 
@@ -252,6 +639,8 @@ private enum BottomSheetOffscreenHostVariant: CaseIterable, CustomTestStringConv
             BottomSheetOffscreenHost.dismissingHost()
         case .dismissingPresentedController:
             BottomSheetOffscreenHost.dismissingPresentedController()
+        case .hiddenHost, .transparentHost, .presentingHost, .movingHost, .hiddenWindow, .transparentWindow, .occupiedHost:
+            BottomSheetOffscreenHost.unavailable(self)
         }
     }
 }
@@ -259,7 +648,14 @@ private enum BottomSheetOffscreenHostVariant: CaseIterable, CustomTestStringConv
 @MainActor
 private struct BottomSheetOffscreenHost {
     let viewController: UIViewController
-    private let window: UIKitRuntimeTestWindow?
+    let window: UIKitRuntimeTestWindow?
+
+    var contextResult: UIContextResult {
+        if let window {
+            return .windowAndController(window: window, controller: viewController)
+        }
+        return .windowAndController(window: makeBottomSheetTestWindow(), controller: viewController)
+    }
 
     static func missingWindow() -> Self {
         let viewController = UIViewController()
@@ -269,7 +665,7 @@ private struct BottomSheetOffscreenHost {
 
     static func dismissingHost() -> Self {
         let viewController = BottomSheetDismissingViewController()
-        let window = UIKitRuntimeTestWindow()
+        let window = makeBottomSheetTestWindow()
         window.show(root: viewController)
         return Self(viewController: viewController, window: window)
     }
@@ -277,8 +673,28 @@ private struct BottomSheetOffscreenHost {
     static func dismissingPresentedController() -> Self {
         let viewController = BottomSheetPresentingViewController()
         viewController.presentedOverride = BottomSheetDismissingViewController()
-        let window = UIKitRuntimeTestWindow()
+        let window = makeBottomSheetTestWindow()
         window.show(root: viewController)
+        return Self(viewController: viewController, window: window)
+    }
+
+    static func unavailable(_ variant: BottomSheetOffscreenHostVariant) -> Self {
+        let viewController: UIViewController
+        switch variant {
+        case .presentingHost: viewController = BottomSheetBeingPresentedHost()
+        case .movingHost: viewController = BottomSheetMovingHost()
+        case .occupiedHost:
+            let host = BottomSheetPresentingViewController()
+            host.presentedOverride = UIViewController()
+            viewController = host
+        default: viewController = UIViewController()
+        }
+        let window = makeBottomSheetTestWindow()
+        window.show(root: viewController)
+        if variant == .hiddenHost { viewController.view.isHidden = true }
+        if variant == .transparentHost { viewController.view.alpha = 0 }
+        if variant == .hiddenWindow { window.isHidden = true }
+        if variant == .transparentWindow { window.alpha = 0 }
         return Self(viewController: viewController, window: window)
     }
 
@@ -291,6 +707,14 @@ private final class BottomSheetDismissingViewController: UIViewController {
     override var isBeingDismissed: Bool { true }
 }
 
+private final class BottomSheetBeingPresentedHost: UIViewController {
+    override var isBeingPresented: Bool { true }
+}
+
+private final class BottomSheetMovingHost: UIViewController {
+    override var isMovingFromParent: Bool { true }
+}
+
 private final class BottomSheetPresentingViewController: UIViewController {
     var presentedOverride: UIViewController?
 
@@ -299,71 +723,32 @@ private final class BottomSheetPresentingViewController: UIViewController {
     }
 }
 
+private final class BottomSheetCapturingHost: UIViewController {
+    var sheet: BottomSheetViewController?
+
+    override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)? = nil) {
+        sheet = viewControllerToPresent as? BottomSheetViewController
+        completion?()
+    }
+}
+
 @MainActor
 private final class BottomSheetTestUIContextProvider: UIContextProvider, @unchecked Sendable {
-    private let hosts: [UIViewController?]
-    private(set) var topMostViewControllerCallCount = 0
+    private let results: [UIContextResult]
+    private var index = 0
+    var callCount: Int { index }
 
-    init(hosts: [UIViewController?]) {
-        self.hosts = hosts
+    init(results: [UIContextResult]) {
+        self.results = results
     }
 
-    func activeWindow() -> UIWindow? {
-        nil
-    }
-
-    func topMostViewController(_ window: UIWindow?) -> UIViewController? {
-        defer { topMostViewControllerCallCount += 1 }
-        guard topMostViewControllerCallCount < hosts.count else {
-            return hosts.last ?? nil
-        }
-        return hosts[topMostViewControllerCallCount]
+    func current() -> UIContextResult {
+        defer { index += 1 }
+        guard index < results.count else { return results.last ?? .failure(TestUIContextError.missing) }
+        return results[index]
     }
 }
 
-private actor BottomSheetFailureProbe {
-    private var values: [Reason] = []
-    private var waiters: [CheckedContinuation<Reason, Never>] = []
-
-    func record(_ reason: Reason) {
-        if let waiter = waiters.first {
-            waiters.removeFirst()
-            waiter.resume(returning: reason)
-        } else {
-            values.append(reason)
-        }
-    }
-
-    func next(_ description: String, seconds: UInt64 = 5) async throws -> Reason {
-        try await withBottomSheetRuntimeTimeout(description, seconds: seconds) {
-            await self.next()
-        }
-    }
-
-    private func next() async -> Reason {
-        if !values.isEmpty {
-            return values.removeFirst()
-        }
-        return await withCheckedContinuation { waiters.append($0) }
-    }
-}
-
-private enum BottomSheetRuntimeTimeoutError: Error {
-    case timedOut(String)
-}
-
-private func withBottomSheetRuntimeTimeout<T: Sendable>(
-    _ description: String,
-    seconds: UInt64 = 5,
-    operation: @escaping @Sendable () async throws -> T
-) async throws -> T {
-    try await withThrowingTaskGroup(of: T.self) { group in
-        defer { group.cancelAll() }
-        group.addTask { try await operation() }
-        group.addTask {
-            try await Task.sleep(nanoseconds: seconds * 1_000_000_000)
-            throw BottomSheetRuntimeTimeoutError.timedOut(description)
-        }
-        return try await group.next()!
-    }
+private enum TestUIContextError: Error {
+    case missing
 }

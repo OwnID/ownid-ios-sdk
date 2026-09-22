@@ -44,7 +44,8 @@ CocoaPods fallback, verify the podspecs in that tag.
 
 Compatibility gates to check before editing:
 
-- iOS 13.0 or higher.
+- iOS 13.0 declared deployment minimum; iOS 15–27 primary runtime support;
+  iOS 13–14 best effort.
 - Xcode 16.0 or higher with a Swift 6-capable toolchain. The SDK package uses
   Swift 6 mode; consuming it does not by itself require changing the host app
   target's Swift language mode.

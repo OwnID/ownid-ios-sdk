@@ -6,43 +6,74 @@ internal protocol BottomSheetPresenter: Sendable {
     @MainActor
     func show<Content: View>(
         themeStore: OwnIDThemeStore,
-        onFailure: @escaping @MainActor (Reason) -> Void,
-        content: @escaping @MainActor (OwnIDUIContainerController) -> Content
-    )
+        onFailure: @escaping @MainActor (BottomSheetPresentationError) -> Void,
+        content: @MainActor (OwnIDUIContainerController) -> Content
+    ) throws
+}
+
+internal enum BottomSheetPresentationError: String, LocalizedError, Sendable {
+    case launchAlreadyInProgress
+    case missingPresentationController
+    case hostNotReady
+    case containerClosedBeforePresentation
+    case presentationAcknowledgementTimedOut
+
+    internal var errorDescription: String? {
+        switch self {
+        case .launchAlreadyInProgress:
+            return "Launch already in progress"
+        case .missingPresentationController:
+            return "UI context does not include a presentation controller"
+        case .hostNotReady:
+            return "Host is transitioning or off-screen"
+        case .containerClosedBeforePresentation:
+            return "Operation container closed before presentation"
+        case .presentationAcknowledgementTimedOut:
+            return "Bottom sheet presentation acknowledgement timed out after 3 seconds"
+        }
+    }
 }
 
 internal final class BottomSheetPresenterImpl: BottomSheetPresenter, @unchecked Sendable {
     private enum TimingConstants {
-        static let maxRetries = 3
-        static let retryDelayNs: UInt64 = 160_000_000
         static let watchdogDelayNs: UInt64 = 3_000_000_000
+        static let retryDelayNs: UInt64 = 160_000_000
+        static let presentationAttemptCount = 4
     }
 
     @MainActor
     private final class ActivePresentation {
         private let presenterRetainer: BottomSheetPresenterImpl
+        weak var window: UIWindow?
+        weak var scene: UIWindowScene?
+        let usesLegacyScene: Bool
         let containerController: OwnIDUIContainerController
         let viewController: BottomSheetViewController
-        let onFailure: @MainActor (Reason) -> Void
+        let onFailure: @MainActor (BottomSheetPresentationError) -> Void
 
         var presentLoopTask: Task<Void, Never>?
         var presentWatchdog: Task<Void, Never>?
         var hasStartedPresentation = false
-        var hasOpened = false
+        var hasAcknowledgedUIKitPresentation = false
 
         init(
             presenter: BottomSheetPresenterImpl,
-            content: AnyView,
-            themeStore: OwnIDThemeStore,
+            window: UIWindow,
             containerController: OwnIDUIContainerController,
-            onFailure: @escaping @MainActor (Reason) -> Void
+            themeStore: OwnIDThemeStore,
+            content: AnyView,
+            onFailure: @escaping @MainActor (BottomSheetPresentationError) -> Void
         ) {
             self.presenterRetainer = presenter
+            self.window = window
+            self.scene = window.windowScene
+            self.usesLegacyScene = window.windowScene == nil
             self.containerController = containerController
             self.viewController = BottomSheetViewController(
-                content: content,
+                expectedWindow: window,
+                containerController: containerController,
                 themeStore: themeStore,
-                containerController: containerController
+                content: content
             )
             self.onFailure = onFailure
         }
@@ -68,50 +99,44 @@ internal final class BottomSheetPresenterImpl: BottomSheetPresenter, @unchecked 
     @MainActor
     internal func show<Content: View>(
         themeStore: OwnIDThemeStore,
-        onFailure: @escaping @MainActor (Reason) -> Void,
-        content: @escaping @MainActor (OwnIDUIContainerController) -> Content
-    ) {
+        onFailure: @escaping @MainActor (BottomSheetPresentationError) -> Void,
+        content: @MainActor (OwnIDUIContainerController) -> Content
+    ) throws {
         guard activePresentation == nil else {
-            onFailure(.systemError(details: "Launch already in progress"))
-            return
+            throw BottomSheetPresentationError.launchAlreadyInProgress
+        }
+
+        let window: UIWindow
+        switch uiContextProvider.current() {
+        case .windowAndController(let resolvedWindow, _):
+            window = resolvedWindow
+        case .windowOnly:
+            throw BottomSheetPresentationError.missingPresentationController
+        case .failure(let error):
+            throw error
         }
 
         let containerController = OwnIDUIContainerController { [weak self] in
             self?.dismissActivePresentation()
         }
+        let resolvedContent = AnyView(content(containerController))
+        guard !containerController.isClosing else {
+            throw BottomSheetPresentationError.containerClosedBeforePresentation
+        }
 
         let presentation = ActivePresentation(
             presenter: self,
-            content: AnyView(content(containerController)),
-            themeStore: themeStore,
+            window: window,
             containerController: containerController,
+            themeStore: themeStore,
+            content: resolvedContent,
             onFailure: onFailure
         )
-        activePresentation = presentation
 
-        presentation.viewController.onDidOpen = { [weak self, weak presentation] in
+        presentation.viewController.onUIKitPresentationAcknowledged = { [weak self, weak presentation] in
             guard let self, let presentation else { return }
-            guard presentation === self.activePresentation else {
-                if presentation.hasStartedPresentation {
-                    presentation.viewController.requestDismiss(completion: {})
-                }
-                return
-            }
-            guard !presentation.hasOpened else { return }
-
-            presentation.hasOpened = true
-            presentation.presentWatchdog?.cancel()
-            presentation.presentWatchdog = nil
+            self.acknowledgeUIKitPresentation(presentation)
         }
-        presentation.viewController.onDidDisappearUnexpectedly = { [weak self, weak presentation] in
-            guard let self, let presentation else { return }
-            guard presentation === self.activePresentation else { return }
-            self.logger?.logW(source: self, prefix: "presentOnHost", message: "Bottom sheet disappeared unexpectedly")
-
-            presentation.cancelTransientTasks()
-            self.activePresentation = nil
-        }
-
         containerController.addClosedHandler { [weak self, weak presentation] _ in
             guard let self, let presentation else { return }
             guard presentation === self.activePresentation else { return }
@@ -119,10 +144,44 @@ internal final class BottomSheetPresenterImpl: BottomSheetPresenter, @unchecked 
             self.activePresentation = nil
         }
 
+        activePresentation = presentation
         presentation.presentLoopTask = Task { @MainActor [weak self, weak presentation] in
-            guard let self else { return }
-            guard let presentation else { return }
-            await self.runPresentLoop(retries: TimingConstants.maxRetries, presentation: presentation)
+            guard let self, let presentation else { return }
+            for attempt in 0..<TimingConstants.presentationAttemptCount {
+                if attempt > 0 {
+                    do {
+                        try await Task.sleep(nanoseconds: TimingConstants.retryDelayNs)
+                    } catch {
+                        return
+                    }
+                }
+                guard !Task.isCancelled, presentation === self.activePresentation else { return }
+                guard !presentation.containerController.isClosing else { return }
+
+                switch self.uiContextProvider.current() {
+                case .windowAndController(let resolvedWindow, let host):
+                    guard self.matchesInitialOwner(window: resolvedWindow, presentation: presentation) else {
+                        self.failPresentation(presentation: presentation, error: .hostNotReady)
+                        return
+                    }
+                    guard self.isReadyToPresent(on: host, in: resolvedWindow) else { continue }
+                    self.presentOnHost(host: host, presentation: presentation)
+                    return
+                case .windowOnly:
+                    self.failPresentation(presentation: presentation, error: .hostNotReady)
+                    return
+                case .failure(let error):
+                    self.logger?.logW(
+                        source: self,
+                        prefix: "show",
+                        message: "UI context resolution failed during presentation retry",
+                        cause: error
+                    )
+                    self.failPresentation(presentation: presentation, error: .hostNotReady)
+                    return
+                }
+            }
+            self.failPresentation(presentation: presentation, error: .hostNotReady)
         }
     }
 
@@ -151,62 +210,58 @@ internal final class BottomSheetPresenterImpl: BottomSheetPresenter, @unchecked 
     }
 
     @MainActor
-    private func runPresentLoop(retries: Int, presentation: ActivePresentation) async {
-        defer { presentation.presentLoopTask = nil }
-
-        for retry in 0...retries {
-            if Task.isCancelled { return }
-            guard presentation === activePresentation else { return }
-
-            guard let host = uiContextProvider.topMostViewController(nil) else {
-                if retry < retries {
-                    try? await Task.sleep(nanoseconds: TimingConstants.retryDelayNs)
-                    continue
-                }
-                failPresentation(
-                    presentation: presentation,
-                    logMessage: "Top view controller not found",
-                    reason: .systemError(details: "Top view controller not found")
-                )
-                return
-            }
-
-            if host.isBeingDismissed || host.view.window == nil || host.presentedViewController?.isBeingDismissed == true {
-                if retry < retries {
-                    try? await Task.sleep(nanoseconds: TimingConstants.retryDelayNs)
-                    continue
-                }
-                failPresentation(
-                    presentation: presentation,
-                    logMessage: "Host is dismissing or off-screen",
-                    reason: .systemError(details: "Host is dismissing or off-screen")
-                )
-                return
-            }
-
-            presentOnHost(host: host, presentation: presentation)
-            return
+    private func isReadyToPresent(on host: UIViewController, in window: UIWindow) -> Bool {
+        var candidate: UIViewController? = host
+        while let current = candidate {
+            guard !(current is BottomSheetViewController) else { return false }
+            candidate = current.parent ?? current.presentingViewController
         }
+        guard !window.isHidden, window.alpha > 0 else { return false }
+        if let scene = window.windowScene {
+            guard scene.activationState == .foregroundActive else { return false }
+        } else {
+            guard UIContextLifecycleMode.isLegacy() else { return false }
+            guard UIApplication.shared.applicationState == .active else { return false }
+        }
+        guard let view = host.viewIfLoaded, view.window === window, !view.isHidden, view.alpha > 0 else { return false }
+        guard !host.isMovingToParent, !host.isMovingFromParent else { return false }
+        guard !host.isBeingPresented, !host.isBeingDismissed, host.transitionCoordinator == nil else { return false }
+        return host.presentedViewController == nil
+    }
+
+    @MainActor
+    private func acknowledgeUIKitPresentation(_ presentation: ActivePresentation) {
+        guard presentation === activePresentation else { return }
+        guard !presentation.hasAcknowledgedUIKitPresentation else { return }
+        guard let window = presentation.window, presentation.viewController.viewIfLoaded?.window === window else { return }
+        presentation.hasAcknowledgedUIKitPresentation = true
+        presentation.presentWatchdog?.cancel()
+        presentation.presentWatchdog = nil
     }
 
     @MainActor
     private func presentOnHost(host: UIViewController, presentation: ActivePresentation) {
         guard presentation === activePresentation else { return }
+        guard !presentation.containerController.isClosing else { return }
 
-        logger?.logD(source: self, prefix: "presentOnHost", message: "Presenting bottom sheet")
         presentation.hasStartedPresentation = true
-
+        presentation.viewController.beginPresentationLifecycle()
+        logger?.logD(source: self, prefix: "presentOnHost", message: "Presenting bottom sheet")
         presentation.presentWatchdog?.cancel()
         presentation.presentWatchdog = Task { @MainActor [weak self, weak presentation] in
-            try? await Task.sleep(nanoseconds: TimingConstants.watchdogDelayNs)
+            do {
+                try await Task.sleep(nanoseconds: TimingConstants.watchdogDelayNs)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
             guard let self else { return }
             guard let presentation else { return }
             guard presentation === self.activePresentation else { return }
-            guard !presentation.hasOpened else { return }
+            guard !presentation.hasAcknowledgedUIKitPresentation, !presentation.containerController.isClosing else { return }
             self.failPresentation(
                 presentation: presentation,
-                logMessage: "Presentation completion timed out",
-                reason: .systemError(details: "Presentation completion timed out")
+                error: .presentationAcknowledgementTimedOut
             )
         }
 
@@ -214,22 +269,26 @@ internal final class BottomSheetPresenterImpl: BottomSheetPresenter, @unchecked 
             host.view.window?.endEditing(true)
         }
 
-        host.present(presentation.viewController, animated: false)
+        host.present(presentation.viewController, animated: false) { [weak presentation] in
+            presentation?.viewController.acknowledgeUIKitPresentation()
+        }
     }
 
     @MainActor
-    private func failPresentation(presentation: ActivePresentation, logMessage: String, reason: Reason) {
+    private func matchesInitialOwner(window: UIWindow, presentation: ActivePresentation) -> Bool {
+        guard let initialWindow = presentation.window, window === initialWindow else { return false }
+        if presentation.usesLegacyScene {
+            return window.windowScene == nil
+        }
+        guard let initialScene = presentation.scene else { return false }
+        return window.windowScene === initialScene
+    }
+
+    @MainActor
+    private func failPresentation(presentation: ActivePresentation, error: BottomSheetPresentationError) {
         guard presentation === activePresentation else { return }
         presentation.cancelTransientTasks()
-        activePresentation = nil
-        if presentation.hasStartedPresentation {
-            presentation.viewController.requestDismiss { [weak presentation] in
-                presentation?.containerController.markClosed()
-            }
-        } else {
-            presentation.containerController.markClosed()
-        }
-        logger?.logW(source: self, prefix: "BottomSheetPresenter", message: logMessage)
-        presentation.onFailure(reason)
+        presentation.containerController.requestDismissWithoutAbort()
+        presentation.onFailure(error)
     }
 }

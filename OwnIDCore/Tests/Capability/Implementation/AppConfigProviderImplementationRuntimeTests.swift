@@ -161,6 +161,38 @@ struct AppConfigProviderImplementationRuntimeTests {
         #expect(await network.requestCount == 1)
     }
 
+    @Test func `Retry schedule stays at its configured cap until a later attempt succeeds`() async throws {
+        let failureURL = try #require(URL(string: "https://app-config-runtime.ownid.test/retry-cap"))
+        let failure = NetworkResponse.Fail.networkError(
+            NetworkResponse.Fail.NetworkError(url: failureURL, error: URLError(.notConnectedToInternet))
+        )
+        let network = ScriptedAppConfigNetwork([
+            .failure(failure),
+            .failure(failure),
+            .failure(failure),
+            .failure(failure),
+            .stallUntilResolved,
+        ])
+        let harness = try Self.makeHarness(network: network, retryScheduleSeconds: [0])
+        defer { harness.cleanup() }
+        var iterator = harness.provider.configStream.makeAsyncIterator()
+
+        let initialConfig = try await harness.provider.getOrFetchConfig()
+        #expect(try #require(await iterator.next()) == initialConfig)
+        try await withTestTimeout("retries beyond the configured schedule length") {
+            await network.waitForRequestCount(5)
+        }
+        await network.resolveNextStall(
+            with: .success(Self.remoteConfigBody(displayName: "Capped Retry Config", logLevel: "Information"))
+        )
+        let retriedConfig = try #require(await iterator.next())
+
+        #expect(initialConfig == .default)
+        #expect(retriedConfig.displayName == "Capped Retry Config")
+        #expect(await network.requestCount == 5)
+        #expect(await harness.provider.isNetworkMonitoringActiveForTest() == false)
+    }
+
     @Test func `Instance task-scope shutdown cancels active network monitor`() async throws {
         let failureURL = try #require(URL(string: "https://app-config-runtime.ownid.test/shutdown-network-monitor"))
         let monitor = RecordingAppConfigPathMonitor()

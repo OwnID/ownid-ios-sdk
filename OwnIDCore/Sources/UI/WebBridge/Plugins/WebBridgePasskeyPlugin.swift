@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import UIKit
 
 /// Built-in FIDO plugin backed by the platform passkey capability.
 ///
@@ -7,14 +8,15 @@ import Security
 /// assertion, and creation actions under the `FIDO` namespace. `get` expects a hosted-page challenge context and
 /// relying-party ID, optionally limited by `credsIds` or `credId`, then calls ``PasskeyProtocol/getCredential``. `create`
 /// accepts either the OwnID flow shape, selected by the presence of `context`, or the WebAuthn enrollment-options shape,
-/// then calls ``PasskeyProtocol/createCredential``. Presentation anchoring is owned by the passkey capability; this
-/// plugin does not derive a window from the WebBridge message.
+/// then calls ``PasskeyProtocol/createCredential``. Presentation anchoring uses the WebBridge-scoped UI context.
 ///
 /// Successful assertions return authenticator data, client data, signature, user handle, optional authenticator
 /// attachment, and credential ID. Successful creation returns the compact OwnID flow payload or the WebAuthn-style
 /// enrollment payload. User or system cancellation maps to bridge error type `ABORTED`; missing assertion credentials
 /// map to `TYPE_NO_CREDENTIAL`; malformed parameters and other provider failures return bridge error messages. The
-/// plugin returns WebBridge payloads only and does not persist assertion or attestation results.
+/// plugin returns WebBridge payloads only and does not persist assertion or attestation results. If the attached
+/// WebView cannot provide a presentation window, `get` and `create` return an error without invoking the passkey
+/// capability.
 @available(iOS 16.0, *)
 internal actor WebBridgePasskeyPlugin: WebBridgePlugin {
     internal static let KEY = WebBridgePluginKey(id: "FIDO")
@@ -23,15 +25,25 @@ internal actor WebBridgePasskeyPlugin: WebBridgePlugin {
     nonisolated let actions: [String] = ["isAvailable", "create", "get"]
 
     private let passkey: any PasskeyProtocol
+    private let uiContextProvider: any UIContextProvider
     private let localInfo: any LocalInfo
     private let coder: any JSONCoder
+    private let logger: OwnIDLogRouter?
 
     private let defaultTimeoutMs = Timeout(milliseconds: 2 * 60 * 1000)
 
-    init(passkey: any PasskeyProtocol, localInfo: any LocalInfo, coder: any JSONCoder) {
+    init(
+        passkey: any PasskeyProtocol,
+        uiContextProvider: any UIContextProvider,
+        localInfo: any LocalInfo,
+        coder: any JSONCoder,
+        logger: OwnIDLogRouter?
+    ) {
         self.passkey = passkey
+        self.uiContextProvider = uiContextProvider
         self.localInfo = localInfo
         self.coder = coder
+        self.logger = logger
     }
 
     nonisolated func handle(_ message: WebBridgePluginMessage) async -> WebBridgePluginResult {
@@ -88,7 +100,13 @@ internal actor WebBridgePasskeyPlugin: WebBridgePlugin {
             timeout: defaultTimeoutMs
         )
 
-        switch await passkey.getCredential(assertionOptions: assertionOptions) {
+        switch await Self.performCredentialRequest(
+            uiContextProvider: uiContextProvider,
+            logger: logger,
+            operation: { [passkey, assertionOptions] window in
+                await passkey.getCredential(window: window, assertionOptions: assertionOptions)
+            }
+        ) {
         case .success(let res):
             return WebBridgePluginResult.success(
                 JSONValue([
@@ -162,7 +180,13 @@ internal actor WebBridgePasskeyPlugin: WebBridgePlugin {
                     excludeCredentials: exclude.isEmpty ? nil : exclude.map { PublicKeyCredentialDescriptor(id: $0, type: .publicKey) }
                 )
 
-                switch await passkey.createCredential(attestationOptions: attestationOptions) {
+                switch await Self.performCredentialRequest(
+                    uiContextProvider: uiContextProvider,
+                    logger: logger,
+                    operation: { [passkey, attestationOptions] window in
+                        await passkey.createCredential(window: window, attestationOptions: attestationOptions)
+                    }
+                ) {
                 case .success(let res):
                     return WebBridgePluginResult.success(
                         JSONValue([
@@ -244,7 +268,13 @@ internal actor WebBridgePasskeyPlugin: WebBridgePlugin {
                     excludeCredentials: excludeCredentials
                 )
 
-                switch await passkey.createCredential(attestationOptions: attestationOptions) {
+                switch await Self.performCredentialRequest(
+                    uiContextProvider: uiContextProvider,
+                    logger: logger,
+                    operation: { [passkey, attestationOptions] window in
+                        await passkey.createCredential(window: window, attestationOptions: attestationOptions)
+                    }
+                ) {
                 case .success(let res):
                     return WebBridgePluginResult.success(
                         JSONValue([
@@ -284,6 +314,23 @@ internal actor WebBridgePasskeyPlugin: WebBridgePlugin {
         return WebBridgePluginResult.error(message: message, type: effectiveType)
     }
 
+    @MainActor
+    private static func performCredentialRequest<Result: Sendable>(
+        uiContextProvider: any UIContextProvider,
+        logger: OwnIDLogRouter?,
+        operation: @MainActor @Sendable (UIWindow) async -> PasskeyResult<Result>
+    ) async -> PasskeyResult<Result> {
+        do {
+            let window = try uiContextProvider.current().requireWindow()
+            return await operation(window)
+        } catch {
+            logger?.logW(source: Self.self, prefix: #function, message: "UI context resolution failed", cause: error)
+            return .failure(
+                .general("Failed to resolve a presentation window: \(error.localizedDescription)", error.asSendableError())
+            )
+        }
+    }
+
     private func credentialIds(credsIds: [String]?, credId: String?) -> [String] {
         if let arr = credsIds?.filter({ !$0.isEmpty }), !arr.isEmpty { return arr }
         if let one = credId, !one.isEmpty { return [one] }
@@ -296,8 +343,10 @@ extension WebBridgePasskeyPlugin {
     internal static func create(resolver: any DIContainerResolver) throws -> WebBridgePasskeyPlugin {
         WebBridgePasskeyPlugin(
             passkey: try resolver.getOrThrow(type: (any PasskeyProtocol).self),
+            uiContextProvider: try resolver.getOrThrow(type: (any UIContextProvider).self),
             localInfo: try resolver.getOrThrow(type: (any LocalInfo).self),
-            coder: try resolver.getOrThrow(type: (any JSONCoder).self)
+            coder: try resolver.getOrThrow(type: (any JSONCoder).self),
+            logger: resolver.getOrNil(type: OwnIDLogRouter.self)
         )
     }
 }

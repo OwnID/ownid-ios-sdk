@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// Outcome of a passkey operation.
 ///
@@ -53,25 +54,26 @@ extension PasskeyResult.Error: CustomStringConvertible {
 /// - Only registered on iOS 16+; unavailable on earlier versions.
 /// - Overlapping requests on the same capability instance are not supported. If a request is already running,
 ///   a new one fails immediately.
-/// - Calls are `@MainActor` and use ``UIContextProvider`` to supply the AuthenticationServices presentation anchor.
-///   If no active window is available, the SDK provides an empty anchor and the platform owns the resulting failure.
+/// - Calls are `@MainActor` and use the supplied window as the AuthenticationServices presentation anchor.
 /// - Results are ``PasskeyResult/success(_:)``, ``PasskeyResult/canceled(_:)``, or ``PasskeyResult/failure(_:)``.
 public protocol PasskeyProtocol: Capability, Sendable {
     /// Retrieves an existing passkey credential (assertion).
     ///
     /// If another passkey request is already running on the same Passkey instance, this call fails immediately.
     ///
+    /// - Parameter window: Window used as the AuthenticationServices presentation anchor.
     /// - Parameter assertionOptions: Server-provided assertion options.
     /// - Returns: ``PasskeyResult`` with the assertion data, a cancellation, or a failure.
-    @MainActor func getCredential(assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult>
+    @MainActor func getCredential(window: UIWindow, assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult>
 
     /// Creates a new passkey credential (attestation).
     ///
     /// If another passkey request is already running on the same Passkey instance, this call fails immediately.
     ///
+    /// - Parameter window: Window used as the AuthenticationServices presentation anchor.
     /// - Parameter attestationOptions: Server-provided attestation options.
     /// - Returns: ``PasskeyResult`` with the attestation data, a cancellation, or a failure.
-    @MainActor func createCredential(attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult>
+    @MainActor func createCredential(window: UIWindow, attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult>
 }
 
 /// Stable OwnID identifiers for AuthenticationServices passkey authorization errors.

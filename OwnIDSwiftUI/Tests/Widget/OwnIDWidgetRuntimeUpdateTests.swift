@@ -1,11 +1,12 @@
 import Foundation
 import SwiftUI
 import Testing
+import UIKit
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 @_spi(OwnIDInternal) @testable import OwnIDSwiftUI
 
-// Covers: UI-PRESENT-110
+// Covers: UI-PRESENT-110, UI-PRESENT-380, UI-PRESENT-390, UI-PRESENT-410
 @MainActor
 @Suite(.serialized)
 struct OwnIDWidgetRuntimeUpdateTests {
@@ -61,6 +62,189 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
     @available(iOS 16.0, *)
     @Test(.timeLimit(.minutes(1)))
+    func `Default login widget replaces owned runtime when instance changes`() async throws {
+        let firstInstance = uniqueWidgetInstanceName("default-login-instance-a")
+        let secondInstance = uniqueWidgetInstanceName("default-login-instance-b")
+        let firstController = DeferredLoginController()
+        let secondController = DeferredLoginController()
+        let firstFlow = RecordingBoostLoginFlow(controllers: [firstController])
+        let secondWindowProbe = WidgetWindowIDProbe()
+        try initializeDefaultWidgetInstance(instanceName: firstInstance, loginFlow: firstFlow)
+        try initializeDefaultWidgetInstance(instanceName: secondInstance)
+        defer {
+            OwnID.destroy(instanceName: firstInstance)
+            OwnID.destroy(instanceName: secondInstance)
+        }
+
+        let secondContainer = try #require(OwnID.getInstanceContainer(secondInstance))
+        secondContainer.registerFactory(
+            (any BoostLoginFlow).self,
+            dependencies: [(any UIContextProvider).self]
+        ) { resolver in
+            DIContextLoginFlow(
+                uiContextProvider: try resolver.getOrThrow(type: (any UIContextProvider).self),
+                windowProbe: secondWindowProbe,
+                controller: secondController
+            )
+        }
+
+        let buttonProbe = WidgetButtonProbe()
+        let callbackProbe = WidgetCallbackProbe<String>()
+        let host = SwiftUIRuntimeHost(
+            rootView: loginWidget(
+                viewModel: nil,
+                loginID: "first@example.test",
+                instanceName: firstInstance,
+                buttonProbe: buttonProbe,
+                onLogin: { response in callbackProbe.record("old:\(response.loginID.id)") }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+        #expect(firstFlow.startCount == 1)
+
+        host.update(
+            rootView: loginWidget(
+                viewModel: nil,
+                loginID: "second@example.test",
+                instanceName: secondInstance,
+                buttonProbe: buttonProbe,
+                onLogin: { response in callbackProbe.record("new:\(response.loginID.id)") }
+            )
+        )
+        await host.settle(cycles: 3)
+
+        #expect(
+            firstController.abortReasonDescriptions
+                == [Reason.userClose(details: "Login widget deinitialized").description]
+        )
+        #expect(buttonProbe.latestState == .ready(accessibilityLabel: widgetButtonTitle))
+
+        await firstController.settle(.success(makeLoginResponse(id: "late@example.test")))
+        await host.settle(cycles: 2)
+        #expect(callbackProbe.isEmpty)
+
+        let currentAction = try #require(buttonProbe.latestAction, "Expected replacement login widget action")
+        currentAction()
+        let expectedWindow = try #require(host.host.view.window)
+        let resolvedWindowID = try await withSwiftUITestTimeout("replacement login UI context", seconds: 2) {
+            await secondWindowProbe.next()
+        }
+        #expect(resolvedWindowID == ObjectIdentifier(expectedWindow))
+
+        await secondController.settle(.success(makeLoginResponse(id: "second@example.test")))
+        #expect(await callbackProbe.next() == "new:second@example.test")
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Removing and readding default login widget replaces its owned model`() async throws {
+        let instanceName = uniqueWidgetInstanceName("default-login-removal")
+        let firstController = DeferredLoginController()
+        let secondController = DeferredLoginController()
+        let flow = RecordingBoostLoginFlow(controllers: [firstController, secondController])
+        try initializeDefaultWidgetInstance(instanceName: instanceName, loginFlow: flow)
+        defer { OwnID.destroy(instanceName: instanceName) }
+
+        let buttonProbe = WidgetButtonProbe()
+        let callbackProbe = WidgetCallbackProbe<String>()
+        let host = SwiftUIRuntimeHost(
+            rootView: removableLoginWidget(
+                isVisible: true,
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onLogin: { response in callbackProbe.record(response.loginID.id) }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+        #expect(flow.startCount == 1)
+
+        host.update(
+            rootView: removableLoginWidget(
+                isVisible: false,
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onLogin: { response in callbackProbe.record(response.loginID.id) }
+            )
+        )
+        buttonProbe.clear()
+        await host.settle(cycles: 3)
+        #expect(
+            firstController.abortReasonDescriptions
+                == [Reason.userClose(details: "Login widget deinitialized").description]
+        )
+
+        await firstController.settle(.success(makeLoginResponse(id: "late@example.test")))
+        await host.settle(cycles: 2)
+        #expect(callbackProbe.isEmpty)
+
+        host.update(
+            rootView: removableLoginWidget(
+                isVisible: true,
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onLogin: { response in callbackProbe.record(response.loginID.id) }
+            )
+        )
+        await host.settle(cycles: 3)
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+        #expect(flow.startCount == 2)
+
+        await secondController.settle(.success(makeLoginResponse(id: "new@example.test")))
+        #expect(await callbackProbe.next() == "new@example.test")
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Default login widget resolves its scoped UI context from the DI flow factory`() async throws {
+        let instanceName = uniqueWidgetInstanceName("default-login-ui-context")
+        let controller = DeferredLoginController()
+        let windowProbe = WidgetWindowIDProbe()
+        try initializeDefaultWidgetInstance(instanceName: instanceName)
+        defer { OwnID.destroy(instanceName: instanceName) }
+
+        let container = try #require(OwnID.getInstanceContainer(instanceName))
+        container.registerFactory(
+            (any BoostLoginFlow).self,
+            dependencies: [(any UIContextProvider).self]
+        ) { resolver in
+            let provider = try resolver.getOrThrow(type: (any UIContextProvider).self)
+            return DIContextLoginFlow(
+                uiContextProvider: provider,
+                windowProbe: windowProbe,
+                controller: controller
+            )
+        }
+
+        let buttonProbe = WidgetButtonProbe()
+        let host = SwiftUIRuntimeHost(
+            rootView: loginWidget(
+                viewModel: nil,
+                loginID: "user@example.test",
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onLogin: { _ in }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+        let expectedWindow = try #require(host.host.view.window)
+        let resolvedWindowID = try await withSwiftUITestTimeout("default login UI context", seconds: 2) {
+            await windowProbe.next()
+        }
+        #expect(resolvedWindowID == ObjectIdentifier(expectedWindow))
+        await controller.settle(.canceled(.timeout))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
     func `Default create-passkey widget keeps owned completion and uses latest reset callback`() async throws {
         let instanceName = uniqueWidgetInstanceName("default-create-passkey")
         let controller = DeferredCreatePasskeyController()
@@ -111,6 +295,51 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
         #expect(await resetProbe.next() == "updated")
         #expect(flow.startCount == 1)
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Default create-passkey widget resolves its scoped UI context from the DI flow factory`() async throws {
+        let instanceName = uniqueWidgetInstanceName("default-create-passkey-ui-context")
+        let controller = DeferredCreatePasskeyController()
+        let windowProbe = WidgetWindowIDProbe()
+        try initializeDefaultWidgetInstance(instanceName: instanceName)
+        defer { OwnID.destroy(instanceName: instanceName) }
+
+        let container = try #require(OwnID.getInstanceContainer(instanceName))
+        container.registerFactory(
+            (any BoostCreatePasskeyFlow).self,
+            dependencies: [(any UIContextProvider).self]
+        ) { resolver in
+            let provider = try resolver.getOrThrow(type: (any UIContextProvider).self)
+            return DIContextCreatePasskeyFlow(
+                uiContextProvider: provider,
+                windowProbe: windowProbe,
+                controller: controller
+            )
+        }
+
+        let buttonProbe = WidgetButtonProbe()
+        let host = SwiftUIRuntimeHost(
+            rootView: createPasskeyWidget(
+                viewModel: nil,
+                loginID: "new@example.test",
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onNewPasskey: { _ in },
+                onReset: {}
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+        let expectedWindow = try #require(host.host.view.window)
+        let resolvedWindowID = try await withSwiftUITestTimeout("default create-passkey UI context", seconds: 2) {
+            await windowProbe.next()
+        }
+        #expect(resolvedWindowID == ObjectIdentifier(expectedWindow))
+        await controller.settle(.canceled(.timeout))
     }
 
     @available(iOS 16.0, *)
@@ -187,8 +416,99 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
     @available(iOS 16.0, *)
     @Test(.timeLimit(.minutes(1)))
-    func `Default create-passkey widget drops owned completion when SwiftUI identity changes`() async throws {
-        let instanceName = uniqueWidgetInstanceName("default-create-passkey-identity")
+    func `Default create-passkey widget replaces owned runtime when instance changes`() async throws {
+        let firstInstance = uniqueWidgetInstanceName("default-create-passkey-instance-a")
+        let secondInstance = uniqueWidgetInstanceName("default-create-passkey-instance-b")
+        let firstController = DeferredCreatePasskeyController()
+        let secondController = DeferredCreatePasskeyController()
+        let firstFlow = RecordingBoostCreatePasskeyFlow(controllers: [firstController])
+        let secondWindowProbe = WidgetWindowIDProbe()
+        try initializeDefaultWidgetInstance(instanceName: firstInstance, createPasskeyFlow: firstFlow)
+        try initializeDefaultWidgetInstance(instanceName: secondInstance)
+        defer {
+            OwnID.destroy(instanceName: firstInstance)
+            OwnID.destroy(instanceName: secondInstance)
+        }
+
+        let secondContainer = try #require(OwnID.getInstanceContainer(secondInstance))
+        secondContainer.registerFactory(
+            (any BoostCreatePasskeyFlow).self,
+            dependencies: [(any UIContextProvider).self]
+        ) { resolver in
+            DIContextCreatePasskeyFlow(
+                uiContextProvider: try resolver.getOrThrow(type: (any UIContextProvider).self),
+                windowProbe: secondWindowProbe,
+                controller: secondController
+            )
+        }
+
+        let buttonProbe = WidgetButtonProbe()
+        let newPasskeyProbe = WidgetCallbackProbe<String>()
+        let resetProbe = WidgetCallbackProbe<String>()
+
+        let host = SwiftUIRuntimeHost(
+            rootView: createPasskeyWidget(
+                viewModel: nil,
+                loginID: "first@example.test",
+                instanceName: firstInstance,
+                buttonProbe: buttonProbe,
+                onNewPasskey: { response in
+                    newPasskeyProbe.record("old:\(response.loginID.id)")
+                },
+                onReset: {
+                    resetProbe.record("old")
+                }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+        #expect(firstFlow.startCount == 1)
+
+        host.update(
+            rootView: createPasskeyWidget(
+                viewModel: nil,
+                loginID: "second@example.test",
+                instanceName: secondInstance,
+                buttonProbe: buttonProbe,
+                onNewPasskey: { response in
+                    newPasskeyProbe.record("new:\(response.loginID.id)")
+                },
+                onReset: {
+                    resetProbe.record("new")
+                }
+            )
+        )
+        await host.settle(cycles: 3)
+
+        #expect(
+            firstController.abortReasonDescriptions
+                == [Reason.userClose(details: "Create-passkey widget deinitialized").description]
+        )
+        #expect(resetProbe.isEmpty)
+        #expect(buttonProbe.latestState == .ready(accessibilityLabel: widgetButtonTitle))
+
+        await firstController.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "late@example.test"))))
+        await host.settle(cycles: 2)
+        #expect(newPasskeyProbe.isEmpty)
+        #expect(resetProbe.isEmpty)
+
+        let currentAction = try #require(buttonProbe.latestAction, "Expected replacement create-passkey widget action")
+        currentAction()
+        let expectedWindow = try #require(host.host.view.window)
+        let resolvedWindowID = try await withSwiftUITestTimeout("replacement create-passkey UI context", seconds: 2) {
+            await secondWindowProbe.next()
+        }
+        #expect(resolvedWindowID == ObjectIdentifier(expectedWindow))
+
+        await secondController.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "second@example.test"))))
+        #expect(await newPasskeyProbe.next() == "new:second@example.test")
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Removing and readding default create-passkey widget replaces its owned model`() async throws {
+        let instanceName = uniqueWidgetInstanceName("default-create-passkey-removal")
         let firstController = DeferredCreatePasskeyController()
         let secondController = DeferredCreatePasskeyController()
         let flow = RecordingBoostCreatePasskeyFlow(controllers: [firstController, secondController])
@@ -196,65 +516,70 @@ struct OwnIDWidgetRuntimeUpdateTests {
         defer { OwnID.destroy(instanceName: instanceName) }
 
         let buttonProbe = WidgetButtonProbe()
-        let newPasskeyProbe = WidgetCallbackProbe<String>()
+        let callbackProbe = WidgetCallbackProbe<String>()
         let resetProbe = WidgetCallbackProbe<String>()
-
         let host = SwiftUIRuntimeHost(
-            rootView: identifiedCreatePasskeyWidget(
-                identity: "initial",
-                viewModel: nil,
-                loginID: "new@example.test",
+            rootView: removableCreatePasskeyWidget(
+                isVisible: true,
                 instanceName: instanceName,
                 buttonProbe: buttonProbe,
-                onNewPasskey: { response in
-                    newPasskeyProbe.record(response.loginID.id)
-                },
-                onReset: {
-                    resetProbe.record("initial")
-                }
+                onNewPasskey: { response in callbackProbe.record(response.loginID.id) },
+                onReset: { resetProbe.record("reset") }
             ),
             size: CGSize(width: 240, height: 120)
         )
         defer { host.close() }
+
         try await startMountedFlow(host, buttonProbe: buttonProbe)
-        await firstController.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "new@example.test"))))
-        #expect(await newPasskeyProbe.next() == "new@example.test")
+        #expect(flow.startCount == 1)
 
         host.update(
-            rootView: identifiedCreatePasskeyWidget(
-                identity: "replacement",
-                viewModel: nil,
-                loginID: "new@example.test",
+            rootView: removableCreatePasskeyWidget(
+                isVisible: false,
                 instanceName: instanceName,
                 buttonProbe: buttonProbe,
-                onNewPasskey: { response in
-                    newPasskeyProbe.record("updated:\(response.loginID.id)")
-                },
-                onReset: {
-                    resetProbe.record("replacement")
-                }
+                onNewPasskey: { response in callbackProbe.record(response.loginID.id) },
+                onReset: { resetProbe.record("reset") }
             )
         )
-        await host.settle(cycles: 2)
+        buttonProbe.clear()
+        await host.settle(cycles: 3)
+        #expect(
+            firstController.abortReasonDescriptions
+                == [Reason.userClose(details: "Create-passkey widget deinitialized").description]
+        )
 
+        await firstController.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "late@example.test"))))
+        await host.settle(cycles: 2)
+        #expect(callbackProbe.isEmpty)
         #expect(resetProbe.isEmpty)
 
-        let action = try #require(buttonProbe.latestAction, "Expected replacement widget action")
-        action()
-
-        try expectWidgetContext(flow.context(at: 1), normalizedLoginID: "new@example.test")
+        host.update(
+            rootView: removableCreatePasskeyWidget(
+                isVisible: true,
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onNewPasskey: { response in callbackProbe.record(response.loginID.id) },
+                onReset: { resetProbe.record("reset") }
+            )
+        )
+        await host.settle(cycles: 3)
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
         #expect(flow.startCount == 2)
 
         await secondController.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "new@example.test"))))
-        #expect(await newPasskeyProbe.next() == "updated:new@example.test")
+        #expect(await callbackProbe.next() == "new@example.test")
+        #expect(resetProbe.isEmpty)
     }
 
     @available(iOS 16.0, *)
     @Test(.timeLimit(.minutes(1)))
-    func `Login widget mounted update keeps view model and uses latest success callback`() async throws {
+    func `Supplied login view model survives instance change and uses latest success callback`() async throws {
+        let firstInstance = uniqueWidgetInstanceName("supplied-login-instance-a")
+        let secondInstance = uniqueWidgetInstanceName("supplied-login-instance-b")
         let controller = DeferredLoginController()
         var startCount = 0
-        let viewModel = makeLoginViewModel { _ in
+        let viewModel = makeLoginViewModel { _, _ in
             startCount += 1
             return controller
         }
@@ -265,6 +590,7 @@ struct OwnIDWidgetRuntimeUpdateTests {
             rootView: loginWidget(
                 viewModel: viewModel,
                 loginID: " first@example.test ",
+                instanceName: firstInstance,
                 buttonProbe: buttonProbe,
                 onLogin: { response in
                     callbackProbe.record("initial:\(response.loginID.id)")
@@ -280,13 +606,16 @@ struct OwnIDWidgetRuntimeUpdateTests {
             rootView: loginWidget(
                 viewModel: viewModel,
                 loginID: " second@example.test ",
+                instanceName: secondInstance,
                 buttonProbe: buttonProbe,
                 onLogin: { response in
                     callbackProbe.record("updated:\(response.loginID.id)")
                 }
             )
         )
-        await host.settle(cycles: 1)
+        await host.settle(cycles: 2)
+
+        #expect(buttonProbe.latestState == .busy(accessibilityLabel: widgetButtonTitle))
 
         await controller.settle(.success(makeLoginResponse(id: "second@example.test")))
         let callback = await callbackProbe.next()
@@ -297,10 +626,229 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
     @available(iOS 16.0, *)
     @Test(.timeLimit(.minutes(1)))
+    func `Replacing supplied login view model switches state effects and current window`() async throws {
+        let oldController = DeferredLoginController()
+        let newController = DeferredLoginController()
+        let oldViewModel = makeLoginViewModel { _, _ in oldController }
+        var newWindow: UIWindow?
+        let newViewModel = makeLoginViewModel { window, _ in
+            newWindow = window
+            return newController
+        }
+        let buttonProbe = WidgetButtonProbe()
+        let callbackProbe = WidgetCallbackProbe<String>()
+
+        let host = SwiftUIRuntimeHost(
+            rootView: loginWidget(
+                viewModel: oldViewModel,
+                loginID: "old@example.test",
+                buttonProbe: buttonProbe,
+                onLogin: { response in callbackProbe.record("old:\(response.loginID.id)") }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+        await host.settle(cycles: 1)
+        let initialWindow = try #require(host.host.view.window)
+        oldViewModel.startFlow(window: initialWindow, loginID: "old@example.test")
+        await host.settle(cycles: 2)
+        #expect(buttonProbe.latestState == .busy(accessibilityLabel: widgetButtonTitle))
+
+        host.update(
+            rootView: loginWidget(
+                viewModel: newViewModel,
+                loginID: "new@example.test",
+                buttonProbe: buttonProbe,
+                onLogin: { response in callbackProbe.record("new:\(response.loginID.id)") }
+            )
+        )
+        await host.settle(cycles: 2)
+        #expect(buttonProbe.latestState == .ready(accessibilityLabel: widgetButtonTitle))
+
+        await oldController.settle(.success(makeLoginResponse(id: "late@example.test")))
+        await host.settle(cycles: 2)
+        #expect(callbackProbe.isEmpty)
+
+        let currentAction = try #require(buttonProbe.latestAction, "Expected replacement login action")
+        currentAction()
+        await host.settle(cycles: 2)
+        #expect(buttonProbe.latestState == .busy(accessibilityLabel: widgetButtonTitle))
+        #expect(newWindow === host.host.view.window)
+        await newController.settle(.success(makeLoginResponse(id: "new@example.test")))
+        #expect(await callbackProbe.next() == "new:new@example.test")
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Mounted login widget forwards its hosting window to the view model`() async throws {
+        let controller = DeferredLoginController()
+        var receivedWindow: UIWindow?
+        let viewModel = makeLoginViewModel { window, _ in
+            receivedWindow = window
+            return controller
+        }
+        let buttonProbe = WidgetButtonProbe()
+        let host = SwiftUIRuntimeHost(
+            rootView: loginWidget(
+                viewModel: viewModel,
+                loginID: "user@example.test",
+                buttonProbe: buttonProbe,
+                onLogin: { _ in }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+
+        #expect(receivedWindow === host.host.view.window)
+        await controller.settle(.canceled(.timeout))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Mounted create-passkey widget forwards its hosting window to the view model`() async throws {
+        let controller = DeferredCreatePasskeyController()
+        var receivedWindow: UIWindow?
+        let viewModel = makeCreatePasskeyViewModel { window, _ in
+            receivedWindow = window
+            return controller
+        }
+        let buttonProbe = WidgetButtonProbe()
+        let host = SwiftUIRuntimeHost(
+            rootView: createPasskeyWidget(
+                viewModel: viewModel,
+                loginID: "user@example.test",
+                buttonProbe: buttonProbe,
+                onNewPasskey: { _ in },
+                onReset: {}
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+
+        #expect(receivedWindow === host.host.view.window)
+        await controller.settle(.canceled(.timeout))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Detached login widget action cannot start and rehosted action uses the new window`() async throws {
+        let firstController = DeferredLoginController()
+        let secondController = DeferredLoginController()
+        var receivedWindows: [UIWindow] = []
+        var startCount = 0
+        let viewModel = makeLoginViewModel { window, _ in
+            startCount += 1
+            receivedWindows.append(window)
+            return startCount == 1 ? firstController : secondController
+        }
+
+        let firstButtonProbe = WidgetButtonProbe()
+        let firstHost = SwiftUIRuntimeHost(
+            rootView: loginWidget(
+                viewModel: viewModel,
+                loginID: "user@example.test",
+                buttonProbe: firstButtonProbe,
+                onLogin: { _ in }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        try await startMountedFlow(firstHost, buttonProbe: firstButtonProbe)
+        await firstController.settle(.canceled(.timeout))
+        await firstHost.settle(cycles: 3)
+        #expect(viewModel.uiState == .init(isRunning: false))
+        let detachedAction = try #require(firstButtonProbe.latestAction)
+        firstHost.close()
+        await Task.yield()
+
+        detachedAction()
+        #expect(startCount == 1)
+        #expect(viewModel.uiState == .init(isRunning: false))
+
+        let secondButtonProbe = WidgetButtonProbe()
+        let secondHost = SwiftUIRuntimeHost(
+            rootView: loginWidget(
+                viewModel: viewModel,
+                loginID: "user@example.test",
+                buttonProbe: secondButtonProbe,
+                onLogin: { _ in }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { secondHost.close() }
+        try await startMountedFlow(secondHost, buttonProbe: secondButtonProbe)
+
+        let expectedWindow = try #require(secondHost.host.view.window)
+        #expect(startCount == 2)
+        #expect(receivedWindows.last === expectedWindow)
+        await secondController.settle(.canceled(.timeout))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
+    func `Detached create-passkey widget action cannot start and rehosted action uses the new window`() async throws {
+        let firstController = DeferredCreatePasskeyController()
+        let secondController = DeferredCreatePasskeyController()
+        var receivedWindows: [UIWindow] = []
+        var startCount = 0
+        let viewModel = makeCreatePasskeyViewModel { window, _ in
+            startCount += 1
+            receivedWindows.append(window)
+            return startCount == 1 ? firstController : secondController
+        }
+
+        let firstButtonProbe = WidgetButtonProbe()
+        let firstHost = SwiftUIRuntimeHost(
+            rootView: createPasskeyWidget(
+                viewModel: viewModel,
+                loginID: "user@example.test",
+                buttonProbe: firstButtonProbe,
+                onNewPasskey: { _ in },
+                onReset: {}
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        try await startMountedFlow(firstHost, buttonProbe: firstButtonProbe)
+        await firstController.settle(.canceled(.timeout))
+        await firstHost.settle(cycles: 3)
+        #expect(viewModel.uiState == .init(isRunning: false, showCheckmark: false))
+        let detachedAction = try #require(firstButtonProbe.latestAction)
+        firstHost.close()
+        await Task.yield()
+
+        detachedAction()
+        #expect(startCount == 1)
+        #expect(viewModel.uiState == .init(isRunning: false, showCheckmark: false))
+
+        let secondButtonProbe = WidgetButtonProbe()
+        let secondHost = SwiftUIRuntimeHost(
+            rootView: createPasskeyWidget(
+                viewModel: viewModel,
+                loginID: "user@example.test",
+                buttonProbe: secondButtonProbe,
+                onNewPasskey: { _ in },
+                onReset: {}
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { secondHost.close() }
+        try await startMountedFlow(secondHost, buttonProbe: secondButtonProbe)
+
+        let expectedWindow = try #require(secondHost.host.view.window)
+        #expect(startCount == 2)
+        #expect(receivedWindows.last === expectedWindow)
+        await secondController.settle(.canceled(.timeout))
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
     func `Login widget callback-only update keeps active flow and uses latest success callback`() async throws {
         let controller = DeferredLoginController()
         var startCount = 0
-        let viewModel = makeLoginViewModel { _ in
+        let viewModel = makeLoginViewModel { _, _ in
             startCount += 1
             return controller
         }
@@ -346,7 +894,7 @@ struct OwnIDWidgetRuntimeUpdateTests {
     func `Login widget reports busy disabled state and ignores repeated taps while running`() async throws {
         let controller = DeferredLoginController()
         var startCount = 0
-        let viewModel = makeLoginViewModel { _ in
+        let viewModel = makeLoginViewModel { _, _ in
             startCount += 1
             return controller
         }
@@ -389,10 +937,12 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
     @available(iOS 16.0, *)
     @Test(.timeLimit(.minutes(1)))
-    func `Create passkey widget mounted update keeps view model and uses latest new-passkey callback`() async throws {
+    func `Supplied create-passkey view model survives instance change and uses latest callback`() async throws {
+        let firstInstance = uniqueWidgetInstanceName("supplied-create-passkey-instance-a")
+        let secondInstance = uniqueWidgetInstanceName("supplied-create-passkey-instance-b")
         let controller = DeferredCreatePasskeyController()
         var startCount = 0
-        let viewModel = makeCreatePasskeyViewModel { _ in
+        let viewModel = makeCreatePasskeyViewModel { _, _ in
             startCount += 1
             return controller
         }
@@ -403,6 +953,7 @@ struct OwnIDWidgetRuntimeUpdateTests {
             rootView: createPasskeyWidget(
                 viewModel: viewModel,
                 loginID: " first@example.test ",
+                instanceName: firstInstance,
                 buttonProbe: buttonProbe,
                 onNewPasskey: { response in
                     callbackProbe.record("initial:\(response.loginID.id)")
@@ -418,13 +969,16 @@ struct OwnIDWidgetRuntimeUpdateTests {
             rootView: createPasskeyWidget(
                 viewModel: viewModel,
                 loginID: " second@example.test ",
+                instanceName: secondInstance,
                 buttonProbe: buttonProbe,
                 onNewPasskey: { response in
                     callbackProbe.record("updated:\(response.loginID.id)")
                 }
             )
         )
-        await host.settle(cycles: 1)
+        await host.settle(cycles: 2)
+
+        #expect(buttonProbe.latestState == .busy(accessibilityLabel: widgetButtonTitle))
 
         await controller.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "second@example.test"))))
         let callback = await callbackProbe.next()
@@ -435,9 +989,68 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
     @available(iOS 16.0, *)
     @Test(.timeLimit(.minutes(1)))
+    func `Replacing supplied create-passkey view model switches state effects and current window`() async throws {
+        let oldController = DeferredCreatePasskeyController()
+        let newController = DeferredCreatePasskeyController()
+        let oldViewModel = makeCreatePasskeyViewModel { _, _ in oldController }
+        var newWindow: UIWindow?
+        let newViewModel = makeCreatePasskeyViewModel { window, _ in
+            newWindow = window
+            return newController
+        }
+        let buttonProbe = WidgetButtonProbe()
+        let callbackProbe = WidgetCallbackProbe<String>()
+        let resetProbe = WidgetCallbackProbe<String>()
+
+        let host = SwiftUIRuntimeHost(
+            rootView: createPasskeyWidget(
+                viewModel: oldViewModel,
+                loginID: "old@example.test",
+                buttonProbe: buttonProbe,
+                onNewPasskey: { response in callbackProbe.record("old:\(response.loginID.id)") },
+                onReset: { resetProbe.record("old") }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+        await host.settle(cycles: 1)
+        let initialWindow = try #require(host.host.view.window)
+        oldViewModel.startFlow(window: initialWindow, loginID: "old@example.test")
+        await host.settle(cycles: 2)
+        #expect(buttonProbe.latestState == .busy(accessibilityLabel: widgetButtonTitle))
+
+        host.update(
+            rootView: createPasskeyWidget(
+                viewModel: newViewModel,
+                loginID: "new@example.test",
+                buttonProbe: buttonProbe,
+                onNewPasskey: { response in callbackProbe.record("new:\(response.loginID.id)") },
+                onReset: { resetProbe.record("new") }
+            )
+        )
+        await host.settle(cycles: 2)
+        #expect(buttonProbe.latestState == .ready(accessibilityLabel: widgetButtonTitle))
+
+        await oldController.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "late@example.test"))))
+        await host.settle(cycles: 2)
+        #expect(callbackProbe.isEmpty)
+        #expect(resetProbe.isEmpty)
+
+        let currentAction = try #require(buttonProbe.latestAction, "Expected replacement create-passkey action")
+        currentAction()
+        await host.settle(cycles: 2)
+        #expect(buttonProbe.latestState == .busy(accessibilityLabel: widgetButtonTitle))
+        #expect(newWindow === host.host.view.window)
+        await newController.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "new@example.test"))))
+        #expect(await callbackProbe.next() == "new:new@example.test")
+        #expect(resetProbe.isEmpty)
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
     func `Create passkey widget exposes completion checkmark after successful create-passkey result`() async throws {
         let controller = DeferredCreatePasskeyController()
-        let viewModel = makeCreatePasskeyViewModel { _ in controller }
+        let viewModel = makeCreatePasskeyViewModel { _, _ in controller }
         let buttonProbe = WidgetButtonProbe()
         let checkmarkProbe = WidgetCheckmarkProbe()
         let callbackProbe = WidgetCallbackProbe<String>()
@@ -470,7 +1083,7 @@ struct OwnIDWidgetRuntimeUpdateTests {
     @Test(.timeLimit(.minutes(1)))
     func `Create passkey widget mounted login ID update uses latest reset callback`() async throws {
         let controller = DeferredCreatePasskeyController()
-        let viewModel = makeCreatePasskeyViewModel { _ in controller }
+        let viewModel = makeCreatePasskeyViewModel { _, _ in controller }
         let buttonProbe = WidgetButtonProbe()
         let newPasskeyProbe = WidgetCallbackProbe<String>()
         let resetProbe = WidgetCallbackProbe<String>()
@@ -514,9 +1127,48 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
     @available(iOS 16.0, *)
     @Test(.timeLimit(.minutes(1)))
+    func `Create passkey widget treats absent and literal nil login IDs as distinct updates`() async throws {
+        let controller = DeferredCreatePasskeyController()
+        let viewModel = makeCreatePasskeyViewModel { _, _ in controller }
+        let buttonProbe = WidgetButtonProbe()
+        let newPasskeyProbe = WidgetCallbackProbe<String>()
+        let resetProbe = WidgetCallbackProbe<String>()
+
+        let host = SwiftUIRuntimeHost(
+            rootView: createPasskeyWidget(
+                viewModel: viewModel,
+                loginID: nil,
+                buttonProbe: buttonProbe,
+                onNewPasskey: { response in newPasskeyProbe.record(response.loginID.id) },
+                onReset: { resetProbe.record("reset") }
+            ),
+            size: CGSize(width: 240, height: 120)
+        )
+        defer { host.close() }
+        try await startMountedFlow(host, buttonProbe: buttonProbe)
+        await controller.settle(.success(.createPasskey(makeCreatePasskeyResponse(id: "created@example.test"))))
+        #expect(await newPasskeyProbe.next() == "created@example.test")
+        #expect(resetProbe.isEmpty)
+
+        host.update(
+            rootView: createPasskeyWidget(
+                viewModel: viewModel,
+                loginID: "nil",
+                buttonProbe: buttonProbe,
+                onNewPasskey: { response in newPasskeyProbe.record(response.loginID.id) },
+                onReset: { resetProbe.record("reset") }
+            )
+        )
+        await host.settle(cycles: 1)
+
+        #expect(await resetProbe.next() == "reset")
+    }
+
+    @available(iOS 16.0, *)
+    @Test(.timeLimit(.minutes(1)))
     func `Create passkey widget callback-only update keeps completion and updates later reset callback`() async throws {
         let controller = DeferredCreatePasskeyController()
-        let viewModel = makeCreatePasskeyViewModel { _ in controller }
+        let viewModel = makeCreatePasskeyViewModel { _, _ in controller }
         let buttonProbe = WidgetButtonProbe()
         let newPasskeyProbe = WidgetCallbackProbe<String>()
         let resetProbe = WidgetCallbackProbe<String>()
@@ -593,7 +1245,7 @@ struct OwnIDWidgetRuntimeUpdateTests {
 
     private func createPasskeyWidget(
         viewModel: OwnIDCreatePasskeyWidgetViewModel?,
-        loginID: String,
+        loginID: String?,
         instanceName: InstanceName = InstanceName(value: "widget-runtime-update"),
         buttonProbe: WidgetButtonProbe,
         checkmarkProbe: WidgetCheckmarkProbe? = nil,
@@ -631,24 +1283,42 @@ struct OwnIDWidgetRuntimeUpdateTests {
         .frame(width: 180, height: 60)
     }
 
-    private func identifiedCreatePasskeyWidget(
-        identity: String,
-        viewModel: OwnIDCreatePasskeyWidgetViewModel?,
-        loginID: String,
+    @ViewBuilder
+    private func removableLoginWidget(
+        isVisible: Bool,
+        instanceName: InstanceName,
+        buttonProbe: WidgetButtonProbe,
+        onLogin: @escaping @MainActor (BoostFlowLoginResponse) -> Void
+    ) -> some View {
+        if isVisible {
+            loginWidget(
+                viewModel: nil,
+                loginID: "user@example.test",
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onLogin: onLogin
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func removableCreatePasskeyWidget(
+        isVisible: Bool,
         instanceName: InstanceName,
         buttonProbe: WidgetButtonProbe,
         onNewPasskey: @escaping @MainActor (BoostFlowCreatePasskeyResponse) -> Void,
         onReset: @escaping @MainActor () -> Void
     ) -> some View {
-        createPasskeyWidget(
-            viewModel: viewModel,
-            loginID: loginID,
-            instanceName: instanceName,
-            buttonProbe: buttonProbe,
-            onNewPasskey: onNewPasskey,
-            onReset: onReset
-        )
-        .id(identity)
+        if isVisible {
+            createPasskeyWidget(
+                viewModel: nil,
+                loginID: "user@example.test",
+                instanceName: instanceName,
+                buttonProbe: buttonProbe,
+                onNewPasskey: onNewPasskey,
+                onReset: onReset
+            )
+        }
     }
 
     private func startMountedFlow<Content: View>(
@@ -691,6 +1361,11 @@ private final class WidgetButtonProbe {
     func record(isBusy: Bool, isEnabled: Bool, action: @escaping () -> Void, accessibilityLabel: String) {
         latestState = ButtonSlotSnapshot(isBusy: isBusy, isEnabled: isEnabled, accessibilityLabel: accessibilityLabel)
         latestAction = action
+    }
+
+    func clear() {
+        latestAction = nil
+        latestState = nil
     }
 }
 

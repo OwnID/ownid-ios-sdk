@@ -7,7 +7,7 @@
       "environment": "simulator",
       "operatingSystem": {
         "minimumVersion": {
-          "major": 13,
+          "major": 15,
           "minor": 0
         },
         "name": "ios"
@@ -4824,6 +4824,54 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV",
+      "target": "s:10Foundation14LocalizedErrorP",
+      "targetFallback": "Foundation.LocalizedError"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV",
+      "target": "s:s5ErrorP",
+      "targetFallback": "Swift.Error"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:9OwnIDCore25DependencyResolutionErrorV",
       "target": "s:s16SendableMetatypeP",
       "targetFallback": "Swift.SendableMetatype"
@@ -5161,20 +5209,8 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore28LoginIDCollectOperationStateO",
-      "target": "s:s8CopyableP",
-      "targetFallback": "Swift.Copyable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore28LoginIDCollectOperationStateO",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore28LoginIDCollectOperationStateO",
-      "target": "s:s9EscapableP",
-      "targetFallback": "Swift.Escapable"
     },
     {
       "kind": "conformsTo",
@@ -5708,20 +5744,8 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore31EmailVerificationOperationStateO",
-      "target": "s:s8CopyableP",
-      "targetFallback": "Swift.Copyable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore31EmailVerificationOperationStateO",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore31EmailVerificationOperationStateO",
-      "target": "s:s9EscapableP",
-      "targetFallback": "Swift.Escapable"
     },
     {
       "kind": "conformsTo",
@@ -5819,20 +5843,8 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore31PhoneVerificationOperationStateO",
-      "target": "s:s8CopyableP",
-      "targetFallback": "Swift.Copyable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore31PhoneVerificationOperationStateO",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore31PhoneVerificationOperationStateO",
-      "target": "s:s9EscapableP",
-      "targetFallback": "Swift.Escapable"
     },
     {
       "kind": "conformsTo",
@@ -8072,6 +8084,26 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyyAA15UIContextResultOyYbScMYccF",
+      "target": "s:9OwnIDCore0A20IDProvidersRegistrarV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyyAA17UIContextProvider_pF",
+      "target": "s:9OwnIDCore0A20IDProvidersRegistrarV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyySo13UIWindowSceneCF",
+      "target": "s:9OwnIDCore0A20IDProvidersRegistrarV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyySo8UIWindowCF",
+      "target": "s:9OwnIDCore0A20IDProvidersRegistrarV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore0A22IDConfigurationBuilderC3envAA0A5IDEnvOvp",
       "target": "s:9OwnIDCore0A22IDConfigurationBuilderC"
     },
@@ -10161,6 +10193,21 @@
       "kind": "memberOf",
       "source": "s:9OwnIDCore15SocialChallengeV8clientIDSSvp",
       "target": "s:9OwnIDCore15SocialChallengeV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore15UIContextResultO10windowOnlyyACSo8UIWindowCcACmF",
+      "target": "s:9OwnIDCore15UIContextResultO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore15UIContextResultO19windowAndControlleryACSo8UIWindowC_So06UIViewG0CtcACmF",
+      "target": "s:9OwnIDCore15UIContextResultO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore15UIContextResultO7failureyACs5Error_pcACmF",
+      "target": "s:9OwnIDCore15UIContextResultO"
     },
     {
       "kind": "memberOf",
@@ -12289,12 +12336,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV6windowSo8UIWindowCSgvp",
-      "target": "s:9OwnIDCore22SignInWithSocialParamsV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV8clientID5nonce6windowACSS_SSSgSo8UIWindowCSgtcfc",
+      "source": "s:9OwnIDCore22SignInWithSocialParamsV8clientID5nonceACSS_SSSgtcfc",
       "target": "s:9OwnIDCore22SignInWithSocialParamsV"
     },
     {
@@ -12571,7 +12613,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore23SignInWithGoogleBuilderV04signD0yyAA12SocialResultOAA0cdeI6ParamsVYaYbScMYccF",
+      "source": "s:9OwnIDCore23SignInWithGoogleBuilderV04signD0yyAA12SocialResultOSo8UIWindowC_AA0cdeI6ParamsVtYaYbScMYccF",
       "target": "s:9OwnIDCore23SignInWithGoogleBuilderV"
     },
     {
@@ -12892,6 +12934,50 @@
       "kind": "memberOf",
       "source": "s:9OwnIDCore24PhoneVerificationUIStateV9challengeAA0D9ChallengeVvp",
       "target": "s:9OwnIDCore24PhoneVerificationUIStateV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV16errorDescriptionSSSgvp",
+      "sourceOrigin": {
+        "displayName": "LocalizedError.errorDescription",
+        "identifier": "s:10Foundation14LocalizedErrorP16errorDescriptionSSSgvp"
+      },
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV5causes0E0_pSgvp",
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO11ownerClosedyA2EmF",
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO11unavailableyA2EmF",
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6reason7message5causeA2C6ReasonO_SSs0E0_pSgtcfc",
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV6reasonAC6ReasonOvp",
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore24UIContextResolutionErrorV7messageSSvp",
+      "target": "s:9OwnIDCore24UIContextResolutionErrorV"
     },
     {
       "kind": "memberOf",
@@ -16649,12 +16735,12 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore15PasskeyProtocolP13getCredential16assertionOptionsAA0C6ResultOyAA09AssertionI0VGAA0jH0V_tYaF",
+      "source": "s:9OwnIDCore15PasskeyProtocolP13getCredential6window16assertionOptionsAA0C6ResultOyAA09AssertionJ0VGSo8UIWindowC_AA0kI0VtYaF",
       "target": "s:9OwnIDCore15PasskeyProtocolP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore15PasskeyProtocolP16createCredential18attestationOptionsAA0C6ResultOyAA011AttestationI0VGAA0jH0V_tYaF",
+      "source": "s:9OwnIDCore15PasskeyProtocolP16createCredential6window18attestationOptionsAA0C6ResultOyAA011AttestationJ0VGSo8UIWindowC_AA0kI0VtYaF",
       "target": "s:9OwnIDCore15PasskeyProtocolP"
     },
     {
@@ -16734,7 +16820,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore16SignInWithSocialP04signD06paramsAA0F6ResultOAA0cdeF6ParamsV_tYaF",
+      "source": "s:9OwnIDCore16SignInWithSocialP04signD06window6paramsAA0F6ResultOSo8UIWindowC_AA0cdeF6ParamsVtYaF",
       "target": "s:9OwnIDCore16SignInWithSocialP"
     },
     {
@@ -16779,7 +16865,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonce6windowAA12SocialResultOSS_SSSgSo8UIWindowCSgtYaF",
+      "source": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
       "target": "s:9OwnIDCore17SignInWithAppleUIP"
     },
     {
@@ -16789,12 +16875,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore17UIContextProviderP12activeWindowSo8UIWindowCSgyF",
-      "target": "s:9OwnIDCore17UIContextProviderP"
-    },
-    {
-      "kind": "requirementOf",
-      "source": "s:9OwnIDCore17UIContextProviderP21topMostViewControllerySo06UIViewH0CSgSo8UIWindowCSgF",
+      "source": "s:9OwnIDCore17UIContextProviderP7currentAA0C6ResultOyF",
       "target": "s:9OwnIDCore17UIContextProviderP"
     },
     {
@@ -16819,7 +16900,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonce6windowAA12SocialResultOSS_SSSgSo8UIWindowCSgtYaF",
+      "source": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
       "target": "s:9OwnIDCore18SignInWithGoogleUIP"
     },
     {
@@ -16924,7 +17005,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore20OperationUIContainerP4show10controlleryqd___tAA0C10ControllerRd__lF",
+      "source": "s:9OwnIDCore20OperationUIContainerP4show10controlleryqd___tKAA0C10ControllerRd__lF",
       "target": "s:9OwnIDCore20OperationUIContainerP"
     },
     {
@@ -21037,6 +21118,430 @@
         ]
       },
       "title": "getOrNil(type:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "uiContext"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "current"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@escaping "
+        },
+        {
+          "kind": "text",
+          "spelling": "@"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@Sendable"
+        },
+        {
+          "kind": "text",
+          "spelling": " () -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore15UIContextResultO",
+          "spelling": "UIContextResult"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "current"
+              },
+              {
+                "kind": "text",
+                "spelling": ": @"
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:ScM",
+                "spelling": "MainActor"
+              },
+              {
+                "kind": "text",
+                "spelling": " "
+              },
+              {
+                "kind": "attribute",
+                "spelling": "@Sendable"
+              },
+              {
+                "kind": "text",
+                "spelling": " () -> "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore15UIContextResultO",
+                "spelling": "UIContextResult"
+              }
+            ],
+            "name": "current"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDProvidersRegistrar",
+        "uiContext(_:)"
+      ],
+      "precise": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyyAA15UIContextResultOyYbScMYccF",
+      "title": "uiContext(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "uiContext"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "provider"
+        },
+        {
+          "kind": "text",
+          "spelling": ": any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore17UIContextProviderP",
+          "spelling": "UIContextProvider"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "provider"
+              },
+              {
+                "kind": "text",
+                "spelling": ": any "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore17UIContextProviderP",
+                "spelling": "UIContextProvider"
+              }
+            ],
+            "name": "provider"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDProvidersRegistrar",
+        "uiContext(_:)"
+      ],
+      "precise": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyyAA17UIContextProvider_pF",
+      "title": "uiContext(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "attribute",
+          "spelling": "@"
+        },
+        {
+          "kind": "attribute",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "uiContext"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "scene"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindowScene",
+          "spelling": "UIWindowScene"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "scene"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindowScene",
+                "spelling": "UIWindowScene"
+              }
+            ],
+            "name": "scene"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDProvidersRegistrar",
+        "uiContext(_:)"
+      ],
+      "precise": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyySo13UIWindowSceneCF",
+      "title": "uiContext(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "attribute",
+          "spelling": "@"
+        },
+        {
+          "kind": "attribute",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "uiContext"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "window"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "window"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              }
+            ],
+            "name": "window"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDProvidersRegistrar",
+        "uiContext(_:)"
+      ],
+      "precise": "s:9OwnIDCore0A20IDProvidersRegistrarV9uiContextyySo8UIWindowCF",
+      "title": "uiContext(_:)"
     },
     {
       "access": "public",
@@ -47655,6 +48160,23 @@
         },
         {
           "kind": "externalParam",
+          "spelling": "window"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
           "spelling": "assertionOptions"
         },
         {
@@ -47703,6 +48225,24 @@
             "declarationFragments": [
               {
                 "kind": "identifier",
+                "spelling": "window"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              }
+            ],
+            "name": "window"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
                 "spelling": "assertionOptions"
               },
               {
@@ -47742,10 +48282,10 @@
       "kind": "swift.method",
       "path": [
         "PasskeyProtocol",
-        "getCredential(assertionOptions:)"
+        "getCredential(window:assertionOptions:)"
       ],
-      "precise": "s:9OwnIDCore15PasskeyProtocolP13getCredential16assertionOptionsAA0C6ResultOyAA09AssertionI0VGAA0jH0V_tYaF",
-      "title": "getCredential(assertionOptions:)"
+      "precise": "s:9OwnIDCore15PasskeyProtocolP13getCredential6window16assertionOptionsAA0C6ResultOyAA09AssertionJ0VGSo8UIWindowC_AA0kI0VtYaF",
+      "title": "getCredential(window:assertionOptions:)"
     },
     {
       "access": "public",
@@ -47778,6 +48318,23 @@
         {
           "kind": "text",
           "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "window"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
         },
         {
           "kind": "externalParam",
@@ -47829,6 +48386,24 @@
             "declarationFragments": [
               {
                 "kind": "identifier",
+                "spelling": "window"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              }
+            ],
+            "name": "window"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
                 "spelling": "attestationOptions"
               },
               {
@@ -47868,10 +48443,10 @@
       "kind": "swift.method",
       "path": [
         "PasskeyProtocol",
-        "createCredential(attestationOptions:)"
+        "createCredential(window:attestationOptions:)"
       ],
-      "precise": "s:9OwnIDCore15PasskeyProtocolP16createCredential18attestationOptionsAA0C6ResultOyAA011AttestationI0VGAA0jH0V_tYaF",
-      "title": "createCredential(attestationOptions:)"
+      "precise": "s:9OwnIDCore15PasskeyProtocolP16createCredential6window18attestationOptionsAA0C6ResultOyAA011AttestationJ0VGSo8UIWindowC_AA0kI0VtYaF",
+      "title": "createCredential(window:attestationOptions:)"
     },
     {
       "access": "public",
@@ -48592,6 +49167,165 @@
       ],
       "precise": "s:9OwnIDCore15StringsProviderP1PQa",
       "title": "P"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "enum"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "UIContextResult"
+        }
+      ],
+      "kind": "swift.enum",
+      "path": [
+        "UIContextResult"
+      ],
+      "precise": "s:9OwnIDCore15UIContextResultO",
+      "title": "UIContextResult"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "windowOnly"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "UIContextResult",
+        "windowOnly(_:)"
+      ],
+      "precise": "s:9OwnIDCore15UIContextResultO10windowOnlyyACSo8UIWindowCcACmF",
+      "title": "UIContextResult.windowOnly(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "windowAndController"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "window"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "controller"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIViewController",
+          "spelling": "UIViewController"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "UIContextResult",
+        "windowAndController(window:controller:)"
+      ],
+      "precise": "s:9OwnIDCore15UIContextResultO19windowAndControlleryACSo8UIWindowC_So06UIViewG0CtcACmF",
+      "title": "UIContextResult.windowAndController(window:controller:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "failure"
+        },
+        {
+          "kind": "text",
+          "spelling": "(any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s5ErrorP",
+          "spelling": "Error"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "UIContextResult",
+        "failure(_:)"
+      ],
+      "precise": "s:9OwnIDCore15UIContextResultO7failureyACs5Error_pcACmF",
+      "title": "UIContextResult.failure(_:)"
     },
     {
       "access": "public",
@@ -53486,6 +54220,23 @@
         },
         {
           "kind": "externalParam",
+          "spelling": "window"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
           "spelling": "params"
         },
         {
@@ -53521,6 +54272,24 @@
             "declarationFragments": [
               {
                 "kind": "identifier",
+                "spelling": "window"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              }
+            ],
+            "name": "window"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
                 "spelling": "params"
               },
               {
@@ -53547,10 +54316,10 @@
       "kind": "swift.method",
       "path": [
         "SignInWithSocial",
-        "signIn(params:)"
+        "signIn(window:params:)"
       ],
-      "precise": "s:9OwnIDCore16SignInWithSocialP04signD06paramsAA0F6ResultOAA0cdeF6ParamsV_tYaF",
-      "title": "signIn(params:)"
+      "precise": "s:9OwnIDCore16SignInWithSocialP04signD06window6paramsAA0F6ResultOSo8UIWindowC_AA0cdeF6ParamsVtYaF",
+      "title": "signIn(window:params:)"
     },
     {
       "access": "public",
@@ -56385,23 +57154,6 @@
         },
         {
           "kind": "text",
-          "spelling": "?, "
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "window"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
-        },
-        {
-          "kind": "text",
           "spelling": "?) "
         },
         {
@@ -56459,28 +57211,6 @@
               }
             ],
             "name": "nonce"
-          },
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "window"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "c:objc(cs)UIWindow",
-                "spelling": "UIWindow"
-              },
-              {
-                "kind": "text",
-                "spelling": "?"
-              }
-            ],
-            "name": "window"
           }
         ],
         "returns": [
@@ -56494,10 +57224,10 @@
       "kind": "swift.method",
       "path": [
         "SignInWithAppleUI",
-        "signIn(clientID:nonce:window:)"
+        "signIn(clientID:nonce:)"
       ],
-      "precise": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonce6windowAA12SocialResultOSS_SSSgSo8UIWindowCSgtYaF",
-      "title": "signIn(clientID:nonce:window:)"
+      "precise": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
+      "title": "signIn(clientID:nonce:)"
     },
     {
       "access": "public",
@@ -56606,7 +57336,7 @@
         },
         {
           "kind": "identifier",
-          "spelling": "activeWindow"
+          "spelling": "current"
         },
         {
           "kind": "text",
@@ -56614,146 +57344,26 @@
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
-        },
-        {
-          "kind": "text",
-          "spelling": "?"
+          "preciseIdentifier": "s:9OwnIDCore15UIContextResultO",
+          "spelling": "UIContextResult"
         }
       ],
       "functionSignature": {
         "returns": [
           {
             "kind": "typeIdentifier",
-            "preciseIdentifier": "c:objc(cs)UIWindow",
-            "spelling": "UIWindow"
-          },
-          {
-            "kind": "text",
-            "spelling": "?"
+            "preciseIdentifier": "s:9OwnIDCore15UIContextResultO",
+            "spelling": "UIContextResult"
           }
         ]
       },
       "kind": "swift.method",
       "path": [
         "UIContextProvider",
-        "activeWindow()"
+        "current()"
       ],
-      "precise": "s:9OwnIDCore17UIContextProviderP12activeWindowSo8UIWindowCSgyF",
-      "title": "activeWindow()"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "attribute",
-          "spelling": "@"
-        },
-        {
-          "kind": "attribute",
-          "preciseIdentifier": "s:ScM",
-          "spelling": "MainActor"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "topMostViewController"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "_"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "window"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
-        },
-        {
-          "kind": "text",
-          "spelling": "?) -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIViewController",
-          "spelling": "UIViewController"
-        },
-        {
-          "kind": "text",
-          "spelling": "?"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "window"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "c:objc(cs)UIWindow",
-                "spelling": "UIWindow"
-              },
-              {
-                "kind": "text",
-                "spelling": "?"
-              }
-            ],
-            "name": "window"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "c:objc(cs)UIViewController",
-            "spelling": "UIViewController"
-          },
-          {
-            "kind": "text",
-            "spelling": "?"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "UIContextProvider",
-        "topMostViewController(_:)"
-      ],
-      "precise": "s:9OwnIDCore17UIContextProviderP21topMostViewControllerySo06UIViewH0CSgSo8UIWindowCSgF",
-      "title": "topMostViewController(_:)"
+      "precise": "s:9OwnIDCore17UIContextProviderP7currentAA0C6ResultOyF",
+      "title": "current()"
     },
     {
       "access": "public",
@@ -61627,23 +62237,6 @@
         },
         {
           "kind": "text",
-          "spelling": "?, "
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "window"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
-        },
-        {
-          "kind": "text",
           "spelling": "?) "
         },
         {
@@ -61701,28 +62294,6 @@
               }
             ],
             "name": "nonce"
-          },
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "window"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "c:objc(cs)UIWindow",
-                "spelling": "UIWindow"
-              },
-              {
-                "kind": "text",
-                "spelling": "?"
-              }
-            ],
-            "name": "window"
           }
         ],
         "returns": [
@@ -61736,10 +62307,10 @@
       "kind": "swift.method",
       "path": [
         "SignInWithGoogleUI",
-        "signIn(clientID:nonce:window:)"
+        "signIn(clientID:nonce:)"
       ],
-      "precise": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonce6windowAA12SocialResultOSS_SSSgSo8UIWindowCSgtYaF",
-      "title": "signIn(clientID:nonce:window:)"
+      "precise": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
+      "title": "signIn(clientID:nonce:)"
     },
     {
       "access": "public",
@@ -67797,6 +68368,14 @@
         },
         {
           "kind": "keyword",
+          "spelling": "throws"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
           "spelling": "where"
         },
         {
@@ -67849,7 +68428,7 @@
         "OperationUIContainer",
         "show(controller:)"
       ],
-      "precise": "s:9OwnIDCore20OperationUIContainerP4show10controlleryqd___tAA0C10ControllerRd__lF",
+      "precise": "s:9OwnIDCore20OperationUIContainerP4show10controlleryqd___tKAA0C10ControllerRd__lF",
       "swiftGenerics": {
         "constraints": [
           {
@@ -79388,43 +79967,6 @@
       "declaration": [
         {
           "kind": "keyword",
-          "spelling": "let"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "window"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
-        },
-        {
-          "kind": "text",
-          "spelling": "?"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "SignInWithSocialParams",
-        "window"
-      ],
-      "precise": "s:9OwnIDCore22SignInWithSocialParamsV6windowSo8UIWindowCSgvp",
-      "title": "window"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
           "spelling": "init"
         },
         {
@@ -79460,23 +80002,6 @@
           "kind": "typeIdentifier",
           "preciseIdentifier": "s:SS",
           "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": "?, "
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "window"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
         },
         {
           "kind": "text",
@@ -79524,38 +80049,16 @@
               }
             ],
             "name": "nonce"
-          },
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "window"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "c:objc(cs)UIWindow",
-                "spelling": "UIWindow"
-              },
-              {
-                "kind": "text",
-                "spelling": "?"
-              }
-            ],
-            "name": "window"
           }
         ]
       },
       "kind": "swift.init",
       "path": [
         "SignInWithSocialParams",
-        "init(clientID:nonce:window:)"
+        "init(clientID:nonce:)"
       ],
-      "precise": "s:9OwnIDCore22SignInWithSocialParamsV8clientID5nonce6windowACSS_SSSgSo8UIWindowCSgtcfc",
-      "title": "init(clientID:nonce:window:)"
+      "precise": "s:9OwnIDCore22SignInWithSocialParamsV8clientID5nonceACSS_SSSgtcfc",
+      "title": "init(clientID:nonce:)"
     },
     {
       "access": "public",
@@ -82654,6 +83157,15 @@
         },
         {
           "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
           "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
           "spelling": "SignInWithSocialParams"
         },
@@ -82710,6 +83222,15 @@
               },
               {
                 "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              },
+              {
+                "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
                 "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
                 "spelling": "SignInWithSocialParams"
               },
@@ -82746,7 +83267,7 @@
         "SignInWithGoogleBuilder",
         "signIn(_:)"
       ],
-      "precise": "s:9OwnIDCore23SignInWithGoogleBuilderV04signD0yyAA12SocialResultOAA0cdeI6ParamsVYaYbScMYccF",
+      "precise": "s:9OwnIDCore23SignInWithGoogleBuilderV04signD0yyAA12SocialResultOSo8UIWindowC_AA0cdeI6ParamsVtYaYbScMYccF",
       "title": "signIn(_:)"
     },
     {
@@ -87768,6 +88289,411 @@
       ],
       "precise": "s:9OwnIDCore24SignInWithAppleOperationP",
       "title": "SignInWithAppleOperation"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "struct"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "UIContextResolutionError"
+        }
+      ],
+      "kind": "swift.struct",
+      "path": [
+        "UIContextResolutionError"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV",
+      "title": "UIContextResolutionError"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "errorDescription"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": "? { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "UIContextResolutionError",
+        "errorDescription"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV16errorDescriptionSSSgvp",
+      "title": "errorDescription"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "cause"
+        },
+        {
+          "kind": "text",
+          "spelling": ": (any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s5ErrorP",
+          "spelling": "Error"
+        },
+        {
+          "kind": "text",
+          "spelling": ")?"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "UIContextResolutionError",
+        "cause"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV5causes0E0_pSgvp",
+      "title": "cause"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "enum"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "Reason"
+        }
+      ],
+      "kind": "swift.enum",
+      "path": [
+        "UIContextResolutionError",
+        "Reason"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+      "title": "UIContextResolutionError.Reason"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "ownerClosed"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "UIContextResolutionError",
+        "Reason",
+        "ownerClosed"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO11ownerClosedyA2EmF",
+      "title": "UIContextResolutionError.Reason.ownerClosed"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "unavailable"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "UIContextResolutionError",
+        "Reason",
+        "unavailable"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO11unavailableyA2EmF",
+      "title": "UIContextResolutionError.Reason.unavailable"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "init"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "reason"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore24UIContextResolutionErrorV",
+          "spelling": "UIContextResolutionError"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+          "spelling": "Reason"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "message"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "cause"
+        },
+        {
+          "kind": "text",
+          "spelling": ": (any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s5ErrorP",
+          "spelling": "Error"
+        },
+        {
+          "kind": "text",
+          "spelling": ")? = nil)"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "reason"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore24UIContextResolutionErrorV",
+                "spelling": "UIContextResolutionError"
+              },
+              {
+                "kind": "text",
+                "spelling": "."
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+                "spelling": "Reason"
+              }
+            ],
+            "name": "reason"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "message"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:SS",
+                "spelling": "String"
+              }
+            ],
+            "name": "message"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "cause"
+              },
+              {
+                "kind": "text",
+                "spelling": ": (any "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:s5ErrorP",
+                "spelling": "Error"
+              },
+              {
+                "kind": "text",
+                "spelling": ")?"
+              }
+            ],
+            "name": "cause"
+          }
+        ]
+      },
+      "kind": "swift.init",
+      "path": [
+        "UIContextResolutionError",
+        "init(reason:message:cause:)"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV6reason7message5causeA2C6ReasonO_SSs0E0_pSgtcfc",
+      "title": "init(reason:message:cause:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "reason"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore24UIContextResolutionErrorV",
+          "spelling": "UIContextResolutionError"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore24UIContextResolutionErrorV6ReasonO",
+          "spelling": "Reason"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "UIContextResolutionError",
+        "reason"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV6reasonAC6ReasonOvp",
+      "title": "reason"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "message"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "UIContextResolutionError",
+        "message"
+      ],
+      "precise": "s:9OwnIDCore24UIContextResolutionErrorV7messageSSvp",
+      "title": "message"
     },
     {
       "access": "public",

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UIKit
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
@@ -68,9 +69,10 @@ struct ProviderMainActorBoundaryTests {
 
     @Test func `Google provider main actor hooks execute on MainActor when called from detached tasks`() async throws {
         let log = await MainActor.run { MainActorProviderEventLog() }
-        let params = SignInWithSocialParams(clientID: "google-client", nonce: "google-nonce", window: nil)
+        let window = await MainActor.run { makeTestWindow() }
+        let params = SignInWithSocialParams(clientID: "google-client", nonce: "google-nonce")
         var builder = SignInWithGoogleBuilder()
-        builder.signIn { params in
+        builder.signIn { _, params in
             log.append(.googleSignIn(params.clientID, params.nonce))
             return .success(id: "google-id", idToken: "google-id-token")
         }
@@ -83,7 +85,7 @@ struct ProviderMainActorBoundaryTests {
 
         let provider = builder.build()
         let result = await Task.detached {
-            let result = await provider.signIn(params: params)
+            let result = await provider.signIn(window: window, params: params)
             await provider.cancel()
             await provider.signOut()
             return result
@@ -105,16 +107,29 @@ struct ProviderMainActorBoundaryTests {
         let log = await MainActor.run { MainActorProviderEventLog() }
         let appleProvider = FakeMainActorAppleProvider(log: log)
         let googleProvider = FakeMainActorGoogleProvider(log: log)
-        let appleUI = SignInWithAppleUIImpl(provider: { appleProvider })
-        let googleUI = SignInWithGoogleUIImpl(provider: { googleProvider })
+        let window = await MainActor.run { makeTestWindow() }
+        let contextProvider = await MainActor.run {
+            MainActorWindowContextProvider(window: window)
+        }
+        let appleUI = SignInWithAppleUIImpl(
+            uiContextProvider: { contextProvider },
+            provider: { appleProvider },
+            logger: nil
+        )
+        let googleUI = SignInWithGoogleUIImpl(
+            uiContextProvider: { contextProvider },
+            provider: { googleProvider },
+            logger: nil
+        )
 
         let observation = await Task.detached {
             let appleProviderResult = await appleProvider.signIn(
-                params: SignInWithSocialParams(clientID: "direct-apple-client", nonce: "direct-apple-nonce", window: nil)
+                window: window,
+                params: SignInWithSocialParams(clientID: "direct-apple-client", nonce: "direct-apple-nonce")
             )
             await appleProvider.cancel()
-            let appleUIResult = await appleUI.signIn(clientID: "apple-client", nonce: "apple-nonce", window: nil)
-            let googleUIResult = await googleUI.signIn(clientID: "google-client", nonce: "google-nonce", window: nil)
+            let appleUIResult = await appleUI.signIn(clientID: "apple-client", nonce: "apple-nonce")
+            let googleUIResult = await googleUI.signIn(clientID: "google-client", nonce: "google-nonce")
             return [appleProviderResult, appleUIResult, googleUIResult]
         }.value
 
@@ -128,6 +143,8 @@ struct ProviderMainActorBoundaryTests {
         #expect(appleUISuccess.idToken == "apple-token")
         #expect(googleUISuccess.id == "google-id")
         #expect(googleUISuccess.idToken == "google-token")
+        #expect(await MainActor.run { appleProvider.receivedWindow === window })
+        #expect(await MainActor.run { googleProvider.receivedWindow === window })
         #expect(
             await log.snapshot() == [
                 .appleSignIn("direct-apple-client", "direct-apple-nonce"),
@@ -178,12 +195,14 @@ private final class MainActorProviderEventLog {
 
 private final class FakeMainActorAppleProvider: SignInWithApple, @unchecked Sendable {
     private let log: MainActorProviderEventLog
+    private(set) var receivedWindow: UIWindow?
 
     init(log: MainActorProviderEventLog) {
         self.log = log
     }
 
-    @MainActor func signIn(params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+        receivedWindow = window
         log.append(.appleSignIn(params.clientID, params.nonce))
         return .success(id: "apple-id", idToken: "apple-token")
     }
@@ -195,12 +214,14 @@ private final class FakeMainActorAppleProvider: SignInWithApple, @unchecked Send
 
 private final class FakeMainActorGoogleProvider: SignInWithGoogle, @unchecked Sendable {
     private let log: MainActorProviderEventLog
+    private(set) var receivedWindow: UIWindow?
 
     init(log: MainActorProviderEventLog) {
         self.log = log
     }
 
-    @MainActor func signIn(params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+        receivedWindow = window
         log.append(.googleSignIn(params.clientID, params.nonce))
         return .success(id: "google-id", idToken: "google-token")
     }
@@ -211,6 +232,24 @@ private final class FakeMainActorGoogleProvider: SignInWithGoogle, @unchecked Se
 
     @MainActor func signOut() {
         log.append(.googleSignOut)
+    }
+}
+
+@MainActor
+private func makeTestWindow() -> UIWindow {
+    UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 640))
+}
+
+@MainActor
+private final class MainActorWindowContextProvider: UIContextProvider, @unchecked Sendable {
+    let window: UIWindow
+
+    init(window: UIWindow) {
+        self.window = window
+    }
+
+    func current() -> UIContextResult {
+        .windowOnly(window)
     }
 }
 

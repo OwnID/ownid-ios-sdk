@@ -7,34 +7,40 @@ import UIKit
 /// only provider actions available to this bridge. This implementation exposes `Apple` and `Google` actions when the
 /// matching providers are registered.
 ///
-/// The hosted page must supply `clientId` and `challengeId`. The plugin forwards them as ``SignInWithSocialParams`` with
-/// the source web view's current window, checks provider availability, then starts provider sign-in. Success returns the
-/// provider ID token as the WebBridge success payload. Provider cancellation maps to bridge error type `ABORTED`;
-/// missing provider support, unavailable providers, invalid parameters, and provider failures return bridge error
-/// messages.
+/// The hosted page must supply `clientId` and `challengeId`. The plugin forwards them as ``SignInWithSocialParams``,
+/// checks provider availability, then starts provider sign-in using the attached WebView's presentation context.
+/// Success returns the provider ID token as the WebBridge success payload. Provider cancellation maps to bridge error
+/// type `ABORTED`; missing provider support, unavailable providers, invalid parameters, missing presentation context,
+/// and provider failures return bridge error messages.
 internal actor WebBridgeSocialPlugin: WebBridgePlugin {
     internal static let KEY = WebBridgePluginKey(id: "SOCIAL")
 
     nonisolated var key: WebBridgePluginKey { Self.KEY }
     nonisolated let actions: [String]
 
-    private nonisolated let signInWithApple: (any SignInWithApple)?
-    private nonisolated let signInWithGoogle: (any SignInWithGoogle)?
+    private let signInWithApple: (any SignInWithApple)?
+    private let signInWithGoogle: (any SignInWithGoogle)?
+    private let uiContextProvider: any UIContextProvider
     private let coder: any JSONCoder
+    private let logger: OwnIDLogRouter?
 
-    init(signInWithApple: (any SignInWithApple)?, signInWithGoogle: (any SignInWithGoogle)?, coder: any JSONCoder) {
+    init(
+        signInWithApple: (any SignInWithApple)?,
+        signInWithGoogle: (any SignInWithGoogle)?,
+        uiContextProvider: any UIContextProvider,
+        coder: any JSONCoder,
+        logger: OwnIDLogRouter?
+    ) {
         self.signInWithApple = signInWithApple
         self.signInWithGoogle = signInWithGoogle
+        self.uiContextProvider = uiContextProvider
         self.coder = coder
+        self.logger = logger
 
         var availableActions: [String] = []
         if signInWithApple != nil { availableActions.append("Apple") }
         if signInWithGoogle != nil { availableActions.append("Google") }
         self.actions = availableActions
-    }
-
-    nonisolated func injectionData() -> (String, [String])? {
-        actions.isEmpty ? nil : (key.id, actions)
     }
 
     nonisolated func handle(_ message: WebBridgePluginMessage) async -> WebBridgePluginResult {
@@ -89,13 +95,67 @@ internal actor WebBridgeSocialPlugin: WebBridgePlugin {
             return WebBridgePluginResult.error(message: "WebBridgeSocialPlugin: 'clientId' is required")
         }
 
-        let anchor: UIWindow? = await MainActor.run { message.webView.window }
-        let providerParams = SignInWithSocialParams(clientID: clientID, nonce: challengeID.value, window: anchor)
+        let providerParams = SignInWithSocialParams(clientID: clientID, nonce: challengeID.value)
         guard await signIn.isAvailable(params: providerParams) else {
             return WebBridgePluginResult.error(message: "WebBridgeSocialPlugin: \(providerName) Sign In is unavailable")
         }
 
-        switch await signIn.signIn(params: providerParams) {
+        return await Self.performSignIn(signIn, params: providerParams, uiContextProvider: uiContextProvider, logger: logger)
+    }
+
+    @MainActor
+    private final class SocialInvocationCancellationGate {
+        private var isActive = false
+
+        func begin() {
+            isActive = true
+        }
+
+        func finish() {
+            isActive = false
+        }
+
+        func cancelIfActive(_ signIn: any SignInWithSocial) {
+            guard isActive else { return }
+            isActive = false
+            signIn.cancel()
+        }
+    }
+
+    @MainActor
+    private static func performSignIn(
+        _ signIn: any SignInWithSocial,
+        params: SignInWithSocialParams,
+        uiContextProvider: any UIContextProvider,
+        logger: OwnIDLogRouter?
+    ) async -> WebBridgePluginResult {
+        let window: UIWindow
+        do {
+            window = try uiContextProvider.current().requireWindow()
+        } catch {
+            logger?.logW(source: Self.self, prefix: #function, message: "UI context resolution failed", cause: error)
+            return WebBridgePluginResult.error(
+                message: "WebBridgeSocialPlugin: Cannot resolve a presentation window: \(error.localizedDescription)"
+            )
+        }
+
+        let cancellationGate = SocialInvocationCancellationGate()
+        let result: SocialResult? = await withTaskCancellationHandler {
+            guard !Task.isCancelled else { return nil }
+            cancellationGate.begin()
+            defer { cancellationGate.finish() }
+            return await signIn.signIn(window: window, params: params)
+        } onCancel: {
+            Task { @MainActor in
+                cancellationGate.cancelIfActive(signIn)
+            }
+        }
+
+        guard let result else {
+            return WebBridgePluginResult.error(message: "WebBridgeSocialPlugin: Canceled", type: "ABORTED")
+        }
+
+        switch result {
         case .success(_, let idToken):
             return WebBridgePluginResult.success(JSONValue(idToken))
 
@@ -113,7 +173,9 @@ extension WebBridgeSocialPlugin {
         WebBridgeSocialPlugin(
             signInWithApple: resolver.getOrNil(type: (any SignInWithApple).self),
             signInWithGoogle: resolver.getOrNil(type: (any SignInWithGoogle).self),
-            coder: try resolver.getOrThrow(type: (any JSONCoder).self)
+            uiContextProvider: try resolver.getOrThrow(type: (any UIContextProvider).self),
+            coder: try resolver.getOrThrow(type: (any JSONCoder).self),
+            logger: resolver.getOrNil(type: OwnIDLogRouter.self)
         )
     }
 }

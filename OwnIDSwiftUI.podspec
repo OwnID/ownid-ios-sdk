@@ -20,6 +20,7 @@ Pod::Spec.new do |spec|
 
   # Sources
   spec.source_files     = "OwnIDSwiftUI/Sources/**/*"
+  spec.resource_bundles = { "OwnIDSwiftUI" => ["sdk-version.xcconfig"] }
 
   spec.dependency       "OwnIDCore", spec.version.to_s
 

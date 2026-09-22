@@ -52,6 +52,36 @@ struct PasskeyAssertionOperationImplementationTests {
         #expect(apiController.cancelReasons.get().count == 1)
     }
 
+    @Test(arguments: PasskeyServerCancelOutcome.allCases)
+    func `Passkey assertion provider failure follows server cancellation outcome`(_ cancelOutcome: PasskeyServerCancelOutcome) async throws {
+        let cancelResult: APIResult<Void, PasskeyAssertionCancelAPIFailure> =
+            switch cancelOutcome {
+            case .failure:
+                .failure(.badRequest(.unknown(errorCode: .unknown, message: "Assertion cancellation failed")))
+            case .canceled:
+                .canceled
+            }
+        let ui = await FakePasskeyAssertionUI(result: .failure(.general("Assertion provider failed", nil, nil)))
+        let apiController = FakePasskeyAssertionAPIController(cancelResult: cancelResult)
+        let operation = makeAssertionOperation(ui: ui, api: FakePasskeyAssertionAPI(apiController: apiController))
+
+        let controller = operation.start(params: PasskeyAssertionOperationParams(loginID: testLoginID()))
+        let result = try await withOperationTimeout("passkey assertion cancellation outcome") { await controller.whenSettled() }
+
+        switch cancelOutcome {
+        case .failure:
+            #expect(try requireOperationFailure(result).errorCode == .integrationError)
+        case .canceled:
+            let reason = try requireOperationCancellation(result)
+            guard case .systemError = reason else {
+                Issue.record("Expected a system-error cancellation, got \(reason)")
+                return
+            }
+        }
+        #expect(apiController.assertionResults.get().isEmpty)
+        #expect(apiController.cancelReasons.get().count == 1)
+    }
+
     @Test func `Passkey assertion verify failure settles terminally and cleans registry`() async throws {
         let assertionResult = testAssertionResult()
         let ui = await FakePasskeyAssertionUI(result: .success(assertionResult))
@@ -154,6 +184,36 @@ struct PasskeyAttestationOperationImplementationTests {
         #expect(apiController.cancelReasons.get().count == 1)
     }
 
+    @Test(arguments: PasskeyServerCancelOutcome.allCases)
+    func `Passkey attestation provider failure follows server cancellation outcome`(_ cancelOutcome: PasskeyServerCancelOutcome) async throws {
+        let cancelResult: APIResult<Void, PasskeyAttestationCancelAPIFailure> =
+            switch cancelOutcome {
+            case .failure:
+                .failure(.badRequest(.unknown(errorCode: .unknown, message: "Attestation cancellation failed")))
+            case .canceled:
+                .canceled
+            }
+        let ui = await FakePasskeyAttestationUI(result: .failure(.general("Attestation provider failed", nil, nil)))
+        let apiController = FakePasskeyAttestationAPIController(cancelResult: cancelResult)
+        let operation = makeAttestationOperation(ui: ui, api: FakePasskeyAttestationAPI(apiController: apiController))
+
+        let controller = operation.start(params: PasskeyAttestationOperationParams(loginID: testLoginID()))
+        let result = try await withOperationTimeout("passkey attestation cancellation outcome") { await controller.whenSettled() }
+
+        switch cancelOutcome {
+        case .failure:
+            #expect(try requireOperationFailure(result).errorCode == .passkeyNotCreated)
+        case .canceled:
+            let reason = try requireOperationCancellation(result)
+            guard case .systemError = reason else {
+                Issue.record("Expected a system-error cancellation, got \(reason)")
+                return
+            }
+        }
+        #expect(apiController.attestationResults.get().isEmpty)
+        #expect(apiController.cancelReasons.get().count == 1)
+    }
+
     @Test func `Passkey attestation verify failure settles terminally and cleans registry`() async throws {
         let attestationResult = testAttestationResult()
         let ui = await FakePasskeyAttestationUI(result: .success(attestationResult))
@@ -196,6 +256,11 @@ struct PasskeyAttestationOperationImplementationTests {
             logger: nil
         )
     }
+}
+
+enum PasskeyServerCancelOutcome: String, CaseIterable, Sendable {
+    case failure
+    case canceled
 }
 
 // Covers: OPS-130, OPS-200

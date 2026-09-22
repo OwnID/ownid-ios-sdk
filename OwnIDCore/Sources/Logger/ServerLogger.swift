@@ -12,7 +12,7 @@ import Foundation
 /// fails, or delivery cannot complete. Transport failures may be retried internally. Local logging may receive summaries
 /// of diagnostics delivery failures, but those failures do not affect the SDK operation that emitted the diagnostic.
 ///
-/// Server diagnostics may include the source label, message, exception text, SDK version, request client string, and device/app
+/// Server diagnostics may include the source label, message, exception text, application version, User-Agent with SDK module versions, and device/app
 /// metadata available from ``LocalInfo``. HTTP logging for diagnostics posts is suppressed so diagnostics do not
 /// recursively log themselves.
 internal final class ServerLogger: @unchecked Sendable {

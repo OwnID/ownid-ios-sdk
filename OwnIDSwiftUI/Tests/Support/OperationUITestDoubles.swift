@@ -11,7 +11,7 @@ final class CapturingOperationUIContainer: OperationUIContainer, @unchecked Send
     }
 
     @MainActor
-    func show<Controller: OperationController>(controller: Controller) {
+    func show<Controller: OperationController>(controller: Controller) throws {
         lock.withLock { operationIDs.append(controller.operationID) }
     }
 }

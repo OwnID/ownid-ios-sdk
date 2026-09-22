@@ -5,10 +5,75 @@ import UIKit
 @_spi(OwnIDInternal) @testable import OwnIDCore
 @_spi(OwnIDInternal) @testable import OwnIDSwiftUI
 
-// Covers: UI-PRESENT-060
+// Covers: UI-PRESENT-060, UI-PRESENT-370
 @MainActor
 @Suite(.serialized)
 struct SDKPresentedOperationContentEnvironmentRuntimeTests {
+
+    @Test
+    func `Operation UI container propagates synchronous presenter errors`() throws {
+        let operationContainer = BottomSheetOperationUIContainerImpl(
+            instanceResolver: DIContainerImpl(scopeName: "startup-error"),
+            presenter: ThrowingBottomSheetPresenter(error: BottomSheetPresentationError.hostNotReady),
+            themeStore: OwnIDThemeStore(),
+            languageTagsProvider: nil,
+            logger: nil
+        )
+
+        do {
+            try operationContainer.show(controller: ActiveLoginIDCollectOperationController())
+            Issue.record("Expected presenter startup error")
+        } catch let error as BottomSheetPresentationError {
+            #expect(error.rawValue == BottomSheetPresentationError.hostNotReady.rawValue)
+        } catch {
+            Issue.record("Unexpected presenter error: \(error)")
+        }
+    }
+
+    @Test
+    func `Operation UI container maps delayed presentation failure to one exact system abort`() throws {
+        let presenter = CapturingBottomSheetPresenter()
+        let controller = ActiveLoginIDCollectOperationController()
+        let operationContainer = BottomSheetOperationUIContainerImpl(
+            instanceResolver: DIContainerImpl(scopeName: "delayed-presentation-error"),
+            presenter: presenter,
+            themeStore: OwnIDThemeStore(),
+            languageTagsProvider: nil,
+            logger: nil
+        )
+
+        try operationContainer.show(controller: controller)
+        presenter.fail(.presentationAcknowledgementTimedOut)
+
+        #expect(controller.abortReasons.count == 1)
+        let abortReason = try #require(controller.abortReasons.first)
+        guard case .systemError(let details) = abortReason else {
+            Issue.record("Expected a system-error abort, got \(abortReason)")
+            return
+        }
+        #expect(details == BottomSheetPresentationError.presentationAcknowledgementTimedOut.localizedDescription)
+    }
+
+    @Test
+    func `Operation settlement starts dismissal before SwiftUI appearance`() async throws {
+        let presenter = CapturingBottomSheetPresenter()
+        let controller = ImmediatelySettledLoginIDCollectOperationController()
+        let operationContainer = BottomSheetOperationUIContainerImpl(
+            instanceResolver: DIContainerImpl(scopeName: "settled-before-appearance"),
+            presenter: presenter,
+            themeStore: OwnIDThemeStore(),
+            languageTagsProvider: nil,
+            logger: nil
+        )
+
+        try operationContainer.show(controller: controller)
+        for _ in 0..<100 where presenter.containerController?.isClosing != true {
+            await Task.yield()
+        }
+
+        #expect(presenter.containerController?.isClosing == true)
+        #expect(controller.abortReasons.isEmpty)
+    }
 
     @Test
     func `Theme bridge publishes captured SDK theme without changing app hosted environment`() async throws {
@@ -61,7 +126,7 @@ struct SDKPresentedOperationContentEnvironmentRuntimeTests {
             logger: nil
         )
 
-        operationContainer.show(controller: ActiveLoginIDCollectOperationController())
+        try operationContainer.show(controller: ActiveLoginIDCollectOperationController())
 
         let viewController = try #require(presenter.viewController)
         let host = UIKitViewControllerRuntimeHost(viewController: viewController)
@@ -139,18 +204,65 @@ private struct ThemeEnvironmentProbe: View {
 @MainActor
 private final class CapturingBottomSheetPresenter: BottomSheetPresenter, @unchecked Sendable {
     private(set) var viewController: BottomSheetViewController?
+    private(set) var containerController: OwnIDUIContainerController?
+    private var window: UIKitRuntimeTestWindow?
+    private var onFailure: (@MainActor (BottomSheetPresentationError) -> Void)?
 
     func show<Content: View>(
         themeStore: OwnIDThemeStore,
-        onFailure: @escaping @MainActor (Reason) -> Void,
-        content: @escaping @MainActor (OwnIDUIContainerController) -> Content
-    ) {
+        onFailure: @escaping @MainActor (BottomSheetPresentationError) -> Void,
+        content: @MainActor (OwnIDUIContainerController) -> Content
+    ) throws {
+        self.onFailure = onFailure
         let containerController = OwnIDUIContainerController(closeAction: {})
+        self.containerController = containerController
+        let window = UIKitRuntimeTestWindow()
+        self.window = window
         viewController = BottomSheetViewController(
-            content: AnyView(content(containerController)),
+            expectedWindow: window,
+            containerController: containerController,
             themeStore: themeStore,
-            containerController: containerController
+            content: AnyView(content(containerController))
         )
+    }
+
+    func fail(_ error: BottomSheetPresentationError) {
+        onFailure?(error)
+    }
+}
+
+private final class ImmediatelySettledLoginIDCollectOperationController: LoginIDCollectOperationController, @unchecked Sendable {
+    let operationID = OperationID(type: .loginIDCollect, id: "settled-before-appearance")
+    private(set) var abortReasons: [Reason] = []
+
+    func abort(reason: Reason) {
+        abortReasons.append(reason)
+    }
+
+    func whenSettled() async -> OperationResult<LoginID, LoginIDCollectOperationFailure> {
+        .success(LoginID(id: "settled@example.test", type: .email))
+    }
+
+    @MainActor
+    func stateStream() -> AsyncStream<LoginIDCollectOperationState> {
+        AsyncStream { _ in }
+    }
+}
+
+@MainActor
+private final class ThrowingBottomSheetPresenter: BottomSheetPresenter, @unchecked Sendable {
+    private let error: any Error
+
+    init(error: any Error) {
+        self.error = error
+    }
+
+    func show<Content: View>(
+        themeStore: OwnIDThemeStore,
+        onFailure: @escaping @MainActor (BottomSheetPresentationError) -> Void,
+        content: @MainActor (OwnIDUIContainerController) -> Content
+    ) throws {
+        throw error
     }
 }
 
@@ -160,7 +272,11 @@ private final class ActiveLoginIDCollectOperationController: LoginIDCollectOpera
         OperationResult<LoginID, LoginIDCollectOperationFailure>.canceled(.timeout)
     )
 
-    func abort(reason: Reason) {}
+    private(set) var abortReasons: [Reason] = []
+
+    func abort(reason: Reason) {
+        abortReasons.append(reason)
+    }
 
     func whenSettled() async -> OperationResult<LoginID, LoginIDCollectOperationFailure> {
         await settlement.wait()

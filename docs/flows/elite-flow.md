@@ -4,6 +4,8 @@ Elite Flow renders an OwnID-hosted page inside an SDK-managed WebView. The OwnID
 
 Use Elite when OwnID should own the primary authentication UI and your app only needs to handle final native handoff points.
 
+The SDK owns the SDK-managed `WKWebView` presentation and dismissal. The app owns the returned controller and any work started by the event callbacks.
+
 ## Minimal Integration
 
 Start Elite Flow from the app entry point, keep the returned controller while the WebView flow is active, and handle final hosted events from [`EliteFlowContext.events`](../../OwnIDCore/Sources/Flow/Elite/EliteFlowContext.swift).
@@ -88,6 +90,8 @@ final class EliteFlowCoordinator {
 - Register only the optional providers that match the hosted experience in your integration, such as [`sessionCreate`](../setup/providers.md#session-create), [`passwordAuthenticate`](../setup/providers.md#password-authenticate), and social sign-in providers like [Sign in with Google](../setup/providers.md#sign-in-with-google). [Sign in with Apple](../setup/providers.md#sign-in-with-apple) is built into `OwnIDCore` by default; complete the iOS capability and OwnID Console setup when the hosted experience should offer Apple sign-in.
 - Keep the app's existing authentication, registration, and session paths available for native handoff, hosted errors, and user close.
 
+In a multi-window app, Elite's SDK-managed WebView needs a usable presentation window and controller. Bind the intended window, scene, or custom `UIContextProvider` in the provider scope used by the Elite handle; see [UI Context](../setup/providers.md#ui-context).
+
 ## Flow Shape
 
 ```mermaid
@@ -132,6 +136,8 @@ The controller is a high-level handle for the running WebView flow. Keep it stro
 
 The same flow instance is single-run: repeated `start(_:)` calls return the same controller and do not start another WebView run.
 
+If the owner is torn down while the flow is active, call `abort(reason:)`. Native user close, WebView detachment, controller abort, and SDK shutdown settle as `.canceled`; do not treat the hosted `onClose` callback as equivalent—`onClose` is a hosted terminal event and settles as `.success` after its handler returns.
+
 `whenSettled()` returns [`FlowResult<Void, EliteFlowFailure>`](../../OwnIDCore/Sources/Flow/Flow.swift). The failure type is declared in [`EliteFlowFailure`](../../OwnIDCore/Sources/Flow/Elite/EliteFlow.swift).
 
 | Result | Meaning | App handling |
@@ -172,6 +178,7 @@ Common options:
 | Option | Use |
 | --- | --- |
 | `baseUrl` | Base URL used for the HTML page. Leave it unset to use server configuration, then the SDK fallback `https://webview.ownid.com`. |
+| `html` | Raw HTML to render in the SDK-managed WebView. Leave it unset to use server configuration or SDK defaults. The resolved base URL must still be a valid HTTP(S) page origin; set `baseUrl` when the HTML needs a specific origin. |
 | `userAgent` | Custom WebView User-Agent string. Leave it unset to use the SDK's default local User-Agent value. |
 | `webViewIsInspectable` | Enables Safari Web Inspector where the platform supports it. Defaults to `false` when set through options; if options are omitted entirely, the SDK uses the app debuggable state. |
 | `backgroundColor` | Native background color for the SDK-managed WebView container and safe-area regions. Leave it unset to use the SDK default, currently white. Hosted page colors still come from the hosted page. |

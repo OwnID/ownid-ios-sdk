@@ -63,8 +63,9 @@ Use these fields as prompts, not as mandatory sections:
   coverage, and who can approve external setup.
 - **Providers**: `sessionCreate`, `passwordAuthenticate`, Sign in with Apple,
   Google, or other provider needs and whether top-level providers are enough.
-- **UI/WKWebView**: SwiftUI/UIKit ownership, app-hosted Operation UI needs,
-  WKWebView owner, hosted URL, trusted origins, and lifecycle/controller owner.
+- **UI/WKWebView**: SwiftUI/UIKit ownership, SDK-hosted default or app-hosted
+  Operation UI choice, WKWebView owner, hosted URL, trusted origins, and
+  lifecycle/controller owner.
 - **Migration**: existing v3 products/imports/surfaces and the first workflow
   to migrate.
 - **Validation**: smallest build/check the app can run, manual flow access, and
@@ -131,8 +132,9 @@ Choose the smallest surface that matches the app workflow:
 - **WebBridge**: app-owned WKWebView loads an app/tenant page with OwnID Web SDK
   and needs native capabilities through the bridge.
 - **UI Customization / Operation UI**: app changes SDK appearance, strings, or
-  widgets, or embeds supported login ID collection and verification operations
-  while the SDK owns operation state and settlement.
+  widgets, or chooses SDK-hosted default or app-hosted UI for supported login ID
+  collection and verification operations while the SDK owns operation state and
+  settlement.
 
 If the requested work spans multiple surfaces, split the plan into complete
 user journeys. Start with the explicitly requested journey; otherwise select
@@ -150,8 +152,8 @@ Request a decision before implementation when the missing value determines:
   `application-identifier`, bundle IDs, or provisioning profiles;
 - Apple Developer, Google Cloud, OwnID Console, SAP CDC/Gigya, or other
   external tenant setup;
-- UI ownership choice between Boost, Elite, WebBridge, or app-hosted
-  Operation UI;
+- UI ownership choice among Boost, Elite, WebBridge, SDK-hosted default
+  Operation UI, and app-hosted Operation UI;
 - unsupported/no-passkey device behavior that affects product requirements;
 - changes to deployment target, Swift version, package manager, signing,
   entitlements, production config, or release process;

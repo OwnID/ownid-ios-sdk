@@ -3,7 +3,7 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: OPS-100, OPS-140, OPS-150, OPS-170
+// Covers: OPS-100, OPS-140, OPS-150, OPS-170, OPS-210
 struct VerificationOperationImplementationTests {
     private let startupTimeout: UInt64 = 15
     private let delayedTerminalTimeout: UInt64 = 5
@@ -197,6 +197,73 @@ struct VerificationOperationImplementationTests {
         #expect(failure.errorCode == .integrationError)
         #expect(failure.message == "Phone start provider failed")
         #expect(api.params.get().count == 1)
+    }
+
+    @Test func `Active email system abort preserves exact reason when API cancellation fails`() async throws {
+        let apiController = FakeEmailVerificationAPIController(
+            completeResult: .success(.accessToken(testAccessToken())),
+            cancelResult: .failure(
+                .badRequest(.unknown(errorCode: .unknown, message: "Email cancellation failed"))
+            )
+        )
+        let operation = makeEmailOperation(
+            api: FakeEmailVerificationAPI(apiController: apiController),
+            ui: FakeEmailVerificationUI()
+        )
+        let controller = try #require(
+            operation.start(params: EmailVerificationOperationParams(loginID: testLoginID()))
+                as? any EmailVerificationOperationController
+        )
+        _ = try await nextEmailActiveState(from: controller, where: { !$0.isBusy })
+        let expectedDetails = "Bottom sheet presentation acknowledgement timed out"
+
+        controller.abort(reason: .systemError(details: expectedDetails))
+
+        let apiReason = try await withOperationTimeout("email system abort API cancellation", seconds: cleanupTimeout) {
+            try await apiController.cancelReason.waitUnlessCancelled()
+        }
+        let settledReason = try requireOperationCancellation(
+            try await withOperationTimeout("email system abort settlement", seconds: cleanupTimeout) {
+                await controller.whenSettled()
+            }
+        )
+
+        #expect(try systemErrorDetails(from: apiReason) == expectedDetails)
+        #expect(try systemErrorDetails(from: settledReason) == expectedDetails)
+        #expect(apiController.cancelReasons.get().count == 1)
+    }
+
+    @Test func `Active phone system abort preserves exact reason when API cancellation is canceled`() async throws {
+        let apiController = FakePhoneVerificationAPIController(
+            completeResult: .success(.accessToken(testAccessToken())),
+            cancelResult: .canceled
+        )
+        let operation = makePhoneOperation(
+            api: FakePhoneVerificationAPI(apiController: apiController),
+            ui: FakePhoneVerificationUI()
+        )
+        let controller = try #require(
+            operation.start(
+                params: PhoneVerificationOperationParams(loginID: testLoginID("+15551234567", type: .phoneNumber))
+            ) as? any PhoneVerificationOperationController
+        )
+        _ = try await nextPhoneActiveState(from: controller, where: { !$0.isBusy })
+        let expectedDetails = "Bottom sheet presentation acknowledgement timed out"
+
+        controller.abort(reason: .systemError(details: expectedDetails))
+
+        let apiReason = try await withOperationTimeout("phone system abort API cancellation", seconds: cleanupTimeout) {
+            try await apiController.cancelReason.waitUnlessCancelled()
+        }
+        let settledReason = try requireOperationCancellation(
+            try await withOperationTimeout("phone system abort settlement", seconds: cleanupTimeout) {
+                await controller.whenSettled()
+            }
+        )
+
+        #expect(try systemErrorDetails(from: apiReason) == expectedDetails)
+        #expect(try systemErrorDetails(from: settledReason) == expectedDetails)
+        #expect(apiController.cancelReasons.get().count == 1)
     }
 
     @Test func `Email resend success stays active and clears busy and visible error`() async throws {
@@ -663,5 +730,13 @@ struct VerificationOperationImplementationTests {
             loginIDValidator: FakeLoginIDValidator(),
             logger: nil
         )
+    }
+
+    private func systemErrorDetails(from reason: Reason) throws -> String? {
+        guard case .systemError(let details) = reason else {
+            Issue.record("Expected system-error cancellation, got \(reason)")
+            return try #require(nil as String?)
+        }
+        return details
     }
 }

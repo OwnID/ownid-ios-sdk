@@ -4,6 +4,7 @@ Providers are optional extensions that add app-specific capabilities to the OwnI
 
 Common provider-backed capabilities include:
 
+- `uiContext` to select the window, scene, or app-owned UI context used for SDK presentation.
 - `sessionCreate` to create or restore the app session after OwnID authentication.
 - `passwordAuthenticate` to support password login through the existing app authentication system.
 - Sign in with Google.
@@ -14,6 +15,7 @@ Some integrations can use OwnID-provided source-only helpers instead of writing 
 ## Contents
 
 - [How Providers Work](#how-providers-work)
+- [UI Context](#ui-context)
 - [Session Create](#session-create)
 - [Password Authenticate](#password-authenticate)
 - [Sign in with Apple](#sign-in-with-apple)
@@ -48,6 +50,45 @@ Provider bindings are materialized when the providers block returns; do not reta
 `isAvailable` describes whether a registered provider can handle the current request. Providers are available by default. Add the callback when support depends on the request parameters, and return `true` for the cases supported by the app's authentication or session backend. For example, a provider backed by an email-only endpoint checks for an email login ID.
 
 Provider failures are reported by the SDK feature that called the provider. Handle them in that result or event callback rather than treating provider errors as a separate global channel.
+
+## UI Context
+
+Before presenting native UI, OwnID asks the active UI-context provider for a window and, when needed, a view controller. Without an override, `OwnIDCore` selects an eligible foreground application window. This is usually enough for a single-window app. Register a specific window or scene when presentation must stay with that owner:
+
+```swift
+import OwnIDCore
+
+OwnID.setProviders { registrar in
+    registrar.uiContext(window)
+}
+```
+
+For a scene-based binding, pass the app-owned `UIWindowScene` to `registrar.uiContext(_:)` instead.
+
+For app-specific routing, register a `UIContextProvider` or a main-actor lookup closure. The closure is called on demand; registration does not call it.
+
+Use `registrar.uiContext(window)`, `registrar.uiContext(windowScene)`, `registrar.uiContext(provider)`, or `registrar.uiContext { ... }` for the corresponding registration form. `UIContextProvider.current()` is resolved on the main actor when a UI-backed capability needs a context.
+
+```swift
+import OwnIDCore
+
+OwnID.setProviders { registrar in
+    registrar.uiContext {
+        // appWindowCoordinator is app-owned.
+        guard let window = appWindowCoordinator.currentWindow else {
+            return .failure(
+                UIContextResolutionError(
+                    reason: .unavailable,
+                    message: "The app does not currently have a presentation window."
+                )
+            )
+        }
+        return .windowOnly(window)
+    }
+}
+```
+
+`UIContextResult.windowAndController` must contain a controller belonging to the same window. Use `.windowOnly` when a window is available but no matching controller is available, or `.failure` when no usable context can be supplied. A custom provider is authoritative: OwnID does not fall back to another provider after its failure. `UIContextResolutionError.Reason.unavailable` may be recoverable on a later lookup; `.ownerClosed` means the bound window, scene, or other owner should be recreated or rebound. Error messages are diagnostic text, not localized end-user copy.
 
 ## Session Create
 
@@ -152,7 +193,7 @@ To use it:
    }
    ```
 
-4. Register the copied helper with OwnID from the main actor after SDK initialization and before using functionality that needs Google sign-in. The helper requires a `configurationProvider`: configure GoogleSignIn with the app's iOS OAuth client ID and use the OwnID-provided client ID as the Google server client ID. Pass `presentingViewControllerProvider` only when the app uses a custom scene or container hierarchy.
+4. Register the copied helper with OwnID from the main actor after SDK initialization and before using functionality that needs Google sign-in. Its `configurationProvider` receives the OwnID-provided Google web/server client ID when OwnID proceeds with provider configuration. Return a request-specific `GIDConfiguration` with the app's iOS OAuth client ID as `clientID` and the supplied value as `serverClientID`:
 
    ```swift
    import GoogleSignIn
@@ -170,7 +211,7 @@ To use it:
    }
    ```
 
-   The `serverClientID` argument is the Google Web/server client ID returned by the OwnID challenge. The `clientID` passed to `GIDConfiguration` must be the app's iOS OAuth client ID.
+   The helper receives the exact `UIWindow` selected for the request and resolves the presenter only from that window. If the default foreground-window selection is not appropriate for the app's scene or container hierarchy, register `uiContext(window)`, `uiContext(windowScene)`, or a custom `UIContextProvider` in the same provider scope. The `clientID` passed to `GIDConfiguration` must be the app's iOS OAuth client ID; the `serverClientID` argument is the Google web/server client ID returned by the OwnID challenge. The helper reports `SocialResult.fail` before presenting Google UI for an empty challenge or iOS client ID, a missing reversed callback URL scheme, or a missing presenter.
 
 5. Follow the [OwnID Google Sign-In guide](https://docs.ownid.com/social-providers/google) for Google Cloud and OwnID Console configuration.
 

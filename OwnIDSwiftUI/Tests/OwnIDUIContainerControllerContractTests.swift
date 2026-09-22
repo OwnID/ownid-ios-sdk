@@ -15,7 +15,6 @@ struct OwnIDUIContainerControllerContractTests {
             closeActionCount += 1
         }
 
-        #expect(controller.isOpened == false)
         #expect(controller.isClosing == false)
         #expect(controller.isClosed == false)
 
@@ -23,14 +22,12 @@ struct OwnIDUIContainerControllerContractTests {
         controller.markOpened()
         controller.markOpened()
 
-        #expect(controller.isOpened)
         #expect(controller.isClosing == false)
         #expect(closeActionCount == 0)
 
         controller.close()
         controller.close()
 
-        #expect(controller.isOpened)
         #expect(controller.isClosing)
         #expect(closeActionCount == 1)
         #expect(closedReasons.isEmpty)
@@ -38,7 +35,6 @@ struct OwnIDUIContainerControllerContractTests {
         controller.markClosed()
         controller.markClosed()
 
-        #expect(controller.isOpened == false)
         #expect(controller.isClosing)
         #expect(controller.isClosed)
         #expect(closeActionCount == 1)
@@ -55,7 +51,6 @@ struct OwnIDUIContainerControllerContractTests {
         controller.addClosedHandler { reason in closedReason = reason?.description }
         controller.markClosed()
 
-        #expect(controller.isOpened == false)
         #expect(controller.isClosed)
         #expect(closeActionCount == 0)
         #expect(closedReason == userCloseReason)

@@ -7,9 +7,9 @@ import UIKit
 /// ``OwnID/withProviders(_:_:)`` creates a child scope whose providers override inherited providers of the same type;
 /// ``OwnID/setProviders(_:)`` updates the current scope in place.
 ///
-/// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, and ``SignInWithGoogle``. Registering the
-/// same provider type more than once in one block uses the last provider. A block that registers no providers leaves the
-/// current scope unchanged.
+/// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, ``SignInWithGoogle``, and
+/// ``UIContextProvider``. Registering the same provider type more than once in one block uses the last provider. A block
+/// that registers no providers leaves the current scope unchanged.
 ///
 /// Do not retain this registrar or provider builders after the enclosing provider block returns. Keep app-owned state in
 /// the handlers passed to the builder. OwnID keeps only the providers built from those handlers; the app owns their
@@ -23,6 +23,7 @@ public struct OwnIDProvidersRegistrar {
     private var sessionCreate: (any SessionCreate)?
     private var passwordAuthenticate: (any PasswordAuthenticate)?
     private var signInWithGoogle: (any SignInWithGoogle)?
+    private var uiContextProvider: (any UIContextProvider)?
 
     internal init(resolver: any DIContainerResolver) {
         self.resolver = resolver
@@ -92,14 +93,54 @@ public struct OwnIDProvidersRegistrar {
         signInWithGoogle = builder.build()
     }
 
+    /// Registers a UI-context provider bound to this exact window.
+    ///
+    /// OwnID holds the exact window weakly and never substitutes another window. If it is released before a lookup,
+    /// the provider returns ``UIContextResolutionError/Reason/ownerClosed``. A successful lookup may contain only the
+    /// window when no matching presentation controller is available. Registration and lookup run on the main actor.
+    @MainActor
+    public mutating func uiContext(_ window: UIWindow) {
+        uiContextProvider = WindowUIContextProviderImpl(window: window)
+    }
+
+    /// Registers a UI-context provider bound to this window scene.
+    ///
+    /// The provider follows the scene session and resolves its current window when ``UIContextProvider/current()`` is
+    /// called. It never substitutes another scene. It reports an unavailable context while the scene is disconnected
+    /// and an owner-closed context after the scene session is no longer available. Registration and lookup run on the
+    /// main actor.
+    @MainActor
+    public mutating func uiContext(_ scene: UIWindowScene) {
+        uiContextProvider = WindowSceneUIContextProviderImpl(scene: scene)
+    }
+
+    /// Registers the supplied UI-context provider without invoking it during registration.
+    ///
+    /// OwnID calls ``UIContextProvider/current()`` on the main actor when a UI-backed capability needs a context. The
+    /// provider remains responsible for selecting its context and reporting resolution failures.
+    public mutating func uiContext(_ provider: any UIContextProvider) {
+        uiContextProvider = provider
+    }
+
+    /// Registers a main-actor closure that supplies a UI-context result on demand.
+    ///
+    /// The closure is invoked each time OwnID resolves the provider; registration does not invoke it. Return
+    /// ``UIContextResult/failure(_:)`` when the app cannot currently provide a usable context.
+    public mutating func uiContext(
+        _ current: @escaping @Sendable @MainActor () -> UIContextResult
+    ) {
+        uiContextProvider = UIContextProviderClosure(currentValue: current)
+    }
+
     internal func register(into registrar: any DIContainerRegistrar) {
         if let sessionCreate { registrar.register((any SessionCreate).self, instance: sessionCreate) }
         if let passwordAuthenticate { registrar.register((any PasswordAuthenticate).self, instance: passwordAuthenticate) }
         if let signInWithGoogle { registrar.register((any SignInWithGoogle).self, instance: signInWithGoogle) }
+        if let uiContextProvider { registrar.register((any UIContextProvider).self, instance: uiContextProvider) }
     }
 
     internal var isEmpty: Bool {
-        sessionCreate == nil && passwordAuthenticate == nil && signInWithGoogle == nil
+        sessionCreate == nil && passwordAuthenticate == nil && signInWithGoogle == nil && uiContextProvider == nil
     }
 
 }
@@ -203,12 +244,13 @@ internal struct PasswordAuthenticateClosure: PasswordAuthenticate {
 /// ``signOut(_:)`` defaults to a no-op. The resulting provider is available for `nil` params, delegates typed
 /// ``SignInWithSocialParams`` to ``isAvailable(_:)``, and reports unavailable for other parameter types.
 ///
-/// OwnID invokes `signIn`, `cancel`, and `signOut` on the main actor. `isAvailable` is not main-actor isolated; dispatch
-/// to the main actor inside that closure when the provider SDK requires UI access.
+/// OwnID invokes `signIn`, `cancel`, and `signOut` on the main actor. The `signIn` callback receives the presentation
+/// window selected for the request as its first argument. `isAvailable` is not main-actor isolated; dispatch to the
+/// main actor inside that closure when the provider SDK requires UI access.
 /// The provider owns cancellation support, local provider session state, ID-token handling, and failure mapping.
 public struct SignInWithGoogleBuilder {
     private var availability: @Sendable (SignInWithSocialParams) async -> Bool = { _ in true }
-    private var signInHandler: (@Sendable @MainActor (SignInWithSocialParams) async -> SocialResult)?
+    private var signInHandler: (@Sendable @MainActor (UIWindow, SignInWithSocialParams) async -> SocialResult)?
     private var cancelHandler: @Sendable @MainActor () -> Void = {}
     private var signOutHandler: @Sendable @MainActor () -> Void = {}
 
@@ -216,7 +258,9 @@ public struct SignInWithGoogleBuilder {
     public mutating func isAvailable(_ block: @escaping @Sendable (SignInWithSocialParams) async -> Bool) { availability = block }
 
     /// Sets the Google sign-in handler.
-    public mutating func signIn(_ block: @escaping @Sendable @MainActor (SignInWithSocialParams) async -> SocialResult) {
+    ///
+    /// - Parameter block: Main-actor callback receiving the presentation window and social sign-in parameters.
+    public mutating func signIn(_ block: @escaping @Sendable @MainActor (UIWindow, SignInWithSocialParams) async -> SocialResult) {
         signInHandler = block
     }
 
@@ -239,7 +283,7 @@ public struct SignInWithGoogleBuilder {
 
 internal struct SignInWithGoogleClosure: SignInWithGoogle {
     internal let availability: @Sendable (SignInWithSocialParams) async -> Bool
-    internal let signInHandler: @Sendable @MainActor (SignInWithSocialParams) async -> SocialResult
+    internal let signInHandler: @Sendable @MainActor (UIWindow, SignInWithSocialParams) async -> SocialResult
     internal let cancelHandler: @Sendable @MainActor () -> Void
     internal let signOutHandler: @Sendable @MainActor () -> Void
 
@@ -249,8 +293,8 @@ internal struct SignInWithGoogleClosure: SignInWithGoogle {
         return await availability(typed)
     }
 
-    @MainActor public func signIn(params: SignInWithSocialParams) async -> SocialResult {
-        await signInHandler(params)
+    @MainActor public func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+        await signInHandler(window, params)
     }
 
     @MainActor public func cancel() {
@@ -262,6 +306,15 @@ internal struct SignInWithGoogleClosure: SignInWithGoogle {
     }
 }
 
+private struct UIContextProviderClosure: UIContextProvider {
+    let currentValue: @Sendable @MainActor () -> UIContextResult
+
+    @MainActor
+    func current() -> UIContextResult {
+        currentValue()
+    }
+}
+
 extension DIContainerRegistrar where Self: DIContainerResolver {
 
     /// Creates a child scope and registers providers from `block` in that scope.
@@ -270,7 +323,8 @@ extension DIContainerRegistrar where Self: DIContainerResolver {
     /// replace providers of the same type only in that child scope. If the same provider type is registered more than once in
     /// `block`, the last provider wins.
     ///
-    /// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, and ``SignInWithGoogle``.
+    /// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, ``SignInWithGoogle``, and
+    /// ``UIContextProvider``.
     ///
     /// If no providers are defined, returns this container.
     ///

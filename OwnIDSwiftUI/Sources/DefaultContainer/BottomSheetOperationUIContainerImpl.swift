@@ -24,33 +24,52 @@ internal final class BottomSheetOperationUIContainerImpl: OperationUIContainer, 
     }
 
     @MainActor
-    internal func show<Controller: OperationController>(controller operationController: Controller) {
-        presenter.show(
-            themeStore: themeStore,
-            onFailure: { reason in
-                self.logger?.logW(
-                    source: BottomSheetOperationUIContainerImpl.self,
-                    prefix: "show",
-                    message: "Startup failure reason=\(reason)"
-                )
-                operationController.abort(reason: reason)
-            },
-            content: { containerController -> AnyView in
-                let content = OperationLifecycleHost(
-                    instanceResolver: self.instanceResolver,
-                    operationController: operationController,
-                    renderController: operationController,
-                    containerController: containerController,
-                    errorTextProvider: nil
-                )
+    internal func show<Controller: OperationController>(controller operationController: Controller) throws {
+        let lifecycleSession = OperationLifecycleSession(operationController: operationController, usesAppContainer: true)
+        do {
+            try presenter.show(
+                themeStore: themeStore,
+                onFailure: { error in
+                    self.logger?.logW(
+                        source: BottomSheetOperationUIContainerImpl.self,
+                        prefix: "show",
+                        message:
+                            "Asynchronous presentation failure operation=\(operationController.operationID.type) "
+                            + "reason=\(error.rawValue): \(error.localizedDescription)",
+                        cause: error
+                    )
+                    operationController.abort(reason: .systemError(details: error.localizedDescription))
+                },
+                content: { containerController -> AnyView in
+                    lifecycleSession.activate(containerController: containerController, onSettled: {})
+                    let content = OperationLifecycleHost(
+                        instanceResolver: self.instanceResolver,
+                        operationController: operationController,
+                        renderController: operationController,
+                        containerController: containerController,
+                        lifecycleSession: lifecycleSession,
+                        errorTextProvider: nil
+                    )
 
-                guard let languageTagsProvider = self.languageTagsProvider else {
-                    return AnyView(content)
+                    guard let languageTagsProvider = self.languageTagsProvider else {
+                        return AnyView(content)
+                    }
+
+                    return AnyView(content.modifier(SDKLayoutDirectionModifier(languageTagsProvider: languageTagsProvider)))
                 }
-
-                return AnyView(content.modifier(SDKLayoutDirectionModifier(languageTagsProvider: languageTagsProvider)))
-            }
-        )
+            )
+        } catch {
+            let failureReason = (error as? BottomSheetPresentationError)?.rawValue ?? "uiContextProviderFailure"
+            logger?.logW(
+                source: BottomSheetOperationUIContainerImpl.self,
+                prefix: "show",
+                message:
+                    "Presentation startup failed operation=\(operationController.operationID.type) "
+                    + "reason=\(failureReason): \(error.localizedDescription)",
+                cause: error
+            )
+            throw error
+        }
     }
 }
 

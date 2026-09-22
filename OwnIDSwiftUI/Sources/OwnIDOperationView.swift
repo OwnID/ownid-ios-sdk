@@ -19,8 +19,8 @@ import SwiftUI
 /// - App-container mode: pass an ``OwnIDUIContainerController`` when your app presents the view in its own sheet,
 ///   dialog, full-screen cover, or overlay. Use the same controller for the whole presentation cycle. The app starts
 ///   and reports container dismissal, while this view keeps the operation and container lifecycle aligned. Removing
-///   this view before ``OwnIDUIContainerController/markClosed()`` does not cancel the operation; the operation waits
-///   for the container close signal or for operation settlement.
+///   this view before ``OwnIDUIContainerController/markClosed()`` does not itself cancel the operation; for
+///   owner-driven dismissal, the operation waits for the container close signal or for operation settlement.
 ///
 /// After the operation settles, this view renders no operation content. If the SDK instance is no longer available,
 /// required strings or content are missing, or the operation type is unsupported, the operation is canceled with a
@@ -74,6 +74,7 @@ public struct OwnIDOperationView<Success: Sendable, Failure: OperationFailure>: 
 
             OperationLifecycleHost(
                 instanceName: operationUIController.instanceName,
+                instanceResolver: operationUIController.instanceResolver,
                 operationController: operationUIController,
                 renderController: operationUIController.operationController,
                 containerController: containerController,

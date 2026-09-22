@@ -10,8 +10,20 @@ let package = Package(
         .library(name: "OwnIDSwiftUI", targets: ["OwnIDSwiftUI"]),
     ],
     targets: [
-        .target(name: "OwnIDCore", path: "OwnIDCore", exclude: ["Tests", "OpenApi", "api"], resources: [.process("Resources")]),
-        .target(name: "OwnIDSwiftUI", dependencies: ["OwnIDCore"], path: "OwnIDSwiftUI/Sources"),
+        .target(
+            name: "OwnIDCore",
+            path: "OwnIDCore",
+            exclude: ["Tests", "OpenApi", "api"],
+            resources: [.process("Resources")],
+            plugins: [.plugin(name: "OwnIDModuleVersion")]
+        ),
+        .target(
+            name: "OwnIDSwiftUI",
+            dependencies: ["OwnIDCore"],
+            path: "OwnIDSwiftUI/Sources",
+            plugins: [.plugin(name: "OwnIDModuleVersion")]
+        ),
+        .plugin(name: "OwnIDModuleVersion", capability: .buildTool()),
         .testTarget(name: "OwnIDCoreTests", dependencies: ["OwnIDCore"], path: "OwnIDCore/Tests"),
         .testTarget(name: "OwnIDSwiftUITests", dependencies: ["OwnIDSwiftUI"], path: "OwnIDSwiftUI/Tests"),
     ],

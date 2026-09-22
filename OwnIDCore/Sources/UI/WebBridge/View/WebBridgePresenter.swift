@@ -4,12 +4,13 @@ import UIKit
 /// Presents and dismisses the SDK-managed WebBridge screen.
 ///
 /// The presenter owns the UIKit presentation boundary for WebBridge operations. It allows one active SDK-managed
-/// WebBridge launch at a time, retries while the host view controller is transitioning, and uses a watchdog to settle a
-/// presentation attempt whose UIKit completion never arrives.
+/// WebBridge launch at a time, resolves the host window and view controller from the operation's UI context, and uses a
+/// watchdog to settle a presentation attempt whose UIKit completion never arrives.
 ///
-/// Immediate startup failures are returned. Delayed presentation failures are reported through `onFailure`, with detach
-/// callbacks suppressed for failures that happen before a WebView is successfully presented. Normal user completion,
-/// cancellation, and terminal WebView errors flow through the operation result instead.
+/// Immediate startup failures, including an unavailable or incomplete presentation context, are returned. Delayed
+/// presentation failures are reported through `onFailure`, with detach callbacks suppressed for failures that happen
+/// before a WebView is successfully presented. Normal user completion, cancellation, and terminal WebView errors flow
+/// through the operation result instead.
 internal protocol WebBridgePresenter: Sendable {
     @MainActor
     @discardableResult
@@ -24,8 +25,6 @@ internal protocol WebBridgePresenter: Sendable {
 
 internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Sendable {
     private enum TimingConstants {
-        static let maxRetries = 3
-        static let retryDelayNs: UInt64 = 160_000_000
         static let watchdogDelayNs: UInt64 = 8_000_000_000
         static let dismissalVerificationDelayNs: UInt64 = 1_000_000_000
     }
@@ -77,14 +76,16 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
         }
 
         let launchID: UInt
+        let window: UIWindow
         let viewController: WebBridgeViewController
         let detachGate: DetachGate
         var watchdog: Task<Void, Never>?
         var settlementObserver: Task<Void, Never>?
         var phase: Phase = .waitingToPresent
 
-        init(launchID: UInt, viewController: WebBridgeViewController, detachGate: DetachGate) {
+        init(launchID: UInt, window: UIWindow, viewController: WebBridgeViewController, detachGate: DetachGate) {
             self.launchID = launchID
+            self.window = window
             self.viewController = viewController
             self.detachGate = detachGate
         }
@@ -172,7 +173,41 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
         presentedWebBridgeController = webBridgeViewController
         webBridgeViewController.modalPresentationStyle = .fullScreen
 
-        let session = PresentationSession(launchID: launchID, viewController: webBridgeViewController, detachGate: detachGate)
+        let window: UIWindow
+        let hostViewController: UIViewController
+        switch uiContextProvider.current() {
+        case .windowAndController(let resolvedWindow, let resolvedController):
+            window = resolvedWindow
+            hostViewController = resolvedController
+        case .windowOnly:
+            detachGate.suppress()
+            Self.releaseLaunchLockIfOwned(launchID)
+            return .init(
+                errorCode: .unknown,
+                message: "Failed to present WebBridge UI: UI context does not include a presentation controller"
+            )
+        case .failure(let error):
+            detachGate.suppress()
+            Self.releaseLaunchLockIfOwned(launchID)
+            return .init(
+                errorCode: .unknown,
+                message: "Failed to present WebBridge UI: \(error.localizedDescription)",
+                underlyingError: error.asSendableError()
+            )
+        }
+
+        guard isReadyToPresent(on: hostViewController, in: window) else {
+            detachGate.suppress()
+            Self.releaseLaunchLockIfOwned(launchID)
+            return .init(errorCode: .unknown, message: "Failed to present WebBridge UI: Host is transitioning or off-screen")
+        }
+
+        let session = PresentationSession(
+            launchID: launchID,
+            window: window,
+            viewController: webBridgeViewController,
+            detachGate: detachGate
+        )
         webBridgeViewController.onDidAppear = { [weak self, weak session] in
             guard let self, let session, self.isSessionActive(session) else { return }
             self.markPresented(session, message: "onDidAppear")
@@ -191,7 +226,7 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
             }
         }
 
-        presentScreen(session: session, retry: TimingConstants.maxRetries, onFailure: onFailure)
+        presentScreen(session: session, hostViewController: hostViewController, onFailure: onFailure)
         return nil
     }
 
@@ -205,49 +240,11 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
     @MainActor
     private func presentScreen(
         session: PresentationSession,
-        retry: Int,
+        hostViewController: UIViewController,
         onFailure: @escaping @MainActor (WebBridgeOperationFailure.UI) -> Void
     ) {
         logger?.logD(source: self, prefix: #function, message: "Invoked")
         guard isSessionActive(session) else { return }
-
-        guard let hostViewController = uiContextProvider.topMostViewController(nil) else {
-            if retry > 0 {
-                schedulePresentRetry(session: session, retry: retry, onFailure: onFailure)
-            } else {
-                fail(session: session, message: "Top view controller not found", onFailure: onFailure)
-            }
-            return
-        }
-
-        if let transitionCoordinator = hostViewController.transitionCoordinator {
-            guard retry > 0 else {
-                fail(session: session, message: "Host is dismissing or off-screen", onFailure: onFailure)
-                return
-            }
-            let didSchedule = transitionCoordinator.animate(alongsideTransition: nil) { [weak self, weak session] _ in
-                Task { @MainActor in
-                    guard let self, let session else { return }
-                    self.presentScreen(session: session, retry: retry - 1, onFailure: onFailure)
-                }
-            }
-            if !didSchedule {
-                schedulePresentRetry(session: session, retry: retry, onFailure: onFailure)
-            }
-            return
-        }
-
-        if hostViewController.isBeingDismissed || hostViewController.view.window == nil
-            || hostViewController.isBeingPresented
-            || hostViewController.presentedViewController?.isBeingDismissed == true
-        {
-            if retry > 0 {
-                schedulePresentRetry(session: session, retry: retry, onFailure: onFailure)
-            } else {
-                fail(session: session, message: "Host is dismissing or off-screen", onFailure: onFailure)
-            }
-            return
-        }
 
         session.phase = .presenting(pendingDismiss: false)
 
@@ -259,12 +256,6 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
                 return
             }
             guard let self, let session, self.isSessionActive(session) else { return }
-
-            if session.viewController.viewIfLoaded?.window != nil {
-                self.markPresented(session, message: "watchdog attached")
-                return
-            }
-
             self.fail(session: session, message: "Presentation completion timed out", onFailure: onFailure)
         }
 
@@ -272,6 +263,23 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
             guard let self, let session, self.isSessionActive(session) else { return }
             self.markPresented(session, message: "completion")
         }
+    }
+
+    @MainActor
+    private func isReadyToPresent(on hostViewController: UIViewController, in window: UIWindow) -> Bool {
+        guard !window.isHidden, window.alpha > 0 else { return false }
+        if let scene = window.windowScene {
+            guard scene.activationState == .foregroundActive else { return false }
+        } else {
+            guard UIContextLifecycleMode.isLegacy() else { return false }
+            guard UIApplication.shared.applicationState == .active else { return false }
+        }
+        guard let hostView = hostViewController.viewIfLoaded, hostView.window === window else { return false }
+        guard !hostView.isHidden, hostView.alpha > 0 else { return false }
+        guard !hostViewController.isMovingToParent, !hostViewController.isMovingFromParent else { return false }
+        guard !hostViewController.isBeingPresented, !hostViewController.isBeingDismissed else { return false }
+        guard hostViewController.transitionCoordinator == nil else { return false }
+        return hostViewController.presentedViewController == nil
     }
 
     @MainActor
@@ -337,7 +345,8 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
     }
 
     @MainActor
-    private func fail(session: PresentationSession, message: String, onFailure: @escaping @MainActor (WebBridgeOperationFailure.UI) -> Void) {
+    private func fail(session: PresentationSession, message: String, onFailure: @escaping @MainActor (WebBridgeOperationFailure.UI) -> Void)
+    {
         guard isSessionActive(session) else { return }
         logger?.logW(source: self, prefix: "WebBridgePresenter", message: message)
         let error = WebBridgeOperationFailure.UI(errorCode: .unknown, message: "Failed to present WebBridge UI: \(message)")
@@ -356,26 +365,9 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
     }
 
     @MainActor
-    private func schedulePresentRetry(
-        session: PresentationSession,
-        retry: Int,
-        onFailure: @escaping @MainActor (WebBridgeOperationFailure.UI) -> Void
-    ) {
-        let launchID = session.launchID
-        DispatchQueue.main.asyncAfter(deadline: .now() + .nanoseconds(Int(TimingConstants.retryDelayNs))) {
-            [weak self, weak session] in
-            guard let self else {
-                Task { @MainActor in Self.releaseLaunchLockIfOwned(launchID) }
-                return
-            }
-            guard let session else { return }
-            self.presentScreen(session: session, retry: retry - 1, onFailure: onFailure)
-        }
-    }
-
-    @MainActor
     private func markPresented(_ session: PresentationSession, message: String) {
         guard isSessionActive(session), !session.phase.isFinishing else { return }
+        guard session.viewController.viewIfLoaded?.window === session.window else { return }
         session.watchdog?.cancel()
         session.watchdog = nil
         logger?.logD(source: self as Any, prefix: #function, message: message)
@@ -437,8 +429,9 @@ internal final class WebBridgePresenterImpl: WebBridgePresenter, @unchecked Send
             Task { @MainActor in finishState() }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + .nanoseconds(Int(TimingConstants.dismissalVerificationDelayNs))) {
-            Task { @MainActor [weak self, weak session] in
-                guard let self, let session, self.isSessionActive(session), session.phase.isFinishing else { return }
+            [weak self, session] in
+            Task { @MainActor [weak self, session] in
+                guard let self, self.isSessionActive(session), session.phase.isFinishing else { return }
                 guard session.viewController.view.window == nil else { return }
                 finishState()
             }

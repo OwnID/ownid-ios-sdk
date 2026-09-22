@@ -7,48 +7,119 @@ import Testing
 // Covers: INFO-RUNTIME-030, INFO-RUNTIME-040
 struct LocalInfoImplementationRuntimeTests {
 
-    @Test func `Local info reports bundle metadata and fallback core module`() throws {
+    private static func expectedReleaseVersion() throws -> String {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("sdk-version.xcconfig")
+        let parts = try String(contentsOf: url, encoding: .utf8).split(separator: "=")
+        try #require(parts.count == 2)
+        return try #require(parts.last).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    @Test func `Local info reads bundled Core metadata without initializer inputs`() throws {
         let localInfo = LocalInfoImpl()
+        let expectedVersion = try Self.expectedReleaseVersion()
         let expectedBundleID = Bundle.main.bundleIdentifier ?? "com.unknown.app"
         let expectedAppVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-        let expectedSystemVersion = Self.currentSystemVersion()
 
         #expect(localInfo.bundleID == expectedBundleID)
         #expect(localInfo.appVersion == expectedAppVersion)
-        #expect(localInfo.modules.isEmpty)
-        #expect(localInfo.userAgent.hasPrefix("OwnIDCore/0.0.0 (iOS \(expectedSystemVersion); "))
-        #expect(localInfo.userAgent.hasSuffix(" \(expectedBundleID)"))
-        #expect(localInfo.userAgent.contains("; "))
-        #expect(!localInfo.userAgent.contains("; )"))
+        #expect(localInfo.modules.map { $0.name } == ["OwnIDCore"])
+        #expect(localInfo.modules.map { $0.version } == [expectedVersion])
         #expect(Self.isBase64URL(localInfo.correlationId))
         #expect(localInfo.correlationId.decodeBase64UrlSafe() != nil)
     }
 
-    @Test func `Local info user agent includes exact current runtime device descriptor`() throws {
+    @Test func `Local info user agent includes structured current runtime context`() throws {
         let localInfo = LocalInfoImpl()
+        let expectedVersion = try Self.expectedReleaseVersion()
         let expectedBundleID = Bundle.main.bundleIdentifier ?? "com.unknown.app"
         let expectedSystemVersion = Self.currentSystemVersion()
-        let expectedDescriptor = Self.expectedRuntimeDeviceDescriptor()
-        let expectedUserAgent = "OwnIDCore/0.0.0 (iOS \(expectedSystemVersion); \(expectedDescriptor)) \(expectedBundleID)"
+        let runtimePrefix = "OwnIDCore/\(expectedVersion) (iOS \(expectedSystemVersion); "
+        let runtimeSuffix = ") \(expectedBundleID)"
 
-        #expect(localInfo.userAgent == expectedUserAgent)
+        try #require(localInfo.userAgent.hasPrefix(runtimePrefix))
+        try #require(localInfo.userAgent.hasSuffix(runtimeSuffix))
+
+        let descriptor = String(localInfo.userAgent.dropFirst(runtimePrefix.count).dropLast(runtimeSuffix.count))
+        #expect(!descriptor.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+        #if targetEnvironment(simulator)
+            #expect(descriptor.localizedCaseInsensitiveContains("simulator"))
+            #if arch(arm64)
+                #expect(descriptor.contains("arm64"))
+            #elseif arch(x86_64)
+                #expect(descriptor.contains("x86_64"))
+            #endif
+        #endif
     }
 
-    @Test func `Local info reports provided modules in user agent`() {
-        let modules: [(name: String, version: String)] = [
-            (name: "OwnIDSwiftUI", version: "4.0.0"),
-            (name: "OwnIDCore", version: "4.0.0"),
-            (name: "OwnIDWebBridge", version: "1.2.3"),
-        ]
+    @Test(arguments: [
+        ("SDK_VERSION = 4.2.0\n", "4.2.0"),
+        ("// Release\r\n SDK_VERSION\t=\t12.34.56 \r\n", "12.34.56"),
+        ("SDK_VERSION = 0.0.0", "0.0.0"),
+        ("", "0.0.0"),
+        ("OTHER_VERSION = 4.2.0", "0.0.0"),
+        ("SDK_VERSION = ", "0.0.0"),
+        ("SDK_VERSION = 4.2", "0.0.0"),
+        ("SDK_VERSION = 4.2.0-beta", "0.0.0"),
+        ("SDK_VERSION = 4.2.0\nSDK_VERSION = 4.2.1", "0.0.0"),
+    ])
+    func `Local info reads owned version resources and preserves modules when metadata is invalid`(contents: String, version: String) throws
+    {
+        let bundle = try Self.makeVersionBundle(contents: contents)
+        defer { try? FileManager.default.removeItem(at: bundle.bundleURL) }
+        let localInfo = LocalInfoImpl(moduleResources: [("OwnIDCore", bundle), ("OwnIDSwiftUI", bundle)])
 
-        let localInfo = LocalInfoImpl(modules: modules)
+        #expect(localInfo.modules.map { $0.name } == ["OwnIDCore", "OwnIDSwiftUI"])
+        #expect(localInfo.modules.map { $0.version } == [version, version])
+        #expect(localInfo.userAgent.hasPrefix("OwnIDCore/\(version) "))
+        #expect(localInfo.userAgent.contains(" OwnIDSwiftUI/\(version) "))
+    }
 
-        #expect(localInfo.modules.map { $0.name } == modules.map { $0.name })
-        #expect(localInfo.modules.map { $0.version } == modules.map { $0.version })
-        #expect(localInfo.userAgent.hasPrefix("OwnIDCore/4.0.0 "))
-        #expect(!localInfo.userAgent.contains("OwnIDCore/0.0.0"))
-        #expect(localInfo.userAgent.contains("OwnIDSwiftUI/4.0.0"))
-        #expect(localInfo.userAgent.contains("OwnIDWebBridge/1.2.3"))
+    @Test func `Missing resource and missing bundle preserve module identities with unknown versions`() throws {
+        let emptyBundle = try Self.makeVersionBundle(contents: nil)
+        defer { try? FileManager.default.removeItem(at: emptyBundle.bundleURL) }
+        let localInfo = LocalInfoImpl(moduleResources: [("OwnIDCore", nil), ("OwnIDSwiftUI", emptyBundle)])
+        #expect(localInfo.modules.map { $0.name } == ["OwnIDCore", "OwnIDSwiftUI"])
+        #expect(localInfo.modules.map { $0.version } == ["0.0.0", "0.0.0"])
+        #expect(localInfo.userAgent.hasPrefix("OwnIDCore/0.0.0 "))
+        #expect(localInfo.userAgent.contains(" OwnIDSwiftUI/0.0.0 "))
+    }
+
+    @Test func `Unreadable version text preserves the module with an unknown version`() throws {
+        let bundle = try Self.makeVersionBundle(contents: nil)
+        defer { try? FileManager.default.removeItem(at: bundle.bundleURL) }
+        try Data([0xFF]).write(to: bundle.bundleURL.appendingPathComponent("sdk-version.xcconfig"))
+        let localInfo = LocalInfoImpl(moduleResources: [("OwnIDCore", bundle)])
+        #expect(localInfo.modules.map { $0.name } == ["OwnIDCore"])
+        #expect(localInfo.modules.map { $0.version } == ["0.0.0"])
+        #expect(localInfo.userAgent.hasPrefix("OwnIDCore/0.0.0 "))
+    }
+
+    @Test func `Each module uses its own version resource and LocalInfo keeps its initial snapshot`() throws {
+        let core = try Self.makeVersionBundle(contents: "SDK_VERSION = 4.2.0")
+        let ui = try Self.makeVersionBundle(contents: "SDK_VERSION = 4.1.0")
+        defer {
+            try? FileManager.default.removeItem(at: core.bundleURL)
+            try? FileManager.default.removeItem(at: ui.bundleURL)
+        }
+        let localInfo = LocalInfoImpl(moduleResources: [("OwnIDSwiftUI", ui), ("OwnIDCore", core)])
+        try "SDK_VERSION = 9.9.9".write(to: ui.bundleURL.appendingPathComponent("sdk-version.xcconfig"), atomically: true, encoding: .utf8)
+        #expect(localInfo.modules.map { $0.version } == ["4.1.0", "4.2.0"])
+        #expect(localInfo.userAgent.hasPrefix("OwnIDCore/4.2.0 "))
+        #expect(localInfo.userAgent.contains(" OwnIDSwiftUI/4.1.0 "))
+    }
+
+    private static func makeVersionBundle(contents: String?) throws -> Bundle {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("OwnIDVersion-\(UUID().uuidString).bundle")
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        let info = try PropertyListSerialization.data(fromPropertyList: ["CFBundleIdentifier": UUID().uuidString], format: .xml, options: 0)
+        try info.write(to: url.appendingPathComponent("Info.plist"))
+        if let contents {
+            try contents.write(to: url.appendingPathComponent("sdk-version.xcconfig"), atomically: true, encoding: .utf8)
+        }
+        return try #require(Bundle(url: url))
     }
 
     @Test func `Local info runtime flags are internally coherent`() {
@@ -103,46 +174,4 @@ struct LocalInfoImplementationRuntimeTests {
         return !value.isEmpty && value.rangeOfCharacter(from: allowedCharacters.inverted) == nil
     }
 
-    private static func expectedRuntimeDeviceDescriptor() -> String {
-        let machineIdentifier = currentMachineIdentifier()
-        let deviceName = expectedRuntimeModelName(machineIdentifier: machineIdentifier)
-
-        if deviceName == machineIdentifier {
-            return deviceName
-        } else {
-            return "\(deviceName); \(machineIdentifier)"
-        }
-    }
-
-    private static func expectedRuntimeModelName(machineIdentifier: String) -> String {
-        if ["i386", "x86_64", "arm64"].contains(machineIdentifier) {
-            if let simulatorDeviceName = ProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] {
-                return "\(simulatorDeviceName.removingXcodeParallelClonePrefix()); simulator"
-            } else {
-                return "Simulator \(machineIdentifier)"
-            }
-        } else {
-            return machineIdentifier
-        }
-    }
-
-    private static func currentMachineIdentifier() -> String {
-        var systemInfo = utsname()
-        uname(&systemInfo)
-        let machineMirror = Mirror(reflecting: systemInfo.machine)
-        return machineMirror.children.reduce("") { identifier, element in
-            guard let value = element.value as? Int8, value != 0 else { return identifier }
-            return identifier + String(UnicodeScalar(UInt8(value)))
-        }
-    }
-}
-
-extension String {
-    fileprivate func removingXcodeParallelClonePrefix() -> String {
-        replacingOccurrences(
-            of: #"^Clone [0-9]+ of "#,
-            with: "",
-            options: .regularExpression
-        )
-    }
 }

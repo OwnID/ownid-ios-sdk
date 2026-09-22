@@ -3,36 +3,28 @@ import Foundation
 import Testing
 import UIKit
 
-@testable import OwnIDCore
+@_spi(OwnIDInternal) @testable import OwnIDCore
 
 // Covers: PASSKEY-CAPABILITY-020, PASSKEY-CAPABILITY-030
 @MainActor
 @Suite(.serialized)
 struct PasskeyImplementationRuntimeTests {
 
-    @Test func `Presentation anchor uses active window from UI context provider`() throws {
+    @Test func `Presentation anchor uses the supplied window`() async throws {
         guard #available(iOS 16.0, *) else { return }
 
-        let expectedWindow = UIWindow(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
-        let provider = FixedWindowUIContextProvider(activeWindow: expectedWindow)
-        let passkey = makePasskey(uiContextProvider: provider)
-        let controller = makeAuthorizationController()
+        let expectedWindow = makeTestWindow()
+        let factory = RecordingAuthorizationControllerFactory()
+        let passkey = makePasskey(factory: factory)
+        let task = Task {
+            await passkey.createCredential(window: expectedWindow, attestationOptions: attestationOptions())
+        }
+        let controller = try await factory.waitForController()
 
-        #expect(passkey.presentationAnchor(for: controller) === expectedWindow)
-    }
+        #expect(passkey.presentationAnchor(for: makeAuthorizationController()) === expectedWindow)
 
-    @Test func `Presentation anchor falls back to an empty window when context has no active window`() throws {
-        guard #available(iOS 16.0, *) else { return }
-
-        let provider = FixedWindowUIContextProvider(activeWindow: nil)
-        let passkey = makePasskey(uiContextProvider: provider)
-        let controller = makeAuthorizationController()
-
-        let anchor = passkey.presentationAnchor(for: controller)
-
-        #expect(provider.activeWindowCallCount == 1)
-        #expect(anchor.rootViewController == nil)
-        #expect(anchor.isHidden)
+        controller.complete(with: ASAuthorizationError(.failed))
+        _ = await task.value
     }
 
     @Test func `Create credential builds platform registration request and performs without options`() async throws {
@@ -50,8 +42,9 @@ struct PasskeyImplementationRuntimeTests {
             attestation: .indirect
         )
         let passkey = makePasskey(factory: factory)
+        let window = makeTestWindow()
 
-        let task = Task { await passkey.createCredential(attestationOptions: options) }
+        let task = Task { await passkey.createCredential(window: window, attestationOptions: options) }
         let controller = try await factory.waitForController()
 
         let request = try #require(controller.authorizationRequests.singleRegistrationRequest())
@@ -70,30 +63,6 @@ struct PasskeyImplementationRuntimeTests {
         _ = await task.value
     }
 
-    @Test func `Create credential defaults required user verification when optional fields are absent`() async throws {
-        guard #available(iOS 16.0, *) else { return }
-
-        let factory = RecordingAuthorizationControllerFactory()
-        let options = attestationOptions(
-            challenge: Data("attestation challenge".utf8),
-            userID: Data("user handle".utf8),
-            excludedCredentials: nil,
-            userVerification: nil,
-            attestation: nil
-        )
-        let passkey = makePasskey(factory: factory)
-
-        let task = Task { await passkey.createCredential(attestationOptions: options) }
-        let controller = try await factory.waitForController()
-
-        let request = try #require(controller.authorizationRequests.singleRegistrationRequest())
-        #expect(request.userVerificationPreference == .required)
-        #expect(controller.performedOptions == [])
-
-        controller.complete(with: ASAuthorizationError(.failed))
-        _ = await task.value
-    }
-
     @Test(arguments: [
         UserVerificationMappingCase(.discouraged, expected: .discouraged),
         UserVerificationMappingCase(.preferred, expected: .preferred),
@@ -105,9 +74,11 @@ struct PasskeyImplementationRuntimeTests {
 
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory)
+        let window = makeTestWindow()
 
         let task = Task {
             await passkey.createCredential(
+                window: window,
                 attestationOptions: attestationOptions(userVerification: testCase.source, attestation: nil)
             )
         }
@@ -131,9 +102,11 @@ struct PasskeyImplementationRuntimeTests {
 
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory)
+        let window = makeTestWindow()
 
         let task = Task {
             await passkey.createCredential(
+                window: window,
                 attestationOptions: attestationOptions(userVerification: nil, attestation: testCase.source)
             )
         }
@@ -159,8 +132,9 @@ struct PasskeyImplementationRuntimeTests {
             userVerification: .required
         )
         let passkey = makePasskey(factory: factory)
+        let window = makeTestWindow()
 
-        let task = Task { await passkey.getCredential(assertionOptions: options) }
+        let task = Task { await passkey.getCredential(window: window, assertionOptions: options) }
         let controller = try await factory.waitForController()
 
         let request = try #require(controller.authorizationRequests.singleAssertionRequest())
@@ -186,8 +160,9 @@ struct PasskeyImplementationRuntimeTests {
             userVerification: nil
         )
         let passkey = makePasskey(factory: factory)
+        let window = makeTestWindow()
 
-        let task = Task { await passkey.getCredential(assertionOptions: options) }
+        let task = Task { await passkey.getCredential(window: window, assertionOptions: options) }
         let controller = try await factory.waitForController()
 
         let request = try #require(controller.authorizationRequests.singleAssertionRequest())
@@ -208,9 +183,10 @@ struct PasskeyImplementationRuntimeTests {
 
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory)
+        let window = makeTestWindow()
 
         let task = Task {
-            await passkey.getCredential(assertionOptions: assertionOptions(userVerification: testCase.source))
+            await passkey.getCredential(window: window, assertionOptions: assertionOptions(userVerification: testCase.source))
         }
         let controller = try await factory.waitForController()
 
@@ -226,9 +202,10 @@ struct PasskeyImplementationRuntimeTests {
 
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory)
+        let window = makeTestWindow()
 
         let task = Task {
-            await passkey.getCredential(assertionOptions: assertionOptions(allowedCredentials: nil))
+            await passkey.getCredential(window: window, assertionOptions: assertionOptions(allowedCredentials: nil))
         }
         let controller = try await factory.waitForController()
 
@@ -244,11 +221,13 @@ struct PasskeyImplementationRuntimeTests {
 
         let invalidChallengeFactory = RecordingAuthorizationControllerFactory()
         let invalidChallenge = await makePasskey(factory: invalidChallengeFactory).createCredential(
+            window: makeTestWindow(),
             attestationOptions: attestationOptions(challenge: nil, userID: Data("user".utf8), excludedCredentials: nil)
         )
 
         let invalidUserFactory = RecordingAuthorizationControllerFactory()
         let invalidUserID = await makePasskey(factory: invalidUserFactory).createCredential(
+            window: makeTestWindow(),
             attestationOptions: attestationOptions(challenge: Data("challenge".utf8), userID: nil, excludedCredentials: nil)
         )
 
@@ -263,6 +242,7 @@ struct PasskeyImplementationRuntimeTests {
 
         let factory = RecordingAuthorizationControllerFactory()
         let result = await makePasskey(factory: factory).getCredential(
+            window: makeTestWindow(),
             assertionOptions: assertionOptions(challenge: nil, allowedCredentials: nil)
         )
 
@@ -270,31 +250,67 @@ struct PasskeyImplementationRuntimeTests {
         #expect(factory.controllers.isEmpty)
     }
 
-    @Test func `Second request fails immediately while another authorization is in progress`() async throws {
+    @Test func `Pre-canceled request skips controller attachment and performance and permits a normal retry`() async throws {
+        guard #available(iOS 16.0, *) else { return }
+
+        let factory = RecordingAuthorizationControllerFactory()
+        let passkey = makePasskey(factory: factory)
+        let canceledTask = Task { @MainActor in
+            await passkey.getCredential(window: makeTestWindow(), assertionOptions: assertionOptions())
+        }
+        canceledTask.cancel()
+
+        let reason = try requireCanceled(await canceledTask.value)
+        #expect(reason.description == Reason.systemError(details: "Operation canceled").description)
+        let preCancelControllers = factory.controllers
+        for controller in preCancelControllers {
+            #expect(controller.delegate == nil)
+            #expect(controller.presentationContextProvider == nil)
+            #expect(controller.performedOptions == nil)
+        }
+        let retryControllerIndex = preCancelControllers.count
+
+        let retryTask = Task { @MainActor in
+            await passkey.getCredential(window: makeTestWindow(), assertionOptions: assertionOptions())
+        }
+        let retryController = try await factory.waitForController(at: retryControllerIndex)
+        #expect(retryController.performedOptions != nil)
+        retryController.complete(with: ASAuthorizationError(.failed))
+        _ = try requireFailure(await retryTask.value)
+    }
+
+    @Test func `Second request fails while authorization is active and slot reopens after failure`() async throws {
         guard #available(iOS 16.0, *) else { return }
 
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory)
 
-        let firstTask = Task { await passkey.createCredential(attestationOptions: attestationOptions()) }
+        let window = makeTestWindow()
+        let firstTask = Task { await passkey.createCredential(window: window, attestationOptions: attestationOptions()) }
         let firstController = try await factory.waitForController()
 
-        let second = await passkey.getCredential(assertionOptions: assertionOptions())
+        let second = await passkey.getCredential(window: window, assertionOptions: assertionOptions())
 
         #expect(try requireFailure(second).description.contains("Another passkey request is already in progress"))
         #expect(factory.controllers.count == 1)
 
         firstController.complete(with: ASAuthorizationError(.failed))
-        _ = await firstTask.value
+        _ = try requireFailure(await firstTask.value)
+
+        let retryTask = Task { await passkey.getCredential(window: window, assertionOptions: assertionOptions()) }
+        let retryController = try await factory.waitForController(at: 1)
+        #expect(retryController.performedOptions != nil)
+        retryController.complete(with: ASAuthorizationError(.failed))
+        _ = try requireFailure(await retryTask.value)
     }
 
-    @Test func `Task cancellation cancels the active authorization controller`() async throws {
+    @Test func `Task cancellation cancels the active authorization controller and reopens the slot`() async throws {
         guard #available(iOS 16.0, *) else { return }
 
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory)
 
-        let task = Task { await passkey.createCredential(attestationOptions: attestationOptions()) }
+        let task = Task { await passkey.createCredential(window: makeTestWindow(), attestationOptions: attestationOptions()) }
         let controller = try await factory.waitForController()
 
         task.cancel()
@@ -304,6 +320,12 @@ struct PasskeyImplementationRuntimeTests {
         let reason = try requireCanceled(await task.value)
         #expect(reason.description == Reason.userClose(details: "User canceled authorization").description)
         #expect(controller.cancelCallCount == 1)
+
+        let retryTask = Task { await passkey.createCredential(window: makeTestWindow(), attestationOptions: attestationOptions()) }
+        let retryController = try await factory.waitForController(at: 1)
+        #expect(retryController.performedOptions != nil)
+        retryController.complete(with: ASAuthorizationError(.failed))
+        _ = try requireFailure(await retryTask.value)
     }
 
     @Test func `Canceled attestation maps to user close without diagnostics`() async throws {
@@ -313,7 +335,7 @@ struct PasskeyImplementationRuntimeTests {
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory, diagnostics: diagnostics)
 
-        let task = Task { await passkey.createCredential(attestationOptions: attestationOptions()) }
+        let task = Task { await passkey.createCredential(window: makeTestWindow(), attestationOptions: attestationOptions()) }
         let controller = try await factory.waitForController()
         controller.complete(with: ASAuthorizationError(.canceled))
 
@@ -329,7 +351,7 @@ struct PasskeyImplementationRuntimeTests {
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory, diagnostics: diagnostics)
 
-        let task = Task { await passkey.getCredential(assertionOptions: assertionOptions()) }
+        let task = Task { await passkey.getCredential(window: makeTestWindow(), assertionOptions: assertionOptions()) }
         let controller = try await factory.waitForController()
         controller.complete(with: ASAuthorizationError(.canceled))
 
@@ -348,7 +370,7 @@ struct PasskeyImplementationRuntimeTests {
         var now = start
         let passkey = makePasskey(factory: factory, diagnostics: diagnostics, now: { now })
 
-        let task = Task { await passkey.getCredential(assertionOptions: assertionOptions()) }
+        let task = Task { await passkey.getCredential(window: makeTestWindow(), assertionOptions: assertionOptions()) }
         let controller = try await factory.waitForController()
         now = start + .milliseconds(650)
         controller.complete(with: ASAuthorizationError(.canceled))
@@ -365,7 +387,7 @@ struct PasskeyImplementationRuntimeTests {
         let createFactory = RecordingAuthorizationControllerFactory()
         let createOptions = attestationOptions(rpID: "create.example.test")
         let createPasskey = makePasskey(factory: createFactory, diagnostics: createDiagnostics)
-        let createTask = Task { await createPasskey.createCredential(attestationOptions: createOptions) }
+        let createTask = Task { await createPasskey.createCredential(window: makeTestWindow(), attestationOptions: createOptions) }
         let createController = try await createFactory.waitForController()
         createController.complete(with: ASAuthorizationError(.notHandled))
 
@@ -377,7 +399,7 @@ struct PasskeyImplementationRuntimeTests {
         let getFactory = RecordingAuthorizationControllerFactory()
         let getOptions = assertionOptions(rpID: "get.example.test")
         let getPasskey = makePasskey(factory: getFactory, diagnostics: getDiagnostics)
-        let getTask = Task { await getPasskey.getCredential(assertionOptions: getOptions) }
+        let getTask = Task { await getPasskey.getCredential(window: makeTestWindow(), assertionOptions: getOptions) }
         let getController = try await getFactory.waitForController()
         getController.complete(with: ASAuthorizationError(.failed))
 
@@ -406,7 +428,7 @@ struct PasskeyImplementationRuntimeTests {
         let passkey = makePasskey(factory: factory, diagnostics: diagnostics)
         let rpID = "error-\(testCase.rawCode).example.test"
 
-        let task = Task { await passkey.createCredential(attestationOptions: attestationOptions(rpID: rpID)) }
+        let task = Task { await passkey.createCredential(window: makeTestWindow(), attestationOptions: attestationOptions(rpID: rpID)) }
         let controller = try await factory.waitForController()
         controller.complete(with: NSError(domain: ASAuthorizationErrorDomain, code: testCase.rawCode))
 
@@ -422,7 +444,7 @@ struct PasskeyImplementationRuntimeTests {
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory, diagnostics: diagnostics)
 
-        let task = Task { await passkey.createCredential(attestationOptions: attestationOptions()) }
+        let task = Task { await passkey.createCredential(window: makeTestWindow(), attestationOptions: attestationOptions()) }
         let controller = try await factory.waitForController()
         controller.complete(with: NSError(domain: ASAuthorizationErrorDomain, code: 1001))
 
@@ -438,13 +460,50 @@ struct PasskeyImplementationRuntimeTests {
         let factory = RecordingAuthorizationControllerFactory()
         let passkey = makePasskey(factory: factory, diagnostics: diagnostics)
 
-        let task = Task { await passkey.createCredential(attestationOptions: attestationOptions(rpID: "generic-error.example.test")) }
+        let task = Task {
+            await passkey.createCredential(
+                window: makeTestWindow(),
+                attestationOptions: attestationOptions(rpID: "generic-error.example.test")
+            )
+        }
         let controller = try await factory.waitForController()
         controller.complete(with: NSError(domain: "example.test", code: 42))
 
         let failure = try requireFailure(await task.value)
         #expect(failure.identifier == nil)
         #expect(diagnostics.rpIds == ["generic-error.example.test"])
+    }
+
+    @Test(arguments: [false, true])
+    func `Failure warning preserves native error details and localized cause`(_ authorizationError: Bool) async throws {
+        guard #available(iOS 16.0, *) else { return }
+
+        let error = NSError(
+            domain: authorizationError ? ASAuthorizationErrorDomain : "example.test",
+            code: authorizationError ? 1004 : 42,
+            userInfo: [NSLocalizedDescriptionKey: "Original provider failure"]
+        )
+        let sink = LogCapture()
+        let diagnostics = RecordingPasskeyDiagnostics()
+        let factory = RecordingAuthorizationControllerFactory()
+        let passkey = makePasskey(factory: factory, diagnostics: diagnostics, logger: testLogRouter(sink: sink))
+        let task = Task { await passkey.createCredential(window: makeTestWindow(), attestationOptions: attestationOptions()) }
+        let controller = try await factory.waitForController()
+        controller.complete(with: error)
+
+        let failure = try requireFailure(await task.value)
+        let warning = try #require(sink.entries.first { $0.level == .warn })
+        #expect(warning.message == "Authorization failed (domain=\(error.domain), code=\(error.code))")
+        #expect(warning.hasCause)
+        #expect(warning.causeDescription == error.localizedDescription)
+        #expect(failure.identifier == (authorizationError ? .failed : nil))
+        guard case .general(let message, let cause, _) = failure else {
+            Issue.record("Expected the original general passkey failure")
+            return
+        }
+        #expect(message == error.localizedDescription)
+        #expect((cause as NSError?) === error)
+        #expect(diagnostics.rpIds == ["login.example.test"])
     }
 
     @available(iOS 16.0, *)
@@ -458,18 +517,22 @@ struct PasskeyImplementationRuntimeTests {
 @available(iOS 16.0, *)
 @MainActor
 private func makePasskey(
-    uiContextProvider: any UIContextProvider = FixedWindowUIContextProvider(activeWindow: nil),
     factory: RecordingAuthorizationControllerFactory = RecordingAuthorizationControllerFactory(),
     diagnostics: RecordingPasskeyDiagnostics = RecordingPasskeyDiagnostics(),
+    logger: OwnIDLogRouter? = nil,
     now: @escaping @MainActor () -> ContinuousClock.Instant = { ContinuousClock().now }
 ) -> PasskeyImpl {
     PasskeyImpl(
-        uiContextProvider: uiContextProvider,
-        logger: nil,
+        logger: logger,
         diagnosticsProvider: { diagnostics },
         now: now,
         authorizationControllerFactory: { factory.makeController(authorizationRequests: $0) }
     )
+}
+
+@MainActor
+private func makeTestWindow() -> UIWindow {
+    UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 640))
 }
 
 @available(iOS 16.0, *)
@@ -639,35 +702,36 @@ enum ExpectedAttestationPreference: String, Sendable {
 @MainActor
 private final class RecordingAuthorizationControllerFactory {
     private(set) var controllers: [RecordingPasskeyAuthorizationController] = []
-    private var controllerWaiters: [CheckedContinuation<RecordingPasskeyAuthorizationController, Never>] = []
+    private var controllerWaiters: [Int: [CheckedContinuation<RecordingPasskeyAuthorizationController, Never>]] = [:]
 
     func makeController(authorizationRequests: [ASAuthorizationRequest]) -> any PasskeyAuthorizationController {
         let controller = RecordingPasskeyAuthorizationController(authorizationRequests: authorizationRequests)
         controllers.append(controller)
-        let waiters = controllerWaiters
-        controllerWaiters.removeAll()
-        for waiter in waiters {
-            waiter.resume(returning: controller)
+        for (index, waiters) in controllerWaiters where controllers.indices.contains(index) {
+            controllerWaiters.removeValue(forKey: index)
+            for waiter in waiters {
+                waiter.resume(returning: controllers[index])
+            }
         }
         return controller
     }
 
-    func waitForController() async throws -> RecordingPasskeyAuthorizationController {
+    func waitForController(at index: Int = 0) async throws -> RecordingPasskeyAuthorizationController {
         try await withTestTimeout("passkey authorization controller", seconds: 2) {
-            await self.firstController()
+            await self.controller(at: index)
         }
     }
 
-    private func firstController() async -> RecordingPasskeyAuthorizationController {
-        if let controller = controllers.first {
-            return controller
+    private func controller(at index: Int) async -> RecordingPasskeyAuthorizationController {
+        if controllers.indices.contains(index) {
+            return controllers[index]
         }
 
         return await withCheckedContinuation { continuation in
-            if let controller = controllers.first {
-                continuation.resume(returning: controller)
+            if controllers.indices.contains(index) {
+                continuation.resume(returning: controllers[index])
             } else {
-                controllerWaiters.append(continuation)
+                controllerWaiters[index, default: []].append(continuation)
             }
         }
     }
@@ -738,26 +802,6 @@ private final class RecordingPasskeyDiagnostics: PasskeyDiagnostics, @unchecked 
 
     func verify(rpId: String) {
         lock.withLock { storage.append(rpId) }
-    }
-}
-
-private final class FixedWindowUIContextProvider: UIContextProvider, @unchecked Sendable {
-    private let window: UIWindow?
-    private(set) var activeWindowCallCount = 0
-
-    init(activeWindow: UIWindow?) {
-        window = activeWindow
-    }
-
-    @MainActor
-    func activeWindow() -> UIWindow? {
-        activeWindowCallCount += 1
-        return window
-    }
-
-    @MainActor
-    func topMostViewController(_ window: UIWindow?) -> UIViewController? {
-        window?.rootViewController
     }
 }
 

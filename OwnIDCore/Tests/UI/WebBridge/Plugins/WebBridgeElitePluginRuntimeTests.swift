@@ -106,7 +106,7 @@ struct WebBridgeElitePluginRuntimeTests {
 
     @Test func `FLOW operation wrapper success invokes side effect after wrapped function`() async throws {
         let events = FlowLocked<[String]>([])
-        let sideEffect = CapturedFlowValue<WebBridgeOperationEventWrapperID>()
+        let sideEffect = AsyncSignalRecorder<WebBridgeOperationEventWrapperID>()
         let wrapper = RecordingWebBridgeEventWrapper(
             action: "onFinish",
             result: .bool(true),
@@ -116,7 +116,7 @@ struct WebBridgeElitePluginRuntimeTests {
         plugin.addEventWrappers([wrapper])
         plugin.setWrapperSideEffect { wrapper in
             events.mutate { $0.append("sideEffect") }
-            sideEffect.set(WebBridgeOperationEventWrapperID(wrapper.webBridgePluginAction))
+            sideEffect.append(WebBridgeOperationEventWrapperID(wrapper.webBridgePluginAction))
         }
 
         let result = await handleWebBridgePlugin(
@@ -125,9 +125,7 @@ struct WebBridgeElitePluginRuntimeTests {
             action: "onFinish",
             params: #"{"loginId":"person@example.test"}"#
         )
-        let sideEffectWrapper = try await withFlowTimeout("FLOW wrapper side effect") {
-            await sideEffect.wait()
-        }
+        let sideEffectWrapper = try await sideEffect.waitForFirst("FLOW wrapper side effect") { _ in true }
 
         #expect(result.success == .bool(true))
         #expect(result.error == nil)

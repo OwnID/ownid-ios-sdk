@@ -1,8 +1,11 @@
 import Testing
+import UIKit
+import WebKit
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
 // Covers: WB-050, WB-060, WB-070, WB-080, WB-090, WB-130, WB-150, WB-160
+@MainActor
 struct WebBridgePluginStoreContractTests {
 
     @Test func `Plugin key canonicalizes case for equality hashing and description`() {
@@ -48,8 +51,10 @@ struct WebBridgePluginStoreContractTests {
         if #available(iOS 16.0, *) {
             let passkey = WebBridgePasskeyPlugin(
                 passkey: WebBridgePluginMatrixPasskey(),
+                uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
                 localInfo: WebBridgePluginMatrixLocalInfo(),
-                coder: coder
+                coder: coder,
+                logger: nil
             )
 
             #expect(passkey.key.id == "FIDO")
@@ -69,7 +74,9 @@ struct WebBridgePluginStoreContractTests {
         let socialPlugin = WebBridgeSocialPlugin(
             signInWithApple: WebBridgePluginMatrixSignInWithApple(),
             signInWithGoogle: WebBridgePluginMatrixSignInWithGoogle(),
-            coder: coder
+            uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
+            coder: coder,
+            logger: nil
         )
         let elitePlugin = WebBridgeElitePlugin(
             sessionCreate: nil,
@@ -89,13 +96,23 @@ struct WebBridgePluginStoreContractTests {
         try expectInjectionData(elitePlugin, id: "FLOW", actions: ["onNativeAction", "onFinish"])
 
         #expect(WebBridgeContextPluginImpl(context: nil).injectionData() == nil)
-        #expect(WebBridgeSocialPlugin(signInWithApple: nil, signInWithGoogle: nil, coder: coder).injectionData() == nil)
+        #expect(
+            WebBridgeSocialPlugin(
+                signInWithApple: nil,
+                signInWithGoogle: nil,
+                uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
+                coder: coder,
+                logger: nil
+            ).injectionData() == nil
+        )
 
         if #available(iOS 16.0, *) {
             let passkeyPlugin = WebBridgePasskeyPlugin(
                 passkey: WebBridgePluginMatrixPasskey(),
+                uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
                 localInfo: WebBridgePluginMatrixLocalInfo(),
-                coder: coder
+                coder: coder,
+                logger: nil
             )
 
             try expectInjectionData(passkeyPlugin, id: "FIDO", actions: ["isAvailable", "create", "get"])
@@ -125,7 +142,7 @@ struct WebBridgePluginStoreContractTests {
             }
             .withProviders("webbridge-default-google-provider") { registrar in
                 registrar.signInWithGoogle { builder in
-                    builder.signIn { _ in .success(id: "google-id", idToken: "google-id-token") }
+                    builder.signIn { _, _ in .success(id: "google-id", idToken: "google-id-token") }
                 }
                 registrar.sessionCreate { builder in
                     builder.create { _ in .success(SessionOutput(session: "session")) }
@@ -146,6 +163,59 @@ struct WebBridgePluginStoreContractTests {
 
         if #available(iOS 16.0, *) {
             #expect(injectionData["FIDO"] == ["isAvailable", "create", "get"])
+        }
+    }
+
+    @Test func `WebBridge plugins use the bridge-local UI context instead of the outer scope`() async throws {
+        let container = try makeDefaultInjectedContainer()
+        let outerWindow = UIWindow(frame: .zero)
+        let outerProvider = WebBridgeTestUIContextProvider(window: outerWindow)
+        let googleProvider = WebBridgeDIProbeGoogleProvider()
+        container.register((any UIContextProvider).self, instance: outerProvider)
+        container.register((any SignInWithGoogle).self, instance: googleProvider)
+        let passkeyProvider: AnyObject?
+        if #available(iOS 16.0, *) {
+            let passkey = WebBridgeDIProbePasskey()
+            container.register((any PasskeyProtocol).self, instance: passkey)
+            passkeyProvider = passkey
+        } else {
+            passkeyProvider = nil
+        }
+
+        let bridge = container.webBridgeNamespace.create()
+        let webView = makeWebBridgeTestWebView()
+        let host = WebBridgeTestWebViewHost(webView)
+        defer {
+            bridge.detach()
+            tearDownWebBridgeTestWebView(webView)
+            host.tearDown()
+        }
+
+        #expect(bridge.attach(webView: webView, allowedOriginRules: ["example.com"]) == nil)
+        let socialPlugin = try #require(bridge.plugins.get(key: WebBridgeSocialPlugin.KEY))
+        let result = await handleWebBridgePlugin(
+            socialPlugin,
+            pluginID: "SOCIAL",
+            action: "Google",
+            params: #"{"clientId":"web-client-id","challengeId":"challenge-id"}"#
+        )
+
+        #expect(result.success == .string("di-id-token"))
+        #expect(googleProvider.signInWindow === host.window)
+        #expect(googleProvider.signInWindow !== outerWindow)
+
+        if #available(iOS 16.0, *) {
+            let passkeyPlugin = try #require(bridge.plugins.get(key: WebBridgePasskeyPlugin.KEY))
+            let passkeyResult = await handleWebBridgePlugin(
+                passkeyPlugin,
+                pluginID: "FIDO",
+                action: "get",
+                params: #"{"context":"ctx","relyingPartyId":"example.test"}"#
+            )
+
+            #expect(passkeyResult.error != nil)
+            #expect((passkeyProvider as? WebBridgeDIProbePasskey)?.assertionWindow === host.window)
+            #expect((passkeyProvider as? WebBridgeDIProbePasskey)?.assertionWindow !== outerWindow)
         }
     }
 
@@ -281,7 +351,8 @@ struct WebBridgePluginStoreContractTests {
     @Test func `Bridge creation captures scoped context and providers through namespace factory resolver`() throws {
         let root = makeNamespace()
         let key = WebBridgePluginKey(id: "captured")
-        let scoped = root
+        let scoped =
+            root
             .withContext("webbridge-captured-context") { builder in
                 builder.authz = .start("scoped@example.test", type: .email)
             }
@@ -375,17 +446,53 @@ private final class WebBridgePluginStoreLanguageTagsProvider: LanguageTagsProvid
     }
 }
 
+@MainActor
+private final class WebBridgeDIProbeGoogleProvider: SignInWithGoogle, @unchecked Sendable {
+    private(set) var signInWindow: UIWindow?
+
+    func isAvailable(params: (any CapabilityParams)?) async -> Bool {
+        true
+    }
+
+    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+        signInWindow = window
+        return .success(id: "di-id", idToken: "di-id-token")
+    }
+
+    func cancel() {}
+
+    func signOut() {}
+}
+
+@available(iOS 16.0, *)
+@MainActor
+private final class WebBridgeDIProbePasskey: PasskeyProtocol, @unchecked Sendable {
+    private(set) var assertionWindow: UIWindow?
+
+    func getCredential(window: UIWindow, assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
+        assertionWindow = window
+        return .failure(.general("DI probe"))
+    }
+
+    func createCredential(window: UIWindow, attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
+        .failure(.general("DI probe"))
+    }
+}
+
 struct SocialPluginAvailabilityCase: CustomStringConvertible, Sendable {
     let description: String
     let apple: Bool
     let google: Bool
     let actions: [String]
 
+    @MainActor
     func makePlugin(coder: any JSONCoder) -> WebBridgeSocialPlugin {
         WebBridgeSocialPlugin(
             signInWithApple: apple ? WebBridgePluginMatrixSignInWithApple() : nil,
             signInWithGoogle: google ? WebBridgePluginMatrixSignInWithGoogle() : nil,
-            coder: coder
+            uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
+            coder: coder,
+            logger: nil
         )
     }
 

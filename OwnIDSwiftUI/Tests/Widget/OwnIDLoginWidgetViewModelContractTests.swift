@@ -1,17 +1,18 @@
 import OwnIDSwiftUI
 import Testing
+import UIKit
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
 @MainActor
 @Suite(.serialized)
-// Covers: UI-150, UI-160, UI-170, UI-180, UI-190, UI-200
+// Covers: UI-170, UI-190, UI-320, UI-340, UI-350, UI-360, UI-370
 struct OwnIDLoginWidgetViewModelContractTests {
     @Test(arguments: LoginWidgetTerminalResult.allCases)
     func `Login view model maps terminal flow results to effects`(terminalResult: LoginWidgetTerminalResult) async throws {
-        let viewModel = makeLoginViewModel { _ in ImmediateLoginController(terminalResult.result) }
+        let viewModel = makeLoginViewModel { _, _ in ImmediateLoginController(terminalResult.result) }
 
-        viewModel.startFlow(loginID: "user@example.com")
+        startFlow(viewModel, loginID: "user@example.com")
         let effect = try await nextElement(from: viewModel.uiEffects, "Expected a terminal login effect")
 
         switch terminalResult {
@@ -33,13 +34,13 @@ struct OwnIDLoginWidgetViewModelContractTests {
 
     @Test func `Login view model ignores repeated starts while running`() {
         var startCount = 0
-        let viewModel = makeLoginViewModel { _ in
+        let viewModel = makeLoginViewModel { _, _ in
             startCount += 1
             return ImmediateLoginController(.success(makeLoginResponse()))
         }
 
-        viewModel.startFlow(loginID: "first@example.com")
-        viewModel.startFlow(loginID: "second@example.com")
+        startFlow(viewModel, loginID: "first@example.com")
+        startFlow(viewModel, loginID: "second@example.com")
 
         #expect(startCount == 1)
         #expect(viewModel.uiState == .init(isRunning: true))
@@ -47,12 +48,12 @@ struct OwnIDLoginWidgetViewModelContractTests {
 
     @Test func `Login view model forwards abort to the active flow`() {
         let controller = RunningLoginController()
-        let viewModel = makeLoginViewModel { _ in controller }
+        let viewModel = makeLoginViewModel { _, _ in controller }
 
         viewModel.abort(reason: .timeout)
         #expect(controller.abortReasonDescriptions.isEmpty)
 
-        viewModel.startFlow(loginID: "user@example.com")
+        startFlow(viewModel, loginID: "user@example.com")
         viewModel.abort(reason: .systemError(details: "screen dismissed"))
 
         #expect(controller.abortReasonDescriptions == ["systemError: screen dismissed"])
@@ -60,11 +61,11 @@ struct OwnIDLoginWidgetViewModelContractTests {
     }
 
     @Test func `Login starter errors emit integration error and stop running`() async throws {
-        let viewModel = makeLoginViewModel { _ in
+        let viewModel = makeLoginViewModel { _, _ in
             throw WidgetStarterError("login starter unavailable")
         }
 
-        viewModel.startFlow(loginID: "user@example.com")
+        startFlow(viewModel, loginID: "user@example.com")
         let effect = try await nextElement(from: viewModel.uiEffects, "Expected login starter error effect")
 
         let error = try #require(loginError(from: effect), "Expected login starter error effect, got \(effect)")
@@ -73,12 +74,63 @@ struct OwnIDLoginWidgetViewModelContractTests {
         #expect(viewModel.uiState == .init(isRunning: false))
     }
 
+    @Test func `Login start forwards the exact hosting window to a custom starter`() async throws {
+        let expectedWindow = makeWidgetTestWindow()
+        defer { expectedWindow.close() }
+        var receivedWindow: UIWindow?
+        let viewModel = makeLoginViewModel { window, _ in
+            receivedWindow = window
+            return ImmediateLoginController(.success(makeLoginResponse()))
+        }
+
+        viewModel.startFlow(window: expectedWindow, loginID: "user@example.com")
+        _ = try await nextElement(from: viewModel.uiEffects, "Expected login effect")
+
+        #expect(receivedWindow === expectedWindow)
+    }
+
+    @Test func `Login start without a hosting window reports an integration error without invoking the starter`() async throws {
+        var startCount = 0
+        let viewModel = makeLoginViewModel { _, _ in
+            startCount += 1
+            return ImmediateLoginController(.success(makeLoginResponse()))
+        }
+
+        viewModel.startFlow(window: nil, loginID: "user@example.com")
+        let effect = try await nextElement(from: viewModel.uiEffects, "Expected missing-window login error")
+        let error = try #require(loginError(from: effect))
+
+        #expect(startCount == 0)
+        #expect(error.errorCode == .integrationError)
+        #expect(error.message.isEmpty == false)
+        #expect(viewModel.uiState == .init(isRunning: false))
+    }
+
+    @Test func `Deinitializing a running login view model aborts the flow and finishes its public streams`() async throws {
+        let controller = RunningLoginController()
+        var viewModel: OwnIDLoginWidgetViewModel? = makeLoginViewModel { _, _ in controller }
+        let weakViewModel = WeakObjectReference(viewModel)
+        let window = makeWidgetTestWindow()
+        defer { window.close() }
+        viewModel!.startFlow(window: window, loginID: "user@example.com")
+
+        var stateIterator = viewModel!.uiStateStream.makeAsyncIterator()
+        #expect(await stateIterator.next() == .init(isRunning: true))
+        let effects = viewModel!.uiEffects
+
+        viewModel = nil
+        #expect(weakViewModel.value == nil)
+        #expect(controller.abortReasonDescriptions == [Reason.userClose(details: "Login widget deinitialized").description])
+        #expect(await stateIterator.next() == nil)
+        #expect(try await nextOptionalElement(from: effects, "Expected login effects to finish") == nil)
+    }
+
     @Test func `Login effects are buffered until a subscriber is attached`() async throws {
-        let viewModel = makeLoginViewModel { _ in
+        let viewModel = makeLoginViewModel { _, _ in
             ImmediateLoginController(.success(makeLoginResponse(id: "buffered@example.com")))
         }
 
-        viewModel.startFlow(loginID: "buffered@example.com")
+        startFlow(viewModel, loginID: "buffered@example.com")
         let effect = try await nextElement(from: viewModel.uiEffects, "Expected buffered login effect")
 
         let response = try #require(loginResponse(from: effect), "Expected buffered login effect, got \(effect)")
@@ -86,7 +138,7 @@ struct OwnIDLoginWidgetViewModelContractTests {
     }
 
     @Test func `Login effects keep only the latest subscriber active`() async throws {
-        let viewModel = makeLoginViewModel { _ in
+        let viewModel = makeLoginViewModel { _, _ in
             ImmediateLoginController(.success(makeLoginResponse(id: "latest@example.com")))
         }
 
@@ -99,7 +151,7 @@ struct OwnIDLoginWidgetViewModelContractTests {
         )
         #expect(firstValue == nil)
 
-        viewModel.startFlow(loginID: "latest@example.com")
+        startFlow(viewModel, loginID: "latest@example.com")
         let effect = try await nextElement(from: secondEffects, "Expected the latest subscriber to receive the effect")
 
         let response = try #require(loginResponse(from: effect), "Expected login effect for latest subscriber, got \(effect)")
@@ -109,12 +161,12 @@ struct OwnIDLoginWidgetViewModelContractTests {
     @Test(arguments: WidgetLoginIDCase.loginNormalizationCases)
     func `Login flow normalizes login IDs and uses widget button source`(input: WidgetLoginIDCase) throws {
         var capturedContext: BoostFlowContext?
-        let viewModel = makeLoginViewModel { context in
+        let viewModel = makeLoginViewModel { _, context in
             capturedContext = context
             return ImmediateLoginController(.success(makeLoginResponse()))
         }
 
-        viewModel.startFlow(loginID: input.raw)
+        startFlow(viewModel, loginID: input.raw)
 
         try expectWidgetContext(capturedContext, normalizedLoginID: input.normalized)
     }

@@ -401,6 +401,7 @@ final class FakeEmailVerificationAPIController: EmailVerificationAPIController, 
     let challenge: VerificationChallenge
     let completeResult: APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure>
     let resendHandler: @Sendable () async -> APIResult<Void, EmailVerificationResendAPIFailure>
+    let cancelResult: APIResult<Void, EmailVerificationCancelAPIFailure>
     let completedCodes = Locked<[String]>([])
     let resendCalls = Locked(0)
     let cancelReasons = Locked<[Reason]>([])
@@ -408,21 +409,25 @@ final class FakeEmailVerificationAPIController: EmailVerificationAPIController, 
     init(
         challenge: VerificationChallenge = testVerificationChallenge(),
         completeResult: APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure>,
-        resendResult: APIResult<Void, EmailVerificationResendAPIFailure> = .success(())
+        resendResult: APIResult<Void, EmailVerificationResendAPIFailure> = .success(()),
+        cancelResult: APIResult<Void, EmailVerificationCancelAPIFailure> = .success(())
     ) {
         self.challenge = challenge
         self.completeResult = completeResult
         self.resendHandler = { resendResult }
+        self.cancelResult = cancelResult
     }
 
     init(
         challenge: VerificationChallenge = testVerificationChallenge(),
         completeResult: APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure>,
-        resendHandler: @escaping @Sendable () async -> APIResult<Void, EmailVerificationResendAPIFailure>
+        resendHandler: @escaping @Sendable () async -> APIResult<Void, EmailVerificationResendAPIFailure>,
+        cancelResult: APIResult<Void, EmailVerificationCancelAPIFailure> = .success(())
     ) {
         self.challenge = challenge
         self.completeResult = completeResult
         self.resendHandler = resendHandler
+        self.cancelResult = cancelResult
     }
 
     func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure> {
@@ -436,7 +441,7 @@ final class FakeEmailVerificationAPIController: EmailVerificationAPIController, 
     func cancel(reason: Reason) async -> APIResult<Void, EmailVerificationCancelAPIFailure> {
         cancelReasons.mutate { $0.append(reason) }
         await cancelReason.set(reason)
-        return .success(())
+        return cancelResult
     }
 }
 
@@ -463,6 +468,7 @@ final class FakePhoneVerificationAPIController: PhoneVerificationAPIController, 
     let challenge: VerificationChallenge
     let completeResult: APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure>
     let resendHandler: @Sendable () async -> APIResult<Void, PhoneVerificationResendAPIFailure>
+    let cancelResult: APIResult<Void, PhoneVerificationCancelAPIFailure>
     let completedCodes = Locked<[String]>([])
     let resendCalls = Locked(0)
     let cancelReasons = Locked<[Reason]>([])
@@ -470,21 +476,25 @@ final class FakePhoneVerificationAPIController: PhoneVerificationAPIController, 
     init(
         challenge: VerificationChallenge = testVerificationChallenge(),
         completeResult: APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure>,
-        resendResult: APIResult<Void, PhoneVerificationResendAPIFailure> = .success(())
+        resendResult: APIResult<Void, PhoneVerificationResendAPIFailure> = .success(()),
+        cancelResult: APIResult<Void, PhoneVerificationCancelAPIFailure> = .success(())
     ) {
         self.challenge = challenge
         self.completeResult = completeResult
         self.resendHandler = { resendResult }
+        self.cancelResult = cancelResult
     }
 
     init(
         challenge: VerificationChallenge = testVerificationChallenge(),
         completeResult: APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure>,
-        resendHandler: @escaping @Sendable () async -> APIResult<Void, PhoneVerificationResendAPIFailure>
+        resendHandler: @escaping @Sendable () async -> APIResult<Void, PhoneVerificationResendAPIFailure>,
+        cancelResult: APIResult<Void, PhoneVerificationCancelAPIFailure> = .success(())
     ) {
         self.challenge = challenge
         self.completeResult = completeResult
         self.resendHandler = resendHandler
+        self.cancelResult = cancelResult
     }
 
     func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure> {
@@ -498,7 +508,7 @@ final class FakePhoneVerificationAPIController: PhoneVerificationAPIController, 
     func cancel(reason: Reason) async -> APIResult<Void, PhoneVerificationCancelAPIFailure> {
         cancelReasons.mutate { $0.append(reason) }
         await cancelReason.set(reason)
-        return .success(())
+        return cancelResult
     }
 }
 
@@ -526,14 +536,17 @@ final class FakePasskeyAssertionAPI: PasskeyAssertionAPI, @unchecked Sendable {
 final class FakePasskeyAssertionAPIController: PasskeyAssertionAPIController, @unchecked Sendable {
     let assertionOptions: AssertionOptions
     let verifyResult: APIResult<AccessToken, PasskeyAssertionVerifyAPIFailure>
+    let cancelResult: APIResult<Void, PasskeyAssertionCancelAPIFailure>
     let assertionResults = Locked<[AssertionResult]>([])
     let cancelReasons = Locked<[Reason]>([])
     init(
         assertionOptions: AssertionOptions = testAssertionOptions(),
-        verifyResult: APIResult<AccessToken, PasskeyAssertionVerifyAPIFailure> = .success(testAccessToken("assertion-access-token"))
+        verifyResult: APIResult<AccessToken, PasskeyAssertionVerifyAPIFailure> = .success(testAccessToken("assertion-access-token")),
+        cancelResult: APIResult<Void, PasskeyAssertionCancelAPIFailure> = .success(())
     ) {
         self.assertionOptions = assertionOptions
         self.verifyResult = verifyResult
+        self.cancelResult = cancelResult
     }
     func verify(assertionResult: AssertionResult) async -> APIResult<AccessToken, PasskeyAssertionVerifyAPIFailure> {
         assertionResults.mutate { $0.append(assertionResult) }
@@ -541,7 +554,7 @@ final class FakePasskeyAssertionAPIController: PasskeyAssertionAPIController, @u
     }
     func cancel(reason: Reason) async -> APIResult<Void, PasskeyAssertionCancelAPIFailure> {
         cancelReasons.mutate { $0.append(reason) }
-        return .success(())
+        return cancelResult
     }
 }
 
@@ -571,14 +584,17 @@ final class FakePasskeyAttestationAPI: PasskeyAttestationAPI, @unchecked Sendabl
 final class FakePasskeyAttestationAPIController: PasskeyAttestationAPIController, @unchecked Sendable {
     let attestationOptions: AttestationOptions
     let verifyResult: APIResult<AttestationResponse, PasskeyAttestationVerifyAPIFailure>
+    let cancelResult: APIResult<Void, PasskeyAttestationCancelAPIFailure>
     let attestationResults = Locked<[AttestationResult]>([])
     let cancelReasons = Locked<[Reason]>([])
     init(
         attestationOptions: AttestationOptions = testAttestationOptions(),
-        verifyResult: APIResult<AttestationResponse, PasskeyAttestationVerifyAPIFailure> = .success(testAttestationResponse())
+        verifyResult: APIResult<AttestationResponse, PasskeyAttestationVerifyAPIFailure> = .success(testAttestationResponse()),
+        cancelResult: APIResult<Void, PasskeyAttestationCancelAPIFailure> = .success(())
     ) {
         self.attestationOptions = attestationOptions
         self.verifyResult = verifyResult
+        self.cancelResult = cancelResult
     }
     func verify(attestationResult: AttestationResult) async -> APIResult<AttestationResponse, PasskeyAttestationVerifyAPIFailure> {
         attestationResults.mutate { $0.append(attestationResult) }
@@ -586,7 +602,7 @@ final class FakePasskeyAttestationAPIController: PasskeyAttestationAPIController
     }
     func cancel(reason: Reason) async -> APIResult<Void, PasskeyAttestationCancelAPIFailure> {
         cancelReasons.mutate { $0.append(reason) }
-        return .success(())
+        return cancelResult
     }
 }
 
@@ -601,23 +617,31 @@ final class FakePasskeyEnrollAPI: PasskeyEnrollAPI, @unchecked Sendable {
 }
 
 final class FakeOIDCAPI: OIDCAPI, @unchecked Sendable {
-    let controller: FakeOIDCAPIController
+    let startResult: APIResult<any OIDCAPIController, OIDCStartAPIFailure>
     let params = Locked<[OIDCAPIParams?]>([])
-    init(controller: FakeOIDCAPIController) { self.controller = controller }
+    init(controller: FakeOIDCAPIController) { self.startResult = .success(controller) }
+    init(startResult: APIResult<any OIDCAPIController, OIDCStartAPIFailure>) { self.startResult = startResult }
     func start(params: OIDCAPIParams?) async -> APIResult<any OIDCAPIController, OIDCStartAPIFailure> {
         self.params.mutate { $0.append(params) }
-        return .success(controller)
+        return startResult
     }
 }
 
 final class FakeOIDCAPIController: OIDCAPIController, @unchecked Sendable {
     let challenge: SocialChallenge
     let completeResult: APIResult<AccessTokenWithUserInfo, OIDCCompleteAPIFailure>
+    let cancelResult: APIResult<Void, OIDCCancelAPIFailure>
     let idTokens = Locked<[String]>([])
     let cancelReasons = Locked<[Reason]>([])
-    init(challenge: SocialChallenge, completeResult: APIResult<AccessTokenWithUserInfo, OIDCCompleteAPIFailure>) {
+    let cancelReason = CapturedValue<Reason>()
+    init(
+        challenge: SocialChallenge,
+        completeResult: APIResult<AccessTokenWithUserInfo, OIDCCompleteAPIFailure>,
+        cancelResult: APIResult<Void, OIDCCancelAPIFailure> = .success(())
+    ) {
         self.challenge = challenge
         self.completeResult = completeResult
+        self.cancelResult = cancelResult
     }
     func completeWithToken(idToken: String) async -> APIResult<AccessTokenWithUserInfo, OIDCCompleteAPIFailure> {
         idTokens.mutate { $0.append(idToken) }
@@ -628,36 +652,67 @@ final class FakeOIDCAPIController: OIDCAPIController, @unchecked Sendable {
     }
     func cancel(reason: Reason) async -> APIResult<Void, OIDCCancelAPIFailure> {
         cancelReasons.mutate { $0.append(reason) }
-        return .success(())
+        await cancelReason.set(reason)
+        return cancelResult
     }
 }
 
 @MainActor
 final class FakeAppleSignInUI: SignInWithAppleUI, @unchecked Sendable {
-    let result: SocialResult
+    let result: SocialResult?
+    let started = MainActorCapturedValue<Void>()
+    let canceled = MainActorCapturedValue<Void>()
+    let completion = MainActorCapturedValue<SocialResult>()
     private(set) var receivedClientID: String?
     private(set) var receivedNonce: String?
-    init(result: SocialResult) { self.result = result }
-    func signIn(clientID: String, nonce: String?, window: UIWindow?) async -> SocialResult {
+    private(set) var signInCallCount = 0
+    private(set) var cancelCallCount = 0
+    init(result: SocialResult? = nil) { self.result = result }
+    func signIn(clientID: String, nonce: String?) async -> SocialResult {
         receivedClientID = clientID
         receivedNonce = nonce
-        return result
+        signInCallCount += 1
+        started.set(())
+        if let result { return result }
+        do {
+            return try await completion.waitUnlessCancelled()
+        } catch {
+            return .canceled(reason: .systemError(details: "Fake Apple UI task canceled"))
+        }
     }
-    func cancel() {}
+    func cancel() {
+        cancelCallCount += 1
+        canceled.set(())
+    }
 }
 
 @MainActor
 final class FakeGoogleSignInUI: SignInWithGoogleUI, @unchecked Sendable {
-    let result: SocialResult
+    let result: SocialResult?
+    let started = MainActorCapturedValue<Void>()
+    let canceled = MainActorCapturedValue<Void>()
+    let completion = MainActorCapturedValue<SocialResult>()
     private(set) var receivedClientID: String?
     private(set) var receivedNonce: String?
-    init(result: SocialResult) { self.result = result }
-    func signIn(clientID: String, nonce: String?, window: UIWindow?) async -> SocialResult {
+    private(set) var signInCallCount = 0
+    private(set) var cancelCallCount = 0
+    init(result: SocialResult? = nil) { self.result = result }
+    func signIn(clientID: String, nonce: String?) async -> SocialResult {
         receivedClientID = clientID
         receivedNonce = nonce
-        return result
+        signInCallCount += 1
+        started.set(())
+        if let result { return result }
+        do {
+            return try await completion.waitUnlessCancelled()
+        } catch {
+            return .canceled(reason: .systemError(details: "Fake Google UI task canceled"))
+        }
     }
-    func cancel() {}
+    func cancel() {
+        cancelCallCount += 1
+        canceled.set(())
+    }
 }
 
 func nextEmailActiveState(

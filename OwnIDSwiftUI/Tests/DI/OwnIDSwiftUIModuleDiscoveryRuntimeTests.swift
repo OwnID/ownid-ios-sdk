@@ -4,7 +4,7 @@ import Testing
 @_spi(OwnIDInternal) @testable import OwnIDCore
 @_spi(OwnIDInternal) @testable import OwnIDSwiftUI
 
-// Covers: UI-PRESENT-040
+// Covers: UI-PRESENT-040, INFO-RUNTIME-060
 @Suite(.serialized)
 struct OwnIDSwiftUIModuleDiscoveryRuntimeTests {
 
@@ -12,9 +12,6 @@ struct OwnIDSwiftUIModuleDiscoveryRuntimeTests {
     @Test func `SwiftUI product discovery registers runtime UI bindings after initialization`() throws {
         let instanceName = InstanceName(value: "OwnIDSwiftUIModuleDiscoveryRuntimeTests-\(UUID().uuidString)")
         defer { OwnID.destroy(instanceName: instanceName) }
-
-        let discoveredModule = try #require(NSClassFromString("OwnIDSwiftUI.OwnIDUIModule") as? any OwnIDModule.Type)
-        #expect(ObjectIdentifier(discoveredModule) == ObjectIdentifier(OwnIDUIModule.self))
 
         OwnID.initialize(instanceName: instanceName) { configuration in
             configuration.appID = "SwiftUIModule\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
@@ -24,6 +21,18 @@ struct OwnIDSwiftUIModuleDiscoveryRuntimeTests {
         }
 
         let container = try #require(OwnID.getInstanceContainer(instanceName))
+        let localInfo = try container.getOrThrow(type: (any LocalInfo).self)
+        #expect(localInfo.modules.map { $0.name } == ["OwnIDCore", "OwnIDSwiftUI"])
+        let coreVersion = try #require(localInfo.modules.first?.version)
+        let configURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("sdk-version.xcconfig")
+        let parts = try String(contentsOf: configURL, encoding: .utf8).split(separator: "=")
+        try #require(parts.count == 2)
+        let expectedVersion = try #require(parts.last).trimmingCharacters(in: .whitespacesAndNewlines)
+        #expect(coreVersion == expectedVersion)
+        #expect(localInfo.modules.map { $0.version } == [coreVersion, coreVersion])
+        #expect(localInfo.userAgent.hasPrefix("OwnIDCore/\(coreVersion) "))
+        #expect(localInfo.userAgent.contains(" OwnIDSwiftUI/\(coreVersion) "))
 
         try assertSwiftUIModuleRuntimeBindings(in: container)
     }

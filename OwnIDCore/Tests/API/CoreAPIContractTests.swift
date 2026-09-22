@@ -91,6 +91,82 @@ struct CoreAPIContractTests {
         #expect(explicitOIDCParams.provider == .google)
         try assertOAuthResponseType(explicitOIDCParams.oauthResponseType, is: .code)
         #expect(explicitOIDCParams.accessToken == accessToken)
+
+        let assertionDefaults = PasskeyAssertionAPIParams()
+        #expect(assertionDefaults.loginID == nil)
+        #expect(assertionDefaults.accessToken == nil)
+        let assertionExplicit = PasskeyAssertionAPIParams(loginID: loginID, accessToken: accessToken)
+        #expect(assertionExplicit.loginID == loginID)
+        #expect(assertionExplicit.accessToken == accessToken)
+
+        let attestationDefaults = PasskeyAttestationAPIParams()
+        #expect(attestationDefaults.loginID == nil)
+        #expect(attestationDefaults.accountDisplayName == nil)
+        #expect(attestationDefaults.accessToken == nil)
+        let attestationExplicit = PasskeyAttestationAPIParams(
+            loginID: loginID,
+            accountDisplayName: "Example User",
+            accessToken: accessToken
+        )
+        #expect(attestationExplicit.loginID == loginID)
+        #expect(attestationExplicit.accountDisplayName == "Example User")
+        #expect(attestationExplicit.accessToken == accessToken)
+
+        let proofToken = ProofToken(token: "proof-token")
+        let passkeyEnrollDefaults = PasskeyEnrollAPIParams(proofToken: proofToken)
+        #expect(passkeyEnrollDefaults.proofToken == proofToken)
+        #expect(passkeyEnrollDefaults.accessToken == nil)
+        #expect(PasskeyEnrollAPIParams(proofToken: proofToken, accessToken: accessToken).accessToken == accessToken)
+
+        let emailEnrollDefaults = EmailEnrollAPIParams(proofToken: proofToken)
+        #expect(emailEnrollDefaults.proofToken == proofToken)
+        #expect(emailEnrollDefaults.accessToken == nil)
+        #expect(EmailEnrollAPIParams(proofToken: proofToken, accessToken: accessToken).accessToken == accessToken)
+
+        let phoneEnrollDefaults = PhoneEnrollAPIParams(proofToken: proofToken)
+        #expect(phoneEnrollDefaults.proofToken == proofToken)
+        #expect(phoneEnrollDefaults.accessToken == nil)
+        #expect(PhoneEnrollAPIParams(proofToken: proofToken, accessToken: accessToken).accessToken == accessToken)
+
+        let emailVerificationDefaults = EmailVerificationAPIParams()
+        #expect(emailVerificationDefaults.loginID == nil)
+        #expect(emailVerificationDefaults.loginIDHintID == nil)
+        #expect(emailVerificationDefaults.accessToken == nil)
+        #expect(emailVerificationDefaults.verificationMethods == nil)
+        #expect(emailVerificationDefaults.magicLinkRedirectURL == nil)
+        let verificationMethods: Set<VerificationMethod> = [.otp, .magicLink]
+        let emailVerificationExplicit = EmailVerificationAPIParams(
+            loginID: loginID,
+            loginIDHintID: "email-hint",
+            accessToken: accessToken,
+            verificationMethods: verificationMethods,
+            magicLinkRedirectURL: "https://example.test/email"
+        )
+        #expect(emailVerificationExplicit.loginID == loginID)
+        #expect(emailVerificationExplicit.loginIDHintID == "email-hint")
+        #expect(emailVerificationExplicit.accessToken == accessToken)
+        #expect(emailVerificationExplicit.verificationMethods == verificationMethods)
+        #expect(emailVerificationExplicit.magicLinkRedirectURL == "https://example.test/email")
+
+        let phoneVerificationDefaults = PhoneVerificationAPIParams()
+        #expect(phoneVerificationDefaults.loginID == nil)
+        #expect(phoneVerificationDefaults.loginIDHintID == nil)
+        #expect(phoneVerificationDefaults.accessToken == nil)
+        #expect(phoneVerificationDefaults.verificationMethods == nil)
+        #expect(phoneVerificationDefaults.magicLinkRedirectURL == nil)
+        let phoneLoginID = LoginID(id: "+15551234567", type: .phoneNumber)
+        let phoneVerificationExplicit = PhoneVerificationAPIParams(
+            loginID: phoneLoginID,
+            loginIDHintID: "phone-hint",
+            accessToken: accessToken,
+            verificationMethods: verificationMethods,
+            magicLinkRedirectURL: "https://example.test/phone"
+        )
+        #expect(phoneVerificationExplicit.loginID == phoneLoginID)
+        #expect(phoneVerificationExplicit.loginIDHintID == "phone-hint")
+        #expect(phoneVerificationExplicit.accessToken == accessToken)
+        #expect(phoneVerificationExplicit.verificationMethods == verificationMethods)
+        #expect(phoneVerificationExplicit.magicLinkRedirectURL == "https://example.test/phone")
     }
 
     @Test func `API call execute maps transport success`() async throws {

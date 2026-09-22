@@ -1,13 +1,13 @@
 @_spi(OwnIDInternal) import OwnIDCore
 import SwiftUI
 
-/// Internal lifecycle bridge between SwiftUI presentation and one operation controller.
+/// Coordinates lifecycle for one app-hosted operation view.
 ///
-/// The host resolves the current instance container, renders operation content, and keeps abort/settlement ownership
-/// on the operation controller. Embedded operation views abort when they disappear; container-backed presentation waits
-/// for the container controller to report final close so dismissal can drive cancellation. Rendering and content
-/// callbacks stay in the resolved content host; this boundary only coordinates instance availability, cancellation,
-/// settlement, and close signals.
+/// The host renders from the scope captured by the app-hosted operation, keeping content and lifecycle tied to its
+/// originating SDK instance. Embedded views abort when they disappear; app-owned containers defer owner-driven
+/// cancellation until their final close signal, while content or instance errors can abort immediately. Settlement
+/// completes the host and dismisses an app-owned container without converting an already-settled result into
+/// cancellation.
 internal struct OperationLifecycleHost<Controller: OperationController>: View {
     private let instanceName: InstanceName?
     private let operationController: Controller
@@ -22,6 +22,7 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
 
     internal init(
         instanceName: InstanceName,
+        instanceResolver: any DIContainerResolver,
         operationController: Controller,
         renderController: any OperationController,
         containerController: OwnIDUIContainerController? = nil,
@@ -34,7 +35,7 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
         self._containerController = ObservedObject(wrappedValue: resolvedContainerController)
         self.usesAppContainer = containerController != nil
         self.errorTextProvider = errorTextProvider
-        self._instanceResolver = State(initialValue: OwnID.getInstanceContainer(instanceName))
+        self._instanceResolver = State(initialValue: instanceResolver)
         self._lifecycleSession = State(
             initialValue: OperationLifecycleSession(operationController: operationController, usesAppContainer: containerController != nil)
         )
@@ -45,6 +46,7 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
         operationController: Controller,
         renderController: any OperationController,
         containerController: OwnIDUIContainerController,
+        lifecycleSession: OperationLifecycleSession<Controller>? = nil,
         errorTextProvider: ((ErrorCode) -> String)? = nil
     ) {
         self.instanceName = nil
@@ -55,7 +57,8 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
         self.errorTextProvider = errorTextProvider
         self._instanceResolver = State(initialValue: instanceResolver)
         self._lifecycleSession = State(
-            initialValue: OperationLifecycleSession(operationController: operationController, usesAppContainer: true)
+            initialValue: lifecycleSession
+                ?? OperationLifecycleSession(operationController: operationController, usesAppContainer: true)
         )
     }
 
@@ -69,7 +72,7 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
                     instanceResolver: instanceResolver,
                     operationController: renderController,
                     errorTextProvider: errorTextProvider,
-                    isReadyForInitialFocus: usesAppContainer ? containerController.isOpened : true,
+                    isReadyForInitialFocus: usesAppContainer ? containerController.isInputReady : true,
                     abortOperation: { reason in
                         lifecycleSession.abort(reason: reason)
                     },
@@ -104,12 +107,11 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
     @MainActor
     private func observeInstanceIfNeeded() async {
         guard let instanceName else { return }
-        instanceResolver = nil
 
         for await instanceContainer in OwnID.getInstanceContainerStream(instanceName) {
             if Task.isCancelled { break }
 
-            guard let instanceContainer else {
+            guard instanceContainer != nil else {
                 let logger = OwnID.getLogger() ?? OwnIDDefaultLogger.make()
                 logger.log(
                     level: .warn,
@@ -125,8 +127,6 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
                 }
                 break
             }
-
-            instanceResolver = instanceContainer
         }
     }
 
@@ -141,16 +141,17 @@ internal struct OperationLifecycleHost<Controller: OperationController>: View {
 
 /// Owns the operation-side lifecycle for one rendered operation view.
 ///
-/// The session keeps cancellation idempotent and separates two presentation modes:
-/// embedded views cancel on disappearance, while app-owned containers decide cancellation when they report final close.
+/// Cancellation is idempotent. Embedded views cancel on disappearance, while app-owned containers defer owner-driven
+/// cancellation until they report final close; settlement can instead request a dismissal without aborting the
+/// operation.
 @MainActor
 internal final class OperationLifecycleSession<Controller: OperationController> {
     private let operationController: Controller
     private let usesAppContainer: Bool
     private var didAbort = false
-    private var didRegisterClosedHandler = false
+    private var isActivated = false
     private var didSettle = false
-    private var didStartSettlementTask = false
+    private var onSettledHandler: (@MainActor () -> Void)?
     private var settlementTask: Task<Void, Never>?
 
     internal init(operationController: Controller, usesAppContainer: Bool) {
@@ -163,37 +164,35 @@ internal final class OperationLifecycleSession<Controller: OperationController> 
     }
 
     internal func activate(containerController: OwnIDUIContainerController, onSettled: @escaping @MainActor () -> Void) {
-        if usesAppContainer, !didRegisterClosedHandler {
-            didRegisterClosedHandler = true
+        if didSettle {
+            onSettled()
+            return
+        }
+        onSettledHandler = onSettled
+        guard !isActivated else { return }
+        isActivated = true
+        if usesAppContainer {
             containerController.addClosedHandler { [self] abortReason in
                 guard !didSettle, let abortReason else { return }
                 abort(reason: abortReason)
             }
         }
-        startSettlementTaskIfNeeded(containerController: containerController, onSettled: onSettled)
+        let operationController = operationController
+        settlementTask = Task { @MainActor [weak self, weak containerController] in
+            _ = await operationController.whenSettled()
+            guard let self, !Task.isCancelled else { return }
+            self.didSettle = true
+            let onSettled = self.onSettledHandler
+            self.onSettledHandler = nil
+            onSettled?()
+            guard usesAppContainer, let containerController, !containerController.isClosed else { return }
+            containerController.requestDismissWithoutAbort()
+        }
     }
 
     internal func abort(reason: Reason) {
         guard !didAbort, !didSettle else { return }
         didAbort = true
-        if !usesAppContainer {
-            settlementTask?.cancel()
-        }
         operationController.abort(reason: reason)
-    }
-
-    private func startSettlementTaskIfNeeded(containerController: OwnIDUIContainerController, onSettled: @escaping @MainActor () -> Void) {
-        guard !didStartSettlementTask else { return }
-        didStartSettlementTask = true
-        let operationController = operationController
-
-        settlementTask = Task { @MainActor [weak self, weak containerController] in
-            _ = await operationController.whenSettled()
-            guard let self, !Task.isCancelled else { return }
-            self.didSettle = true
-            onSettled()
-            guard usesAppContainer, let containerController, !containerController.isClosed else { return }
-            containerController.requestDismissWithoutAbort()
-        }
     }
 }

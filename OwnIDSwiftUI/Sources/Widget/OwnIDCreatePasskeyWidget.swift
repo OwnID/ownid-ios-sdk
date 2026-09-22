@@ -8,12 +8,15 @@ import SwiftUI
 /// The SDK owns starting and settling the flow; the app owns any session, navigation, registration, or error UI changes
 /// it performs from the callbacks.
 ///
-/// A create-passkey result calls `onNewPasskey` and shows the checkmark state. A login result calls `onLogin`. User
-/// or business cancellation calls `onCancel`. Flow start failures and terminal failures call `onError` with
-/// ``BoostCreatePasskeyFlowFailure``. When the visible checkmark state is cleared because the login ID no longer
-/// matches the in-memory create-passkey result, `onReset` is called. While a flow is running, repeated taps are ignored
-/// and the default icon button is disabled. `showSpinner` controls whether the busy state is shown as a spinner; it
-/// does not make a running flow accept another tap.
+/// A create-passkey result calls `onNewPasskey` and shows the checkmark state. A login result calls `onLogin`. A
+/// canceled flow calls `onCancel`. Flow start failures and terminal failures call `onError` with
+/// ``BoostCreatePasskeyFlowFailure``. When previously completed UI is cleared, including on a repeated start or when
+/// the login ID no longer matches the in-memory create-passkey result, `onReset` is called. While a flow is running,
+/// repeated taps are ignored and the default icon button is disabled. `showSpinner` controls whether the busy state is
+/// shown as a spinner; it does not make a running flow accept another tap.
+///
+/// The widget presents flow UI from the window that currently hosts it. If the widget is not attached to a window when
+/// a new flow must start, no flow starts and `onError` receives a UI-context failure.
 ///
 /// By default, this widget owns its ``OwnIDCreatePasskeyWidgetViewModel``. Inject a view model when your app
 /// needs to keep completion state across custom view lifecycles or reuse the view model in custom widget UI.
@@ -26,8 +29,109 @@ import SwiftUI
 /// the widget follows the current ``EnvironmentValues/ownIDTheme`` or captures the current SwiftUI color scheme and
 /// primary accent color. Parent `.tint(_:)` modifiers are not a supported way to configure OwnID theme tokens.
 public struct OwnIDCreatePasskeyWidget<IconButton: View, OrText: View, Checkmark: View>: View {
+    private let instanceName: InstanceName
+    private let loginID: String?
+    private let showSpinner: Bool
+    private let position: OwnIDBoostButtonPosition
+    private let theme: OwnIDTheme?
+    private let providedViewModel: OwnIDCreatePasskeyWidgetViewModel?
+    private let widgetStrings: BoostWidgetStrings?
+    private let onNewPasskey: (BoostFlowCreatePasskeyResponse) -> Void
+    private let onLogin: (BoostFlowLoginResponse) -> Void
+    private let onReset: () -> Void
+    private let onCancel: ((Reason) -> Void)?
+    private let onError: ((BoostCreatePasskeyFlowFailure) -> Void)?
+    private let iconButton: (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton
+    private let orText: (String) -> OrText
+    private let checkmark: () -> Checkmark
+
+    internal init(
+        onLogin: @escaping (BoostFlowLoginResponse) -> Void,
+        onNewPasskey: @escaping (BoostFlowCreatePasskeyResponse) -> Void,
+        onReset: @escaping () -> Void,
+        loginID: String?,
+        onError: ((BoostCreatePasskeyFlowFailure) -> Void)?,
+        onCancel: ((Reason) -> Void)?,
+        showSpinner: Bool,
+        position: OwnIDBoostButtonPosition = .start,
+        theme: OwnIDTheme?,
+        instanceName: InstanceName,
+        viewModel: OwnIDCreatePasskeyWidgetViewModel?,
+        widgetStrings: BoostWidgetStrings?,
+        @ViewBuilder iconButton:
+            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton,
+        @ViewBuilder orText: @escaping (String) -> OrText,
+        @ViewBuilder checkmark: @escaping () -> Checkmark
+    ) {
+        self.onLogin = onLogin
+        self.onNewPasskey = onNewPasskey
+        self.onReset = onReset
+        self.loginID = loginID
+        self.onError = onError
+        self.onCancel = onCancel
+        self.showSpinner = showSpinner
+        self.position = position
+        self.theme = theme
+        self.instanceName = instanceName
+        self.providedViewModel = viewModel
+        self.widgetStrings = widgetStrings
+        self.iconButton = iconButton
+        self.orText = orText
+        self.checkmark = checkmark
+    }
+
+    @ViewBuilder
+    public var body: some View {
+        if let providedViewModel {
+            OwnIDCreatePasskeyWidgetStatefulContent(
+                onLogin: onLogin,
+                onNewPasskey: onNewPasskey,
+                onReset: onReset,
+                loginID: loginID,
+                onError: onError,
+                onCancel: onCancel,
+                showSpinner: showSpinner,
+                position: position,
+                theme: theme,
+                instanceName: instanceName,
+                viewModel: providedViewModel,
+                widgetStrings: widgetStrings,
+                iconButton: iconButton,
+                orText: orText,
+                checkmark: checkmark
+            )
+        } else {
+            OwnIDCreatePasskeyWidgetStatefulContent(
+                onLogin: onLogin,
+                onNewPasskey: onNewPasskey,
+                onReset: onReset,
+                loginID: loginID,
+                onError: onError,
+                onCancel: onCancel,
+                showSpinner: showSpinner,
+                position: position,
+                theme: theme,
+                instanceName: instanceName,
+                viewModel: nil,
+                widgetStrings: widgetStrings,
+                iconButton: iconButton,
+                orText: orText,
+                checkmark: checkmark
+            )
+            .id(instanceName)
+        }
+    }
+}
+
+private struct OwnIDCreatePasskeyWidgetStatefulContent<IconButton: View, OrText: View, Checkmark: View>: View {
+    private struct InputID: Hashable {
+        let viewModel: ObjectIdentifier
+        let loginID: String?
+    }
+
     @State private var ownedViewModel: OwnIDCreatePasskeyWidgetViewModel
     @State private var uiState: OwnIDCreatePasskeyWidgetViewModel.UIState
+    @State private var windowAttachment: WidgetWindowAttachment? = nil
     @State private var resolvedWidgetStrings: BoostWidgetStrings? = nil
 
     private let instanceName: InstanceName
@@ -50,14 +154,7 @@ public struct OwnIDCreatePasskeyWidget<IconButton: View, OrText: View, Checkmark
         providedViewModel ?? ownedViewModel
     }
 
-    private static func normalizeLoginID(_ loginID: String?) -> String? {
-        guard let loginID else { return nil }
-        let normalizedLoginID = loginID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !normalizedLoginID.isEmpty else { return nil }
-        return normalizedLoginID
-    }
-
-    internal init(
+    init(
         onLogin: @escaping (BoostFlowLoginResponse) -> Void,
         onNewPasskey: @escaping (BoostFlowCreatePasskeyResponse) -> Void,
         onReset: @escaping () -> Void,
@@ -65,7 +162,7 @@ public struct OwnIDCreatePasskeyWidget<IconButton: View, OrText: View, Checkmark
         onError: ((BoostCreatePasskeyFlowFailure) -> Void)?,
         onCancel: ((Reason) -> Void)?,
         showSpinner: Bool,
-        position: OwnIDBoostButtonPosition = .start,
+        position: OwnIDBoostButtonPosition,
         theme: OwnIDTheme?,
         instanceName: InstanceName,
         viewModel: OwnIDCreatePasskeyWidgetViewModel?,
@@ -75,33 +172,41 @@ public struct OwnIDCreatePasskeyWidget<IconButton: View, OrText: View, Checkmark
         @ViewBuilder orText: @escaping (String) -> OrText,
         @ViewBuilder checkmark: @escaping () -> Checkmark
     ) {
-        self._onLogin = LatestValue(wrappedValue: onLogin)
-        self._onNewPasskey = LatestValue(wrappedValue: onNewPasskey)
-        self._onReset = LatestValue(wrappedValue: onReset)
+        self._ownedViewModel = State(initialValue: OwnIDCreatePasskeyWidgetViewModel(instanceName: instanceName))
+        self._uiState = State(initialValue: OwnIDCreatePasskeyWidgetViewModel.UIState())
+        self.instanceName = instanceName
         self.loginID = loginID
-        self._onError = LatestValue(wrappedValue: onError)
-        self._onCancel = LatestValue(wrappedValue: onCancel)
         self.showSpinner = showSpinner
         self.position = position
         self.theme = theme
-        self.instanceName = instanceName
         self.providedViewModel = viewModel
         self.widgetStrings = widgetStrings
+        self._onNewPasskey = LatestValue(wrappedValue: onNewPasskey)
+        self._onLogin = LatestValue(wrappedValue: onLogin)
+        self._onReset = LatestValue(wrappedValue: onReset)
+        self._onCancel = LatestValue(wrappedValue: onCancel)
+        self._onError = LatestValue(wrappedValue: onError)
         self.iconButton = iconButton
         self.orText = orText
         self.checkmark = checkmark
-
-        self._ownedViewModel = State(initialValue: OwnIDCreatePasskeyWidgetViewModel(instanceName: instanceName))
-        self._uiState = State(initialValue: OwnIDCreatePasskeyWidgetViewModel.UIState())
     }
 
-    public var body: some View {
+    private static func normalizeLoginID(_ loginID: String?) -> String? {
+        guard let loginID else { return nil }
+        let normalizedLoginID = loginID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedLoginID.isEmpty else { return nil }
+        return normalizedLoginID
+    }
+
+    var body: some View {
         let viewModel = effectiveViewModel
+        let viewModelID = ObjectIdentifier(viewModel)
         let normalizedLoginID = Self.normalizeLoginID(loginID)
         let resolvedStrings = widgetStrings ?? resolvedWidgetStrings ?? .default
+        let actionWindowAttachment = windowAttachment
 
         OwnIDBoostButton(
-            onClick: { viewModel.startFlow(loginID: normalizedLoginID) },
+            onClick: { viewModel.startFlow(window: actionWindowAttachment?.window, loginID: normalizedLoginID) },
             isBusy: uiState.isRunning,
             instanceName: instanceName,
             position: position,
@@ -113,16 +218,20 @@ public struct OwnIDCreatePasskeyWidget<IconButton: View, OrText: View, Checkmark
         .iconButton(iconButton)
         .orText(orText)
         .checkmark(checkmark)
-        .taskCompat(id: "OwnIDCreatePasskeyWidget.loginID.\(ObjectIdentifier(viewModel).hashValue).\(normalizedLoginID ?? "nil")") {
+        .background(
+            WidgetWindowReader(attachment: $windowAttachment)
+                .allowsHitTesting(false)
+        )
+        .taskCompat(id: InputID(viewModel: viewModelID, loginID: normalizedLoginID)) {
             viewModel.onLoginIDChanged(normalizedLoginID)
         }
-        .taskCompat(id: "OwnIDCreatePasskeyWidget.state.\(ObjectIdentifier(viewModel).hashValue)") {
+        .taskCompat(id: viewModelID) {
             for await state in viewModel.uiStateStream {
                 if Task.isCancelled { break }
                 uiState = state
             }
         }
-        .taskCompat(id: "OwnIDCreatePasskeyWidget.effects.\(ObjectIdentifier(viewModel).hashValue)") {
+        .taskCompat(id: viewModelID) {
             for await effect in viewModel.uiEffects {
                 if Task.isCancelled { break }
                 switch effect {

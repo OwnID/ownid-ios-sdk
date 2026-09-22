@@ -1,7 +1,8 @@
 import Foundation
 import Testing
+import UIKit
 
-@testable import OwnIDCore
+@_spi(OwnIDInternal) @testable import OwnIDCore
 
 // Covers: WB-BRIDGE-230
 @MainActor
@@ -19,7 +20,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
     ) async {
         guard #available(iOS 16.0, *) else { return }
 
-        let plugin = WebBridgePasskeyPlugin(
+        let plugin = makePlugin(
             passkey: RecordingWebBridgePasskey(),
             localInfo: WebBridgeRuntimePluginLocalInfo(isSystemFidoCapable: isCapable),
             coder: coder
@@ -49,7 +50,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
                 )
             )
         )
-        let plugin = WebBridgePasskeyPlugin(
+        let plugin = makePlugin(
             passkey: passkey,
             localInfo: WebBridgeRuntimePluginLocalInfo(),
             coder: coder
@@ -88,7 +89,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
                 )
             )
         )
-        let plugin = WebBridgePasskeyPlugin(
+        let plugin = makePlugin(
             passkey: passkey,
             localInfo: WebBridgeRuntimePluginLocalInfo(),
             coder: coder
@@ -137,7 +138,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
                 )
             )
         )
-        let plugin = WebBridgePasskeyPlugin(
+        let plugin = makePlugin(
             passkey: passkey,
             localInfo: WebBridgeRuntimePluginLocalInfo(),
             coder: coder
@@ -195,7 +196,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
         guard #available(iOS 16.0, *) else { return }
 
         let passkey = RecordingWebBridgePasskey(assertionOutcome: testCase.assertionOutcome)
-        let plugin = WebBridgePasskeyPlugin(
+        let plugin = makePlugin(
             passkey: passkey,
             localInfo: WebBridgeRuntimePluginLocalInfo(),
             coder: coder
@@ -220,7 +221,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
         guard #available(iOS 16.0, *) else { return }
 
         let passkey = RecordingWebBridgePasskey(attestationOutcome: testCase.attestationOutcome)
-        let plugin = WebBridgePasskeyPlugin(
+        let plugin = makePlugin(
             passkey: passkey,
             localInfo: WebBridgeRuntimePluginLocalInfo(),
             coder: coder
@@ -250,7 +251,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
         guard #available(iOS 16.0, *) else { return }
 
         let passkey = RecordingWebBridgePasskey()
-        let plugin = WebBridgePasskeyPlugin(
+        let plugin = makePlugin(
             passkey: passkey,
             localInfo: WebBridgeRuntimePluginLocalInfo(),
             coder: coder
@@ -277,12 +278,115 @@ struct WebBridgePasskeyPluginRuntimeTests {
         #expect(passkey.assertionOptions == nil)
         #expect(passkey.attestationOptions == nil)
     }
+
+    @Test func `Passkey plugin forwards the attached window and logs context failures`() async throws {
+        guard #available(iOS 16.0, *) else { return }
+
+        let expectedWindow = UIWindow(frame: .zero)
+        let passkey = RecordingWebBridgePasskey(
+            assertionOutcome: .failure(.general("unexpected assertion call")),
+            attestationOutcome: .failure(.general("unexpected attestation call"))
+        )
+        let plugin = makePlugin(
+            passkey: passkey,
+            localInfo: WebBridgeRuntimePluginLocalInfo(),
+            coder: coder,
+            uiContextProvider: WebBridgeTestUIContextProvider(window: expectedWindow)
+        )
+
+        _ = await handleWebBridgePlugin(
+            plugin,
+            pluginID: "FIDO",
+            action: "get",
+            params: #"{"context":"ctx","relyingPartyId":"example.test"}"#
+        )
+        _ = await handleWebBridgePlugin(
+            plugin,
+            pluginID: "FIDO",
+            action: "create",
+            params:
+                #"{"context":"ctx","relyingPartyId":"example.test","relyingPartyName":"Example","userName":"user","userDisplayName":"User"}"#
+        )
+        let enrollmentResult = await handleWebBridgePlugin(
+            plugin,
+            pluginID: "FIDO",
+            action: "create",
+            params:
+                #"{"challenge":"challenge-b64","rp":{"id":"example.test","name":"Example"},"user":{"name":"user","displayName":"User"},"pubKeyCredParams":[{"type":"public-key","alg":-7}]}"#
+        )
+
+        #expect(passkey.assertionWindow === expectedWindow)
+        #expect(passkey.attestationWindow === expectedWindow)
+        #expect(enrollmentResult.error != nil)
+
+        let logSink = LogCapture()
+        let unavailablePasskey = RecordingWebBridgePasskey()
+        let unavailablePlugin = makePlugin(
+            passkey: unavailablePasskey,
+            localInfo: WebBridgeRuntimePluginLocalInfo(),
+            coder: coder,
+            uiContextProvider: WebBridgeTestUIContextProvider(
+                result: .failure(UIContextResolutionError(reason: .ownerClosed, message: "WebBridge owner closed"))
+            ),
+            logger: webBridgeTestLogRouter(sink: logSink)
+        )
+        let result = await handleWebBridgePlugin(
+            unavailablePlugin,
+            pluginID: "FIDO",
+            action: "get",
+            params: #"{"context":"ctx","relyingPartyId":"example.test"}"#
+        )
+        let error = try webBridgeErrorPayload(from: result, coder: coder)
+
+        let flowCreateError = try await handleWebBridgePluginError(
+            unavailablePlugin,
+            pluginID: "FIDO",
+            action: "create",
+            params:
+                #"{"context":"ctx","relyingPartyId":"example.test","relyingPartyName":"Example","userName":"user","userDisplayName":"User"}"#,
+            coder: coder
+        )
+        let enrollmentCreateError = try await handleWebBridgePluginError(
+            unavailablePlugin,
+            pluginID: "FIDO",
+            action: "create",
+            params:
+                #"{"challenge":"challenge-b64","rp":{"id":"example.test","name":"Example"},"user":{"name":"user","displayName":"User"},"pubKeyCredParams":[{"type":"public-key","alg":-7}]}"#,
+            coder: coder
+        )
+
+        #expect(error["type"] == .string("UNKNOWN"))
+        #expect(error["message"]?.stringValue?.contains("Failed to resolve a presentation window") == true)
+        #expect(flowCreateError["message"]?.stringValue?.contains("Failed to resolve a presentation window") == true)
+        #expect(enrollmentCreateError["message"]?.stringValue?.contains("Failed to resolve a presentation window") == true)
+        #expect(logSink.messages.contains { $0.contains("UI context resolution failed") })
+        #expect(unavailablePasskey.assertionWindow == nil)
+        #expect(unavailablePasskey.attestationWindow == nil)
+    }
+
+    private func makePlugin(
+        passkey: any PasskeyProtocol,
+        localInfo: any LocalInfo,
+        coder: any JSONCoder,
+        uiContextProvider: any UIContextProvider = WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
+        logger: OwnIDLogRouter? = nil
+    ) -> WebBridgePasskeyPlugin {
+        WebBridgePasskeyPlugin(
+            passkey: passkey,
+            uiContextProvider: uiContextProvider,
+            localInfo: localInfo,
+            coder: coder,
+            logger: logger
+        )
+    }
 }
 
 private final class RecordingWebBridgePasskey: PasskeyProtocol, @unchecked Sendable {
     private let lock = NSLock()
     private var recordedAssertionOptions: AssertionOptions?
     private var recordedAttestationOptions: AttestationOptions?
+    private var recordedAssertionWindow: UIWindow?
+    private var recordedAttestationWindow: UIWindow?
     private let assertionOutcome: PasskeyResult<AssertionResult>
     private let attestationOutcome: PasskeyResult<AttestationResult>
 
@@ -302,13 +406,27 @@ private final class RecordingWebBridgePasskey: PasskeyProtocol, @unchecked Senda
         lock.withLock { recordedAttestationOptions }
     }
 
-    @MainActor func getCredential(assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
-        lock.withLock { recordedAssertionOptions = assertionOptions }
+    var assertionWindow: UIWindow? {
+        lock.withLock { recordedAssertionWindow }
+    }
+
+    var attestationWindow: UIWindow? {
+        lock.withLock { recordedAttestationWindow }
+    }
+
+    @MainActor func getCredential(window: UIWindow, assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
+        lock.withLock {
+            recordedAssertionWindow = window
+            recordedAssertionOptions = assertionOptions
+        }
         return assertionOutcome
     }
 
-    @MainActor func createCredential(attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
-        lock.withLock { recordedAttestationOptions = attestationOptions }
+    @MainActor func createCredential(window: UIWindow, attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
+        lock.withLock {
+            recordedAttestationWindow = window
+            recordedAttestationOptions = attestationOptions
+        }
         return attestationOutcome
     }
 }

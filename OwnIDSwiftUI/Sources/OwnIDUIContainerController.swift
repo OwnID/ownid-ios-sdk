@@ -37,8 +37,8 @@ public final class OwnIDUIContainerController: ObservableObject {
 
     private enum State {
         case idle
-        case opened
-        case closing(request: CloseRequest, wasOpened: Bool)
+        case opened(isInputReady: Bool)
+        case closing(request: CloseRequest)
         case closed(request: CloseRequest?)
     }
 
@@ -65,8 +65,17 @@ public final class OwnIDUIContainerController: ObservableObject {
     /// non-SwiftUI containers after their presentation animation has completed. Repeated calls during the same cycle
     /// are ignored.
     public func markOpened() {
+        markOpened(isInputReady: true)
+    }
+
+    internal func markOpened(isInputReady: Bool) {
         guard case .idle = state else { return }
-        state = .opened
+        state = .opened(isInputReady: isInputReady)
+    }
+
+    internal func setInputReady(_ isInputReady: Bool) {
+        guard case .opened(let currentValue) = state, currentValue != isInputReady else { return }
+        state = .opened(isInputReady: isInputReady)
     }
 
     /// Requests app-managed dismissal for this container.
@@ -96,17 +105,6 @@ public final class OwnIDUIContainerController: ObservableObject {
         handlers.forEach { $0(abortReason) }
     }
 
-    internal var isOpened: Bool {
-        switch state {
-        case .opened:
-            return true
-        case .closing(_, let wasOpened):
-            return wasOpened
-        case .idle, .closed:
-            return false
-        }
-    }
-
     internal var isClosed: Bool {
         if case .closed = state { return true }
         return false
@@ -119,6 +117,11 @@ public final class OwnIDUIContainerController: ObservableObject {
         case .idle, .opened:
             return false
         }
+    }
+
+    internal var isInputReady: Bool {
+        guard case .opened(let isInputReady) = state else { return false }
+        return isInputReady
     }
 
     internal func requestDismissWithoutAbort() {
@@ -136,7 +139,7 @@ public final class OwnIDUIContainerController: ObservableObject {
 
     private var currentCloseRequest: CloseRequest? {
         switch state {
-        case .closing(let request, _):
+        case .closing(let request):
             return request
         case .closed(let request):
             return request
@@ -148,9 +151,9 @@ public final class OwnIDUIContainerController: ObservableObject {
     private func requestClose(_ request: CloseRequest) {
         switch state {
         case .idle:
-            state = .closing(request: request, wasOpened: false)
+            state = .closing(request: request)
         case .opened:
-            state = .closing(request: request, wasOpened: true)
+            state = .closing(request: request)
         case .closing, .closed:
             return
         }
@@ -175,9 +178,8 @@ extension View {
     ///
     /// Use this when you pass an ``OwnIDUIContainerController`` to ``OwnIDOperationView`` and present that view inside
     /// your own sheet, full-screen cover, dialog, or overlay. Attach the modifier to the root of the presented
-    /// content. The SDK then tracks when the container appears and disappears, and suppresses text input focus while
-    /// dismissal is in progress. Built-in operation content uses the open signal to delay one-time initial focus until
-    /// the surrounding presentation is ready.
+    /// content. The SDK then tracks when the container appears and disappears, delays initial text input focus until
+    /// the container is open, and suppresses focus while dismissal is in progress.
     ///
     /// Do not attach the same controller to multiple simultaneously visible containers.
     ///

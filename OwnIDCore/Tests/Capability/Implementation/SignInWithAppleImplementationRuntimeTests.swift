@@ -16,7 +16,8 @@ struct SignInWithAppleImplementationRuntimeTests {
         let signIn = makeSignIn(factory: factory)
         let task = Task {
             await signIn.signIn(
-                params: SignInWithSocialParams(clientID: "client-id", nonce: "server-nonce", window: nil)
+                window: makeTestWindow(),
+                params: SignInWithSocialParams(clientID: "client-id", nonce: "server-nonce")
             )
         }
         let controller = try await factory.waitForController()
@@ -42,7 +43,7 @@ struct SignInWithAppleImplementationRuntimeTests {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: nil))
         }
         let controller = try await factory.waitForController()
         let state = try #require(controller.request.state)
@@ -64,7 +65,7 @@ struct SignInWithAppleImplementationRuntimeTests {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: nil))
         }
         let controller = try await factory.waitForController()
 
@@ -87,7 +88,7 @@ struct SignInWithAppleImplementationRuntimeTests {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: nil))
         }
         let controller = try await factory.waitForController()
 
@@ -100,7 +101,7 @@ struct SignInWithAppleImplementationRuntimeTests {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: nil))
         }
         let controller = try await factory.waitForController()
 
@@ -120,7 +121,7 @@ struct SignInWithAppleImplementationRuntimeTests {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: nil))
         }
         let controller = try await factory.waitForController()
 
@@ -134,7 +135,7 @@ struct SignInWithAppleImplementationRuntimeTests {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: nil))
         }
         let controller = try await factory.waitForController()
 
@@ -147,7 +148,7 @@ struct SignInWithAppleImplementationRuntimeTests {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: nil))
         }
         let controller = try await factory.waitForController()
 
@@ -156,16 +157,62 @@ struct SignInWithAppleImplementationRuntimeTests {
         try expectFailure(await task.value, message: "Error")
     }
 
+    @Test func `Pre-canceled request leaves the active request intact and permits a normal retry`() async throws {
+        let factory = RecordingAppleAuthorizationControllerFactory()
+        let signIn = makeSignIn(factory: factory)
+        let activeTask = Task { @MainActor in
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: "active"))
+        }
+        let activeController = try await factory.waitForController()
+
+        let canceledTask = Task { @MainActor in
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: "canceled"))
+        }
+        canceledTask.cancel()
+
+        let canceledReason = try requireCancellation(await canceledTask.value)
+        #expect(canceledReason.description == Reason.systemError(details: "Operation canceled").description)
+        #expect(factory.controllers.count == 1)
+        #expect(activeController.cancelCallCount == 0)
+
+        let activeState = try #require(activeController.request.state)
+        activeController.complete(
+            with: SignInWithAppleAuthorization(
+                user: "active-user",
+                state: activeState,
+                identityToken: Data("active-token".utf8)
+            )
+        )
+        let activeSuccess = try requireSuccess(await activeTask.value)
+        #expect(activeSuccess.id == "active-user")
+
+        let retryTask = Task { @MainActor in
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: "retry"))
+        }
+        let retryController = try await factory.waitForController(at: 1)
+        let retryState = try #require(retryController.request.state)
+        retryController.complete(
+            with: SignInWithAppleAuthorization(
+                user: "retry-user",
+                state: retryState,
+                identityToken: Data("retry-token".utf8)
+            )
+        )
+        let retrySuccess = try requireSuccess(await retryTask.value)
+        #expect(retrySuccess.id == "retry-user")
+        #expect(retrySuccess.idToken == "retry-token")
+    }
+
     @Test func `Restart cancels prior request and ignores its late callback`() async throws {
         let factory = RecordingAppleAuthorizationControllerFactory()
         let signIn = makeSignIn(factory: factory)
         let firstTask = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: "first", window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: "first"))
         }
         let firstController = try await factory.waitForController()
 
         let secondTask = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: "second", window: nil))
+            await signIn.signIn(window: makeTestWindow(), params: SignInWithSocialParams(clientID: "client-id", nonce: "second"))
         }
         let secondController = try await factory.waitForController(at: 1)
 
@@ -206,7 +253,8 @@ struct SignInWithAppleImplementationRuntimeTests {
         let signIn = makeSignIn(factory: factory)
         let task = Task {
             await signIn.signIn(
-                params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: expectedWindow)
+                window: expectedWindow,
+                params: SignInWithSocialParams(clientID: "client-id", nonce: nil)
             )
         }
         let controller = try await factory.waitForController()
@@ -217,34 +265,21 @@ struct SignInWithAppleImplementationRuntimeTests {
         _ = await task.value
     }
 
-    @Test func `Presentation anchor falls back to active context window`() async throws {
-        let factory = RecordingAppleAuthorizationControllerFactory()
-        let expectedWindow = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 640))
-        let contextProvider = FixedWindowUIContextProvider(activeWindow: expectedWindow)
-        let signIn = makeSignIn(factory: factory, uiContextProvider: contextProvider)
-        let task = Task {
-            await signIn.signIn(params: SignInWithSocialParams(clientID: "client-id", nonce: nil, window: nil))
-        }
-        let controller = try await factory.waitForController()
-        let callbackController = ASAuthorizationController(authorizationRequests: [controller.request])
-
-        #expect(signIn.presentationAnchor(for: callbackController) === expectedWindow)
-        #expect(contextProvider.activeWindowCallCount == 1)
-        controller.complete(with: ASAuthorizationError(.canceled))
-        _ = await task.value
-    }
 }
 
 @MainActor
 private func makeSignIn(
-    factory: RecordingAppleAuthorizationControllerFactory,
-    uiContextProvider: any UIContextProvider = FixedWindowUIContextProvider(activeWindow: nil)
+    factory: RecordingAppleAuthorizationControllerFactory
 ) -> SignInWithAppleImpl {
     SignInWithAppleImpl(
-        uiContextProvider: uiContextProvider,
         logger: nil,
         authorizationControllerFactory: { factory.makeController(request: $0) }
     )
+}
+
+@MainActor
+private func makeTestWindow() -> UIWindow {
+    UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 640))
 }
 
 private func requireSuccess(
@@ -348,25 +383,6 @@ private final class RecordingAppleAuthorizationController: SignInWithAppleAuthor
 
     func complete(with error: any Error) {
         delegate?.authorizationController(self, didCompleteWithError: error)
-    }
-}
-
-@MainActor
-private final class FixedWindowUIContextProvider: UIContextProvider, @unchecked Sendable {
-    private let window: UIWindow?
-    private(set) var activeWindowCallCount = 0
-
-    init(activeWindow: UIWindow?) {
-        window = activeWindow
-    }
-
-    func activeWindow() -> UIWindow? {
-        activeWindowCallCount += 1
-        return window
-    }
-
-    func topMostViewController(_ window: UIWindow?) -> UIViewController? {
-        window?.rootViewController
     }
 }
 

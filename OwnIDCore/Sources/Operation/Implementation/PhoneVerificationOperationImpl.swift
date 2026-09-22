@@ -108,12 +108,11 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
                         if let provided = resolvedParams.loginID {
                             loginID = provided
                         } else {
-                            do {
+                            do throws(LoginIDResolutionError) {
                                 loginID = try self.context?.loginID(loginIDValidator: self.loginIDValidator)
                             } catch let error {
                                 if accessToken == nil {
-                                    let contextError = error as! LoginIDResolutionError
-                                    let failure = contextError.toPhoneVerificationOperationFailure()
+                                    let failure = error.toPhoneVerificationOperationFailure()
                                     guard await self.isAlive() else { return }
                                     await self.stream.yield(.complete(.failure(failure)))
                                     continue

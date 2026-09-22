@@ -25,7 +25,7 @@ Use this page as a compact map of the public iOS SDK documentation.
 
 ## Integration
 
-- [Operation UI](integration/operation-ui.md): app-hosted SDK operation screens.
+- [Operation UI](integration/operation-ui.md): SDK-hosted default and app-hosted operation screens.
 - [WebBridge](integration/webbridge.md): OwnID actions from app-hosted WKWebView content.
 
 ## Customization

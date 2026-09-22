@@ -13,8 +13,8 @@ Source docs:
 - `../../../../docs/setup/context.md`
 - `../../../../docs/setup/providers.md`
 
-SDK contracts: `OwnID`, `OwnIDNamespace`, `Context`, `Authz`, and
-`OwnIDProvidersRegistrar`.
+SDK contracts: `OwnID`, `OwnIDInstance`, `OwnIDNamespace`, `Context`, `Authz`,
+and `OwnIDProvidersRegistrar`.
 
 ## Mental Model
 
@@ -25,6 +25,10 @@ Namespace handles can carry two independent payloads:
 
 Start from the top-level namespace handle for the surface being integrated, such
 as `OwnID.flows` or `OwnID.webBridge`.
+
+`OwnIDInstance` is also a public scope handle. Use `withProviders` to derive a
+child provider scope, or `setProviders` to update that instance's current scope
+in place; see [Namespace Handles](../../../../docs/setup/namespace-handles.md#namespace-model).
 
 `withContext` and `withProviders` return derived handles. Build the derived handle
 before calling `start()`, `create()`, or another surface entry point, then keep

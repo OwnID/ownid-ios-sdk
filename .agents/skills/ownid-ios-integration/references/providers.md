@@ -11,8 +11,8 @@ Source docs:
 - `../../../../docs/setup/namespace-handles.md`
 
 SDK contracts: `OwnID.setProviders`, `withProviders`,
-`OwnIDProvidersRegistrar`, `SessionCreate`, `PasswordAuthenticate`, and
-`SignInWithSocial`.
+`OwnIDProvidersRegistrar`, `SessionCreate`, `PasswordAuthenticate`,
+`SignInWithSocial`, and `UIContextProvider`.
 
 ## Contents
 
@@ -37,6 +37,8 @@ Provider categories:
   authentication boundary.
 - Social providers such as Google: let supported OwnID social steps call the
   app's provider SDK and receive a provider ID token.
+- `uiContext`: bind native presentation to an app-owned window, window scene, or
+  custom UI-context provider. See [UI Context](../../../../docs/setup/providers.md#ui-context).
 - Sign in with Apple is built into `OwnIDCore`; it is not registered through
   `OwnIDProvidersRegistrar`.
 - Source-only identity helpers can wire provider callbacks for a specific
@@ -57,6 +59,10 @@ Provider categories:
 - Complete each provider registration with its required handler: `create` for
   `sessionCreate`, `authenticate` for `passwordAuthenticate`, and `signIn` for
   `signInWithGoogle`.
+- For a direct UI-backed call with a known owner, bind `uiContext(window)` or
+  `uiContext(windowScene)` in scoped `withProviders` on the main actor. Use a
+  top-level binding only when later top-level calls should follow that same
+  owner. Built-in Boost widgets and WebBridge bind their own UI hosts.
 
 ## Scope Semantics
 
@@ -86,6 +92,10 @@ Critical contracts:
   the app backend or identity provider and returns Swift
   `Result<SessionOutput, any Error & Sendable>`.
 - Google/social provider handlers return `SocialResult`.
+- Custom social `signIn` handlers receive the selected `UIWindow`; use that exact
+  window as the provider SDK's presentation anchor. See [UI Context](../../../../docs/setup/providers.md#ui-context).
+- A custom `UIContextProvider` is authoritative. If it returns `.failure`, the
+  SDK reports that failure instead of falling back to another provider.
 - `sessionCreate` `create`/`isAvailable` and `passwordAuthenticate`
   `authenticate`/`isAvailable` callbacks run on the main actor. Google
   `signIn`, `cancel`, and `signOut` also run on the main actor.
@@ -113,6 +123,8 @@ the helper.
 - Shared providers are registered through top-level `OwnID.setProviders`;
   scoped overrides stay with the derived surface handle that uses them.
 - The integration registers only provider types the selected surface can call.
+- Direct UI-backed calls bind the intended owner when required; built-in Boost
+  widget and WebBridge host binding stays owned by those surfaces.
 - Passwords remain inside the app backend or identity-provider boundary.
 - Provider callbacks return the exact result types required by the selected SDK
   release.

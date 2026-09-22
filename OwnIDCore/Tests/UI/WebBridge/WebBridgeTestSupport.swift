@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UIKit
 import WebKit
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -95,51 +96,92 @@ func tearDownWebBridgeTestWebView(_ webView: WKWebView) {
 }
 
 @MainActor
+final class WebBridgeTestUIContextProvider: UIContextProvider, @unchecked Sendable {
+    var result: UIContextResult
+
+    init(result: UIContextResult) {
+        self.result = result
+    }
+
+    convenience init(window: UIWindow) {
+        self.init(result: .windowOnly(window))
+    }
+
+    convenience init(window: UIWindow, controller: UIViewController) {
+        self.init(result: .windowAndController(window: window, controller: controller))
+    }
+
+    func current() -> UIContextResult {
+        result
+    }
+}
+
+/// Keeps page-executing fixtures in a visible view hierarchy until their callbacks finish.
+@MainActor
+final class WebBridgeTestWebViewHost {
+    let window: UIWindow
+    let controller: UIViewController
+    private weak var webView: WKWebView?
+
+    init(_ webView: WKWebView) {
+        self.webView = webView
+        window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 640))
+        controller = UIViewController()
+        window.rootViewController = controller
+        controller.view.frame = window.bounds
+        webView.frame = controller.view.bounds
+        webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        controller.view.addSubview(webView)
+        window.isHidden = false
+        controller.view.layoutIfNeeded()
+    }
+
+    func tearDown() {
+        webView?.removeFromSuperview()
+        window.isHidden = true
+        window.rootViewController = nil
+    }
+}
+
+@MainActor
 func loadWebBridgeTestHTML(
     _ html: String,
     baseURL: URL,
     in webView: WKWebView
 ) async throws {
+    try Task.checkCancellation()
     let previousNavigationDelegate = webView.navigationDelegate
     defer { webView.navigationDelegate = previousNavigationDelegate }
 
-    let maxAttempts = 3
-    var lastError: (any Error)?
-    for attempt in 1...maxAttempts {
-        let navigationProbe = WebBridgeTestNavigationProbe()
-        webView.navigationDelegate = navigationProbe
+    let navigationProbe = WebBridgeTestNavigationProbe()
+    webView.navigationDelegate = navigationProbe
+    webView.stopLoading()
+    webView.loadHTMLString(html, baseURL: baseURL)
+    do {
+        try await navigationProbe.waitForFinish("WebBridge HTML navigation: \(baseURL.absoluteString)")
+    } catch {
         webView.stopLoading()
-        webView.loadHTMLString(html, baseURL: baseURL)
-        do {
-            try await withFlowTimeout("wait for WebBridge test HTML load attempt \(attempt)", seconds: 10) {
-                try await navigationProbe.waitForFinish()
-            }
-            return
-        } catch let error as FlowTestTimeout {
-            lastError = error
-            guard attempt < maxAttempts else { break }
-        } catch {
-            throw error
-        }
+        throw error
     }
-    throw lastError ?? FlowTestTimeout.timedOut("wait for WebBridge test HTML load")
 }
 
 @MainActor
 @discardableResult
 func evaluateWebBridgeTestJavaScript(
     _ script: String,
-    in webView: WKWebView
+    in webView: WKWebView,
+    seconds: UInt64 = 5
 ) async throws -> String? {
-    try await withCheckedThrowingContinuation { continuation in
-        webView.evaluateJavaScript(script) { result, error in
-            if let error {
-                continuation.resume(throwing: error)
-            } else {
-                continuation.resume(returning: result as? String)
-            }
+    try Task.checkCancellation()
+    let results = AsyncSignalRecorder<Result<String?, any Error>>()
+    webView.evaluateJavaScript(script) { result, error in
+        if let error {
+            results.append(.failure(error))
+        } else {
+            results.append(.success(result as? String))
         }
     }
+    return try await results.waitForFirst("WebBridge JavaScript evaluation", seconds: seconds) { _ in true }.get()
 }
 
 final class WebBridgeScriptCallbackProbe: NSObject, WKScriptMessageHandler, @unchecked Sendable {
@@ -147,21 +189,25 @@ final class WebBridgeScriptCallbackProbe: NSObject, WKScriptMessageHandler, @unc
 
     let handlerName: String
 
-    private let message = CapturedFlowValue<String>()
+    private let messages = AsyncSignalRecorder<String>()
 
     init(handlerName: String = WebBridgeScriptCallbackProbe.handlerName) {
         self.handlerName = handlerName
     }
 
-    func waitForMessage() async -> String {
-        await message.wait()
+    func waitForMessage(_ description: String = "WebBridge script callback") async throws -> String {
+        try await messages.waitForFirst(description) { _ in true }
+    }
+
+    func waitForMessageCount(_ count: Int) async throws -> [String] {
+        try await messages.waitForCount(count, "WebBridge script callback count \(count)") { _ in true }
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if let body = message.body as? String {
-            self.message.set(body)
+            messages.append(body)
         } else {
-            self.message.set(String(describing: message.body))
+            messages.append(String(describing: message.body))
         }
     }
 }
@@ -203,11 +249,11 @@ private enum WebBridgeTestNavigationError: Error, Sendable {
     case failed(String)
 }
 
-private final class WebBridgeTestNavigationProbe: NSObject, WKNavigationDelegate, @unchecked Sendable {
-    private let result = CapturedFlowValue<WebBridgeTestNavigationResult>()
+final class WebBridgeTestNavigationProbe: NSObject, WKNavigationDelegate, @unchecked Sendable {
+    private let results = AsyncSignalRecorder<WebBridgeTestNavigationResult>()
 
-    func waitForFinish() async throws {
-        switch await result.wait() {
+    func waitForFinish(_ description: String = "WebBridge HTML navigation", seconds: UInt64 = 10) async throws {
+        switch try await results.waitForFirst(description, seconds: seconds, where: { _ in true }) {
         case .finished:
             return
         case .failed(let message):
@@ -216,15 +262,19 @@ private final class WebBridgeTestNavigationProbe: NSObject, WKNavigationDelegate
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        result.set(.finished)
+        results.append(.finished)
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) {
-        result.set(.failed(error.localizedDescription))
+        results.append(.failed(error.localizedDescription))
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
-        result.set(.failed(error.localizedDescription))
+        results.append(.failed(error.localizedDescription))
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        results.append(.failed("WebBridge test web content process terminated"))
     }
 }
 
@@ -315,17 +365,17 @@ final class WebBridgePluginMatrixUserRepository: UserRepository, @unchecked Send
 
 @available(iOS 16.0, *)
 final class WebBridgePluginMatrixPasskey: PasskeyProtocol, @unchecked Sendable {
-    @MainActor func getCredential(assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
+    @MainActor func getCredential(window: UIWindow, assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
         fatalError("Unexpected passkey assertion")
     }
 
-    @MainActor func createCredential(attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
+    @MainActor func createCredential(window: UIWindow, attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
         fatalError("Unexpected passkey attestation")
     }
 }
 
 final class WebBridgePluginMatrixSignInWithApple: SignInWithApple, @unchecked Sendable {
-    @MainActor func signIn(params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
         fatalError("Unexpected Apple sign-in")
     }
 
@@ -335,7 +385,7 @@ final class WebBridgePluginMatrixSignInWithApple: SignInWithApple, @unchecked Se
 }
 
 final class WebBridgePluginMatrixSignInWithGoogle: SignInWithGoogle, @unchecked Sendable {
-    @MainActor func signIn(params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
         fatalError("Unexpected Google sign-in")
     }
 

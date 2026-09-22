@@ -55,8 +55,10 @@ struct OwnIDOperationUIHostingContractTests {
 
     @Test func `Operation UI controller delegates identity settlement and abort`() async throws {
         let delegate = ManualLoginIDCollectOperationController(operationID: OperationID(type: .loginIDCollect, id: "delegated"))
+        let resolver = DIContainerImpl(scopeName: "operation-ui-controller")
         let controller = OwnIDOperationUIController(
             instanceName: InstanceName(value: "operation-ui-controller"),
+            instanceResolver: resolver,
             delegate: delegate
         )
 
@@ -105,6 +107,102 @@ struct OwnIDOperationUIHostingContractTests {
 
         #expect(closeActionCount == 1)
         #expect(containerController.isClosed)
+        #expect(controller.abortDescriptions().isEmpty)
+    }
+
+    @MainActor
+    @Test func `Lifecycle session releases settlement handlers and does not retain late activation`() async {
+        let controller = ManualLoginIDCollectOperationController(
+            operationID: OperationID(type: .loginIDCollect, id: "settlement-handler-release")
+        )
+        let containerController = OwnIDUIContainerController(closeAction: {})
+        let session = OperationLifecycleSession(operationController: controller, usesAppContainer: true)
+        let settledSignal = MainActorSignal()
+        var capture: LifecycleHandlerCapture? = LifecycleHandlerCapture()
+        weak var weakCapture = capture
+
+        session.activate(containerController: containerController, onSettled: { [capture] in
+            _ = capture
+            settledSignal.signal()
+        })
+        capture = nil
+        await controller.settle(.success(LoginID(id: "settled@example.test", type: .email)))
+        await settledSignal.wait()
+        #expect(weakCapture == nil)
+
+        var lateCapture: LifecycleHandlerCapture? = LifecycleHandlerCapture()
+        weak var weakLateCapture = lateCapture
+        session.activate(containerController: containerController, onSettled: { [lateCapture] in _ = lateCapture })
+        lateCapture = nil
+        #expect(weakLateCapture == nil)
+    }
+
+    @MainActor
+    @Test func `Removing an unsettled embedded operation host aborts once as user close`() async throws {
+        let instanceName = InstanceName(value: "embedded-unsettled-\(UUID().uuidString)")
+        OwnID.initialize(instanceName: instanceName) { configuration in
+            configuration.appID = "EmbeddedUnsettled\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+        }
+        defer { OwnID.destroy(instanceName: instanceName) }
+
+        let controller = ManualLoginIDCollectOperationController(
+            operationID: OperationID(type: .loginIDCollect, id: "embedded-unsettled")
+        )
+        let resolver = loginIDCollectContentResolver(
+            scopeName: "operation-ui-hosting-embedded-unsettled",
+            recorder: AppHostedLoginIDCollectContentRecorder()
+        )
+        let host = SwiftUIRuntimeHost(
+            rootView: OperationLifecycleHost(
+                instanceName: instanceName,
+                instanceResolver: resolver,
+                operationController: controller,
+                renderController: controller
+            )
+        )
+        await host.settle()
+
+        host.close()
+        try await waitForAbortCount(1, controller: controller)
+        host.close()
+        await Task.yield()
+
+        #expect(
+            controller.abortDescriptions()
+                == [Reason.userClose(details: "Operation view disappeared").description]
+        )
+    }
+
+    @MainActor
+    @Test func `Removing a settled embedded operation host does not abort`() async throws {
+        let instanceName = InstanceName(value: "embedded-settled-\(UUID().uuidString)")
+        OwnID.initialize(instanceName: instanceName) { configuration in
+            configuration.appID = "EmbeddedSettled\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+        }
+        defer { OwnID.destroy(instanceName: instanceName) }
+
+        let controller = ManualLoginIDCollectOperationController(
+            operationID: OperationID(type: .loginIDCollect, id: "embedded-settled")
+        )
+        let resolver = loginIDCollectContentResolver(
+            scopeName: "operation-ui-hosting-embedded-settled",
+            recorder: AppHostedLoginIDCollectContentRecorder()
+        )
+        let host = SwiftUIRuntimeHost(
+            rootView: OperationLifecycleHost(
+                instanceName: instanceName,
+                instanceResolver: resolver,
+                operationController: controller,
+                renderController: controller
+            )
+        )
+        await host.settle()
+
+        await controller.settle(.success(LoginID(id: "settled@example.test", type: .email)))
+        await host.settle(cycles: 3)
+        host.close()
+        await Task.yield()
+
         #expect(controller.abortDescriptions().isEmpty)
     }
 
@@ -176,13 +274,28 @@ struct OwnIDOperationUIHostingContractTests {
 
     @MainActor
     @Test func `App hosted view aborts and dismisses when instance disappears`() async throws {
-        let controller = SettlingLoginIDCollectOperationController(operationID: OperationID(type: .loginIDCollect, id: "missing-instance"))
+        let instanceName = InstanceName(value: "instance-disappearance-\(UUID().uuidString)")
+        OwnID.initialize(instanceName: instanceName) { configuration in
+            configuration.appID = "InstanceDisappearance\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+        }
+        defer { OwnID.destroy(instanceName: instanceName) }
+
+        let controller = SettlingLoginIDCollectOperationController(
+            operationID: OperationID(type: .loginIDCollect, id: "instance-disappearance")
+        )
         let closeSignal = MainActorSignal()
         let containerController = OwnIDUIContainerController {
             closeSignal.signal()
         }
+        let resolver = try #require(OwnID.getInstanceContainer(instanceName))
+        let contentRecorder = AppHostedLoginIDCollectContentRecorder()
+        registerLoginIDCollectContent(
+            in: resolver,
+            recorder: contentRecorder
+        )
         let operationUIController = OwnIDOperationUIController<LoginID, LoginIDCollectOperationFailure>(
-            instanceName: InstanceName(value: "missing-instance-\(UUID().uuidString)"),
+            instanceName: instanceName,
+            instanceResolver: resolver,
             delegate: controller
         )
         let host = SwiftUIRuntimeHost(
@@ -193,8 +306,15 @@ struct OwnIDOperationUIHostingContractTests {
         )
         defer { host.close() }
 
-        await host.settle()
-        _ = await controller.whenSettled()
+        _ = try await contentRecorder.waitForSnapshot(
+            matching: { _ in true },
+            host: host,
+            description: "operation content before instance destruction"
+        )
+        OwnID.destroy(instanceName: instanceName)
+        _ = try await withSwiftUITestTimeout("instance disappearance settlement", seconds: 2) {
+            await controller.whenSettled()
+        }
         await closeSignal.wait()
         containerController.markClosed()
 
@@ -263,11 +383,12 @@ struct OwnIDOperationUIHostingContractTests {
             operationID: OperationID(type: .loginIDCollect, id: "public-explicit-theme"),
             uiState: testLoginIDCollectUIState(loginIDValue: "public-theme@example.test")
         )
+        let container = try #require(OwnID.getInstanceContainer(instanceName))
         let operationUIController = OwnIDOperationUIController<LoginID, LoginIDCollectOperationFailure>(
             instanceName: instanceName,
+            instanceResolver: container,
             delegate: controller
         )
-        let container = try #require(OwnID.getInstanceContainer(instanceName))
         registerLoginIDCollectContent(in: container, recorder: recorder)
         try #require(container.getOrNil(type: OwnIDThemeStore.self)).set(sdkPresentedTheme)
 
@@ -467,6 +588,19 @@ private func testLoginIDCollectUIState(
     )
 }
 
+@MainActor
+private func waitForAbortCount(
+    _ expectedCount: Int,
+    controller: ManualLoginIDCollectOperationController
+) async throws {
+    try await withSwiftUITestTimeout("embedded operation disappearance", seconds: 2) {
+        while !Task.isCancelled {
+            if controller.abortDescriptions().count >= expectedCount { return }
+            await Task.yield()
+        }
+    }
+}
+
 private final class AppHostedLoginIDCollectOperation: LoginIDCollectOperation, @unchecked Sendable {
     let operationType: OperationType = .loginIDCollect
 
@@ -524,6 +658,8 @@ private final class RecordingLoginIDCollectOperationController: LoginIDCollectOp
     }
 }
 
+private final class LifecycleHandlerCapture {}
+
 private final class ManualLoginIDCollectOperationController: LoginIDCollectOperationController, @unchecked Sendable {
     let operationID: OperationID
 
@@ -544,7 +680,19 @@ private final class ManualLoginIDCollectOperationController: LoginIDCollectOpera
 
     @MainActor
     func stateStream() -> AsyncStream<LoginIDCollectOperationState> {
-        AsyncStream { continuation in continuation.finish() }
+        AsyncStream { continuation in
+            continuation.yield(
+                .active(
+                    uiState: LoginIDCollectUIState(
+                        loginIDValue: "embedded@example.test",
+                        collectableLoginIDTypes: [.email],
+                        onLoginIDChange: { _ in },
+                        onContinue: {},
+                        onCancel: {}
+                    )
+                )
+            )
+        }
     }
 
     func settle(_ result: OperationResult<LoginID, LoginIDCollectOperationFailure>) async {
@@ -730,7 +878,7 @@ private final class MainActorSignal {
 }
 
 private final class SentinelOperationUIContainer: OperationUIContainer, @unchecked Sendable {
-    @MainActor func show<Controller: OperationController>(controller: Controller) {}
+    @MainActor func show<Controller: OperationController>(controller: Controller) throws {}
 }
 
 private final class AppHostedLoginIDCollectRecorder: @unchecked Sendable {

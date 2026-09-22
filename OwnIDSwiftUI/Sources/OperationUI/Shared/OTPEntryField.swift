@@ -233,7 +233,9 @@ private struct OTPTextInputBridge: UIViewRepresentable {
         }
 
         fileprivate func textFieldDidEndEditing(_ textField: UITextField) {
-            onFocusChanged(false)
+            Task { @MainActor [weak self] in
+                self?.onFocusChanged(false)
+            }
         }
 
         @objc

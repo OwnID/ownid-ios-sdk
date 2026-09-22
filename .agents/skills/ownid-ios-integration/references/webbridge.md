@@ -75,12 +75,17 @@ Attach before `load(...)`; reload the page after a successful attach if it was
 already loaded. `attach(...)` and `detach()` are main-actor calls from the UI
 owner that controls the `WKWebView`.
 
+The attached `WKWebView` supplies the presentation context for bridge-native
+passkey and social UI. A separately registered `uiContext` does not replace
+that bridge-local context.
+
 Configure the trusted-page `WKWebView` so the OwnID Web SDK JavaScript can
 run, while keeping the host app's normal web view hardening in place.
 
 `attach(...)` returns `nil` on success and `WebBridgeError` on failure. Handle
 attachment failure before loading a page that requires native bridge
-capabilities.
+capabilities. A failed attach does not consume the bridge, so retry the same
+instance after correcting the cause.
 
 ## Implementation Pattern
 
@@ -116,11 +121,9 @@ bridge. Configure `OwnID.webBridge.defaultPluginFactories` before `create()` so
 new bridges receive the intended defaults.
 
 Create one fresh bridge per `WKWebView` session. Keep a strong reference while
-the page is active. Detach when the session ends.
-
-Detaching does not remove `WKUserScript` entries already added to the
-`WKUserContentController`; use a new `WKWebView`/configuration when the next
-session needs a clean content controller.
+the page is active. After a successful attach, the bridge is single-use:
+`detach()` is terminal and a later attach requires a fresh bridge. Detach when
+the session ends.
 
 ## Validation
 

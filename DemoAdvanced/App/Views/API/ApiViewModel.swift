@@ -501,15 +501,13 @@ final class ApiViewModel: ObservableObject {
                                         let appleUI = try container.getOrThrow(type: (any SignInWithAppleUI).self)
                                         socialResult = await appleUI.signIn(
                                             clientID: controller.challenge.clientID,
-                                            nonce: controller.challenge.challengeID.value,
-                                            window: nil
+                                            nonce: controller.challenge.challengeID.value
                                         )
                                     case .google:
                                         let googleUI = try container.getOrThrow(type: (any SignInWithGoogleUI).self)
                                         socialResult = await googleUI.signIn(
                                             clientID: controller.challenge.clientID,
-                                            nonce: controller.challenge.challengeID.value,
-                                            window: nil
+                                            nonce: controller.challenge.challengeID.value
                                         )
                                     }
                                 } catch {

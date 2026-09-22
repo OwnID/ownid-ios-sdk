@@ -1,5 +1,6 @@
 import Foundation
 @_spi(OwnIDInternal) import OwnIDCore
+import UIKit
 
 /// Manages Boost login widget state and effects.
 ///
@@ -10,6 +11,7 @@ import Foundation
 /// The view model owns Boost login flow execution and exposes renderable state plus one-off effects. The app owns
 /// collecting those effects while its widget UI is active and mapping them to session, navigation, cancel, or error
 /// handling.
+/// Releasing the view model while a flow is active aborts the flow and ends its public streams.
 @MainActor
 public final class OwnIDLoginWidgetViewModel {
     /// Current state that can be rendered by a widget view.
@@ -85,10 +87,14 @@ public final class OwnIDLoginWidgetViewModel {
 
     private enum FlowStarter {
         case defaultInstance(InstanceName)
-        case custom(@MainActor @Sendable (BoostFlowContext) throws -> any BoostLoginFlowController)
+        case custom(@MainActor @Sendable (UIWindow, BoostFlowContext) throws -> any BoostLoginFlowController)
     }
 
     private let flowStarter: FlowStarter
+    private var logger: OwnIDLogRouter? {
+        guard case .defaultInstance(let instanceName) = flowStarter else { return nil }
+        return OwnID.getInstanceContainer(instanceName)?.getOrNil(type: OwnIDLogRouter.self)
+    }
     private var state: State = .idle {
         didSet {
             let nextState = UIState(isRunning: state == .running)
@@ -108,12 +114,14 @@ public final class OwnIDLoginWidgetViewModel {
 
     /// Creates a login widget view model with a custom login starter.
     ///
-    /// Use this initializer when your app needs to inject a custom flow starter, for example in custom widget UI. The
-    /// starter owns any app-specific flow wiring and should return a controller that settles exactly once.
+    /// Use this initializer when your app needs to provide custom flow wiring, for example in custom widget UI. The
+    /// closure receives the window hosting the widget and the flow context; use that window for any UI-dependent
+    /// provider configuration and return a controller that settles exactly once. If the closure throws, the view model
+    /// accepts no controller, returns to idle, and emits ``UIEffect/error(_:)``.
     ///
-    /// - Parameter boostLoginFlowStarter: Closure that starts login for the provided flow context.
+    /// - Parameter boostLoginFlowStarter: Closure that starts login for the provided window and flow context.
     public init(
-        boostLoginFlowStarter: @escaping @MainActor @Sendable (BoostFlowContext) throws -> any BoostLoginFlowController
+        boostLoginFlowStarter: @escaping @MainActor @Sendable (UIWindow, BoostFlowContext) throws -> any BoostLoginFlowController
     ) {
         self.flowStarter = .custom(boostLoginFlowStarter)
     }
@@ -151,10 +159,14 @@ public final class OwnIDLoginWidgetViewModel {
     /// The flow context uses the widget-button source.
     ///
     /// Successful completion emits ``UIEffect/login(_:)``. Flow cancellation emits ``UIEffect/canceled(_:)``. Flow
-    /// failures and starter errors emit ``UIEffect/error(_:)`` and return the view model to idle.
+    /// failures and starter errors emit ``UIEffect/error(_:)`` and return the view model to idle. If `window` is `nil`,
+    /// the flow is not started and the error effect reports that the UI context is unavailable.
     ///
-    /// - Parameter loginID: Optional raw login ID to pass into the flow context.
-    public func startFlow(loginID: String?) {
+    /// - Parameters:
+    ///   - window: Window that currently hosts the widget. The default flow uses it as its UI context and a custom
+    ///     starter receives it unchanged. Pass `nil` when the widget is not attached.
+    ///   - loginID: Optional raw login ID to pass into the flow context.
+    public func startFlow(window: UIWindow?, loginID: String?) {
         guard state != .running else { return }
         state = .running
 
@@ -168,6 +180,12 @@ public final class OwnIDLoginWidgetViewModel {
         }
 
         do {
+            guard let window else {
+                throw UIContextResolutionError(
+                    reason: .unavailable,
+                    message: "The widget is not currently attached to a window."
+                )
+            }
             let controller: any BoostLoginFlowController
             switch flowStarter {
             case .defaultInstance(let instanceName):
@@ -183,9 +201,11 @@ public final class OwnIDLoginWidgetViewModel {
                     state = .idle
                     return
                 }
-                controller = instance.flows.boost.login.start(flowContext)
+                controller = instance.flows
+                    .withProviders { $0.uiContext(window) }
+                    .boost.login.start(flowContext)
             case .custom(let starter):
-                controller = try starter(flowContext)
+                controller = try starter(window, flowContext)
             }
             currentController = controller
 
@@ -207,6 +227,10 @@ public final class OwnIDLoginWidgetViewModel {
         } catch {
             currentController = nil
             settleTask = nil
+
+            if error is UIContextResolutionError {
+                logger?.logW(source: Self.self, prefix: "startFlow", message: "UI context resolution failed", cause: error)
+            }
 
             let message = error.localizedDescription.isEmpty ? "Failed to start login flow" : error.localizedDescription
             let wrappedError = BoostLoginFlowFailure.unexpected(

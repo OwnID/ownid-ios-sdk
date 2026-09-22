@@ -6,8 +6,19 @@ import Foundation
 /// This is an internal SDK module contract, not a public app integration contract. The module owns operation UI content,
 /// SDK-owned presentation support, and theme propagation for the optional UI product. Apps customize operation content
 /// through public UI APIs rather than by calling this module directly.
-@objc
-@_spi(OwnIDInternal) public final class OwnIDUIModule: NSObject, OwnIDModule {
+@objc(OwnIDSwiftUIModule)
+@_spi(OwnIDInternal) public final class OwnIDSwiftUIModule: NSObject, OwnIDModule {
+
+    public static var moduleResources: (name: String, bundle: Bundle?) {
+        #if SWIFT_PACKAGE
+            let bundle = Bundle.module
+        #else
+            let bundle = [Bundle(for: Self.self), Bundle.main]
+                .compactMap { $0.url(forResource: "OwnIDSwiftUI", withExtension: "bundle") }
+                .compactMap(Bundle.init(url:)).first
+        #endif
+        return ("OwnIDSwiftUI", bundle)
+    }
 
     /// Injects the default UI dependencies into an OwnID instance container.
     ///

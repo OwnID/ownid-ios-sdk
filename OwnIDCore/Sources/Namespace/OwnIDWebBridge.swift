@@ -25,6 +25,8 @@ public final class OwnIDWebBridge: @unchecked Sendable, OwnIDNamespace {
     ///
     /// The returned bridge starts with fresh plugin instances created from the current ``defaultPluginFactories``.
     /// Definitions that cannot create a plugin are skipped with a warning so the rest of the bridge can still be used.
+    /// After a successful attach, UI actions from that bridge use the presentation context associated with its
+    /// attached `WKWebView`.
     ///
     /// You can further adjust the returned bridge through ``WebBridge/plugins`` before calling
     /// ``WebBridge/attach(webView:allowedOriginRules:)``, for example to add or replace plugins for that specific
@@ -32,10 +34,7 @@ public final class OwnIDWebBridge: @unchecked Sendable, OwnIDNamespace {
     ///
     /// - Returns: A new bridge instance for a single WKWebView session.
     public func create() -> any WebBridge {
-        WebBridgeImpl.create(
-            resolver: container,
-            initialPlugins: pluginFactoryStore.instantiateAll(resolver: container)
-        )
+        WebBridgeImpl.create(resolver: container, pluginFactoryStore: pluginFactoryStore)
     }
 
     /// Default plugin factories used for future ``WebBridge`` instances created by this namespace.

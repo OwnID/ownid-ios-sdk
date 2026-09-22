@@ -233,6 +233,13 @@ Start with the built-in widgets and use their customization parameters:
 - `OwnIDBoostButton` when the app fully owns flow start and state mapping but
   wants the shared Boost row layout.
 
+Built-in widgets bind each new flow to their current host window. For custom
+widget UI that reuses widget state and callback mapping, initialize the
+corresponding view model with `boostLoginFlowStarter` or
+`boostCreatePasskeyFlowStarter`. Scope the flow started by that closure with the
+provided `UIWindow`; do not select a different presentation owner.
+Follow the canonical [custom UI guidance](../../../../docs/flows/boost-flow.md#use-your-own-ui).
+
 ## Integration Checklist
 
 - `OwnIDSwiftUI` is present for Boost widgets; `OwnIDCore` is also a direct

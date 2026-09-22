@@ -35,6 +35,7 @@ Pick the narrowest SDK integration layer that matches the app requirement.
 | Change Boost widget text for one screen | `BoostWidgetStrings` on the widget | Prefer SDK localization for global language behavior. |
 | Force SDK UI language | `languages` during initialization or `OwnID.setLanguage(...)` | Language codes with optional regions. This switches from automatic system language tracking to explicit values. |
 | Replace widget icon/checkmark/spinner/trailing text | Boost widget modifiers/slots | The widget still owns throttling, flow state, callbacks, and accessibility label source. |
+| Use the SDK's default operation presentation | Start the supported operation without `appHostedComponent` | See [SDK-Hosted Default UI](../../../../docs/integration/operation-ui.md#sdk-hosted-default-ui) and [UI Context](../../../../docs/setup/providers.md#ui-context) for the canonical contract. |
 | Put supported operation UI inside app layout/dialog/sheet | `appHostedComponent` plus `OwnIDOperationView` | Supported for login ID collection, email verification, and phone verification. |
 
 ## Themes And Colors

@@ -167,6 +167,8 @@ Run `passkeys.auth` only when `.passkeyAuth` is present in the current requireme
 
 OwnID passkey operations delegate to Apple's AuthenticationServices framework. Availability and runtime results depend on iOS version, entitlements, provisioning profile, AASA/domain setup, tenant configuration, and available credentials.
 
+Native passkey UI also needs a presentation window. OwnID selects an eligible foreground window by default; for a multi-window app, bind the active window or scene (or a custom `UIContextProvider`) through the provider scope used by this Headless handle. See [UI Context](../setup/providers.md#ui-context).
+
 Check availability, start the operation, keep the controller strongly referenced until settlement, and finish login with the returned Access Token. A local controller is enough only when the calling task owns the whole step; otherwise keep it in owner state and call `abort(reason:)` when the owner cancels or is torn down.
 
 ```swift

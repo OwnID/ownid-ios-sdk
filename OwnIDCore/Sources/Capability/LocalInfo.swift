@@ -2,23 +2,24 @@ import Foundation
 
 /// Process-wide local application and device information exposed through OwnID SDK instances.
 ///
-/// - Values are derived from the host application and device at root SDK initialization time.
+/// - Values are derived from the host application, device, and bundled module metadata when the SDK first initializes in the process.
 /// - Shared by all SDK instances within the current process.
 /// - Values can be included in SDK request headers and diagnostic or analytics metadata.
-/// - The correlation ID is a process/root SDK lifetime value for request correlation, not a persisted user or
+/// - The correlation ID is a process lifetime value for request correlation, not a persisted user or
 ///   device ID.
 /// - Biometric/device flags are for analytics and risk signals only, not access control.
 ///   The SDK does not pre-block passkey operations based on these flags.
 public protocol LocalInfo: Capability, Sendable {
-    /// Name/version pairs for OwnID modules bundled in the app (e.g. core, SwiftUI).
+    /// Name/version pairs for Core and optional OwnID modules discoverable when the SDK first initializes in the process (e.g. SwiftUI).
+    /// An unavailable module version is reported as `0.0.0`.
     var modules: [(name: String, version: String)] { get }
     /// The application bundle identifier.
     var bundleID: String { get }
-    /// The application version string; empty if unavailable.
+    /// The application version string, or `0.0.0` if unavailable.
     var appVersion: String { get }
     /// User-Agent header sent on SDK HTTP requests.
     var userAgent: String { get }
-    /// Random Base64URL string generated once per process/root SDK lifetime and propagated via the baggage header.
+    /// Random Base64URL string generated once per process lifetime and propagated via the baggage header.
     var correlationId: String { get }
 
     /// Whether the app is built in a debug configuration.

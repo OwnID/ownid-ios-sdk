@@ -1,24 +1,26 @@
-# App-Hosted Operation UI
+# Operation UI
 
-Use app-hosted operation UI when the app owns where a supported OwnID operation appears, but still wants the SDK to drive operation state, validation, resend, cancellation, and settlement.
+OwnID supports two presentation paths for supported operation UI: SDK-hosted default UI, or app-hosted UI. In both paths, the SDK drives operation state, validation, resend, cancellation, and settlement.
 
-This applies to login ID collection, email verification, and phone verification. If the SDK should present its default UI container, start the operation directly without [`appHostedComponent`](../../OwnIDSwiftUI/Sources/OwnIDOperationUIHosting.swift).
+This applies to login ID collection, email verification, and phone verification. Use app-hosted UI when the app owns where the operation appears; otherwise, start the operation directly and let the SDK present its default UI container.
 
 ## Contents
 
 - [Minimal Integration](#minimal-integration)
 - [Examples](#examples)
 - [Prerequisites](#prerequisites)
-- [Operation UI Lifecycle](#operation-ui-lifecycle)
+- [SDK-Hosted Default UI](#sdk-hosted-default-ui)
+- [App-Hosted UI Lifecycle](#app-hosted-ui-lifecycle)
 - [App-Owned Presentation](#app-owned-presentation)
+- [Settlement, Cancellation, and Failures](#settlement-cancellation-and-failures)
 - [Custom Content](#custom-content)
 - [UI Error Text](#ui-error-text)
 
 ## Minimal Integration
 
-Choose the operation, apply `appHostedComponent`, keep the [`OwnIDOperationUIController`](../../OwnIDSwiftUI/Sources/OwnIDOperationUIHosting.swift) in SwiftUI state, render [`OwnIDOperationView`](../../OwnIDSwiftUI/Sources/OwnIDOperationView.swift), and await settlement. In the example below, `operations` is the scoped operation namespace for the current integration context.
+Choose the operation, apply `appHostedComponent`, keep the [`OwnIDOperationUIController`](../../OwnIDSwiftUI/Sources/OwnIDOperationUIHosting.swift) in SwiftUI state, render [`OwnIDOperationView`](../../OwnIDSwiftUI/Sources/OwnIDOperationView.swift), and await settlement. In the example below, `operations` is the scoped operation namespace for the current integration context. Build that scoped handle before the availability check and use the same entry for `isAvailable()` and `start()`.
 
-Availability is a preflight signal only. Use it to hide or disable unavailable actions, but still handle cancellation and typed failures from the started operation.
+Availability is a preflight signal only. Use it to hide or disable unavailable actions, but still handle cancellation and typed failures from the started operation. An operation entry remains bound to the OwnID instance and context scope from which it was obtained; reacquire it after that instance is replaced or destroyed.
 
 If the task owner stops awaiting before settlement, keep rendering the controller or explicitly abort the operation during cleanup.
 
@@ -86,10 +88,18 @@ var body: some View {
 
 - Add the SwiftUI SDK as described in [Install](../../README.md#install) and initialize OwnID in [Configuration](../setup/configuration.md).
 - Scope each operation attempt with the login ID, Access Token, or other values that operation needs; see [Context](../setup/context.md) and [Namespace Handles](../setup/namespace-handles.md).
-- Build the app-owned SwiftUI container for embedded, sheet, dialog, overlay, or full-screen presentation and keep the operation UI controller strongly referenced while the UI owns that operation.
+- For app-hosted UI, build the app-owned SwiftUI container for embedded, sheet, dialog, overlay, or full-screen presentation and keep the operation UI controller strongly referenced while the UI owns that operation.
 - Keep app authentication, session, retry, or fallback UI available for unavailable, canceled, or failed operation attempts.
 
-## Operation UI Lifecycle
+## SDK-Hosted Default UI
+
+When the app starts a supported operation directly, without `appHostedComponent`, the optional `OwnIDSwiftUI` product supplies the operation content and presents it in its default bottom-sheet container. The app still owns the returned operation controller and must observe its terminal result; showing the sheet does not turn a cancellation or failure into success.
+
+Start SDK-hosted UI while the app has an active, presentation-capable window. The default context lookup selects an eligible foreground app window. If the app has multiple scenes or must bind the operation to a particular owner, register the intended window, scene, or custom `UIContextProvider` as described in [Providers](../setup/providers.md) before starting. If the SDK cannot present the UI—for example, because no usable presentation context is available or another default presentation is active—the operation settles with a typed failure or cancellation. Keep fallback UI available and do not assume that a call to `start()` means that a sheet was shown.
+
+Use `appHostedComponent` whenever the app needs to own the surface, dismissal binding, or surrounding navigation. Core-only integrations do not include the SwiftUI default operation UI.
+
+## App-Hosted UI Lifecycle
 
 ```mermaid
 flowchart LR
@@ -186,6 +196,20 @@ struct DemoOperationDialog<Success: Sendable, Failure: OperationFailure>: View {
     }
 }
 ```
+
+## Settlement, Cancellation, and Failures
+
+`whenSettled()` delivers exactly one terminal [`OperationResult`](../../OwnIDCore/Sources/Operation/OperationCapability.swift):
+
+| Result | Meaning | App handling |
+| --- | --- | --- |
+| `success(value)` | The operation completed. | Continue with the returned value and update app-owned state. |
+| `canceled(reason)` | The user, app-owned container, timeout, SDK scope, or platform canceled the attempt. | Keep the current app session intact, clear the controller, and offer retry or fallback when appropriate. |
+| `failure(error)` | A typed input, backend, provider, UI-integration, or runtime failure stopped the attempt. | Branch on the concrete failure enum, keep fallback UI available, and start a fresh operation for retry. |
+
+Canceling the task that is waiting in `whenSettled()` does not cancel the operation. If the owner is going away before settlement, keep rendering the controller until it settles or call `abort(reason:)`. A controller represents one run and cannot be restarted; after settlement, call `start()` again on the same bound operation entry to create a new controller. For app-hosted presentation, create a fresh single-use `OwnIDUIContainerController` for the new presentation cycle; `start()` does not create that container. Reacquire the entry only after its OwnID instance is replaced or destroyed.
+
+Built-in and custom content may show recoverable validation or verification errors through `UIError` while the operation remains active. Use `UIError.localizedMessage` or an `errorTextProvider` for visible copy. Use the terminal result and typed failure enum for routing; do not branch on `message`, visible text, or `ErrorCode` alone.
 
 ## Custom Content
 

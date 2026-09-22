@@ -5,8 +5,8 @@ description: >-
   integration in a client iOS app, including Swift Package Manager dependencies
   or CocoaPods git-tag fallback, passkey setup, SDK configuration, namespace
   handles, context, providers, SwiftUI Boost widgets, Elite Flow, Passkey
-  Enrollment, WebBridge, UI customization, app-hosted Operation UI, and
-  v3-to-v4 migration.
+  Enrollment, WebBridge, UI customization, SDK-hosted default and app-hosted
+  Operation UI, and v3-to-v4 migration.
 ---
 
 # OwnID iOS Integration
@@ -45,9 +45,9 @@ itself may not exist in the client app.
 - [context.md](references/context.md): choose OwnID runtime context values:
   `.start(...)`, `.fromToken(...)`, `accountDisplayName`, `withContext`,
   `setContext`, and `clearContext`.
-- [providers.md](references/providers.md): register app-owned provider
-  callbacks for session creation, password authentication, Google/social
-  sign-in, and track Sign in with Apple capability and tenant setup.
+- [providers.md](references/providers.md): configure presentation context and
+  app-owned callbacks for session creation, password authentication, and
+  Google/social sign-in; track Sign in with Apple capability and tenant setup.
 - [boost-flow.md](references/boost-flow.md): add OwnID SwiftUI widgets to
   existing native login or registration forms while keeping app-owned fallback
   paths.
@@ -60,8 +60,8 @@ itself may not exist in the client app.
   app-owned WKWebView whose app/tenant page loads the OwnID Web SDK and needs
   native passkeys, context, stored user, social sign-in, or auth providers.
 - [ui-customization.md](references/ui-customization.md): themes, colors,
-  localization, widgets, and app-hosted Operation UI for login ID collection
-  and verification.
+  localization, widgets, and SDK-hosted default or app-hosted Operation UI for
+  login ID collection and verification.
 - [migration-v3-to-v4.md](references/migration-v3-to-v4.md): move an existing
   v3 integration to the v4 SDK boundary: new products, changed integration
   responsibilities, removed packaged integrations/UI surfaces, and updated
@@ -74,8 +74,8 @@ itself may not exist in the client app.
   lifecycle, and dependency contracts, and maintained demos for working
   host-app composition. Reconcile all of them against the selected SDK release.
 - Include intended integrator surfaces demonstrated by the docs or maintained
-  demos, including app-hosted Operation UI, when production SDK types and
-  behavior support the pattern.
+  demos, including SDK-hosted default and app-hosted Operation UI, when
+  production SDK types and behavior support the pattern.
 - Copy OwnID-published source-only helpers unchanged. Keep app-owned
   dependencies, configuration, and provider registration outside the helper.
 - Preserve the host app's existing auth, session, navigation, loading, error,

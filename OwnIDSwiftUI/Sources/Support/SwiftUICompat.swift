@@ -15,8 +15,7 @@ extension View {
             overlay(alignment: alignment, content: content)
         } else {
             ZStack(alignment: alignment) {
-                self
-                content()
+                TupleView((self, content()))
             }
         }
     }

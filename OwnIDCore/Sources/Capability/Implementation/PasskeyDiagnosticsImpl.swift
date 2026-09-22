@@ -1,4 +1,3 @@
-import Compression
 import Foundation
 
 /// Best-effort runtime diagnostics for iOS passkey relying-party configuration.
@@ -94,11 +93,11 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         }
 
         _ = Task.detached(priority: .utility) { [self, rpId] in
-            await runDiagnostics(rpId: rpId)
+            try? await runDiagnostics(rpId: rpId)
         }
     }
 
-    private func runDiagnostics(rpId: String) async {
+    func runDiagnostics(rpId: String) async throws {
         let bundleId = localInfo.bundleID
         var steps: [Step] = []
         var cdnApps: [String] = []
@@ -109,7 +108,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
 
         var aasaPayload: (data: Data, response: HTTPURLResponse)?
         if let domain = normalizedRpId {
-            let fetch = await fetchAASA(for: domain)
+            let fetch = try await fetchAASA(for: domain)
             steps.append(fetch.step)
             aasaPayload = fetch.payload
         } else {
@@ -132,7 +131,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         }
 
         if let domain = normalizedRpId {
-            let cdn = await fetchCDN(domain: domain, bundleId: bundleId)
+            let cdn = try await fetchCDN(domain: domain, bundleId: bundleId)
             steps.append(cdn.step)
             cdnApps = cdn.apps
         } else {
@@ -163,6 +162,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         }
 
         var builder = "\nPasskeyDiagnostics: \(summary.rawValue)\n"
+        builder += "AASA/CDN entries do not verify the installed app association.\n"
         builder += "Env: Application bundleId=\(bundleId), version=\(localInfo.appVersion), debuggable=\(localInfo.isDebuggable)\n"
         builder += "Env: correlationId=\(localInfo.correlationId)\n"
         builder +=
@@ -227,18 +227,18 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         return (.pass("Validate rpId", details: ["rpId": normalized]), normalized)
     }
 
-    private func fetchAASA(for domain: String) async -> (step: Step, payload: (data: Data, response: HTTPURLResponse)?) {
+    private func fetchAASA(for domain: String) async throws -> (step: Step, payload: (data: Data, response: HTTPURLResponse)?) {
         guard let url = URL(string: "https://\(domain)/.well-known/apple-app-site-association") else {
             return (.fail("Fetch AASA", reason: "Invalid URL", details: ["domain": domain]), nil)
         }
-        return await fetch(url: url, name: "Fetch AASA", enforceJSON: true, checkSize: true)
+        return try await fetch(url: url, name: "Fetch AASA", enforceJSON: true, checkSize: true)
     }
 
-    private func fetchCDN(domain: String, bundleId: String) async -> (step: Step, apps: [String]) {
+    private func fetchCDN(domain: String, bundleId: String) async throws -> (step: Step, apps: [String]) {
         guard let url = URL(string: "https://app-site-association.cdn-apple.com/a/v1/\(domain)") else {
             return (.fail("Apple CDN", reason: "Invalid CDN URL", details: ["domain": domain]), [])
         }
-        let fetch = await fetch(
+        let fetch = try await fetch(
             url: url,
             name: "Apple CDN",
             enforceJSON: false,
@@ -258,7 +258,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         }
     }
 
-    private func fetch(url: URL, name: String, enforceJSON: Bool, checkSize: Bool, failureHeaders: [String] = []) async -> (
+    private func fetch(url: URL, name: String, enforceJSON: Bool, checkSize: Bool, failureHeaders: [String] = []) async throws -> (
         step: Step, payload: (data: Data, response: HTTPURLResponse)?
     ) {
         var request = URLRequest(url: url)
@@ -274,90 +274,41 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
         let session = sessionFactory(config, delegate)
         defer { session.invalidateAndCancel() }
 
-        do {
-            let (data, response) = try await session.dataCompat(for: request, delegate: nil)
-            guard let http = response as? HTTPURLResponse else { return (.fail(name, reason: "Non-HTTP response"), nil) }
-            if (300..<400).contains(http.statusCode) {
-                var details: [String: String] = ["code": "\(http.statusCode)", "url": url.absoluteString]
-                for header in failureHeaders {
-                    if let value = http.value(forHTTPHeaderField: header) {
-                        details[header] = value
-                    }
-                }
-                return (.fail(name, reason: "Redirect not allowed", details: details), nil)
-            }
-            guard http.statusCode == 200 else {
-                var details: [String: String] = ["code": "\(http.statusCode)", "url": url.absoluteString]
-                for header in failureHeaders {
-                    if let value = http.value(forHTTPHeaderField: header) {
-                        details[header] = value
-                    }
-                }
-                return (.fail(name, reason: "HTTP \(http.statusCode)", details: details), nil)
-            }
-            if enforceJSON {
-                let contentType = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
-                if !contentType.starts(with: "application/json") {
-                    return (.fail(name, reason: "Wrong Content-Type", details: ["contentType": contentType]), nil)
+        let (data, response) = try await session.dataCompat(for: request, delegate: nil)
+        guard let http = response as? HTTPURLResponse else { return (.fail(name, reason: "Non-HTTP response"), nil) }
+        if (300..<400).contains(http.statusCode) {
+            var details: [String: String] = ["code": "\(http.statusCode)", "url": url.absoluteString]
+            for header in failureHeaders {
+                if let value = http.value(forHTTPHeaderField: header) {
+                    details[header] = value
                 }
             }
-            var finalData = data
-            let encodingHeader = http.value(forHTTPHeaderField: "Content-Encoding") ?? ""
-            let normalizedEncoding = encodingHeader.lowercased()
-            if checkSize {
-                if !normalizedEncoding.isEmpty && normalizedEncoding != "identity" {
-                    guard let decompressed = decompressBody(data, encoding: normalizedEncoding) else {
-                        return (
-                            .fail(name, reason: "Failed to decompress AASA", details: ["encoding": normalizedEncoding]),
-                            nil
-                        )
-                    }
-                    finalData = decompressed
-                }
-                if finalData.count > 131_072 {
-                    return (.fail(name, reason: "AASA exceeds 128 KB", details: ["size": "\(finalData.count)"]), nil)
-                }
-            }
-            var details: [String: String] = ["code": "\(http.statusCode)", "size": "\(finalData.count)"]
-            if let contentType = http.value(forHTTPHeaderField: "Content-Type") { details["contentType"] = contentType }
-            if !encodingHeader.isEmpty { details["contentEncoding"] = encodingHeader }
-            return (.pass(name, details: details), (finalData, http))
-        } catch {
-            if let urlError = error as? URLError {
-                let details = ["code": "\(urlError.code.rawValue)", "url": url.absoluteString]
-                switch urlError.code {
-                case .timedOut, .networkConnectionLost, .notConnectedToInternet:
-                    return (.warn(name, reason: "Network unavailable", details: details), nil)
-                default:
-                    return (.fail(name, reason: "Network error", details: details), nil)
-                }
-            }
-            return (.fail(name, reason: "Error", details: ["error": error.localizedDescription]), nil)
+            return (.fail(name, reason: "Redirect not allowed", details: details), nil)
         }
-    }
-
-    private func decompressBody(_ data: Data, encoding: String) -> Data? {
-        let primary = encoding.split(separator: ",").first?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
-
-        switch primary {
-        case "", "identity":
-            return data
-        case "gzip", "x-gzip":
-            if let inflated = try? (data as NSData).decompressed(using: .zlib) as Data {
-                return inflated
+        guard http.statusCode == 200 else {
+            var details: [String: String] = ["code": "\(http.statusCode)", "url": url.absoluteString]
+            for header in failureHeaders {
+                if let value = http.value(forHTTPHeaderField: header) {
+                    details[header] = value
+                }
             }
-            guard data.count > 18 else { return nil }
-            let start: Data.Index = 10
-            let end: Data.Index = data.count - 8
-            guard end > start else { return nil }
-            let range: Range<Data.Index> = start..<end
-            let trimmedData = data.subdata(in: range)
-            return try? (trimmedData as NSData).decompressed(using: .zlib) as Data
-        case "deflate", "compress", "zlib":
-            return try? (data as NSData).decompressed(using: .zlib) as Data
-        default:
-            return nil
+            return (.fail(name, reason: "HTTP \(http.statusCode)", details: details), nil)
         }
+        if enforceJSON {
+            let contentType = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
+            if !contentType.starts(with: "application/json") {
+                return (.fail(name, reason: "Wrong Content-Type", details: ["contentType": contentType]), nil)
+            }
+        }
+
+        let encodingHeader = http.value(forHTTPHeaderField: "Content-Encoding") ?? ""
+        if checkSize && data.count > 131_072 {
+            return (.fail(name, reason: "AASA exceeds 128 KB", details: ["size": "\(data.count)"]), nil)
+        }
+        var details: [String: String] = ["code": "\(http.statusCode)", "size": "\(data.count)"]
+        if let contentType = http.value(forHTTPHeaderField: "Content-Type") { details["contentType"] = contentType }
+        if !encodingHeader.isEmpty { details["contentEncoding"] = encodingHeader }
+        return (.pass(name, details: details), (data, http))
     }
 
     private func isIPv4(_ host: String) -> Bool {
@@ -402,7 +353,7 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
 
     private func checkBundleIdentifierMembership(name: String, apps: [String], bundleId: String) -> Step {
         if let match = apps.first(where: { appEntryMatchesBundleIdentifier($0, bundleId: bundleId) }) {
-            return .pass(name, details: ["bundleId": bundleId, "matchedAppEntry": match])
+            return Step(name, status: .pass, reason: "Entry found", details: ["bundleId": bundleId, "matchedAppEntry": match])
         }
         return .fail(
             name,

@@ -13,6 +13,8 @@ A handle returned by `withContext` or `withProviders` keeps the context and prov
 
 Concrete `flows`, `headless`, and `webBridge` namespace handles expose scoped `withContext` and `withProviders` methods. They do not expose the in-place `setContext`, `clearContext`, or `setProviders` methods.
 
+An `OwnIDInstance` handle also exposes `withProviders` and `setProviders`: `withProviders` returns a child instance view, while `setProviders` updates that instance's current scope in place. `OwnID.setProviders` is the corresponding update for the default instance.
+
 > [!IMPORTANT]
 > After destroying or replacing an instance, its old handles are invalid. Discard and release them, and reacquire handles from `OwnID` before further use. When your app holds no other reference to them, associated provider callbacks become releasable after cleanup completes, which may occur after the lifecycle call returns.
 
@@ -20,7 +22,7 @@ Concrete `flows`, `headless`, and `webBridge` namespace handles expose scoped `w
 
 Attach context as close as possible to the concrete flow, operation, API run, or WebBridge session that needs it.
 
-Register shared providers through top-level `OwnID.setProviders` unless one SDK request or session needs an override. Use `withProviders { ... }` only for that override case.
+Register shared providers through top-level `OwnID.setProviders` unless one SDK request or session needs an override. Use `withProviders { ... }` only for that override case. The same distinction applies to an `OwnIDInstance` handle: use `setProviders` for its current scope and `withProviders` for a child scope.
 
 Build the derived handle before checking availability, running preflight, starting, or creating the SDK feature.
 

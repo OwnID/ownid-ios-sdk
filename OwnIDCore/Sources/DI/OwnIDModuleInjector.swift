@@ -1,11 +1,19 @@
 import Foundation
 
-/// SDK module entry point for registering dependencies into an instance container.
+/// SDK module entry point for local metadata and instance dependency registration.
 ///
 /// This is an internal SDK module contract, not a public app integration contract. Implementations own only their
 /// module's bindings. They may depend on Core services and may replace module-owned fallback bindings when that is the
 /// intended extension point.
 @_spi(OwnIDInternal) public protocol OwnIDModule {
+    /// The module's name and owned resource bundle, read synchronously before root initialization completes.
+    ///
+    /// Return only local metadata; this getter must not register dependencies or initialize UI.
+    /// Every module must provide this descriptor. Its bundle contains `sdk-version.xcconfig` with one
+    /// `SDK_VERSION` setting in numeric `major.minor.patch` form. A missing bundle is represented by `nil`;
+    /// unavailable or invalid version resources are reported as `0.0.0` while retaining the module name.
+    static var moduleResources: (name: String, bundle: Bundle?) { get }
+
     /// Registers this module's dependencies into the given container.
     ///
     /// - Throws: If this module cannot complete registration. The injector retains completed registrations, logs the
@@ -20,7 +28,15 @@ import Foundation
 /// registrations completed before a thrown error remain, only that module's remaining work is skipped, the failure is
 /// logged, and later discovered modules continue.
 @_spi(OwnIDInternal) public final class OwnIDModuleInjector {
-    private static let possiblePluginClassNames = ["OwnIDSwiftUI.OwnIDUIModule", "OwnIDReactNativeCoreModule"]
+    private static let possiblePluginClassNames = ["OwnIDSwiftUIModule", "OwnIDReactNativeCoreModule"]
+
+    internal static func moduleResources(
+        classNames: [String] = possiblePluginClassNames,
+        classResolver: (String) -> AnyClass? = NSClassFromString
+    ) -> [(name: String, bundle: Bundle?)] {
+        resolveModuleTypes(classNames: classNames, classResolver: classResolver, logger: nil)
+            .map { $0.moduleResources }
+    }
 
     internal static func injectIntoInstanceContainer(
         container: any DIContainer,

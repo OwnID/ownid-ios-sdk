@@ -343,7 +343,8 @@ Recreate the required v4 SwiftUI customization:
   model ownership;
 - modifiers/slots: `.iconButton`, `.checkmark`, `.orText`;
 - shared `OwnIDTheme` and `OwnIDColors`;
-- app-hosted operation UI via `appHostedComponent` and `OwnIDOperationView`;
+- SDK-hosted default operation UI, or app-hosted operation UI via
+  `appHostedComponent` and `OwnIDOperationView`;
 - language configuration, `BoostWidgetStrings`, and operation UI strings.
 
 Use v4 SwiftUI customization surfaces for appearance changes.
@@ -370,8 +371,8 @@ Before ending the migration, verify by inspection that:
 - Any migrated Passkey Enrollment path uses a current OwnID access token.
 - Fallback password/manual registration flows remain available unless their
   removal was explicitly approved.
-- UI customization uses v4 SwiftUI APIs and app-hosted Operation UI where the
-  migrated journey needs it.
+- UI customization uses v4 SwiftUI APIs and the appropriate SDK-hosted default
+  or app-hosted Operation UI path where the migrated journey needs it.
 
 ## Validation Guidance
 

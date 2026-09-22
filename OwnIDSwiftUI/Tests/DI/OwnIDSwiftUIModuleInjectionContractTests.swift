@@ -4,14 +4,14 @@ import Testing
 @_spi(OwnIDInternal) @testable import OwnIDSwiftUI
 
 // Covers: SPI-050, UI-030
-struct OwnIDUIModuleInjectionContractTests {
+struct OwnIDSwiftUIModuleInjectionContractTests {
 
     @MainActor
     @Test func `Direct UI module injection registers providers and UI capabilities`() throws {
         let container = DIContainerImpl(scopeName: "ui-module-test")
         container.register((any UIContextProvider).self, instance: ModuleTestUIContextProvider())
 
-        try OwnIDUIModule.injectIntoInstanceContainer(container: container)
+        try OwnIDSwiftUIModule.injectIntoInstanceContainer(container: container)
 
         try assertSwiftUIModuleRuntimeBindings(in: container)
     }
@@ -19,7 +19,7 @@ struct OwnIDUIModuleInjectionContractTests {
     @Test func `Default container registration keeps UI context provider as required dependency`() throws {
         let container = DIContainerImpl(scopeName: "ui-module-missing-context")
 
-        try OwnIDUIModule.injectIntoInstanceContainer(container: container)
+        try OwnIDSwiftUIModule.injectIntoInstanceContainer(container: container)
 
         #expect(container.getOrNil(type: OwnIDThemeStore.self) != nil)
         #expect(container.getOrNil(type: (any LoginIDCollectUIProvider).self) != nil)
@@ -40,7 +40,7 @@ struct OwnIDUIModuleInjectionContractTests {
     private static func injectBareContainerAndDropHandle() throws -> @Sendable () -> Bool {
         let container = DIContainerImpl(scopeName: "ui-module-release")
         container.register((any UIContextProvider).self, instance: ModuleTestUIContextProvider())
-        try OwnIDUIModule.injectIntoInstanceContainer(container: container)
+        try OwnIDSwiftUIModule.injectIntoInstanceContainer(container: container)
         return { [weak container] in container == nil }
     }
 }

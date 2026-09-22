@@ -20,7 +20,34 @@ internal struct LocalInfoImpl: LocalInfo {
     let isFingerprintHardwarePresent: Bool
     let isStrongBiometricEnabled: Bool
 
-    init(modules: [(name: String, version: String)] = []) {
+    private static func resolveModuleResources() -> [(name: String, bundle: Bundle?)] {
+        #if SWIFT_PACKAGE
+            let bundle = Bundle.module
+        #else
+            let bundle = [Bundle(for: OwnIDModuleInjector.self), Bundle.main]
+                .compactMap { $0.url(forResource: "OwnIDCore", withExtension: "bundle") }
+                .compactMap(Bundle.init(url:)).first
+        #endif
+        return [("OwnIDCore", bundle)] + OwnIDModuleInjector.moduleResources()
+    }
+
+    private static func readVersion(from bundle: Bundle?) -> String {
+        guard let url = bundle?.url(forResource: "sdk-version", withExtension: "xcconfig"),
+            let contents = try? String(contentsOf: url, encoding: .utf8)
+        else { return "0.0.0" }
+        let settings = contents.split(whereSeparator: \.isNewline).compactMap { line -> String? in
+            let parts = line.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
+            guard parts.count == 2, parts[0].trimmingCharacters(in: .whitespaces) == "SDK_VERSION" else { return nil }
+            return parts[1].trimmingCharacters(in: .whitespaces)
+        }
+        guard settings.count == 1, let version = settings.first,
+            version.range(of: #"^[0-9]+\.[0-9]+\.[0-9]+$"#, options: .regularExpression) != nil
+        else { return "0.0.0" }
+        return version
+    }
+
+    init(moduleResources: [(name: String, bundle: Bundle?)] = LocalInfoImpl.resolveModuleResources()) {
+        let modules = moduleResources.map { (name: $0.name, version: Self.readVersion(from: $0.bundle)) }
         self.modules = modules
 
         let appBundleID = Bundle.main.bundleIdentifier ?? "com.unknown.app"

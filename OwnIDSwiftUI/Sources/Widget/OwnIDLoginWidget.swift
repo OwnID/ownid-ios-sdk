@@ -8,10 +8,13 @@ import SwiftUI
 /// The SDK owns starting and settling the flow; the app owns any session, navigation, or error UI changes it performs
 /// from the callbacks.
 ///
-/// A successful flow calls `onLogin`. User or business cancellation calls `onCancel`. Flow start failures and
-/// terminal failures call `onError` with ``BoostLoginFlowFailure``. While a flow is running, repeated taps are ignored
+/// A successful flow calls `onLogin`. A canceled flow calls `onCancel`. Flow start failures and terminal failures call
+/// `onError` with ``BoostLoginFlowFailure``. While a flow is running, repeated taps are ignored
 /// and the default icon button is disabled. `showSpinner` controls whether the busy state is shown as a spinner; it
 /// does not make a running flow accept another tap.
+///
+/// The widget presents flow UI from the window that currently hosts it. If the widget is not attached to a window when
+/// tapped, no flow starts and `onError` receives a UI-context failure.
 ///
 /// By default, this widget owns its ``OwnIDLoginWidgetViewModel``. Inject a view model when your app needs to
 /// keep the same flow state across custom view lifecycles or reuse the view model in custom widget UI.
@@ -24,8 +27,89 @@ import SwiftUI
 /// the widget follows the current ``EnvironmentValues/ownIDTheme`` or captures the current SwiftUI color scheme and
 /// primary accent color. Parent `.tint(_:)` modifiers are not a supported way to configure OwnID theme tokens.
 public struct OwnIDLoginWidget<IconButton: View, OrText: View>: View {
+    private let instanceName: InstanceName
+    private let loginID: String?
+    private let showSpinner: Bool
+    private let position: OwnIDBoostButtonPosition
+    private let theme: OwnIDTheme?
+    private let providedViewModel: OwnIDLoginWidgetViewModel?
+    private let widgetStrings: BoostWidgetStrings?
+    private let onLogin: (BoostFlowLoginResponse) -> Void
+    private let onCancel: ((Reason) -> Void)?
+    private let onError: ((BoostLoginFlowFailure) -> Void)?
+    private let iconButton: (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton
+    private let orText: (String) -> OrText
+
+    internal init(
+        onLogin: @escaping (BoostFlowLoginResponse) -> Void,
+        loginID: String?,
+        onError: ((BoostLoginFlowFailure) -> Void)?,
+        onCancel: ((Reason) -> Void)?,
+        showSpinner: Bool,
+        position: OwnIDBoostButtonPosition = .start,
+        theme: OwnIDTheme?,
+        instanceName: InstanceName,
+        viewModel: OwnIDLoginWidgetViewModel?,
+        widgetStrings: BoostWidgetStrings?,
+        @ViewBuilder iconButton:
+            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton,
+        @ViewBuilder orText: @escaping (String) -> OrText
+    ) {
+        self.onLogin = onLogin
+        self.loginID = loginID
+        self.onError = onError
+        self.onCancel = onCancel
+        self.showSpinner = showSpinner
+        self.position = position
+        self.theme = theme
+        self.instanceName = instanceName
+        self.providedViewModel = viewModel
+        self.widgetStrings = widgetStrings
+        self.iconButton = iconButton
+        self.orText = orText
+    }
+
+    @ViewBuilder
+    public var body: some View {
+        if let providedViewModel {
+            OwnIDLoginWidgetStatefulContent(
+                onLogin: onLogin,
+                loginID: loginID,
+                onError: onError,
+                onCancel: onCancel,
+                showSpinner: showSpinner,
+                position: position,
+                theme: theme,
+                instanceName: instanceName,
+                viewModel: providedViewModel,
+                widgetStrings: widgetStrings,
+                iconButton: iconButton,
+                orText: orText
+            )
+        } else {
+            OwnIDLoginWidgetStatefulContent(
+                onLogin: onLogin,
+                loginID: loginID,
+                onError: onError,
+                onCancel: onCancel,
+                showSpinner: showSpinner,
+                position: position,
+                theme: theme,
+                instanceName: instanceName,
+                viewModel: nil,
+                widgetStrings: widgetStrings,
+                iconButton: iconButton,
+                orText: orText
+            )
+            .id(instanceName)
+        }
+    }
+}
+
+private struct OwnIDLoginWidgetStatefulContent<IconButton: View, OrText: View>: View {
     @State private var ownedViewModel: OwnIDLoginWidgetViewModel
     @State private var uiState: OwnIDLoginWidgetViewModel.UIState
+    @State private var windowAttachment: WidgetWindowAttachment? = nil
     @State private var resolvedWidgetStrings: BoostWidgetStrings? = nil
 
     private let instanceName: InstanceName
@@ -45,20 +129,13 @@ public struct OwnIDLoginWidget<IconButton: View, OrText: View>: View {
         providedViewModel ?? ownedViewModel
     }
 
-    private static func normalizeLoginID(_ loginID: String?) -> String? {
-        guard let loginID else { return nil }
-        let normalizedLoginID = loginID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !normalizedLoginID.isEmpty else { return nil }
-        return normalizedLoginID
-    }
-
-    internal init(
+    init(
         onLogin: @escaping (BoostFlowLoginResponse) -> Void,
         loginID: String?,
         onError: ((BoostLoginFlowFailure) -> Void)?,
         onCancel: ((Reason) -> Void)?,
         showSpinner: Bool,
-        position: OwnIDBoostButtonPosition = .start,
+        position: OwnIDBoostButtonPosition,
         theme: OwnIDTheme?,
         instanceName: InstanceName,
         viewModel: OwnIDLoginWidgetViewModel?,
@@ -67,29 +144,37 @@ public struct OwnIDLoginWidget<IconButton: View, OrText: View>: View {
             @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton,
         @ViewBuilder orText: @escaping (String) -> OrText
     ) {
-        self._onLogin = LatestValue(wrappedValue: onLogin)
+        self._ownedViewModel = State(initialValue: OwnIDLoginWidgetViewModel(instanceName: instanceName))
+        self._uiState = State(initialValue: OwnIDLoginWidgetViewModel.UIState())
+        self.instanceName = instanceName
         self.loginID = loginID
-        self._onError = LatestValue(wrappedValue: onError)
-        self._onCancel = LatestValue(wrappedValue: onCancel)
         self.showSpinner = showSpinner
         self.position = position
         self.theme = theme
-        self.instanceName = instanceName
         self.providedViewModel = viewModel
         self.widgetStrings = widgetStrings
+        self._onLogin = LatestValue(wrappedValue: onLogin)
+        self._onCancel = LatestValue(wrappedValue: onCancel)
+        self._onError = LatestValue(wrappedValue: onError)
         self.iconButton = iconButton
         self.orText = orText
-
-        self._ownedViewModel = State(initialValue: OwnIDLoginWidgetViewModel(instanceName: instanceName))
-        self._uiState = State(initialValue: OwnIDLoginWidgetViewModel.UIState())
     }
 
-    public var body: some View {
+    private static func normalizeLoginID(_ loginID: String?) -> String? {
+        guard let loginID else { return nil }
+        let normalizedLoginID = loginID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedLoginID.isEmpty else { return nil }
+        return normalizedLoginID
+    }
+
+    var body: some View {
         let viewModel = effectiveViewModel
+        let viewModelID = ObjectIdentifier(viewModel)
         let resolvedStrings = widgetStrings ?? resolvedWidgetStrings ?? .default
+        let actionWindowAttachment = windowAttachment
 
         OwnIDBoostButton(
-            onClick: { viewModel.startFlow(loginID: Self.normalizeLoginID(loginID)) },
+            onClick: { viewModel.startFlow(window: actionWindowAttachment?.window, loginID: Self.normalizeLoginID(loginID)) },
             isBusy: uiState.isRunning,
             instanceName: instanceName,
             position: position,
@@ -101,13 +186,17 @@ public struct OwnIDLoginWidget<IconButton: View, OrText: View>: View {
         .iconButton(iconButton)
         .orText(orText)
         .checkmark { EmptyView() }
-        .taskCompat(id: "OwnIDLoginWidget.state.\(ObjectIdentifier(viewModel).hashValue)") {
+        .background(
+            WidgetWindowReader(attachment: $windowAttachment)
+                .allowsHitTesting(false)
+        )
+        .taskCompat(id: viewModelID) {
             for await state in viewModel.uiStateStream {
                 if Task.isCancelled { break }
                 uiState = state
             }
         }
-        .taskCompat(id: "OwnIDLoginWidget.effects.\(ObjectIdentifier(viewModel).hashValue)") {
+        .taskCompat(id: viewModelID) {
             for await effect in viewModel.uiEffects {
                 if Task.isCancelled { break }
                 switch effect {

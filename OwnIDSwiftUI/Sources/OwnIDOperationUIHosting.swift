@@ -1,6 +1,7 @@
 @_spi(OwnIDInternal) import OwnIDCore
 
-extension OperationEntry where Params == EmailVerificationOperationParams?, Success == AccessOrProofToken, Failure == EmailVerificationOperationFailure {
+extension OperationEntry
+where Params == EmailVerificationOperationParams?, Success == AccessOrProofToken, Failure == EmailVerificationOperationFailure {
     /// Returns an email-verification operation entry whose UI is rendered by the app with ``OwnIDOperationView``.
     ///
     /// Use this when you want to present OwnID verification inside your SwiftUI hierarchy, sheet, dialog, full-screen
@@ -10,7 +11,8 @@ extension OperationEntry where Params == EmailVerificationOperationParams?, Succ
     }
 }
 
-extension OperationEntry where Params == PhoneVerificationOperationParams?, Success == AccessOrProofToken, Failure == PhoneVerificationOperationFailure {
+extension OperationEntry
+where Params == PhoneVerificationOperationParams?, Success == AccessOrProofToken, Failure == PhoneVerificationOperationFailure {
     /// Returns a phone-verification operation entry whose UI is rendered by the app with ``OwnIDOperationView``.
     ///
     /// Use this when you want to present OwnID verification inside your SwiftUI hierarchy, sheet, dialog, full-screen
@@ -37,19 +39,29 @@ extension OperationEntry where Params == LoginIDCollectOperationParams?, Success
 /// operations, the no-argument overloads pass `nil`, which lets the operation resolve defaults from the current OwnID
 /// context.
 ///
-/// With an app-hosted entry, the SDK starts the operation but leaves presentation to your app. ``start(params:)``
-/// returns an ``OwnIDOperationUIController`` that should be kept in UI state, rendered by ``OwnIDOperationView``, and
-/// observed for its terminal ``OperationResult``. Availability is a preflight signal only; start may still settle with
+/// This wrapper supports operation entries obtained from an OwnID SDK instance, not arbitrary custom
+/// ``OperationEntry`` implementations.
+///
+/// With an app-hosted entry, the SDK starts the operation but leaves presentation to your app. The entry remains tied
+/// to the SDK instance and context from which it was derived. ``start(params:)`` returns an
+/// ``OwnIDOperationUIController`` that should be kept in UI state, rendered by ``OwnIDOperationView``, and observed
+/// for its terminal ``OperationResult``. Availability is a preflight signal only; start may still settle with
 /// cancellation or a typed failure if runtime state changes.
 public struct OwnIDOperationUIEntry<Params, Success: Sendable, Failure: OperationFailure>: Sendable {
     private let instanceName: InstanceName
+    private let instanceResolver: any DIContainerResolver
     private let delegate: any OperationEntry<Params, Success, Failure>
 
     /// The operation type started by this entry.
     public var operationType: OperationType { delegate.operationType }
 
-    internal init(instanceName: InstanceName, delegate: any OperationEntry<Params, Success, Failure>) {
+    internal init(
+        instanceName: InstanceName,
+        instanceResolver: any DIContainerResolver,
+        delegate: any OperationEntry<Params, Success, Failure>
+    ) {
         self.instanceName = instanceName
+        self.instanceResolver = instanceResolver
         self.delegate = delegate
     }
 
@@ -75,10 +87,16 @@ public struct OwnIDOperationUIEntry<Params, Success: Sendable, Failure: Operatio
     /// ``OwnIDOperationUIController/whenSettled()``. Starting more than one operation is app-owned; keep each
     /// operation controller tied to the UI and presentation container that owns that operation.
     ///
-    /// This method starts the operation but does not show SDK-owned UI. If the operation cannot proceed, the returned
-    /// controller settles with ``OperationResult/failure(_:)`` or ``OperationResult/canceled(_:)``.
+    /// This method starts the operation but does not show SDK-owned UI. If runtime state changes after start, the
+    /// returned controller settles with ``OperationResult/failure(_:)`` or ``OperationResult/canceled(_:)``.
+    ///
+    /// - Warning: This method traps if the operation runtime cannot be resolved from the entry's bound scope.
     public func start(params: Params) -> OwnIDOperationUIController<Success, Failure> {
-        OwnIDOperationUIController(instanceName: instanceName, delegate: delegate.start(params: params))
+        OwnIDOperationUIController(
+            instanceName: instanceName,
+            instanceResolver: instanceResolver,
+            delegate: delegate.start(params: params)
+        )
     }
 }
 
@@ -100,6 +118,8 @@ extension OwnIDOperationUIEntry {
     /// Starts an optional-parameter operation without passing parameters.
     ///
     /// This overload passes `nil` parameters, allowing the operation to use values from the current OwnID context.
+    ///
+    /// - Warning: This method traps if the operation runtime cannot be resolved from the entry's bound scope.
     public func start<Wrapped>() -> OwnIDOperationUIController<Success, Failure> where Params == Wrapped? {
         start(params: nil)
     }
@@ -116,14 +136,20 @@ extension OwnIDOperationUIEntry {
 /// ``OwnIDOperationView`` or without reporting the container close, call ``abort(reason:)`` with a meaningful
 /// ``Reason`` for owner-driven cleanup. The controller does not retain app UI state.
 ///
-/// A controller represents one started operation. It does not restart an operation after settlement; start a new entry
-/// when you need another operation run.
+/// A controller represents one started operation. It does not restart an operation after settlement; call `start` again
+/// on the same bound entry when you need a new operation run and controller.
 public final class OwnIDOperationUIController<Success: Sendable, Failure: OperationFailure>: OperationController {
     internal let instanceName: InstanceName
+    internal let instanceResolver: any DIContainerResolver
     private let delegate: any OperationController<Success, Failure>
 
-    internal init(instanceName: InstanceName, delegate: any OperationController<Success, Failure>) {
+    internal init(
+        instanceName: InstanceName,
+        instanceResolver: any DIContainerResolver,
+        delegate: any OperationController<Success, Failure>
+    ) {
         self.instanceName = instanceName
+        self.instanceResolver = instanceResolver
         self.delegate = delegate
     }
 
@@ -165,7 +191,11 @@ extension OperationEntry {
         guard let entry = scopedEntry as? AnyScopedOperationEntry<Params, Success, Failure> else {
             preconditionFailure("OwnID could not prepare this operation for app-hosted UI")
         }
-        return OwnIDOperationUIEntry(instanceName: instanceName, delegate: entry)
+        return OwnIDOperationUIEntry(
+            instanceName: instanceName,
+            instanceResolver: entry.operationResolver,
+            delegate: entry
+        )
     }
 }
 

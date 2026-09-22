@@ -32,7 +32,7 @@ private struct BottomSheetSurface: View {
             .clipShape(TopRoundedCorners(radius: 10))
             .contentShape(TopRoundedCorners(radius: 10))
             .environment(\.ownIDTheme, resolvedHostedTheme)
-            .environment(\.ownIDSuppressTextInputFocus, containerController.isClosing)
+            .environment(\.ownIDSuppressTextInputFocus, !containerController.isInputReady)
             .tintCompat(resolvedHostedTheme.colors.primary)
     }
 }
@@ -97,6 +97,13 @@ private struct TopRoundedCorners: Shape {
 }
 
 internal final class BottomSheetViewController: UIViewController {
+    private enum EntrancePhase {
+        case notStarted
+        case animating
+        case pendingReadiness
+        case ready
+    }
+
     private enum LayoutConstants {
         static let maxSheetWidth: CGFloat = 480
     }
@@ -111,6 +118,7 @@ internal final class BottomSheetViewController: UIViewController {
         static let dragResetDamping: CGFloat = 0.86
     }
 
+    private weak var expectedWindow: UIWindow?
     private let containerController: OwnIDUIContainerController
     private let hostingController: UIHostingController<BottomSheetSurface>
 
@@ -118,25 +126,31 @@ internal final class BottomSheetViewController: UIViewController {
     private let sheetContainerView = UIView(frame: .zero)
     private lazy var sheetHeightConstraint = sheetContainerView.heightAnchor.constraint(equalToConstant: 1)
     private var sheetBottomConstraint: NSLayoutConstraint!
+
+    internal var onUIKitPresentationAcknowledged: (@MainActor () -> Void)?
+
+    private var activationSuppressedSceneIDs: Set<ObjectIdentifier> = []
+    private var isLegacyActivationSuppressed = false
+    private var isObservingReadiness = false
+    private var hasAppeared = false
+    private var entrancePhase: EntrancePhase = .notStarted
+    private var isCurrentlyAppeared = false
+    private var isDismissalExpected = false
+    private var isDismissalAnimating = false
+    private var pendingDismissCompletion: (@MainActor () -> Void)?
+
     private var keyboardOverlap: CGFloat = 0
     private var isSheetHeightUpdateScheduled = false
     private var panStartTouchY: CGFloat?
     private var isInteractiveDismissing = false
 
-    private var hasAppeared = false
-    private var hasAnimatedIn = false
-    private var isDismissalExpected = false
-    private var isDismissalAnimating = false
-    private var pendingDismissCompletion: (@MainActor () -> Void)?
-
-    internal var onDidOpen: (@MainActor () -> Void)?
-    internal var onDidDisappearUnexpectedly: (@MainActor () -> Void)?
-
     internal init(
-        content: AnyView,
+        expectedWindow: UIWindow,
+        containerController: OwnIDUIContainerController,
         themeStore: OwnIDThemeStore,
-        containerController: OwnIDUIContainerController
+        content: AnyView
     ) {
+        self.expectedWindow = expectedWindow
         self.containerController = containerController
         let layoutRelay = BottomSheetLayoutRelay()
         self.hostingController = UIHostingController(
@@ -245,7 +259,16 @@ internal final class BottomSheetViewController: UIViewController {
     internal override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         hasAppeared = true
+        isCurrentlyAppeared = true
+        acknowledgeUIKitPresentation()
         animateInIfNeeded()
+        reevaluateInputReadiness()
+    }
+
+    internal override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        isCurrentlyAppeared = false
+        containerController.setInputReady(false)
     }
 
     internal override func viewDidDisappear(_ animated: Bool) {
@@ -262,17 +285,23 @@ internal final class BottomSheetViewController: UIViewController {
         let isLeavingPresentationHierarchy =
             isBeingDismissed || navigationController?.isBeingDismissed == true || presentingViewController == nil
         guard isLeavingPresentationHierarchy else { return }
+        stopReadinessObservations()
         containerController.markClosed()
-        onDidDisappearUnexpectedly?()
     }
 
     @MainActor
     internal func requestDismiss(completion: @escaping @MainActor () -> Void) {
         guard !isDismissalExpected else { return }
         isDismissalExpected = true
+        containerController.setInputReady(false)
+        stopReadinessObservations()
         pendingDismissCompletion = completion
 
-        guard isViewLoaded, hasAppeared, hasAnimatedIn else {
+        guard isViewLoaded, hasAppeared, entrancePhase != .notStarted else {
+            guard presentingViewController != nil || viewIfLoaded?.window != nil else {
+                invokeDismissCompletionIfNeeded()
+                return
+            }
             dismiss(animated: false) { [weak self] in
                 self?.invokeDismissCompletionIfNeeded()
             }
@@ -280,6 +309,17 @@ internal final class BottomSheetViewController: UIViewController {
         }
 
         animateOutAndDismissIfNeeded()
+    }
+
+    @MainActor
+    internal func beginPresentationLifecycle() {
+        startReadinessObservations()
+        reevaluateInputReadiness()
+    }
+
+    @MainActor
+    internal func acknowledgeUIKitPresentation() {
+        onUIKitPresentationAcknowledged?()
     }
 
     @MainActor
@@ -328,8 +368,13 @@ internal final class BottomSheetViewController: UIViewController {
     }
 
     private func animateInIfNeeded() {
-        guard !hasAnimatedIn else { return }
-        hasAnimatedIn = true
+        guard !isDismissalExpected, !isDismissalAnimating, !containerController.isClosing else { return }
+        if entrancePhase == .pendingReadiness {
+            finishOpeningIfReady()
+            return
+        }
+        guard entrancePhase == .notStarted else { return }
+        entrancePhase = .animating
 
         view.layoutIfNeeded()
         sheetContainerView.transform = dismissedTransform
@@ -342,14 +387,133 @@ internal final class BottomSheetViewController: UIViewController {
             guard let self else { return }
             self.overlayView.alpha = AnimationConstants.dimmedOverlayAlpha
             self.sheetContainerView.transform = .identity
-        } completion: { [weak self] finished in
-            guard let self, finished else { return }
-            self.onDidOpen?()
-            self.containerController.markOpened()
-            if self.isDismissalExpected {
-                self.animateOutAndDismissIfNeeded()
-            }
+        } completion: { [weak self] _ in
+            guard let self else { return }
+            self.entrancePhase = .pendingReadiness
+            self.finishOpeningIfReady()
         }
+    }
+
+    private func finishOpeningIfReady() {
+        guard entrancePhase == .pendingReadiness, isCurrentlyAppeared else { return }
+        guard !isDismissalExpected, !isDismissalAnimating, !containerController.isClosing, !isBeingDismissed else { return }
+        guard presentingViewController != nil else { return }
+        guard let view = viewIfLoaded, view.window === expectedWindow else { return }
+
+        // Interruption can stop the entrance before its visual endpoint; readiness must not depend on `finished`.
+        UIView.performWithoutAnimation {
+            overlayView.alpha = AnimationConstants.dimmedOverlayAlpha
+            sheetContainerView.transform = .identity
+        }
+        entrancePhase = .ready
+        containerController.markOpened(isInputReady: currentInputReadiness)
+        guard !isDismissalExpected, !containerController.isClosing else { return }
+        reevaluateInputReadiness()
+    }
+
+    private var currentInputReadiness: Bool {
+        guard entrancePhase == .ready, isCurrentlyAppeared else { return false }
+        guard !isDismissalExpected, !isDismissalAnimating, !containerController.isClosing, !isBeingDismissed else { return false }
+        guard let expectedWindow, viewIfLoaded?.window === expectedWindow else { return false }
+        guard !expectedWindow.isHidden else { return false }
+        if let scene = expectedWindow.windowScene {
+            guard !activationSuppressedSceneIDs.contains(ObjectIdentifier(scene)) else { return false }
+            return scene.activationState == .foregroundActive
+        }
+        guard UIContextLifecycleMode.isLegacy() else { return false }
+        guard !isLegacyActivationSuppressed else { return false }
+        return UIApplication.shared.applicationState == .active
+    }
+
+    @MainActor
+    private func reevaluateInputReadiness() {
+        containerController.setInputReady(currentInputReadiness)
+    }
+
+    @MainActor
+    private func startReadinessObservations() {
+        guard !isObservingReadiness, let expectedWindow else { return }
+        isObservingReadiness = true
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(readinessDidBecomeAvailable(_:)),
+            name: UIWindow.didBecomeVisibleNotification,
+            object: expectedWindow
+        )
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(readinessDidBecomeUnavailable(_:)),
+            name: UIWindow.didBecomeHiddenNotification,
+            object: expectedWindow
+        )
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(readinessDidBecomeAvailable(_:)),
+            name: UIScene.didActivateNotification,
+            object: nil
+        )
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(readinessDidBecomeUnavailable(_:)),
+            name: UIScene.willDeactivateNotification,
+            object: nil
+        )
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(readinessDidBecomeAvailable(_:)),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+        notificationCenter.addObserver(
+            self,
+            selector: #selector(readinessDidBecomeUnavailable(_:)),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+    }
+
+    @MainActor
+    private func stopReadinessObservations() {
+        guard isObservingReadiness else { return }
+        let notificationCenter = NotificationCenter.default
+        if let expectedWindow {
+            notificationCenter.removeObserver(self, name: UIWindow.didBecomeVisibleNotification, object: expectedWindow)
+            notificationCenter.removeObserver(self, name: UIWindow.didBecomeHiddenNotification, object: expectedWindow)
+        }
+        notificationCenter.removeObserver(self, name: UIScene.didActivateNotification, object: nil)
+        notificationCenter.removeObserver(self, name: UIScene.willDeactivateNotification, object: nil)
+        notificationCenter.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+        notificationCenter.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
+        isObservingReadiness = false
+    }
+
+    @MainActor
+    @objc
+    private func readinessDidBecomeAvailable(_ notification: Notification) {
+        if notification.name == UIScene.didActivateNotification {
+            guard let scene = notification.object as? UIScene else { return }
+            activationSuppressedSceneIDs.remove(ObjectIdentifier(scene))
+            guard expectedWindow?.windowScene === scene else { return }
+        } else if notification.name == UIApplication.didBecomeActiveNotification {
+            isLegacyActivationSuppressed = false
+            guard expectedWindow?.windowScene == nil else { return }
+        }
+        reevaluateInputReadiness()
+    }
+
+    @MainActor
+    @objc
+    private func readinessDidBecomeUnavailable(_ notification: Notification) {
+        if notification.name == UIScene.willDeactivateNotification {
+            guard let scene = notification.object as? UIScene else { return }
+            activationSuppressedSceneIDs.insert(ObjectIdentifier(scene))
+            guard expectedWindow?.windowScene === scene else { return }
+        } else if notification.name == UIApplication.willResignActiveNotification {
+            isLegacyActivationSuppressed = true
+            guard expectedWindow?.windowScene == nil else { return }
+        }
+        containerController.setInputReady(false)
     }
 
     private func animateOutAndDismissIfNeeded() {
@@ -443,10 +607,24 @@ internal final class BottomSheetViewController: UIViewController {
             return
         }
 
-        let coordinateSpace =
-            (notification.object as? UIScreen)?.coordinateSpace
-            ?? view.window?.screen.coordinateSpace
-            ?? UIScreen.main.coordinateSpace
+        guard let expectedWindow, view.window === expectedWindow else { return }
+        let coordinateSpace: any UICoordinateSpace
+        if let scene = expectedWindow.windowScene {
+            coordinateSpace = scene.screen.coordinateSpace
+        } else {
+            guard UIContextLifecycleMode.isLegacy() else { return }
+            #if compiler(>=6.4)
+                @diagnose(
+                    DeprecatedDeclaration,
+                    as: ignored,
+                    reason: "Legacy hosts without scene lifecycle have no UIWindowScene to query."
+                )
+            #endif
+            func legacyScreen(for window: UIWindow) -> UIScreen {
+                window.screen
+            }
+            coordinateSpace = legacyScreen(for: expectedWindow).coordinateSpace
+        }
         let keyboardFrame = coordinateSpace.convert(frameValue.cgRectValue, to: view)
         keyboardOverlap = BottomSheetLayoutMetrics.keyboardOverlap(
             viewBounds: view.bounds,
@@ -543,7 +721,7 @@ internal final class BottomSheetViewController: UIViewController {
     }
 
     private var canInteractivelyDismiss: Bool {
-        hasAppeared && hasAnimatedIn && !isDismissalExpected && !isDismissalAnimating
+        isCurrentlyAppeared && entrancePhase == .ready && !containerController.isClosing && !isDismissalExpected && !isDismissalAnimating
     }
 
     internal override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .allButUpsideDown }

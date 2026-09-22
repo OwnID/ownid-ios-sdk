@@ -121,11 +121,13 @@ internal final class WebBridgeWebViewCoordinator: NSObject, WKNavigationDelegate
     }
 
     @MainActor
-    private static func defaultOpenURL(_ url: URL) {
+    private static func defaultOpenURL(_ url: URL, logger: OwnIDLogRouter?) {
         guard !isAppExtension else { return }
         #if canImport(UIKit)
-            guard UIApplication.shared.canOpenURL(url) else { return }
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            UIApplication.shared.open(url, options: [:]) { didOpen in
+                guard !didOpen else { return }
+                logger?.logW(source: WebBridgeWebViewCoordinator.self, prefix: "openURL", message: "Failed to open external WebBridge URL")
+            }
         #else
             _ = url
         #endif
@@ -134,11 +136,11 @@ internal final class WebBridgeWebViewCoordinator: NSObject, WKNavigationDelegate
     init(
         logger: OwnIDLogRouter?,
         onWebViewDetach: @escaping @MainActor @Sendable () -> Void,
-        openURL: @escaping @MainActor @Sendable (URL) -> Void = WebBridgeWebViewCoordinator.defaultOpenURL
+        openURL: (@MainActor @Sendable (URL) -> Void)? = nil
     ) {
         self.logger = logger
         self.onWebViewDetach = onWebViewDetach
-        self.openURL = openURL
+        self.openURL = openURL ?? { url in Self.defaultOpenURL(url, logger: logger) }
     }
 
     func detach() {

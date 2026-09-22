@@ -6,10 +6,11 @@ import WebKit
 /// Start resolves WebView content and options in caller, server-config, local-runtime, then SDK-default order; validates
 /// the resolved page origin; and publishes a ``WebBridgeUIState`` for SDK-managed `WKWebView` presentation.
 ///
-/// The state machine settles once. Successful terminal hosted callbacks settle with ``OperationResult/success(_:)``,
-/// immediate or delayed UI startup failures and WebView runtime errors settle with ``OperationResult/failure(_:)``, and
-/// user close, WebView detach, abort, and SDK shutdown settle with ``OperationResult/canceled(_:)``. Completion releases
-/// controller ownership.
+/// The state machine settles once. Successful terminal hosted callbacks settle with ``OperationResult/success(_:)``;
+/// immediate or delayed UI startup failures and WebView runtime errors settle with ``OperationResult/failure(_:)``;
+/// native user close, WebView detach, abort, and SDK shutdown settle with ``OperationResult/canceled(_:)``. Completion
+/// releases controller ownership. A non-cancellation failure while loading app configuration before UI startup is
+/// terminal and is surfaced as an unexpected operation failure.
 internal final class WebBridgeOperationImpl: WebBridgeOperation, @unchecked Sendable {
     enum Event: Sendable {
         enum UIEvent: Sendable { case close, error((any Error)?, String?), cancel(Reason) }
@@ -104,7 +105,12 @@ internal final class WebBridgeOperationImpl: WebBridgeOperation, @unchecked Send
                         } catch is CancellationError {
                             return
                         } catch {
-                            return
+                            let message = "Failed to load AppConfig before starting WebBridge: \(String(describing: error))"
+                            self.logger?.logW(source: self, prefix: "Event.Start", message: message, cause: error)
+                            await self.stream.yield(
+                                .complete(.failure(.unexpected(message: message, underlyingError: error.asSendableError())))
+                            )
+                            continue
                         }
                         let baseUrl = params.options?.baseUrl ?? appConfig.webView?.baseUrl ?? WebBridgeUIDefaults.webViewURL
                         params.onBaseUrlResolved?(baseUrl)

@@ -26,6 +26,8 @@ Both SDK products require:
 - Swift 6
 - Xcode 16.0+
 
+iOS 15–27 is the primary supported runtime range; iOS 13–14 is best effort.
+
 ### Swift Package Manager
 
 Add the package:

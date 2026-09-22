@@ -1,6 +1,7 @@
 import Foundation
 import OwnIDSwiftUI
 import Testing
+import UIKit
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
@@ -67,16 +68,51 @@ enum CreatePasskeyWidgetTerminalResult: CaseIterable, Sendable {
 
 @MainActor
 func makeLoginViewModel(
-    starter: @escaping @MainActor @Sendable (BoostFlowContext) throws -> any BoostLoginFlowController
+    starter: @escaping @MainActor @Sendable (UIWindow, BoostFlowContext) throws -> any BoostLoginFlowController
 ) -> OwnIDLoginWidgetViewModel {
     OwnIDLoginWidgetViewModel(boostLoginFlowStarter: starter)
 }
 
 @MainActor
 func makeCreatePasskeyViewModel(
-    starter: @escaping @MainActor @Sendable (BoostFlowContext) throws -> any BoostCreatePasskeyFlowController
+    starter: @escaping @MainActor @Sendable (UIWindow, BoostFlowContext) throws -> any BoostCreatePasskeyFlowController
 ) -> OwnIDCreatePasskeyWidgetViewModel {
     OwnIDCreatePasskeyWidgetViewModel(boostCreatePasskeyFlowStarter: starter)
+}
+
+@MainActor
+func makeWidgetTestWindow() -> UIKitRuntimeTestWindow {
+    let window = UIKitRuntimeTestWindow()
+    window.show(root: UIViewController())
+    return window
+}
+
+final class WeakObjectReference<Object: AnyObject> {
+    weak var value: Object?
+
+    init(_ value: Object?) {
+        self.value = value
+    }
+}
+
+@MainActor
+func startFlow(
+    _ viewModel: OwnIDLoginWidgetViewModel,
+    loginID: String?
+) {
+    let window = makeWidgetTestWindow()
+    defer { window.close() }
+    viewModel.startFlow(window: window, loginID: loginID)
+}
+
+@MainActor
+func startFlow(
+    _ viewModel: OwnIDCreatePasskeyWidgetViewModel,
+    loginID: String?
+) {
+    let window = makeWidgetTestWindow()
+    defer { window.close() }
+    viewModel.startFlow(window: window, loginID: loginID)
 }
 
 func makeLoginResponse(id: String = "user@example.com") -> BoostFlowLoginResponse {
@@ -225,8 +261,11 @@ final class RunningCreatePasskeyController: BoostCreatePasskeyFlowController, @u
 
 final class DeferredLoginController: BoostLoginFlowController, @unchecked Sendable {
     private let store = DeferredFlowResultStore<BoostFlowLoginResponse, BoostLoginFlowFailure>()
+    private(set) var abortReasonDescriptions: [String] = []
 
-    func abort(reason: Reason) {}
+    func abort(reason: Reason) {
+        abortReasonDescriptions.append(reason.description)
+    }
 
     func whenSettled() async -> FlowResult<BoostFlowLoginResponse, BoostLoginFlowFailure> {
         await store.wait()
@@ -239,8 +278,11 @@ final class DeferredLoginController: BoostLoginFlowController, @unchecked Sendab
 
 final class DeferredCreatePasskeyController: BoostCreatePasskeyFlowController, @unchecked Sendable {
     private let store = DeferredFlowResultStore<BoostFlowResponse, BoostCreatePasskeyFlowFailure>()
+    private(set) var abortReasonDescriptions: [String] = []
 
-    func abort(reason: Reason) {}
+    func abort(reason: Reason) {
+        abortReasonDescriptions.append(reason.description)
+    }
 
     func whenSettled() async -> FlowResult<BoostFlowResponse, BoostCreatePasskeyFlowFailure> {
         await store.wait()
@@ -248,6 +290,91 @@ final class DeferredCreatePasskeyController: BoostCreatePasskeyFlowController, @
 
     func settle(_ result: FlowResult<BoostFlowResponse, BoostCreatePasskeyFlowFailure>) async {
         await store.resolve(result)
+    }
+}
+
+actor WidgetWindowIDProbe {
+    private var values: [ObjectIdentifier] = []
+    private var waiters: [CheckedContinuation<ObjectIdentifier, Never>] = []
+
+    func record(_ windowID: ObjectIdentifier) {
+        if let waiter = waiters.first {
+            waiters.removeFirst()
+            waiter.resume(returning: windowID)
+        } else {
+            values.append(windowID)
+        }
+    }
+
+    func next() async -> ObjectIdentifier {
+        if !values.isEmpty {
+            return values.removeFirst()
+        }
+        return await withCheckedContinuation { waiters.append($0) }
+    }
+}
+
+final class DIContextLoginFlow: BoostLoginFlow, @unchecked Sendable {
+    private let uiContextProvider: any UIContextProvider
+    private let windowProbe: WidgetWindowIDProbe
+    private let controller: any BoostLoginFlowController
+
+    init(
+        uiContextProvider: any UIContextProvider,
+        windowProbe: WidgetWindowIDProbe,
+        controller: any BoostLoginFlowController
+    ) {
+        self.uiContextProvider = uiContextProvider
+        self.windowProbe = windowProbe
+        self.controller = controller
+    }
+
+    func start(_ context: BoostFlowContext) -> any BoostLoginFlowController {
+        let uiContextProvider = self.uiContextProvider
+        let windowProbe = self.windowProbe
+        Task { @MainActor in
+            switch uiContextProvider.current() {
+            case .windowOnly(let window):
+                await windowProbe.record(ObjectIdentifier(window))
+            case .windowAndController(let window, _):
+                await windowProbe.record(ObjectIdentifier(window))
+            case .failure:
+                break
+            }
+        }
+        return controller
+    }
+}
+
+final class DIContextCreatePasskeyFlow: BoostCreatePasskeyFlow, @unchecked Sendable {
+    private let uiContextProvider: any UIContextProvider
+    private let windowProbe: WidgetWindowIDProbe
+    private let controller: any BoostCreatePasskeyFlowController
+
+    init(
+        uiContextProvider: any UIContextProvider,
+        windowProbe: WidgetWindowIDProbe,
+        controller: any BoostCreatePasskeyFlowController
+    ) {
+        self.uiContextProvider = uiContextProvider
+        self.windowProbe = windowProbe
+        self.controller = controller
+    }
+
+    func start(_ context: BoostFlowContext) -> any BoostCreatePasskeyFlowController {
+        let uiContextProvider = self.uiContextProvider
+        let windowProbe = self.windowProbe
+        Task { @MainActor in
+            switch uiContextProvider.current() {
+            case .windowOnly(let window):
+                await windowProbe.record(ObjectIdentifier(window))
+            case .windowAndController(let window, _):
+                await windowProbe.record(ObjectIdentifier(window))
+            case .failure:
+                break
+            }
+        }
+        return controller
     }
 }
 

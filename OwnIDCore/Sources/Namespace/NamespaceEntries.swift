@@ -94,23 +94,25 @@ public protocol OperationEntry<Params, Success, Failure>: Sendable {
     func start(params: Params) -> any OperationController<Success, Failure>
 }
 
-/// Operation entry that can create operation-local dependency scopes.
+/// Internal operation-entry contract for creating an operation-local scope.
 ///
-/// This is an internal SDK module contract, not a public app integration contract. Optional UI modules use it to bind
-/// operation-local dependencies without mutating the owning instance scope or sibling operation scopes.
+/// This SPI is used by SDK modules that need to add operation-specific behavior without changing the owning instance
+/// scope or sibling operation scopes. It is not an app integration surface.
 @_spi(OwnIDInternal)
 public protocol ScopedOperationEntry: OperationEntry {
     /// Name of the OwnID SDK instance that owns this operation entry.
     var instanceName: InstanceName { get }
 
+    /// Resolver for the operation entry's current scope.
+    ///
+    /// SDK modules use this resolver to access dependencies associated with the entry and with operation-local
+    /// extensions derived from it.
+    var operationResolver: any DIContainerResolver { get }
+
     /// Creates an operation-local scope and returns an entry that starts operations from that scope.
     ///
     /// Dependencies registered in `configure` are visible only to operations started from the returned entry. The parent
     /// instance scope and sibling operation scopes are not mutated.
-    ///
-    /// - Note: The erased `Any` return is intentional. `ScopedOperationEntry` is consumed through `any
-    ///   ScopedOperationEntry` existentials by other SDK modules, and parameterized protocol existentials/casts are not
-    ///   runtime-safe on iOS 13-15. Keep this erased until the SDK drops support for iOS versions earlier than 16.
     func withOperationScope(_ scopeName: String, configure: @escaping @Sendable (any DIContainer) -> Void) -> Any
 }
 
@@ -124,6 +126,7 @@ public struct AnyScopedOperationEntry<Params, Success: Sendable, Failure: Operat
 
     public var operationType: OperationType { entry.operationType }
     public var instanceName: InstanceName { scoped.instanceName }
+    public var operationResolver: any DIContainerResolver { scoped.operationResolver }
 
     internal init<Entry: ScopedOperationEntry>(_ entry: Entry)
     where Entry.Params == Params, Entry.Success == Success, Entry.Failure == Failure {
@@ -254,6 +257,7 @@ private struct ScopedOperationEntryImpl<Runtime: Any & Sendable, Params, Success
 
     var operationType: OperationType { delegate.operationType }
     var instanceName: InstanceName { try! delegate.container.getOrThrow(type: InstanceName.self) }
+    var operationResolver: any DIContainerResolver { delegate.container }
 
     init(delegate: OperationEntryImpl<Runtime, Params, Success, Failure>) {
         self.delegate = delegate

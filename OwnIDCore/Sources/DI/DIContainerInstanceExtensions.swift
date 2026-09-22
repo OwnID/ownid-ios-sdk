@@ -116,7 +116,6 @@ import Foundation
 
             registerFactory { resolver -> any PasskeyProtocol in
                 PasskeyImpl(
-                    uiContextProvider: (try? resolver.getOrThrow(type: (any UIContextProvider).self)) ?? UIContextProviderImpl(),
                     logger: resolver.getOrNil(type: OwnIDLogRouter.self),
                     diagnosticsProvider: { resolver.getOrNil(type: (any PasskeyDiagnostics).self) }
                 )
@@ -125,7 +124,6 @@ import Foundation
 
         registerFactory { resolver -> any SignInWithApple in
             SignInWithAppleImpl(
-                uiContextProvider: (try? resolver.getOrThrow(type: (any UIContextProvider).self)) ?? UIContextProviderImpl(),
                 logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
@@ -453,9 +451,11 @@ import Foundation
             ]
         ) { resolver -> any PhoneVerificationOperation in PhoneVerificationOperationImpl.create(resolver: resolver) }
 
-        registerFactory(dependencies: [(any PasskeyProtocol).self]) { resolver -> any PasskeyAttestationUI in
+        registerFactory(dependencies: [(any UIContextProvider).self, (any PasskeyProtocol).self]) { resolver -> any PasskeyAttestationUI in
             PasskeyAttestationUIImpl(
-                passkeyProvider: { try resolver.getOrThrow(type: (any PasskeyProtocol).self) }
+                uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
+                passkeyProvider: { try resolver.getOrThrow(type: (any PasskeyProtocol).self) },
+                logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
 
@@ -468,9 +468,11 @@ import Foundation
             ]
         ) { resolver -> any PasskeyAttestationOperation in PasskeyAttestationOperationImpl.create(resolver: resolver) }
 
-        registerFactory(dependencies: [(any PasskeyProtocol).self]) { resolver -> any PasskeyAssertionUI in
+        registerFactory(dependencies: [(any UIContextProvider).self, (any PasskeyProtocol).self]) { resolver -> any PasskeyAssertionUI in
             PasskeyAssertionUIImpl(
-                passkeyProvider: { try resolver.getOrThrow(type: (any PasskeyProtocol).self) }
+                uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
+                passkeyProvider: { try resolver.getOrThrow(type: (any PasskeyProtocol).self) },
+                logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
 
@@ -491,8 +493,12 @@ import Foundation
             ]
         ) { resolver -> any PasskeyEnrollOperation in PasskeyEnrollOperationImpl.create(resolver: resolver) }
 
-        registerFactory(dependencies: [(any SignInWithApple).self]) { resolver -> any SignInWithAppleUI in
-            SignInWithAppleUIImpl(provider: { try resolver.getOrThrow(type: (any SignInWithApple).self) })
+        registerFactory(dependencies: [(any UIContextProvider).self, (any SignInWithApple).self]) { resolver -> any SignInWithAppleUI in
+            SignInWithAppleUIImpl(
+                uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
+                provider: { try resolver.getOrThrow(type: (any SignInWithApple).self) },
+                logger: resolver.getOrNil(type: OwnIDLogRouter.self)
+            )
         }
 
         registerFactory(
@@ -504,8 +510,12 @@ import Foundation
             ]
         ) { resolver -> any SignInWithAppleOperation in SignInWithAppleOperationImpl.create(resolver: resolver) }
 
-        registerFactory(dependencies: [(any SignInWithGoogle).self]) { resolver -> any SignInWithGoogleUI in
-            SignInWithGoogleUIImpl(provider: { try resolver.getOrThrow(type: (any SignInWithGoogle).self) })
+        registerFactory(dependencies: [(any UIContextProvider).self, (any SignInWithGoogle).self]) { resolver -> any SignInWithGoogleUI in
+            SignInWithGoogleUIImpl(
+                uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
+                provider: { try resolver.getOrThrow(type: (any SignInWithGoogle).self) },
+                logger: resolver.getOrNil(type: OwnIDLogRouter.self)
+            )
         }
 
         registerFactory(
@@ -589,7 +599,7 @@ import Foundation
         let webBridgePluginFactoryStore = WebBridgePluginFactoryStoreImpl()
         register(webBridgePluginFactoryStore)
 
-        registerFactory(dependencies: [(any JSONCoder).self]) { resolver in
+        registerFactory(dependencies: [(any UIContextProvider).self, (any JSONCoder).self]) { resolver in
             try WebBridgeSocialPlugin.create(resolver: resolver)
         }
         webBridgePluginFactoryStore.registerBuiltIn(key: WebBridgeSocialPlugin.KEY) { resolver in
@@ -618,9 +628,11 @@ import Foundation
         }
 
         if #available(iOS 16.0, *) {
-            registerFactory(dependencies: [(any PasskeyProtocol).self, (any LocalInfo).self, (any JSONCoder).self]) { resolver in
-                try WebBridgePasskeyPlugin.create(resolver: resolver)
-            }
+            registerFactory(
+                dependencies: [(any PasskeyProtocol).self, (any UIContextProvider).self, (any LocalInfo).self, (any JSONCoder).self]) {
+                    resolver in try WebBridgePasskeyPlugin.create(resolver: resolver)
+                }
+
             webBridgePluginFactoryStore.registerBuiltIn(key: WebBridgePasskeyPlugin.KEY) { resolver in
                 try resolver.getOrThrow(type: WebBridgePasskeyPlugin.self)
             }
@@ -638,7 +650,7 @@ import Foundation
         ) { resolver -> any WebBridge in
             WebBridgeImpl.create(
                 resolver: resolver,
-                initialPlugins: try resolver.getOrThrow(type: WebBridgePluginFactoryStoreImpl.self).instantiateAll(resolver: resolver)
+                pluginFactoryStore: try resolver.getOrThrow(type: WebBridgePluginFactoryStoreImpl.self)
             )
         }
 

@@ -111,7 +111,7 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
                                     with: taskScope.spawnOnMain { [weak self] in
                                         guard let self else { return }
                                         guard await self.isAlive() else { return }
-                                        let socialResult = await ui.signIn(clientID: clientID, nonce: nonce, window: nil)
+                                        let socialResult = await ui.signIn(clientID: clientID, nonce: nonce)
                                         await self.stream.yield(.signIn(socialResult))
                                     }
                                 )

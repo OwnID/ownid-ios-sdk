@@ -1,7 +1,8 @@
 import Foundation
 import Testing
+import UIKit
 
-@testable import OwnIDCore
+@_spi(OwnIDInternal) @testable import OwnIDCore
 
 // Covers: WB-BRIDGE-240
 @MainActor
@@ -17,7 +18,11 @@ struct WebBridgeSocialPluginRuntimeTests {
             available: providerCase.available,
             result: providerCase.result
         )
-        let plugin = makePlugin(providerCase.provider.makeProviderSet(provider: provider))
+        let expectedWindow = UIWindow(frame: .zero)
+        let plugin = makePlugin(
+            providerCase.provider.makeProviderSet(provider: provider),
+            uiContextProvider: WebBridgeTestUIContextProvider(window: expectedWindow)
+        )
 
         let result = await handleWebBridgePlugin(
             plugin,
@@ -43,7 +48,7 @@ struct WebBridgeSocialPluginRuntimeTests {
             let params = try #require(signInParams.first)
             #expect(params.clientID == "web-client-id")
             #expect(params.nonce == "challenge-id")
-            #expect(params.window == nil)
+            #expect(provider.signInWindows.first === expectedWindow)
         } else {
             #expect(signInParams.isEmpty)
         }
@@ -98,11 +103,90 @@ struct WebBridgeSocialPluginRuntimeTests {
         #expect(provider.events.isEmpty)
     }
 
-    private func makePlugin(_ providers: WebBridgeSocialProviderSet) -> WebBridgeSocialPlugin {
+    @Test func `SOCIAL plugin resolves context after availability and logs resolution failure`() async throws {
+        let provider = RecordingWebBridgeSocialProvider()
+        let logSink = LogCapture()
+        let resolutionError = UIContextResolutionError(
+            reason: .unavailable,
+            message: "The WebBridge WebView is not attached to a window."
+        )
+        let plugin = makePlugin(
+            .google(provider),
+            uiContextProvider: WebBridgeTestUIContextProvider(result: .failure(resolutionError)),
+            logger: webBridgeTestLogRouter(sink: logSink)
+        )
+
+        let error = try await handleWebBridgePluginError(
+            plugin,
+            pluginID: "SOCIAL",
+            action: "Google",
+            params: Self.socialParams,
+            coder: coder
+        )
+
+        #expect(error["type"] == .string("UNKNOWN"))
+        #expect(error["message"]?.stringValue?.contains("Cannot resolve a presentation window") == true)
+        #expect(provider.events == ["available"])
+        #expect(provider.signInParams.isEmpty)
+        #expect(logSink.messages.contains { $0.contains("UI context resolution failed") })
+        #expect(logSink.entries.contains { $0.causeDescription?.contains("UI context unavailable") == true })
+    }
+
+    @Test func `SOCIAL plugin cancels an active provider request exactly once`() async throws {
+        let provider = BlockingWebBridgeSocialProvider()
+        let plugin = makePlugin(.google(provider))
+        let task = Task { @MainActor in
+            await handleWebBridgePlugin(
+                plugin,
+                pluginID: "SOCIAL",
+                action: "Google",
+                params: Self.socialParams
+            )
+        }
+
+        _ = try await provider.started.waitForFirst("wait for social provider invocation") { _ in true }
+        task.cancel()
+        _ = try await provider.cancellationObserved.waitForFirst("wait for social provider cancellation") { _ in true }
+
+        let result = await task.value
+        let error = try webBridgeErrorPayload(from: result, coder: coder)
+        #expect(error["type"] == .string("ABORTED"))
+        #expect(provider.cancelCount == 1)
+    }
+
+    @Test func `SOCIAL plugin skips provider invocation and cancellation when already canceled`() async throws {
+        let provider = CancellationBeforeInvocationSocialProvider()
+        let plugin = makePlugin(.google(provider))
+        let task = Task { @MainActor in
+            await handleWebBridgePlugin(
+                plugin,
+                pluginID: "SOCIAL",
+                action: "Google",
+                params: Self.socialParams
+            )
+        }
+
+        _ = try await provider.availabilityStarted.waitForFirst("wait for social availability") { _ in true }
+        task.cancel()
+
+        let result = await task.value
+        let error = try webBridgeErrorPayload(from: result, coder: coder)
+        #expect(error["type"] == .string("ABORTED"))
+        #expect(provider.signInCount == 0)
+        #expect(provider.cancelCount == 0)
+    }
+
+    private func makePlugin(
+        _ providers: WebBridgeSocialProviderSet,
+        uiContextProvider: any UIContextProvider = WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
+        logger: OwnIDLogRouter? = nil
+    ) -> WebBridgeSocialPlugin {
         WebBridgeSocialPlugin(
             signInWithApple: providers.apple,
             signInWithGoogle: providers.google,
-            coder: coder
+            uiContextProvider: uiContextProvider,
+            coder: coder,
+            logger: logger
         )
     }
 
@@ -131,10 +215,18 @@ private enum WebBridgeSocialProviderKind: String, CaseIterable, CustomTestString
         }
     }
 
-    func makeProviderSet(provider: RecordingWebBridgeSocialProvider) -> WebBridgeSocialProviderSet {
+    func makeProviderSet<Provider: SignInWithSocial>(provider: Provider) -> WebBridgeSocialProviderSet {
         switch self {
-        case .apple: .apple(provider)
-        case .google: .google(provider)
+        case .apple:
+            guard let provider = provider as? any SignInWithApple else {
+                fatalError("Expected an Apple sign-in provider")
+            }
+            return .apple(provider)
+        case .google:
+            guard let provider = provider as? any SignInWithGoogle else {
+                fatalError("Expected a Google sign-in provider")
+            }
+            return .google(provider)
         }
     }
 }
@@ -200,11 +292,11 @@ private struct WebBridgeSocialProviderSet {
 
     static let empty = WebBridgeSocialProviderSet(apple: nil, google: nil)
 
-    static func apple(_ provider: RecordingWebBridgeSocialProvider) -> WebBridgeSocialProviderSet {
+    static func apple(_ provider: any SignInWithApple) -> WebBridgeSocialProviderSet {
         WebBridgeSocialProviderSet(apple: provider, google: nil)
     }
 
-    static func google(_ provider: RecordingWebBridgeSocialProvider) -> WebBridgeSocialProviderSet {
+    static func google(_ provider: any SignInWithGoogle) -> WebBridgeSocialProviderSet {
         WebBridgeSocialProviderSet(apple: nil, google: provider)
     }
 }
@@ -215,6 +307,7 @@ private final class RecordingWebBridgeSocialProvider: SignInWithApple, SignInWit
     private let result: SocialResult
     private var recordedEvents: [String] = []
     private var recordedSignInParams: [SignInWithSocialParams] = []
+    private var recordedSignInWindows: [UIWindow] = []
 
     init(
         available: Bool = true,
@@ -232,15 +325,20 @@ private final class RecordingWebBridgeSocialProvider: SignInWithApple, SignInWit
         lock.withLock { recordedSignInParams }
     }
 
+    var signInWindows: [UIWindow] {
+        lock.withLock { recordedSignInWindows }
+    }
+
     @MainActor func isAvailable(params: (any CapabilityParams)?) async -> Bool {
         lock.withLock { recordedEvents.append("available") }
         return available
     }
 
-    @MainActor func signIn(params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
         lock.withLock {
             recordedEvents.append("signIn")
             recordedSignInParams.append(params)
+            recordedSignInWindows.append(window)
         }
         return result
     }
@@ -248,4 +346,67 @@ private final class RecordingWebBridgeSocialProvider: SignInWithApple, SignInWit
     @MainActor func cancel() {}
 
     @MainActor func signOut() {}
+}
+
+@MainActor
+private final class BlockingWebBridgeSocialProvider: SignInWithGoogle, @unchecked Sendable {
+    let started = AsyncSignalRecorder<Int>()
+    let cancellationObserved = AsyncSignalRecorder<Int>()
+
+    private let lock = NSLock()
+    private var signInContinuation: CheckedContinuation<SocialResult, Never>?
+    private var recordedCancelCount = 0
+
+    var cancelCount: Int {
+        lock.withLock { recordedCancelCount }
+    }
+
+    func isAvailable(params: (any CapabilityParams)?) async -> Bool {
+        true
+    }
+
+    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+        started.append(1)
+        return await withCheckedContinuation { continuation in
+            lock.withLock { signInContinuation = continuation }
+        }
+    }
+
+    func cancel() {
+        let continuation = lock.withLock { () -> CheckedContinuation<SocialResult, Never>? in
+            recordedCancelCount += 1
+            let continuation = signInContinuation
+            signInContinuation = nil
+            return continuation
+        }
+        cancellationObserved.append(cancelCount)
+        continuation?.resume(returning: .canceled(reason: .userClose(details: "task canceled")))
+    }
+
+    func signOut() {}
+}
+
+@MainActor
+private final class CancellationBeforeInvocationSocialProvider: SignInWithGoogle, @unchecked Sendable {
+    let availabilityStarted = AsyncSignalRecorder<Int>()
+
+    private(set) var signInCount = 0
+    private(set) var cancelCount = 0
+
+    func isAvailable(params: (any CapabilityParams)?) async -> Bool {
+        availabilityStarted.append(1)
+        await waitForTaskCancellation()
+        return true
+    }
+
+    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+        signInCount += 1
+        return .success(id: "unexpected", idToken: "unexpected")
+    }
+
+    func cancel() {
+        cancelCount += 1
+    }
+
+    func signOut() {}
 }

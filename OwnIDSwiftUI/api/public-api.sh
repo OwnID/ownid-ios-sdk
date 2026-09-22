@@ -6,7 +6,8 @@ API_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODULE="$(basename "$(dirname "$API_DIR")")"
 REPO_ROOT="$(cd "$API_DIR/../.." && pwd)"
 BASELINE_PATH="$API_DIR/$MODULE.symbols.json"
-TRIPLE="${OWNID_API_TARGET_TRIPLE:-arm64-apple-ios13.0-simulator}"
+# Symbol-graph extraction uses iOS 15; the package deployment target remains iOS 13.
+TRIPLE="${OWNID_API_TARGET_TRIPLE:-arm64-apple-ios15.0-simulator}"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/ownid-public-api-${MODULE}.XXXXXX")"
 
 cleanup() {
@@ -45,7 +46,7 @@ require_tool xcode-select
 
 SDK_PATH="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 DEVELOPER_DIR_PATH="$(xcode-select -p)"
-SCRATCH_PATH="$TMP_ROOT/build"
+SCRATCH_PATH="${OWNID_API_SCRATCH_PATH:-$TMP_ROOT/build}"
 RAW_SYMBOLS_DIR="$TMP_ROOT/raw"
 NORMALIZED_PATH="$TMP_ROOT/$MODULE.symbols.json"
 
@@ -56,7 +57,13 @@ swift build \
     --triple "$TRIPLE" \
     --target "$MODULE"
 
-MODULE_PATH="$(find "$SCRATCH_PATH" -type f -path "*/debug/Modules/$MODULE.swiftmodule" -print -quit)"
+MODULE_PATH="$(find "$SCRATCH_PATH" -type f -path "*/debug/$MODULE.swiftmodule" -print -quit)"
+if [[ -z "$MODULE_PATH" ]]; then
+    MODULE_PATH="$(find "$SCRATCH_PATH" -type f -path "*/debug/Modules/$MODULE.swiftmodule" -print -quit)"
+fi
+if [[ -z "$MODULE_PATH" ]]; then
+    MODULE_PATH="$(find "$SCRATCH_PATH" -type f -name "$MODULE.swiftmodule" -print -quit)"
+fi
 if [[ -z "$MODULE_PATH" ]]; then
     echo "error: failed to locate built module for $MODULE" >&2
     exit 1

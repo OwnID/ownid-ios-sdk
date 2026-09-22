@@ -7,7 +7,7 @@
       "environment": "simulator",
       "operatingSystem": {
         "minimumVersion": {
-          "major": 13,
+          "major": 15,
           "minor": 0
         },
         "name": "ios"
@@ -657,7 +657,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC21boostLoginFlowStarterAC0A6IDCore05BoostiJ10Controller_pAE0mJ7ContextVYbKScMYcc_tcfc",
+      "source": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC21boostLoginFlowStarterAC0A6IDCore05BoostiJ10Controller_pSo8UIWindowC_AE0mJ7ContextVtYbKScMYcc_tcfc",
       "target": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC"
     },
     {
@@ -707,7 +707,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC9startFlow7loginIDySSSg_tF",
+      "source": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC9startFlow6window7loginIDySo8UIWindowCSg_SSSgtF",
       "target": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC"
     },
     {
@@ -769,7 +769,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC011boostCreateE11FlowStarterAC0A6IDCore05BoostjeK10Controller_pAE0nK7ContextVYbKScMYcc_tcfc",
+      "source": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC011boostCreateE11FlowStarterAC0A6IDCore05BoostjeK10Controller_pSo8UIWindowC_AE0nK7ContextVtYbKScMYcc_tcfc",
       "target": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC"
     },
     {
@@ -849,7 +849,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC9startFlow7loginIDySSSg_tF",
+      "source": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC9startFlow6window7loginIDySo8UIWindowCSg_SSSgtF",
       "target": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC"
     },
     {
@@ -3856,6 +3856,19 @@
     {
       "access": "public",
       "declaration": [
+        {
+          "kind": "attribute",
+          "spelling": "@"
+        },
+        {
+          "kind": "attribute",
+          "preciseIdentifier": "s:7SwiftUI11ViewBuilderV",
+          "spelling": "ViewBuilder"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
         {
           "kind": "attribute",
           "spelling": "@"
@@ -9947,6 +9960,19 @@
         },
         {
           "kind": "attribute",
+          "preciseIdentifier": "s:7SwiftUI11ViewBuilderV",
+          "spelling": "ViewBuilder"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@"
+        },
+        {
+          "kind": "attribute",
           "preciseIdentifier": "s:ScM",
           "spelling": "MainActor"
         },
@@ -11503,6 +11529,15 @@
         },
         {
           "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
           "preciseIdentifier": "s:9OwnIDCore16BoostFlowContextV",
           "spelling": "BoostFlowContext"
         },
@@ -11559,6 +11594,15 @@
               },
               {
                 "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              },
+              {
+                "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
                 "preciseIdentifier": "s:9OwnIDCore16BoostFlowContextV",
                 "spelling": "BoostFlowContext"
               },
@@ -11589,7 +11633,7 @@
         "OwnIDLoginWidgetViewModel",
         "init(boostLoginFlowStarter:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC21boostLoginFlowStarterAC0A6IDCore05BoostiJ10Controller_pAE0mJ7ContextVYbKScMYcc_tcfc",
+      "precise": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC21boostLoginFlowStarterAC0A6IDCore05BoostiJ10Controller_pSo8UIWindowC_AE0mJ7ContextVtYbKScMYcc_tcfc",
       "title": "init(boostLoginFlowStarter:)"
     },
     {
@@ -12027,6 +12071,23 @@
         },
         {
           "kind": "externalParam",
+          "spelling": "window"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": "?, "
+        },
+        {
+          "kind": "externalParam",
           "spelling": "loginID"
         },
         {
@@ -12045,6 +12106,28 @@
       ],
       "functionSignature": {
         "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "window"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              },
+              {
+                "kind": "text",
+                "spelling": "?"
+              }
+            ],
+            "name": "window"
+          },
           {
             "declarationFragments": [
               {
@@ -12078,10 +12161,10 @@
       "kind": "swift.method",
       "path": [
         "OwnIDLoginWidgetViewModel",
-        "startFlow(loginID:)"
+        "startFlow(window:loginID:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC9startFlow7loginIDySSSg_tF",
-      "title": "startFlow(loginID:)"
+      "precise": "s:12OwnIDSwiftUI0A22IDLoginWidgetViewModelC9startFlow6window7loginIDySo8UIWindowCSg_SSSgtF",
+      "title": "startFlow(window:loginID:)"
     },
     {
       "access": "public",
@@ -12978,6 +13061,15 @@
         },
         {
           "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
           "preciseIdentifier": "s:9OwnIDCore16BoostFlowContextV",
           "spelling": "BoostFlowContext"
         },
@@ -13034,6 +13126,15 @@
               },
               {
                 "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              },
+              {
+                "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
                 "preciseIdentifier": "s:9OwnIDCore16BoostFlowContextV",
                 "spelling": "BoostFlowContext"
               },
@@ -13064,7 +13165,7 @@
         "OwnIDCreatePasskeyWidgetViewModel",
         "init(boostCreatePasskeyFlowStarter:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC011boostCreateE11FlowStarterAC0A6IDCore05BoostjeK10Controller_pAE0nK7ContextVYbKScMYcc_tcfc",
+      "precise": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC011boostCreateE11FlowStarterAC0A6IDCore05BoostjeK10Controller_pSo8UIWindowC_AE0nK7ContextVtYbKScMYcc_tcfc",
       "title": "init(boostCreatePasskeyFlowStarter:)"
     },
     {
@@ -13888,6 +13989,23 @@
         },
         {
           "kind": "externalParam",
+          "spelling": "window"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": "?, "
+        },
+        {
+          "kind": "externalParam",
           "spelling": "loginID"
         },
         {
@@ -13906,6 +14024,28 @@
       ],
       "functionSignature": {
         "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "window"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              },
+              {
+                "kind": "text",
+                "spelling": "?"
+              }
+            ],
+            "name": "window"
+          },
           {
             "declarationFragments": [
               {
@@ -13939,10 +14079,10 @@
       "kind": "swift.method",
       "path": [
         "OwnIDCreatePasskeyWidgetViewModel",
-        "startFlow(loginID:)"
+        "startFlow(window:loginID:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC9startFlow7loginIDySSSg_tF",
-      "title": "startFlow(loginID:)"
+      "precise": "s:12OwnIDSwiftUI0A30IDCreatePasskeyWidgetViewModelC9startFlow6window7loginIDySo8UIWindowCSg_SSSgtF",
+      "title": "startFlow(window:loginID:)"
     },
     {
       "access": "public",

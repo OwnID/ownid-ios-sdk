@@ -1,5 +1,6 @@
 import Foundation
 @_spi(OwnIDInternal) import OwnIDCore
+import UIKit
 
 /// Manages Boost create-passkey widget state and effects.
 ///
@@ -10,6 +11,7 @@ import Foundation
 /// The view model owns Boost create-passkey flow execution and exposes renderable state plus one-off effects. The app
 /// owns collecting those effects while its widget UI is active and mapping them to session, navigation, registration,
 /// reset, cancel, or error handling.
+/// Releasing the view model while a flow is active aborts the flow and ends its public streams.
 ///
 /// The view model keeps the latest create-passkey success in memory while it is alive so the widget can keep its
 /// completion state visible and later restore or clear that state as the login ID changes. It does not persist the
@@ -40,7 +42,7 @@ public final class OwnIDCreatePasskeyWidgetViewModel {
         case resetRequested
         /// Emitted when the flow completes by logging the user in instead of creating a new passkey.
         case login(BoostFlowLoginResponse)
-        /// Emitted when the flow creates a new passkey.
+        /// Emitted for a create-passkey response, including restored in-memory completion.
         case createPasskey(BoostFlowCreatePasskeyResponse)
         /// Emitted when the create-passkey flow fails or cannot be started.
         case error(BoostCreatePasskeyFlowFailure)
@@ -100,10 +102,14 @@ public final class OwnIDCreatePasskeyWidgetViewModel {
 
     private enum FlowStarter {
         case defaultInstance(InstanceName)
-        case custom(@MainActor @Sendable (BoostFlowContext) throws -> any BoostCreatePasskeyFlowController)
+        case custom(@MainActor @Sendable (UIWindow, BoostFlowContext) throws -> any BoostCreatePasskeyFlowController)
     }
 
     private let flowStarter: FlowStarter
+    private var logger: OwnIDLogRouter? {
+        guard case .defaultInstance(let instanceName) = flowStarter else { return nil }
+        return OwnID.getInstanceContainer(instanceName)?.getOrNil(type: OwnIDLogRouter.self)
+    }
     private var state: State = .idle {
         didSet {
             let nextState = UIState(
@@ -129,12 +135,16 @@ public final class OwnIDCreatePasskeyWidgetViewModel {
 
     /// Creates a create-passkey widget view model with a custom flow starter.
     ///
-    /// Use this initializer when your app needs to inject a custom flow starter, for example in custom widget UI. The
-    /// starter owns any app-specific flow wiring and should return a controller that settles exactly once.
+    /// Use this initializer when your app needs to provide custom flow wiring, for example in custom widget UI. The
+    /// closure receives the window hosting the widget and the flow context; use that window for any UI-dependent
+    /// provider configuration and return a controller that settles exactly once. If the closure throws, the view model
+    /// accepts no controller, returns to idle, and emits ``UIEffect/error(_:)``.
     ///
-    /// - Parameter boostCreatePasskeyFlowStarter: Closure that starts create-passkey for the provided flow context.
+    /// - Parameter boostCreatePasskeyFlowStarter: Closure that starts create-passkey for the provided window and flow
+    ///   context.
     public init(
-        boostCreatePasskeyFlowStarter: @escaping @MainActor @Sendable (BoostFlowContext) throws -> any BoostCreatePasskeyFlowController
+        boostCreatePasskeyFlowStarter:
+            @escaping @MainActor @Sendable (UIWindow, BoostFlowContext) throws -> any BoostCreatePasskeyFlowController
     ) {
         self.flowStarter = .custom(boostCreatePasskeyFlowStarter)
     }
@@ -204,11 +214,16 @@ public final class OwnIDCreatePasskeyWidgetViewModel {
     /// start a new flow.
     ///
     /// Flow cancellation emits ``UIEffect/canceled(_:)``. Flow failures and starter errors emit
-    /// ``UIEffect/error(_:)`` and return the view model to idle. Successful flow results emit either
-    /// ``UIEffect/login(_:)`` or ``UIEffect/createPasskey(_:)``.
+    /// ``UIEffect/error(_:)`` and return the view model to idle. If `window` is `nil` when a new flow must start, the
+    /// flow is not started and the error effect reports that the UI context is unavailable. Successful flow results
+    /// emit either ``UIEffect/login(_:)`` or ``UIEffect/createPasskey(_:)``.
     ///
-    /// - Parameter loginID: Optional raw login ID to pass into the flow context.
-    public func startFlow(loginID: String?) {
+    /// - Parameters:
+    ///   - window: Window that currently hosts the widget. The default flow uses it as its UI context and a custom
+    ///     starter receives it unchanged. Pass `nil` when the widget is not attached. Existing completion state can
+    ///     still be reset or restored without a window.
+    ///   - loginID: Optional raw login ID to pass into the flow context.
+    public func startFlow(window: UIWindow?, loginID: String?) {
         let normalizedLoginID = Self.normalizeLoginID(loginID)
 
         switch state {
@@ -239,6 +254,12 @@ public final class OwnIDCreatePasskeyWidgetViewModel {
         }
 
         do {
+            guard let window else {
+                throw UIContextResolutionError(
+                    reason: .unavailable,
+                    message: "The widget is not currently attached to a window."
+                )
+            }
             let controller: any BoostCreatePasskeyFlowController
             switch flowStarter {
             case .defaultInstance(let instanceName):
@@ -254,9 +275,11 @@ public final class OwnIDCreatePasskeyWidgetViewModel {
                     state = .idle
                     return
                 }
-                controller = instance.flows.boost.createPasskey.start(flowContext)
+                controller = instance.flows
+                    .withProviders { $0.uiContext(window) }
+                    .boost.createPasskey.start(flowContext)
             case .custom(let starter):
-                controller = try starter(flowContext)
+                controller = try starter(window, flowContext)
             }
             currentController = controller
 
@@ -293,6 +316,10 @@ public final class OwnIDCreatePasskeyWidgetViewModel {
         } catch {
             currentController = nil
             settleTask = nil
+
+            if error is UIContextResolutionError {
+                logger?.logW(source: Self.self, prefix: "startFlow", message: "UI context resolution failed", cause: error)
+            }
 
             let message = error.localizedDescription.isEmpty ? "Failed to start create passkey flow" : error.localizedDescription
             let wrappedError = BoostCreatePasskeyFlowFailure.unexpected(

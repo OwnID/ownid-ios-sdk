@@ -1,21 +1,35 @@
 import Foundation
+import UIKit
 
-/// Default Core adapter from operation UI to the registered platform passkey capability.
-///
-/// The adapter preserves the ``PasskeyResult`` boundary: setup or provider failures are returned as
-/// ``PasskeyResult/failure(_:)`` for the operation to classify.
 internal final class PasskeyAssertionUIImpl: PasskeyAssertionUI {
+    private let uiContextProvider: @Sendable () throws -> any UIContextProvider
     private let passkeyProvider: @Sendable () throws -> any PasskeyProtocol
+    private let logger: OwnIDLogRouter?
 
-    init(passkeyProvider: @escaping @Sendable () throws -> any PasskeyProtocol) {
+    init(
+        uiContextProvider: @escaping @Sendable () throws -> any UIContextProvider,
+        passkeyProvider: @escaping @Sendable () throws -> any PasskeyProtocol,
+        logger: OwnIDLogRouter?
+    ) {
+        self.uiContextProvider = uiContextProvider
         self.passkeyProvider = passkeyProvider
+        self.logger = logger
     }
 
     @MainActor
     func getCredential(options: AssertionOptions) async -> PasskeyResult<AssertionResult> {
         do {
             let passkey = try passkeyProvider()
-            return await passkey.getCredential(assertionOptions: options)
+            let window: UIWindow
+            do {
+                window = try uiContextProvider().current().requireWindow()
+            } catch {
+                logger?.logW(source: self, prefix: #function, message: "UI context resolution failed", cause: error)
+                return .failure(
+                    .general("Failed to resolve a presentation window: \(error.localizedDescription)", error.asSendableError())
+                )
+            }
+            return await passkey.getCredential(window: window, assertionOptions: options)
         } catch let missing as MissingDependencyError {
             return .failure(.general("Missing dependency: \(missing.dependencyName)", missing))
         } catch {

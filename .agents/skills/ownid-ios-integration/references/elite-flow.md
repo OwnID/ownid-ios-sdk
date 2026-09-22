@@ -61,6 +61,13 @@ place. It is not registered through `OwnID.setProviders`.
 `EliteFlowContext` is separate from SDK runtime context. It configures the one
 Elite WebView run through `events` and optional `options`.
 
+In a multi-window app, bind the intended presentation owner before deriving the
+Elite handle: use `withProviders` with `uiContext(window)`,
+`uiContext(windowScene)`, or a custom `UIContextProvider`, then call
+`elite.start(...)` on that returned handle. See the canonical [UI Context
+guidance](../../../../docs/setup/providers.md#ui-context) for provider scope and
+failure semantics.
+
 ## Event Rules
 
 Configure hosted-page callbacks with `EliteFlowContext.events`. Handlers run on

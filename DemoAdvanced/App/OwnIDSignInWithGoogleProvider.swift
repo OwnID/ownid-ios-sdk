@@ -3,177 +3,88 @@ import GoogleSignIn
 import UIKit
 
 extension OwnIDProvidersRegistrar {
-    @MainActor
-    private enum GoogleSignInProviderState {
-        static var isActive = false
-    }
-
-    /// Registers a GoogleSignIn-backed Google sign-in helper on this registrar.
+    /// Registers a source-only GoogleSignIn implementation for Google social sign-in.
     ///
-    /// Register this source-only helper inside a providers block. It is not part of the `OwnIDCore` or `OwnIDSwiftUI`
-    /// package products, is not a separate product, and depends on the host target compiling and linking `GoogleSignIn`.
+    /// ### Registration
     ///
-    /// Use ``OwnID/setProviders(_:)`` to update providers in the current scope,
-    /// or ``OwnID/withProviders(_:_:)`` to register Google Sign-In only in the returned child scope.
+    /// Call this helper inside ``OwnID/setProviders(_:)`` to register it in the current provider scope. Use
+    /// ``OwnID/withProviders(_:_:)`` when Google sign-in should be available only through the returned child scope.
+    /// This source-only helper is not included in the `OwnIDCore` or `OwnIDSwiftUI` products. The host target must link
+    /// `GoogleSignIn`.
     ///
-    /// It registers a Google implementation through ``OwnIDProvidersRegistrar/signInWithGoogle(_:)`` so OwnID can
-    /// resolve ``SignInWithGoogle`` from the scope where this provider is registered.
+    /// The host app must also:
     ///
-    /// Behavior:
-    /// - Uses the Google web/server client ID and optional `nonce` supplied in the provider callback parameters.
-    /// - Forwards the nonce to GoogleSignIn when present; treat ID tokens and nonces as sensitive authentication data.
-    /// - Resolves a presentation anchor using `presentingViewControllerProvider`, or falls back to ``UIContextProvider``.
-    /// - Applies `GIDSignIn.sharedInstance.configuration` before each request.
-    /// - Reports available for Google sign-in parameters.
-    /// - Runs sign-in, cancellation, and sign-out handlers on the main actor through the ``SignInWithSocial`` and
-    ///   ``SignInWithGoogle`` contracts.
-    /// - Supports one active sign-in request at a time across all provider registrations; overlapping requests fail
-    ///   immediately.
-    /// - Returns ``SocialResult/success(id:idToken:)`` only when a non-empty Google ID token is returned.
-    /// - Maps provider cancellation and cooperative Swift task cancellation to
-    ///   ``SocialResult/canceled(reason:)`` with ``Reason/userClose(details:)``.
-    /// - Returns ``SocialResult/fail(error:)`` for empty server or iOS client IDs, a missing reversed iOS-client
-    ///   callback URL scheme, missing presenters, missing ID tokens, and non-cancellation GoogleSignIn failures.
+    /// - Register the reversed iOS OAuth client ID as a callback URL scheme.
+    /// - Forward callback URLs to `GIDSignIn.sharedInstance.handle(_:)`.
     ///
-    /// Source-only integration notes:
-    /// - The OwnID challenge `clientID` is the Google web/server client ID. Use it as `serverClientID` when building
-    ///   `GIDConfiguration` for backend ID token validation.
-    /// - GoogleSignIn-iOS also requires the app's iOS OAuth client ID as `clientID`. Provide it from app configuration:
-    ///   `GIDConfiguration(clientID: iosClientID, serverClientID: ownIDClientID)`.
-    /// - This helper sets `GIDSignIn.sharedInstance.configuration` programmatically before sign-in, so the
-    ///   `configurationProvider` must supply the full GoogleSignIn configuration for the request.
-    /// - The host target must register the reversed iOS OAuth client ID as a callback URL scheme and forward callback
-    ///   URLs to GoogleSignIn; scheme matching is case-insensitive.
+    /// ### Google configuration
     ///
-    /// Cancellation notes:
-    /// - An already-canceled Swift task returns cancellation without starting sign-in.
-    /// - Canceling a Swift task does not dismiss provider UI immediately. The helper returns cancellation after the
-    ///   active provider attempt completes.
-    /// - GoogleSignIn does not expose direct cancellation, so the helper cannot guarantee immediate provider UI dismissal
-    ///   or physical cancellation of an active request.
-    /// - A new sign-in request is still rejected until the active attempt completes.
-    /// - `cancelHandler` is invoked for app-owned cleanup. Dismiss only UI whose ownership the app can establish.
+    /// The OwnID challenge provides the Google web/server client ID. When OwnID proceeds with provider configuration,
+    /// `configurationProvider` receives that value on the main actor and must return a request-specific
+    /// `GIDConfiguration`:
     ///
-    /// Sign-out:
-    /// - Calls `GIDSignIn.sharedInstance.signOut()` for local GoogleSignIn cleanup.
-    /// - This is local provider/app cleanup. It does not revoke OAuth consent grants or clear OwnID session state.
+    /// - Set `clientID` to the app's Google iOS OAuth client ID.
+    /// - Set `serverClientID` to the supplied web/server client ID. This is the audience of the returned OIDC ID token.
+    ///
+    /// Before starting GoogleSignIn, the helper rejects an empty challenge web/server client ID or iOS client ID and
+    /// verifies that the iOS client's reversed form is registered as a callback URL scheme.
+    ///
+    /// ### Presentation and credentials
+    ///
+    /// OwnID supplies the exact `UIWindow` for each invocation. The helper resolves the presenter only from that window
+    /// and does not search application-global window state. Sign-in fails when no presenter can be resolved from the
+    /// supplied window.
+    ///
+    /// A non-empty OwnID nonce is forwarded to GoogleSignIn. Nonces and returned ID tokens are sensitive authentication
+    /// data; do not log or persist them.
+    ///
+    /// ### Results
+    ///
+    /// The helper maps outcomes as follows:
+    ///
+    /// - Returns ``SocialResult/success(id:idToken:)`` only when GoogleSignIn supplies a non-empty ID token. The Google
+    ///   user ID is included when available and may otherwise be empty.
+    /// - Returns ``SocialResult/canceled(reason:)`` for a thrown `CancellationError`, GoogleSignIn user cancellation, or
+    ///   cooperative Swift task cancellation.
+    /// - Returns ``SocialResult/fail(error:)`` for an empty challenge web/server or iOS client ID, a missing callback
+    ///   URL scheme or presenter, a missing ID token, and non-cancellation GoogleSignIn failures.
+    ///
+    /// Only one Google sign-in request can be active at a time across all registrations in the process. An overlapping
+    /// request fails immediately, and a new request remains blocked until the active GoogleSignIn attempt completes.
+    ///
+    /// ### Cancellation
+    ///
+    /// An already-canceled Swift task returns cancellation without starting GoogleSignIn. Canceling a task after its
+    /// GoogleSignIn attempt has started does not dismiss or cancel active Google authorization UI; GoogleSignIn does not
+    /// expose an API for that. The helper reports task cancellation after the active provider attempt completes.
+    ///
+    /// `cancelHandler` runs on the main actor when OwnID requests cancellation and is only for app-owned cleanup. Dismiss
+    /// only UI whose ownership the app can establish; this callback cannot guarantee cancellation of GoogleSignIn UI.
+    ///
+    /// ### Sign-out
+    ///
+    /// Sign-out calls `GIDSignIn.sharedInstance.signOut()` to remove the current Google user from local keychain state.
+    /// It does not revoke OAuth consent grants or clear OwnID session state.
     ///
     /// - Parameters:
-    ///   - configurationProvider: Required factory that receives the OwnID challenge Google web/server client ID and
-    ///     returns a `GIDConfiguration` for the current request.
-    ///   - presentingViewControllerProvider: Optional custom presenter resolver for apps with non-standard scene/container
-    ///     hierarchies.
-    ///   - cancelHandler: Optional callback invoked on cancel for app-owned cleanup.
+    ///   - configurationProvider: Main-actor factory that creates request-specific configuration from the OwnID web/server
+    ///     client ID.
+    ///   - cancelHandler: Optional main-actor callback for app-owned cancellation cleanup.
     @MainActor
     mutating func signInWithGoogleProvider(
         configurationProvider: @escaping (String) -> GIDConfiguration,
-        presentingViewControllerProvider: (() -> UIViewController?)? = nil,
         cancelHandler: (() -> Void)? = nil
     ) {
         let logger = getOrNil(type: OwnIDLogRouter.self)
-        let uiContextProvider = try? getOrThrow(type: (any UIContextProvider).self)
-
-        func configurationError(_ configuration: GIDConfiguration, registeredURLSchemes: [String]) -> SocialResult.Error? {
-            guard !configuration.clientID.isEmpty else {
-                return .general("Google iOS clientID is empty")
-            }
-
-            let requiredScheme = configuration.clientID
-                .split(separator: ".", omittingEmptySubsequences: false)
-                .reversed()
-                .joined(separator: ".")
-            guard registeredURLSchemes.contains(where: { $0.caseInsensitiveCompare(requiredScheme) == .orderedSame }) else {
-                return .general("Google iOS clientID callback URL scheme is not registered")
-            }
-            return nil
-        }
-
-        func registeredURLSchemes(in bundle: Bundle) -> [String] {
-            guard let urlTypes = bundle.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [Any] else {
-                return []
-            }
-            return urlTypes.flatMap { urlType -> [String] in
-                guard
-                    let urlType = urlType as? [String: Any],
-                    let schemes = urlType["CFBundleURLSchemes"] as? [Any]
-                else {
-                    return []
-                }
-                return schemes.compactMap { $0 as? String }
-            }
-        }
 
         signInWithGoogle { provider in
-            provider.signIn { params in
-                guard !Task.isCancelled else {
-                    return .canceled(reason: .userClose())
-                }
-                guard !GoogleSignInProviderState.isActive else {
-                    return .fail(error: .general("Another Google sign-in request is already in progress"))
-                }
-                GoogleSignInProviderState.isActive = true
-                defer {
-                    GoogleSignInProviderState.isActive = false
-                }
-
-                guard !params.clientID.isEmpty else {
-                    return .fail(error: .general("Google server clientID is empty"))
-                }
-                let presentingViewController =
-                    presentingViewControllerProvider?()
-                    ?? uiContextProvider?.topMostViewController(params.window ?? uiContextProvider?.activeWindow())
-
-                guard let presentingViewController else {
-                    return .fail(error: .general("Cannot resolve a presenting view controller for Google Sign-In"))
-                }
-
-                let configuration = configurationProvider(params.clientID)
-                if let error = configurationError(
-                    configuration,
-                    registeredURLSchemes: registeredURLSchemes(in: .main)
-                ) {
-                    return .fail(error: error)
-                }
-
-                GIDSignIn.sharedInstance.configuration = configuration
-
-                do {
-                    let signInResult: GIDSignInResult
-                    if let nonce = params.nonce, !nonce.isEmpty {
-                        signInResult = try await GIDSignIn.sharedInstance.signIn(
-                            withPresenting: presentingViewController,
-                            hint: nil,
-                            additionalScopes: nil,
-                            nonce: nonce
-                        )
-                    } else {
-                        signInResult = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
-                    }
-                    guard !Task.isCancelled else {
-                        return .canceled(reason: .userClose())
-                    }
-                    guard let idToken = signInResult.user.idToken?.tokenString, !idToken.isEmpty else {
-                        return .fail(error: .general("Google Sign-In did not return an ID token"))
-                    }
-                    return .success(id: signInResult.user.userID ?? "", idToken: idToken)
-                } catch is CancellationError {
-                    return .canceled(reason: .userClose())
-                } catch {
-                    guard !Task.isCancelled else {
-                        return .canceled(reason: .userClose())
-                    }
-                    let nsError = error as NSError
-                    if nsError.domain == kGIDSignInErrorDomain, nsError.code == GIDSignInError.Code.canceled.rawValue {
-                        return .canceled(reason: .userClose())
-                    }
-                    logger?.logW(
-                        source: Self.self,
-                        prefix: "signInWithGoogle",
-                        message: "Google sign-in failed: \(error.localizedDescription)",
-                        cause: error
-                    )
-                    return .fail(error: .general("Google Sign-In failed", error))
-                }
+            provider.signIn { window, params in
+                await GoogleSignInProviderImplementation.signIn(
+                    window: window,
+                    params: params,
+                    configurationProvider: configurationProvider,
+                    logger: logger
+                )
             }
             provider.cancel {
                 cancelHandler?()
@@ -182,5 +93,139 @@ extension OwnIDProvidersRegistrar {
                 GIDSignIn.sharedInstance.signOut()
             }
         }
+    }
+}
+
+@MainActor
+private enum GoogleSignInProviderImplementation {
+    static var isActive = false
+
+    static func signIn(
+        window: UIWindow,
+        params: SignInWithSocialParams,
+        configurationProvider: (String) -> GIDConfiguration,
+        logger: OwnIDLogRouter?
+    ) async -> SocialResult {
+        guard !Task.isCancelled else {
+            return .canceled(reason: .userClose())
+        }
+        guard !isActive else {
+            return .fail(error: .general("Another Google sign-in request is already in progress"))
+        }
+        isActive = true
+        defer {
+            isActive = false
+        }
+
+        guard !params.clientID.isEmpty else {
+            return .fail(error: .general("Google server clientID is empty"))
+        }
+        guard let presentingViewController = resolvePresentingViewController(in: window) else {
+            let message = "Cannot resolve a presenting view controller for Google Sign-In"
+            logger?.logW(source: OwnIDProvidersRegistrar.self, prefix: "signInWithGoogle", message: message)
+            return .fail(error: .general(message))
+        }
+
+        let configuration = configurationProvider(params.clientID)
+        if let error = configurationError(configuration) {
+            return .fail(error: error)
+        }
+
+        GIDSignIn.sharedInstance.configuration = configuration
+
+        do {
+            let signInResult: GIDSignInResult
+            if let nonce = params.nonce, !nonce.isEmpty {
+                signInResult = try await GIDSignIn.sharedInstance.signIn(
+                    withPresenting: presentingViewController,
+                    hint: nil,
+                    additionalScopes: nil,
+                    nonce: nonce
+                )
+            } else {
+                signInResult = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
+            }
+            guard !Task.isCancelled else {
+                return .canceled(reason: .userClose())
+            }
+            guard let idToken = signInResult.user.idToken?.tokenString, !idToken.isEmpty else {
+                return .fail(error: .general("Google Sign-In did not return an ID token"))
+            }
+            return .success(id: signInResult.user.userID ?? "", idToken: idToken)
+        } catch is CancellationError {
+            return .canceled(reason: .userClose())
+        } catch {
+            guard !Task.isCancelled else {
+                return .canceled(reason: .userClose())
+            }
+            let nsError = error as NSError
+            if nsError.domain == kGIDSignInErrorDomain, nsError.code == GIDSignInError.Code.canceled.rawValue {
+                return .canceled(reason: .userClose())
+            }
+            logger?.logW(
+                source: OwnIDProvidersRegistrar.self,
+                prefix: "signInWithGoogle",
+                message: "Google sign-in failed: \(error.localizedDescription)",
+                cause: error
+            )
+            return .fail(error: .general("Google Sign-In failed", error))
+        }
+    }
+
+    static func resolvePresentingViewController(in window: UIWindow) -> UIViewController? {
+        func isCoherent(_ controller: UIViewController) -> Bool {
+            guard let controllerWindow = controller.viewIfLoaded?.window else { return true }
+            return controllerWindow === window
+        }
+
+        guard let rootController = window.rootViewController, isCoherent(rootController) else { return nil }
+
+        var current = rootController
+        var visited = Set<ObjectIdentifier>()
+        visited.insert(ObjectIdentifier(current))
+
+        func eligibleController(_ candidate: UIViewController?) -> UIViewController? {
+            guard let candidate, !candidate.isBeingDismissed else { return nil }
+            let identity = ObjectIdentifier(candidate)
+            guard !visited.contains(identity), isCoherent(candidate) else { return nil }
+            return candidate
+        }
+
+        while let next = eligibleController(current.presentedViewController)
+            ?? eligibleController((current as? UINavigationController)?.visibleViewController)
+            ?? eligibleController((current as? UITabBarController)?.selectedViewController)
+        {
+            visited.insert(ObjectIdentifier(next))
+            current = next
+        }
+
+        return current
+    }
+
+    static func configurationError(_ configuration: GIDConfiguration) -> SocialResult.Error? {
+        guard !configuration.clientID.isEmpty else {
+            return .general("Google iOS clientID is empty")
+        }
+
+        let requiredScheme = configuration.clientID
+            .split(separator: ".", omittingEmptySubsequences: false)
+            .reversed()
+            .joined(separator: ".")
+        let registeredURLSchemes = (Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [Any] ?? [])
+            .flatMap { urlType -> [String] in
+                guard
+                    let urlType = urlType as? [String: Any],
+                    let schemes = urlType["CFBundleURLSchemes"] as? [Any]
+                else {
+                    return []
+                }
+                return schemes.compactMap { $0 as? String }
+            }
+        guard registeredURLSchemes.contains(where: {
+            $0.caseInsensitiveCompare(requiredScheme) == .orderedSame
+        }) else {
+            return .general("Google iOS clientID callback URL scheme is not registered")
+        }
+        return nil
     }
 }
