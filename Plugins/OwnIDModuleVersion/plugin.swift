@@ -10,7 +10,7 @@ struct OwnIDModuleVersion: BuildToolPlugin {
             .buildCommand(
                 displayName: "Copy \(target.name) version resource",
                 executable: URL(fileURLWithPath: "/bin/cp"),
-                arguments: [input.path, output.path],
+                arguments: ["-f", input.path, output.path],
                 inputFiles: [input],
                 outputFiles: [output]
             )
