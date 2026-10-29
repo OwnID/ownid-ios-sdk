@@ -28,7 +28,7 @@ internal final class PhoneVerificationAPIControllerImpl: PhoneVerificationAPICon
         self.interceptor = interceptor
     }
 
-    func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure> {
+    func complete(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure> {
         do {
             let request = try PhoneVerificationCompleteAPICall(
                 apiBaseURL: apiBaseURL,

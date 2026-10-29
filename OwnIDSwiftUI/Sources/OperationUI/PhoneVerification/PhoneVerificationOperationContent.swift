@@ -58,8 +58,8 @@ internal struct PhoneVerificationOperationContentView: View {
         self._model = State(
             initialValue: VerificationOperationContentModel(
                 initialState: .created,
-                stateStream: controller.stateStream(),
-                stringsStream: stringsProvider.getStrings(params: PhoneVerificationStringsParams()),
+                makeStateStream: { controller.stateStream() },
+                makeStringsStream: { stringsProvider.getStrings(params: PhoneVerificationStringsParams()) },
                 shouldFinishStateObservation: { state in
                     if case .completed = state { return true }
                     return false
@@ -93,10 +93,12 @@ private struct PhoneVerificationOperationObservedContentView: View {
     @Environment(\.ownIDOperationOverrides) private var overrides
 
     internal var body: some View {
-        content
-            .onAppear {
-                model.startObserving()
-            }
+        ZStack {
+            content
+        }
+        .taskCompat(id: controller.operationID) {
+            await model.observe()
+        }
     }
 
     @ViewBuilder

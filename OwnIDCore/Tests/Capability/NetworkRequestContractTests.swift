@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @testable import OwnIDCore
@@ -69,44 +70,51 @@ struct NetworkRequestContractTests {
         #expect(header(.traceparent, in: built) == existingTraceParent)
     }
 
-    @Test func `Default header adapter adds language app URL and correlation metadata`() async throws {
+    @Test(arguments: [(true, true), (true, false), (false, true), (false, false)])
+    func `Default header adapter adds only available metadata`(hasLocalInfo: Bool, hasLanguageProvider: Bool) async throws {
         let url = try #require(URL(string: "https://example.test/api/login"))
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = Data(#"{"body":true}"#.utf8)
         request.setValue("tenant=value, other=two", forHTTPHeaderField: NetworkRequest.Header.baggage.rawValue)
         let adapter = NetworkRequest.DefaultHeadersAdapter(
-            localInfo: StubLocalInfo(correlationId: "correlation-123"),
-            languageTagsProvider: StaticLanguageTagsProvider(tags: [
+            localInfo: hasLocalInfo ? StubLocalInfo(correlationId: "correlation-123") : nil,
+            languageTagsProvider: hasLanguageProvider ? StaticLanguageTagsProvider(tags: [
                 LanguageTag(language: "fr", country: "FR"),
                 LanguageTag(language: "he", country: ""),
-            ]),
+            ]) : nil,
             appURLHeaderValue: "App123.server.uat.ownid-eu.com"
         )
 
+        let expectedLanguage = hasLanguageProvider ? "fr-FR,he" : nil
         let adapted = try await adapt(
             request,
             using: adapter,
-            until: { header(.acceptLanguage, in: $0) == "fr-FR,he" }
+            until: { header(.acceptLanguage, in: $0) == expectedLanguage }
         )
 
         #expect(adapted.url == url)
         #expect(adapted.httpMethod == "POST")
         #expect(adapted.httpBody == request.httpBody)
-        #expect(header(.acceptLanguage, in: adapted) == "fr-FR,he")
+        #expect(header(.acceptLanguage, in: adapted) == expectedLanguage)
         #expect(header(.ownIDAppURL, in: adapted) == "App123.server.uat.ownid-eu.com")
-        #expect(header(.baggage, in: adapted) == "tenant=value,other=two,sdk.correlation_id=correlation-123")
+        let expectedBaggage = hasLocalInfo
+            ? "tenant=value,other=two,sdk.correlation_id=correlation-123"
+            : "tenant=value, other=two"
+        #expect(header(.baggage, in: adapted) == expectedBaggage)
     }
 
-    @Test func `Default header adapter preserves existing singleton metadata`() async throws {
+    @Test(arguments: [true, false])
+    func `Default header adapter preserves existing singleton metadata`(hasMetadata: Bool) async throws {
         let url = try #require(URL(string: "https://example.test/api/login"))
         var request = URLRequest(url: url)
         request.setValue("de-DE", forHTTPHeaderField: NetworkRequest.Header.acceptLanguage.rawValue)
         request.setValue("custom.example.test", forHTTPHeaderField: NetworkRequest.Header.ownIDAppURL.rawValue)
         request.setValue("SDK.Correlation_ID=existing, tenant=value", forHTTPHeaderField: NetworkRequest.Header.baggage.rawValue)
+        request.setValue("Host-App/2.0", forHTTPHeaderField: "User-Agent")
         let adapter = NetworkRequest.DefaultHeadersAdapter(
-            localInfo: StubLocalInfo(correlationId: "new-correlation"),
-            languageTagsProvider: StaticLanguageTagsProvider(tags: [LanguageTag(language: "fr", country: "FR")]),
+            localInfo: hasMetadata ? StubLocalInfo(correlationId: "new-correlation") : nil,
+            languageTagsProvider: hasMetadata ? StaticLanguageTagsProvider(tags: [LanguageTag(language: "fr", country: "FR")]) : nil,
             appURLHeaderValue: "App123.server.ownid.com"
         )
 
@@ -114,22 +122,45 @@ struct NetworkRequestContractTests {
 
         #expect(header(.acceptLanguage, in: adapted) == "de-DE")
         #expect(header(.ownIDAppURL, in: adapted) == "custom.example.test")
-        #expect(header(.baggage, in: adapted) == "SDK.Correlation_ID=existing,tenant=value")
+        #expect(adapted.value(forHTTPHeaderField: "User-Agent") == "Host-App/2.0")
+        let expectedBaggage = hasMetadata ? "SDK.Correlation_ID=existing,tenant=value" : "SDK.Correlation_ID=existing, tenant=value"
+        #expect(header(.baggage, in: adapted) == expectedBaggage)
+    }
+
+    @Test func `Default header adapter observes language changes until released`() async throws {
+        let url = try #require(URL(string: "https://example.test/api/login"))
+        let request = URLRequest(url: url)
+        let provider = LiveLanguageTagsProvider(tags: [LanguageTag(language: "fr", country: "FR")])
+        defer { provider.finish() }
+        var adapter: NetworkRequest.DefaultHeadersAdapter? = NetworkRequest.DefaultHeadersAdapter(
+            localInfo: nil,
+            languageTagsProvider: provider,
+            appURLHeaderValue: "App123.server.ownid.com"
+        )
+
+        _ = try await adapt(request, using: #require(adapter), until: { header(.acceptLanguage, in: $0) == "fr-FR" })
+        provider.setLanguageTags(["de", "ja"])
+        let updated = try await adapt(request, using: #require(adapter), until: { header(.acceptLanguage, in: $0) == "de,ja" })
+        #expect(header(.acceptLanguage, in: updated) == "de,ja")
+        #expect(provider.terminations.entries.isEmpty)
+
+        adapter = nil
+        _ = try await provider.terminations.waitForFirst("Header adapter language subscription release") { _ in true }
     }
 
     private func adapt(
         _ request: URLRequest,
         using adapter: NetworkRequest.DefaultHeadersAdapter,
-        until isReady: (URLRequest) -> Bool = { _ in true },
-        sourceLocation: SourceLocation = SourceLocation(fileID: #fileID, filePath: #filePath, line: #line, column: #column)
+        until isReady: @escaping @Sendable (URLRequest) -> Bool = { _ in true }
     ) async throws -> URLRequest {
-        var adapted = await adapter.adapt(request)
-        for _ in 0..<50 {
-            if isReady(adapted) { return adapted }
-            await Task.yield()
-            adapted = await adapter.adapt(request)
+        try await withTestTimeout("Default headers adapter metadata") {
+            while true {
+                try Task.checkCancellation()
+                let adapted = await adapter.adapt(request)
+                if isReady(adapted) { return adapted }
+                await Task.yield()
+            }
         }
-        return try #require(nil as URLRequest?, "Default headers adapter did not reach the expected state", sourceLocation: sourceLocation)
     }
 
     private func header(_ name: NetworkRequest.Header, in request: URLRequest) -> String? {
@@ -150,6 +181,29 @@ private struct StaticLanguageTagsProvider: LanguageTagsProvider {
     }
 }
 
+private final class LiveLanguageTagsProvider: LanguageTagsProvider, Sendable {
+    private let stream: AsyncStream<[LanguageTag]>
+    private let continuation: AsyncStream<[LanguageTag]>.Continuation
+    let terminations = AsyncSignalRecorder<Void>()
+
+    init(tags: [LanguageTag]) {
+        let (stream, continuation) = AsyncStream<[LanguageTag]>.makeStream()
+        self.stream = stream
+        self.continuation = continuation
+        let terminations = self.terminations
+        continuation.onTermination = { _ in terminations.append(()) }
+        continuation.yield(tags)
+    }
+
+    var languageTags: AsyncStream<[LanguageTag]> { stream }
+
+    func setLanguageTags(_ tags: [String]) {
+        continuation.yield(tags.map { LanguageTag(language: $0, country: "") })
+    }
+
+    func finish() { continuation.finish() }
+}
+
 private struct StubLocalInfo: LocalInfo {
     let modules: [(name: String, version: String)] = []
     let bundleID = "com.ownid.tests"
@@ -158,8 +212,11 @@ private struct StubLocalInfo: LocalInfo {
     let correlationId: String
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = false
+    let biometryType: LABiometryType = .none
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 }

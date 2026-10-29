@@ -17,7 +17,7 @@ struct DemoBaseApp: App {
 
         OwnID.setProviders { registrar in
             registrar.demoIdentityProviders(identityPlatform: Self.identityPlatform)
-            registrar.signInWithGoogleProvider(configurationProvider: { serverClientID in
+            registrar.googleSignInProvider(configurationProvider: { serverClientID in
                 GIDConfiguration(
                     clientID: DemoConfiguration.googleIOSClientID,
                     serverClientID: serverClientID

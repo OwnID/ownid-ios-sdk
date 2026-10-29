@@ -3,13 +3,13 @@ import UIKit
 
 internal final class SignInWithGoogleUIImpl: SignInWithGoogleUI, @unchecked Sendable {
     private let uiContextProvider: @Sendable () throws -> any UIContextProvider
-    private let provider: @Sendable () throws -> any SignInWithGoogle
+    private let provider: @Sendable () throws -> any GoogleSignInProvider
     private let logger: OwnIDLogRouter?
-    private var active: [(id: UUID, provider: any SignInWithGoogle)] = []
+    private var active: [(id: UUID, provider: any GoogleSignInProvider)] = []
 
     init(
         uiContextProvider: @escaping @Sendable () throws -> any UIContextProvider,
-        provider: @escaping @Sendable () throws -> any SignInWithGoogle,
+        provider: @escaping @Sendable () throws -> any GoogleSignInProvider,
         logger: OwnIDLogRouter?
     ) {
         self.uiContextProvider = uiContextProvider
@@ -18,9 +18,14 @@ internal final class SignInWithGoogleUIImpl: SignInWithGoogleUI, @unchecked Send
     }
 
     @MainActor
-    func signIn(clientID: String, nonce: String?) async -> SocialResult {
+    func signIn(clientID: String, nonce: String?) async -> SocialSignInResult {
         do {
+            guard !Task.isCancelled else { return .canceled(reason: .systemError(details: "Authorization canceled")) }
             let google = try provider()
+            let params = SocialSignInParams(clientID: clientID, nonce: nonce)
+            let available = await google.isAvailable(params: params)
+            guard !Task.isCancelled else { return .canceled(reason: .systemError(details: "Authorization canceled")) }
+            guard available else { return .fail(error: .general("Google sign-in provider is unavailable.")) }
             let window: UIWindow
             do {
                 window = try uiContextProvider().current().requireWindow()
@@ -37,7 +42,7 @@ internal final class SignInWithGoogleUIImpl: SignInWithGoogleUI, @unchecked Send
                     self.active.remove(at: index)
                 }
             }
-            return await google.signIn(window: window, params: SignInWithSocialParams(clientID: clientID, nonce: nonce))
+            return await google.signIn(window: window, params: params)
         } catch let missing as MissingDependencyError {
             return .fail(error: .general("Missing dependency: \(missing.dependencyName)", missing))
         } catch {

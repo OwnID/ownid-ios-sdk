@@ -92,7 +92,7 @@ internal final class RunDiagnosticImpl: RunDiagnostic, @unchecked Sendable {
         guard let previousRun, let serverLogger else { return }
         let exit = await exitProvider(previousRun.processId)
         serverLogger.log(
-            level: .warn,
+            level: exit == nil ? .info : .warn,
             className: "RunDiagnostic",
             message: "Previous run observed",
             cause: nil,

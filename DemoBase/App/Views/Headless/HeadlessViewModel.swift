@@ -391,7 +391,7 @@ final class HeadlessViewModel: ObservableObject {
                     busy: true
                 )
 
-                await controller.completeWithCode(code: otpCode)
+                await controller.complete(code: otpCode)
                     .onSuccess { token in
                         viewModel.log.add("Email Verification succeeded: \(token)")
                         self.finish(token)

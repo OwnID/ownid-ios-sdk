@@ -1,12 +1,106 @@
 import Foundation
 import Testing
 
-@testable import OwnIDCore
+@_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: WIRE-170, WIRE-180, API-060
+// Covers: WIRE-170, WIRE-180, API-060, API-240
 struct EnrollAPIImplementationMappingTests {
     private let baseURL = URL(string: "https://example.test/api")!
     private let coder = JSONCoderImpl()
+
+    @Test func `Passkeys enroll entry forwards params to passkey enrollment API`() async {
+        let runtime = NamespacePasskeyEnrollAPI()
+        let container = DIContainerImpl(scopeName: "passkey-enroll-entry")
+        container.register((any PasskeyEnrollAPI).self, instance: runtime)
+        let params = PasskeyEnrollAPIParams(
+            proofToken: ProofToken(token: "proof-token"),
+            accessToken: AccessToken(token: "access-token"),
+            traceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00"
+        )
+
+        let result = await container.apiNamespace.passkeys.enroll.start(params: params)
+
+        assertPasskeyEnrollSuccess(result)
+        let receivedParams = await runtime.receivedParams
+        #expect(receivedParams.count == 1)
+        #expect(receivedParams.first?.proofToken == params.proofToken)
+        #expect(receivedParams.first?.accessToken == params.accessToken)
+        #expect(receivedParams.first?.traceParent == params.traceParent)
+    }
+
+    @Test func `Retained enroll entries resolve current and child context lazily without verification runtime`() async throws {
+        let network = APIRecordingNetwork(response: enrollSuccess())
+        let emailResolutions = LockedCounter()
+        let phoneResolutions = LockedCounter()
+        let container = DIContainerImpl(scopeName: "retained-enroll-entries")
+        container.register((any APIBaseURL).self, instance: StaticAPIBaseURL(url: baseURL))
+        container.register((any NetworkProtocol).self, instance: network)
+        container.register((any JSONCoder).self, instance: coder)
+        container.registerFactory { resolver -> any EmailEnrollAPI in
+            _ = emailResolutions.increment()
+            return EmailEnrollAPIImpl.create(resolver: resolver)
+        }
+        container.registerFactory { resolver -> any PhoneEnrollAPI in
+            _ = phoneResolutions.increment()
+            return PhoneEnrollAPIImpl.create(resolver: resolver)
+        }
+        _ = container.setContext { $0.authz = .fromToken("initial-parent-token") }
+        let rootEntries = container.apiNamespace.verifications
+        let scopedEntries = container.apiNamespace.withContext { $0.authz = .fromToken("child-token") }.verifications
+        #expect(emailResolutions.value == 0)
+        #expect(phoneResolutions.value == 0)
+        #expect(await network.requestsSnapshot().isEmpty)
+
+        _ = container.setContext { $0.authz = .fromToken("current-parent-token") }
+        let traceParent = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00"
+        let email = EmailEnrollAPIParams(proofToken: ProofToken(token: "email-proof"), traceParent: traceParent)
+        let phone = PhoneEnrollAPIParams(proofToken: ProofToken(token: "phone-proof"), traceParent: traceParent)
+        assertEmailEnrollSuccess(await rootEntries.email.enroll.start(params: email))
+        assertPhoneEnrollSuccess(await rootEntries.phone.enroll.start(params: phone))
+        assertEmailEnrollSuccess(await scopedEntries.email.enroll.start(params: email))
+        assertPhoneEnrollSuccess(await scopedEntries.phone.enroll.start(params: phone))
+        assertEmailEnrollSuccess(
+            await scopedEntries.email.enroll.start(
+                params: EmailEnrollAPIParams(
+                    proofToken: ProofToken(token: "email-proof"),
+                    accessToken: AccessToken(token: "email-explicit-token"),
+                    traceParent: traceParent
+                )
+            )
+        )
+        assertPhoneEnrollSuccess(
+            await scopedEntries.phone.enroll.start(
+                params: PhoneEnrollAPIParams(
+                    proofToken: ProofToken(token: "phone-proof"),
+                    accessToken: AccessToken(token: "phone-explicit-token"),
+                    traceParent: traceParent
+                )
+            )
+        )
+
+        #expect(emailResolutions.value == 3)
+        #expect(phoneResolutions.value == 3)
+        let requests = await network.requestsSnapshot()
+        #expect(requests.count == 6)
+        for (index, request) in requests.enumerated() {
+            let channel = index.isMultiple(of: 2) ? "email" : "phone"
+            let accessToken: String
+            if index < 2 {
+                accessToken = "current-parent-token"
+            } else if index < 4 {
+                accessToken = "child-token"
+            } else {
+                accessToken = "\(channel)-explicit-token"
+            }
+            assertEnrollRequest(
+                request.buildURLRequest(),
+                path: "verifications/\(channel)/enroll",
+                proofToken: "\(channel)-proof",
+                accessToken: accessToken,
+                traceParent: traceParent
+            )
+        }
+    }
 
     @Test func `Enroll requests build endpoint bodies and headers`() throws {
         let emailCall = try EmailEnrollAPICall(
@@ -947,5 +1041,14 @@ private actor RecordingAPICallInterceptor: APICallInterceptor {
 
     func onResponseCount() -> Int {
         responseCount
+    }
+}
+
+private actor NamespacePasskeyEnrollAPI: PasskeyEnrollAPI {
+    private(set) var receivedParams: [PasskeyEnrollAPIParams] = []
+
+    func start(params: PasskeyEnrollAPIParams) async -> APIResult<Void, PasskeyEnrollAPIFailure> {
+        receivedParams.append(params)
+        return .success(())
     }
 }

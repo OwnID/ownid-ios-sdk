@@ -38,7 +38,7 @@ fallback UI.
 - `OwnIDCore` is installed and OwnID is initialized before `start`.
 - iOS passkey setup from the public README is complete.
 - The tenant/hosted page requirements are known: native registration handoff,
-  session creation, password auth, Google or Apple sign-in, passkeys, and
+  session creation, password auth, Sign in with Google or Sign in with Apple, passkeys, and
   runtime context.
 - App behavior is decided for `onNativeAction`, `onFinish`, `onError`, and
   `onClose`.

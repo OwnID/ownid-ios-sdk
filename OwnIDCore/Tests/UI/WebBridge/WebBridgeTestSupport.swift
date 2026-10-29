@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 import UIKit
 import WebKit
@@ -314,10 +315,13 @@ struct WebBridgePluginMatrixLocalInfo: LocalInfo {
     let correlationId = "correlation-webbridge-test"
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = false
+    let biometryType: LABiometryType = .none
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 }
 
 struct WebBridgeRuntimePluginLocalInfo: LocalInfo {
@@ -328,10 +332,13 @@ struct WebBridgeRuntimePluginLocalInfo: LocalInfo {
     let correlationId: String
     let isDebuggable = true
     let isSystemFidoCapable: Bool
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = false
+    let biometryType: LABiometryType = .none
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 
     init(correlationId: String = "correlation-webbridge-plugin-test", isSystemFidoCapable: Bool = true) {
         self.correlationId = correlationId
@@ -374,9 +381,9 @@ final class WebBridgePluginMatrixPasskey: PasskeyProtocol, @unchecked Sendable {
     }
 }
 
-final class WebBridgePluginMatrixSignInWithApple: SignInWithApple, @unchecked Sendable {
-    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
-        fatalError("Unexpected Apple sign-in")
+final class WebBridgePluginMatrixAppleSignInProvider: AppleSignInProvider, @unchecked Sendable {
+    @MainActor func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
+        fatalError("Unexpected Sign in with Apple")
     }
 
     @MainActor func cancel() {
@@ -384,9 +391,9 @@ final class WebBridgePluginMatrixSignInWithApple: SignInWithApple, @unchecked Se
     }
 }
 
-final class WebBridgePluginMatrixSignInWithGoogle: SignInWithGoogle, @unchecked Sendable {
-    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
-        fatalError("Unexpected Google sign-in")
+final class WebBridgePluginMatrixGoogleSignInProvider: GoogleSignInProvider, @unchecked Sendable {
+    @MainActor func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
+        fatalError("Unexpected Sign in with Google")
     }
 
     @MainActor func cancel() {

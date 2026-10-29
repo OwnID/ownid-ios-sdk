@@ -305,13 +305,9 @@ public enum TransportType: String, Codable, Sendable, CustomStringConvertible {
 
     case ble = "ble"
 
-    case smartCard = "smart-card"
-
     case hybrid = "hybrid"
 
     case `internal` = "internal"
-
-    case cable = "cable"
 
     public var description: String { rawValue }
 }

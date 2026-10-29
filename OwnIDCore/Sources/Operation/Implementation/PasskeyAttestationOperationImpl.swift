@@ -67,8 +67,6 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
         self.stream = stream
         self.controllerImpl = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -89,6 +87,7 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
 
                         taskScope.spawn { [weak self] in
                             guard let self else { return }
+                            let readinessParams = params
                             let params = params ?? PasskeyAttestationOperationParams()
                             let accessToken = params.accessToken ?? self.context?.accessToken
                             var loginID: LoginID?
@@ -123,9 +122,20 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
                                 return
                             }
 
+                            let available = await self.ui.isAvailable(params: readinessParams)
+                            guard await self.isAlive() else { return }
+                            guard available else {
+                                let failure = PasskeyAttestationOperationFailure.integration(
+                                    .providerFailed(errorCode: .passkeyNotCreated, message: "PasskeyAttestationUI is unavailable")
+                                )
+                                await self.stream.yield(.complete(.failure(failure)))
+                                return
+                            }
+
                             let apiResult = await self.api.start(
                                 params: PasskeyAttestationAPIParams(
                                     loginID: loginID,
+                                    accountDisplayName: self.context?.accountDisplayName,
                                     accessToken: accessToken,
                                     traceParent: params.traceParent ?? TraceContext.generateTraceParent()
                                 )
@@ -296,6 +306,7 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
 
     @discardableResult
     internal func start(params: PasskeyAttestationOperationParams? = nil) -> PasskeyAttestationOperationController {
+        guard controllerImpl._attachOwner(self) else { return controller }
         let stream = self.stream
         taskScope.spawn { [stream] in
             await stream.yield(.start(params))
@@ -337,6 +348,9 @@ internal final class PasskeyAttestationOperationImpl: PasskeyAttestationOperatio
             return .unavailable("LoginID or AccessToken required")
         }
 
+        guard await ui.isAvailable(params: operationParams) else {
+            return .unavailable("PasskeyAttestationUI is unavailable")
+        }
         return .available
     }
 

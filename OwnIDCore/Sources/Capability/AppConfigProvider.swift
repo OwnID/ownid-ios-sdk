@@ -9,6 +9,9 @@ import Foundation
 /// The applied payload is the SDK module boundary for runtime rules, UI asset configuration, and diagnostics thresholds.
 /// This is not an app-developer integration surface.
 internal protocol AppConfigProvider: Capability, Sendable {
+    /// The applied configuration, or `nil` before the first publication. Reading does not wait for bootstrap.
+    var currentConfig: AppConfig? { get }
+
     /// Returns the active ``AppConfig``, suspending only until bootstrap produces a value.
     ///
     /// A cold-start caller may wait for the first network attempt, the bootstrap timeout, or an immediate fetch

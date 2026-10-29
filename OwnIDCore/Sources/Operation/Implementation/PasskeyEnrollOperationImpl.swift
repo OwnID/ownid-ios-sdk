@@ -58,8 +58,6 @@ internal final class PasskeyEnrollOperationImpl: PasskeyEnrollOperation, @unchec
         self.stream = stream
         self.controllerImpl = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -170,6 +168,7 @@ internal final class PasskeyEnrollOperationImpl: PasskeyEnrollOperation, @unchec
 
     @discardableResult
     internal func start(params: PasskeyEnrollOperationParams? = nil) -> PasskeyEnrollOperationController {
+        guard controllerImpl._attachOwner(self) else { return controller }
         let stream = self.stream
         taskScope.spawn { [stream] in
             await stream.yield(.start(params))

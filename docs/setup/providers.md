@@ -149,7 +149,7 @@ OwnID.setProviders { registrar in
 
 ## Sign in with Apple
 
-Sign in with Apple is built into `OwnIDCore` by default through AuthenticationServices. To use it, configure the Apple capability on the iOS app target and Apple Sign-in in the OwnID Console.
+Sign in with Apple is built into `OwnIDCore` by default through AuthenticationServices. To use it, configure the Apple capability on the iOS app target and Sign in with Apple in the OwnID Console.
 
 To use it:
 
@@ -168,13 +168,13 @@ To use it:
 
 4. If the app uses manual signing, regenerate and install provisioning profiles after changing the App ID capability.
 
-5. Follow the [OwnID Apple Sign-in guide](https://docs.ownid.com/social-providers/apple) for Apple Sign-in configuration in the OwnID Console.
+5. Follow the [OwnID Sign in with Apple guide](https://docs.ownid.com/social-providers/apple) for Sign in with Apple configuration in the OwnID Console.
 
 ## Sign in with Google
 
-Sign in with Google setup has two parts: app-side provider wiring in your iOS app and Google Sign-In configuration in the OwnID Console. OwnID's source-only Google provider helper connects OwnID Google sign-in to GoogleSignIn-iOS; copy it into your app target.
+Sign in with Google setup has two parts: app-side provider wiring in your iOS app and Sign in with Google configuration in the OwnID Console. OwnID's source-only Google provider helper connects OwnID Sign in with Google to GoogleSignIn-iOS; copy it into your app target.
 
-The Google provider implements `signIn`; it returns `SocialResult.success`, `canceled`, or `fail`. OwnID invokes `signIn`, `cancel`, and `signOut` on the main actor. The helper returns `fail` before presenting Google UI when the server or iOS client ID is empty or the reversed iOS-client callback URL scheme is missing. An already-canceled Swift task does not start sign-in. Canceling a task during an active provider attempt does not dismiss provider UI immediately; the helper returns `canceled` after that attempt completes. For exact parameters and return values, see [`SignInWithSocial`](../../OwnIDCore/Sources/Capability/SignInWithSocial.swift).
+The Google provider implements `signIn`; it returns `SocialSignInResult.success`, `canceled`, or `fail`. OwnID invokes `signIn`, `cancel`, and `signOut` on the main actor. The helper returns `fail` before presenting Google UI when the server or iOS client ID is empty or the reversed iOS-client callback URL scheme is missing. An already-canceled Swift task does not start sign-in. Canceling a task during an active provider attempt does not dismiss provider UI immediately; the helper returns `canceled` after that attempt completes. For exact parameters and return values, see [`SocialSignIn`](../../OwnIDCore/Sources/Capability/SocialSignIn.swift).
 
 To use it:
 
@@ -182,7 +182,7 @@ To use it:
 
 2. Add [GoogleSignIn-iOS](https://github.com/google/GoogleSignIn-iOS) `9.1.0` or later to your app target dependencies. This is the minimum version this helper is documented against; newer compatible versions can be used. See Google's [iOS integration guide](https://developers.google.com/identity/sign-in/ios/start-integrating) for package setup details.
 
-3. Register the Google iOS OAuth client's `REVERSED_CLIENT_ID` value in the app target's URL Types and forward redirect URLs to Google Sign-In. This value must come from the iOS OAuth client, not the Web OAuth client.
+3. Register the Google iOS OAuth client's `REVERSED_CLIENT_ID` value in the app target's URL Types and forward redirect URLs to Sign in with Google. This value must come from the iOS OAuth client, not the Web OAuth client.
 
    ```swift
    WindowGroup {
@@ -193,7 +193,7 @@ To use it:
    }
    ```
 
-4. Register the copied helper with OwnID from the main actor after SDK initialization and before using functionality that needs Google sign-in. Its `configurationProvider` receives the OwnID-provided Google web/server client ID when OwnID proceeds with provider configuration. Return a request-specific `GIDConfiguration` with the app's iOS OAuth client ID as `clientID` and the supplied value as `serverClientID`:
+4. Register the copied helper with OwnID from the main actor after SDK initialization and before using functionality that needs Sign in with Google. Its `configurationProvider` receives the OwnID-provided Google web/server client ID when OwnID proceeds with provider configuration. Return a request-specific `GIDConfiguration` with the app's iOS OAuth client ID as `clientID` and the supplied value as `serverClientID`:
 
    ```swift
    import GoogleSignIn
@@ -202,7 +202,7 @@ To use it:
    let googleIOSClientID = "<Google iOS OAuth client ID>"
 
    OwnID.setProviders { registrar in
-       registrar.signInWithGoogleProvider(configurationProvider: { serverClientID in
+       registrar.googleSignInProvider(configurationProvider: { serverClientID in
            GIDConfiguration(
                clientID: googleIOSClientID,
                serverClientID: serverClientID
@@ -211,9 +211,9 @@ To use it:
    }
    ```
 
-   The helper receives the exact `UIWindow` selected for the request and resolves the presenter only from that window. If the default foreground-window selection is not appropriate for the app's scene or container hierarchy, register `uiContext(window)`, `uiContext(windowScene)`, or a custom `UIContextProvider` in the same provider scope. The `clientID` passed to `GIDConfiguration` must be the app's iOS OAuth client ID; the `serverClientID` argument is the Google web/server client ID returned by the OwnID challenge. The helper reports `SocialResult.fail` before presenting Google UI for an empty challenge or iOS client ID, a missing reversed callback URL scheme, or a missing presenter.
+   The helper receives the exact `UIWindow` selected for the request and resolves the presenter only from that window. If the default foreground-window selection is not appropriate for the app's scene or container hierarchy, register `uiContext(window)`, `uiContext(windowScene)`, or a custom `UIContextProvider` in the same provider scope. The `clientID` passed to `GIDConfiguration` must be the app's iOS OAuth client ID; the `serverClientID` argument is the Google web/server client ID returned by the OwnID challenge. The helper reports `SocialSignInResult.fail` before presenting Google UI for an empty challenge or iOS client ID, a missing reversed callback URL scheme, or a missing presenter.
 
-5. Follow the [OwnID Google Sign-In guide](https://docs.ownid.com/social-providers/google) for Google Cloud and OwnID Console configuration.
+5. Follow the [OwnID Sign in with Google guide](https://docs.ownid.com/social-providers/google) for Google Cloud and OwnID Console configuration.
 
 ## SAP Customer Data Cloud (Gigya)
 

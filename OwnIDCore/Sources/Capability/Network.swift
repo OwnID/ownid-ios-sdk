@@ -286,39 +286,51 @@ public struct NetworkRequest: Sendable {
 
 extension NetworkRequest {
     internal struct DefaultHeadersAdapter: Adapter {
-        private let localInfo: any LocalInfo
+        private let localInfo: (any LocalInfo)?
         private let appURLHeaderValue: String
-        private let tagsCache: LanguageTagsCache
+        private let tagsCache: LanguageTagsCache?
 
-        private actor LanguageTagsCache {
-            private var latest: [LanguageTag] = [LanguageTag.default]
+        private final class LanguageTagsCache: Sendable {
+            private actor State {
+                private var latest: [LanguageTag] = [LanguageTag.default]
+
+                func current() -> [LanguageTag] { latest }
+
+                func update(_ tags: [LanguageTag]) { latest = tags }
+            }
+
+            private let state: State
+            private let observationTask: Task<Void, Never>
 
             fileprivate init(provider: any LanguageTagsProvider) {
-                Task { [weak self] in
-                    guard let self else { return }
+                let state = State()
+                self.state = state
+                self.observationTask = Task {
                     for await tags in provider.languageTags {
-                        await self.update(tags)
+                        await state.update(tags)
                     }
                 }
             }
 
-            fileprivate func current() -> [LanguageTag] { latest }
+            deinit {
+                observationTask.cancel()
+            }
 
-            fileprivate func update(_ tags: [LanguageTag]) {
-                latest = tags
+            fileprivate func current() async -> [LanguageTag] {
+                await state.current()
             }
         }
 
-        internal init(localInfo: any LocalInfo, languageTagsProvider: any LanguageTagsProvider, appURLHeaderValue: String) {
+        internal init(localInfo: (any LocalInfo)?, languageTagsProvider: (any LanguageTagsProvider)?, appURLHeaderValue: String) {
             self.localInfo = localInfo
             self.appURLHeaderValue = appURLHeaderValue
-            self.tagsCache = LanguageTagsCache(provider: languageTagsProvider)
+            self.tagsCache = languageTagsProvider.map { LanguageTagsCache(provider: $0) }
         }
 
         func adapt(_ request: URLRequest) async -> URLRequest {
             var req = request
 
-            if req.value(forHTTPHeaderField: Header.acceptLanguage.rawValue) == nil {
+            if let tagsCache, req.value(forHTTPHeaderField: Header.acceptLanguage.rawValue) == nil {
                 let tags = await tagsCache.current()
                 let joined = tags.map { $0.tagString }.joined(separator: ",")
                 let value = joined.isEmpty ? "en" : joined
@@ -329,18 +341,20 @@ extension NetworkRequest {
                 req.setValue(appURLHeaderValue, forHTTPHeaderField: Header.ownIDAppURL.rawValue)
             }
 
-            let baggagePair = "sdk.correlation_id=\(localInfo.correlationId)"
-            let existingBaggage = req.value(forHTTPHeaderField: Header.baggage.rawValue) ?? ""
-            let tokens = existingBaggage.split(separator: ",")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-            let hasCorrelation = tokens.contains { $0.lowercased().hasPrefix("sdk.correlation_id=") }
-            let merged: String = {
-                if tokens.isEmpty { return baggagePair }
-                if hasCorrelation { return tokens.joined(separator: ",") }
-                return (tokens + [baggagePair]).joined(separator: ",")
-            }()
-            req.setValue(merged, forHTTPHeaderField: Header.baggage.rawValue)
+            if let localInfo {
+                let baggagePair = "sdk.correlation_id=\(localInfo.correlationId)"
+                let existingBaggage = req.value(forHTTPHeaderField: Header.baggage.rawValue) ?? ""
+                let tokens = existingBaggage.split(separator: ",")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                let hasCorrelation = tokens.contains { $0.lowercased().hasPrefix("sdk.correlation_id=") }
+                let merged: String = {
+                    if tokens.isEmpty { return baggagePair }
+                    if hasCorrelation { return tokens.joined(separator: ",") }
+                    return (tokens + [baggagePair]).joined(separator: ",")
+                }()
+                req.setValue(merged, forHTTPHeaderField: Header.baggage.rawValue)
+            }
 
             return req
         }

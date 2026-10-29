@@ -201,7 +201,7 @@ Migration rules:
   lifecycle policies. Route provider inputs through those boundaries and
   extend them only when the selected journey requires a new app-owned contract.
 - Sign in with Apple is provided by Core; register Google only when the app
-  owns Google sign-in setup.
+  owns Sign in with Google setup.
 - Use `withProviders { ... }` as a one-flow, screen, or WebBridge provider
   override when behavior must differ from top-level providers.
 - Keep fallback password login and manual registration paths unless the product

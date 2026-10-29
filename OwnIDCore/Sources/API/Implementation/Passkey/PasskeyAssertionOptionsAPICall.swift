@@ -151,10 +151,8 @@ internal final class PasskeyAssertionOptionsAPICall: APICall {
         case .usb: return .usb
         case .nfc: return .nfc
         case .ble: return .ble
-        case .smartCard: return .smartCard
         case .hybrid: return .hybrid
         case .internal: return .internal
-        case .cable: return .cable
         }
     }
 

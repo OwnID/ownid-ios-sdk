@@ -9,6 +9,8 @@ struct OperationModelContractTests {
     @Test func `Operation types expose Own ID wire values`() {
         #expect(OperationType.emailVerification.rawValue == "EmailVerification")
         #expect(OperationType.passkeyAuth.rawValue == "PasskeyAuth")
+        #expect(OperationType.idDocVerification.rawValue == "IdDocVerification")
+        #expect(OperationType(rawValue: "IdDocumentVerification") == nil)
     }
 
     @Test func `Operation descriptions use wire values and redact channel value`() {
@@ -26,13 +28,13 @@ struct OperationModelContractTests {
     @Test func `Operation requirement Codable uses public keys and strict operation type values`() throws {
         let requirement = OperationRequirement(
             score: -5,
-            type: .emailVerification,
+            type: .idDocVerification,
             channels: [OperationChannel(channel: "person@example.com", id: "email-main")]
         )
 
         let encoded = try modelJSON.object(encoding: requirement)
         #expect(encoded["score"] as? Int == -5)
-        #expect(encoded["type"] as? String == "EmailVerification")
+        #expect(encoded["type"] as? String == "IdDocVerification")
 
         let channels = try #require(encoded["channels"] as? [[String: String]])
         #expect(channels == [["channel": "person@example.com", "id": "email-main"]])
@@ -42,8 +44,13 @@ struct OperationModelContractTests {
 
         let nilChannels = OperationRequirement(score: 1, type: .passkeyAuth, channels: nil)
         #expect(try modelJSON.object(encoding: nilChannels)["channels"] == nil)
-        #expect(throws: (any Error).self) {
-            try modelJSON.decoder.decode(OperationRequirement.self, from: Data(#"{"score":1,"type":"PasskeyAuthentication"}"#.utf8))
+        for unsupportedType in ["PasskeyAuthentication", "IdDocumentVerification"] {
+            #expect(throws: (any Error).self) {
+                try modelJSON.decoder.decode(
+                    OperationRequirement.self,
+                    from: Data("{\"score\":1,\"type\":\"\(unsupportedType)\"}".utf8)
+                )
+            }
         }
     }
 }

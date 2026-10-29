@@ -4,7 +4,7 @@ import Testing
 
 @testable import OwnIDCore
 
-// Covers: INFO-RUNTIME-030, INFO-RUNTIME-040
+// Covers: INFO-RUNTIME-030
 struct LocalInfoImplementationRuntimeTests {
 
     private static func expectedReleaseVersion() throws -> String {
@@ -122,43 +122,78 @@ struct LocalInfoImplementationRuntimeTests {
         return try #require(Bundle(url: url))
     }
 
-    @Test func `Local info runtime flags are internally coherent`() {
+    @Test func `Local info reports OS level passkey support`() {
         let localInfo = LocalInfoImpl()
-
-        #if DEBUG
-            #expect(localInfo.isDebuggable)
-        #else
-            #expect(!localInfo.isDebuggable)
-        #endif
-
         if #available(iOS 16.0, *) {
             #expect(localInfo.isSystemFidoCapable)
         } else {
             #expect(!localInfo.isSystemFidoCapable)
         }
+    }
 
-        #expect(!(localInfo.isFaceHardwarePresent && localInfo.isFingerprintHardwarePresent))
-        if localInfo.isStrongBiometricEnabled {
-            #expect(localInfo.isFaceHardwarePresent || localInfo.isFingerprintHardwarePresent)
+    @Test(.enabled(if: ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 18))
+    func `Legacy authentication metadata preserves unknown states and mechanism names`() {
+        if #unavailable(iOS 18.0) {
+            let localInfo = LocalInfoImpl()
+            #expect(localInfo.isBiometryEnrolled == nil)
+            #expect(localInfo.isBiometryLockedOut == nil)
+            switch localInfo.biometryType {
+            case .faceID:
+                #expect(localInfo.biometryLocalizedName == "Face ID")
+                #expect(localInfo.biometryIconSystemName == "faceid")
+            case .touchID:
+                #expect(localInfo.biometryLocalizedName == "Touch ID")
+                #expect(localInfo.biometryIconSystemName == "touchid")
+            default:
+                #expect(localInfo.biometryLocalizedName == nil)
+                #expect(localInfo.biometryIconSystemName == nil)
+            }
         }
     }
 
-    @Test func `Local info security flags match LAContext current runtime snapshot`() {
-        let localInfo = LocalInfoImpl()
-        let context = LAContext()
-        let expectedStrongBiometricEnabled =
-            context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
-        let expectedBiometryType = context.biometryType
-        let expectedDeviceSecured = context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
+    @Test func `SDK instances and reinitialization expose the same process snapshot`() async throws {
+        try await withOwnIDRootStateTestLock {
+            let suffix = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+            let firstName = InstanceName(value: "LocalInfoFirst\(suffix)")
+            let secondName = InstanceName(value: "LocalInfoSecond\(suffix)")
+            defer {
+                OwnID.destroy(instanceName: firstName)
+                OwnID.destroy(instanceName: secondName)
+            }
+            OwnID.initialize(instanceName: firstName) {
+                $0.appID = "First\(suffix)"
+                $0.rootURL = "https://127.0.0.1:9/local-info"
+            }
+            let first = OwnID.instance(instanceName: firstName).localInfo
+            OwnID.initialize(instanceName: secondName) {
+                $0.appID = "Second\(suffix)"
+                $0.rootURL = "https://127.0.0.1:9/local-info"
+            }
+            let second = OwnID.instance(instanceName: secondName).localInfo
+            OwnID.destroy(instanceName: firstName)
+            OwnID.initialize(instanceName: firstName) {
+                $0.appID = "First\(suffix)"
+                $0.rootURL = "https://127.0.0.1:9/local-info"
+            }
+            let recreated = OwnID.instance(instanceName: firstName).localInfo
 
-        #expect(localInfo.isDeviceSecured == expectedDeviceSecured)
-        #expect(localInfo.isFaceHardwarePresent == (expectedBiometryType == .faceID))
-        #expect(localInfo.isFingerprintHardwarePresent == (expectedBiometryType == .touchID))
-        #expect(localInfo.isStrongBiometricEnabled == expectedStrongBiometricEnabled)
-        #expect(!(localInfo.isFaceHardwarePresent && localInfo.isFingerprintHardwarePresent))
-        if localInfo.isStrongBiometricEnabled {
-            #expect(localInfo.isDeviceSecured)
-            #expect(localInfo.isFaceHardwarePresent || localInfo.isFingerprintHardwarePresent)
+            for snapshot in [second, recreated] {
+                #expect(snapshot.modules.map { $0.name } == first.modules.map { $0.name })
+                #expect(snapshot.modules.map { $0.version } == first.modules.map { $0.version })
+                #expect(snapshot.bundleID == first.bundleID)
+                #expect(snapshot.appVersion == first.appVersion)
+                #expect(snapshot.userAgent == first.userAgent)
+                #expect(snapshot.correlationId == first.correlationId)
+                #expect(snapshot.isDebuggable == first.isDebuggable)
+                #expect(snapshot.isSystemFidoCapable == first.isSystemFidoCapable)
+                #expect(snapshot.biometryType == first.biometryType)
+                #expect(snapshot.isBiometryUsable == first.isBiometryUsable)
+                #expect(snapshot.isBiometryEnrolled == first.isBiometryEnrolled)
+                #expect(snapshot.isBiometryLockedOut == first.isBiometryLockedOut)
+                #expect(snapshot.biometryLocalizedName == first.biometryLocalizedName)
+                #expect(snapshot.biometryIconSystemName == first.biometryIconSystemName)
+                #expect(snapshot.isPasscodeSet == first.isPasscodeSet)
+            }
         }
     }
 

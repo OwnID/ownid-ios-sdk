@@ -47,7 +47,7 @@ struct PasskeyAssertionAPIImplementationMappingTests {
                         {
                           "id": "Y3JlZGVudGlhbC1pZA",
                           "type": "public-key",
-                          "transports": ["internal", "hybrid", "smart-card"]
+                          "transports": ["usb", "nfc", "ble", "hybrid", "internal"]
                         }
                       ],
                       "userVerification": "required",
@@ -69,7 +69,26 @@ struct PasskeyAssertionAPIImplementationMappingTests {
         #expect(options.allowCredentials?.count == 1)
         #expect(options.allowCredentials?.first?.id == "Y3JlZGVudGlhbC1pZA")
         #expect(options.allowCredentials?.first?.type == .publicKey)
-        #expect(options.allowCredentials?.first?.transports == [.internal, .hybrid, .smartCard])
+        #expect(options.allowCredentials?.first?.transports == [.usb, .nfc, .ble, .hybrid, .internal])
+    }
+
+    @Test(arguments: ["smart-card", "cable"])
+    func `Options reject unsupported transport values`(_ transport: String) throws {
+        let result = try makeOptionsCall().mapHttpSuccess(
+            success(
+                code: 201,
+                path: "passkeys/assertion/options",
+                body: """
+                    {
+                      "challenge": "Y2hhbGxlbmdl",
+                      "rpId": "login.example.test",
+                      "allowCredentials": [{"id": "Y3JlZC0x", "type": "public-key", "transports": ["\(transport)"]}]
+                    }
+                    """
+            )
+        )
+
+        try assertOptionsUnexpectedResponseError(try requireFailure(result), statusCode: 201)
     }
 
     @Test func `Options success accepts padded Base64url assertion options`() throws {

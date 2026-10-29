@@ -68,8 +68,8 @@ WebBridge attaches native SDK capabilities to an app-owned web session. Configur
 | Passkeys | The hosted page uses passkey web actions. | Complete [platform passkey setup](../setup/passkeys.md). |
 | Stored user | The hosted page uses stored-user web actions. | Built-in SDK capability; no app setup required. |
 | Context | The hosted page requests native context. | Set context before bridge creation. See [Context](../setup/context.md) and [Namespace Handles](../setup/namespace-handles.md). |
-| Apple sign-in | The hosted page uses Apple sign-in. | Set up [Sign in with Apple](../setup/providers.md#sign-in-with-apple) for the app target and OwnID Console. |
-| Google sign-in | The hosted page uses Google sign-in. | Register [`signInWithGoogle`](../setup/providers.md#sign-in-with-google). |
+| Sign in with Apple | The hosted page uses Sign in with Apple. | Set up [Sign in with Apple](../setup/providers.md#sign-in-with-apple) for the app target and OwnID Console. |
+| Sign in with Google | The hosted page uses Sign in with Google. | Register [`googleSignIn`](../setup/providers.md#sign-in-with-google). |
 | Session creation | The hosted page requests app session creation. | Register [`sessionCreate`](../setup/providers.md#session-create). |
 | Password authentication | The hosted page uses password authentication. | Register [`passwordAuthenticate`](../setup/providers.md#password-authenticate). |
 

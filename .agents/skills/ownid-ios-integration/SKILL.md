@@ -47,7 +47,7 @@ itself may not exist in the client app.
   `setContext`, and `clearContext`.
 - [providers.md](references/providers.md): configure presentation context and
   app-owned callbacks for session creation, password authentication, and
-  Google/social sign-in; track Sign in with Apple capability and tenant setup.
+  Sign in with Google and other social providers; track the Sign in with Apple capability and tenant setup.
 - [boost-flow.md](references/boost-flow.md): add OwnID SwiftUI widgets to
   existing native login or registration forms while keeping app-owned fallback
   paths.

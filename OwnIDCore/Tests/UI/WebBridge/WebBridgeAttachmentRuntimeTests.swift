@@ -1085,6 +1085,8 @@ private actor GatedRuntimeWebBridgePlugin: WebBridgePlugin {
 }
 
 private final class SilentAppConfigProvider: AppConfigProvider, @unchecked Sendable {
+    var currentConfig: AppConfig? { .default }
+
     func getOrFetchConfig() async throws -> AppConfig {
         .default
     }
@@ -1098,6 +1100,9 @@ private final class SilentAppConfigProvider: AppConfigProvider, @unchecked Senda
 
 private final class ControlledWebBridgeAppConfigProvider: AppConfigProvider, @unchecked Sendable {
     private let state = ControlledWebBridgeAppConfigState()
+    private let snapshot = Locked<AppConfig?>(nil)
+
+    var currentConfig: AppConfig? { snapshot.get() }
 
     func getOrFetchConfig() async throws -> AppConfig {
         .default
@@ -1111,6 +1116,7 @@ private final class ControlledWebBridgeAppConfigProvider: AppConfigProvider, @un
     }
 
     func yieldAndWaitForObservation(_ config: AppConfig) async {
+        snapshot.set(config)
         let nextRequestAfterObservation = await state.enqueue(config)
         await state.waitForRequest(nextRequestAfterObservation)
     }

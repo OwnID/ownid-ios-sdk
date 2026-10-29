@@ -20,6 +20,29 @@ internal struct InternalResendPolicy: Sendable, Codable, Hashable {
         case debounce = "debounce"
     }
 
+    internal init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.allow = try container.decode(Bool.self, forKey: .allow)
+        let attempts = try container.decode(Double.self, forKey: .attempts)
+        guard attempts.isFinite, attempts >= 0, attempts <= 10 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .attempts,
+                in: container,
+                debugDescription: "Resend attempts must be an integer between 0 and 10."
+            )
+        }
+        let integerAttempts = Int(attempts)
+        guard attempts == Double(integerAttempts) else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .attempts,
+                in: container,
+                debugDescription: "Resend attempts must be an integer between 0 and 10."
+            )
+        }
+        self.attempts = integerAttempts
+        self.debounce = try container.decode(Int.self, forKey: .debounce)
+    }
+
     internal func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(allow, forKey: .allow)

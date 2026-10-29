@@ -1,9 +1,10 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: LOC-010, LOC-020, LOC-030, STRINGS-RUNTIME-010
+// Covers: LOC-010, LOC-020, LOC-030, STRINGS-RUNTIME-010, STRINGS-RUNTIME-020
 struct StringsProviderContractTests {
 
     @Test func `Strings provider merges exact language and default maps in fallback order`() async throws {
@@ -146,6 +147,199 @@ struct StringsProviderContractTests {
         #expect(updated.cancel == "Cancel")
         #expect(updated.cta == "Server login cta")
         #expect(updated.error == "Server login error")
+    }
+
+    private static let loginForms: [(String, [LoginIDType], String, String, String, String)] = [
+        ("email", [.email], "email", "Enter your email", "Email", "Enter a valid email"),
+        ("phone", [.phoneNumber], "phoneNumber", "Enter your phone number", "Phone number", "Enter a valid phone number"),
+        ("username", [.userName], "userName", "Enter your ID number", "ID number", "Enter a valid ID number"),
+        ("email or phone", [.email, .phoneNumber], "emailOrPhoneNumber", "Enter your email or phone number", "Email or phone number", "Enter a valid email or phone number"),
+        ("email or username", [.email, .userName], "emailOrUserName", "Enter your email or ID number", "Email or ID number", "Enter a valid email or ID number"),
+        ("phone or username", [.phoneNumber, .userName], "phoneNumberOrUserName", "Enter your phone or ID number", "Phone or ID number", "Enter a valid phone or ID number"),
+        ("all identifiers", [.email, .phoneNumber, .userName], "emailOrPhoneNumberOrUserName", "Enter your email, phone or ID number", "Email, phone or ID number", "Enter a valid email, phone or ID number"),
+    ]
+
+    @Test(arguments: StringsProviderContractTests.loginForms)
+    func `Login collection factory and embedded defaults honor each form contract`(
+        name: String, loginIDTypes: [LoginIDType], serverKey: String, prompt: String, placeholder: String, error: String
+    ) throws {
+        let params = LoginIDCollectStringsParams(loginIDTypes: loginIDTypes)
+        let face = LoginIDCollectStrings(
+            title: "Sign In with Face ID", message: prompt, placeholder: placeholder, cancel: "Cancel", cta: "Continue", error: error
+        )
+        let touch = LoginIDCollectStrings(
+            title: "Sign In with Touch ID", message: prompt, placeholder: placeholder, cancel: "Cancel", cta: "Continue", error: error
+        )
+        let otp = LoginIDCollectStrings(
+            title: prompt, message: "to receive a one-time code", placeholder: placeholder, cancel: "Cancel", cta: "Continue", error: error
+        )
+        #expect(LoginIDCollectStrings.default(loginIDTypes: loginIDTypes, isSystemFidoCapable: true) == face)
+        #expect(LoginIDCollectStrings.default(loginIDTypes: loginIDTypes, isSystemFidoCapable: true, isTouchID: true) == touch)
+        #expect(LoginIDCollectStrings.default(loginIDTypes: loginIDTypes, isSystemFidoCapable: false) == otp)
+        #expect(LoginIDCollectStrings.default(loginIDTypes: loginIDTypes, isSystemFidoCapable: false, isTouchID: true) == otp)
+        let mixedTypes = loginIDTypes + loginIDTypes + [.credentialID]
+        #expect(LoginIDCollectStrings.default(loginIDTypes: mixedTypes, isSystemFidoCapable: true) == face)
+        #expect(LoginIDCollectStrings.default(loginIDTypes: mixedTypes, isSystemFidoCapable: true, isTouchID: true) == touch)
+        #expect(LoginIDCollectStrings.default(loginIDTypes: mixedTypes, isSystemFidoCapable: false, isTouchID: true) == otp)
+
+        var scenarios: [(name: String, type: LABiometryType, usable: Bool, enrolled: Bool?, lockedOut: Bool?, expectedTitle: String)] = [
+            ("usable Touch ID", .touchID, true, true, false, "Sign In with Touch ID"),
+            ("not enrolled Touch ID", .touchID, false, false, false, "Sign In with Touch ID"),
+            ("locked out Touch ID", .touchID, false, true, true, "Sign In with Touch ID"),
+            ("usable Face ID", .faceID, true, true, false, "Sign In with Face ID"),
+            ("unusable Face ID", .faceID, false, false, false, "Sign In with Face ID"),
+            ("no biometry", .none, false, nil, nil, "Sign In with Face ID"),
+            ("unrecognized native type", try #require(LABiometryType(rawValue: 999)), true, nil, nil, "Sign In with Face ID"),
+        ]
+        if #available(iOS 17, *) { scenarios.append(("Optic ID", .opticID, true, true, false, "Sign In with Face ID")) }
+        for scenario in scenarios {
+            let repository = LoginIDCollectStringsEmbeddedRepositoryImpl(localInfo: StringsProviderLocalInfo(
+                isSystemFidoCapable: true, biometryType: scenario.type, isBiometryUsable: scenario.usable,
+                isBiometryEnrolled: scenario.enrolled, isBiometryLockedOut: scenario.lockedOut
+            ))
+            let expected = LoginIDCollectStrings(
+                title: scenario.expectedTitle, message: prompt, placeholder: placeholder, cancel: "Cancel", cta: "Continue", error: error
+            )
+            #expect(repository.fallbackToEmbedded(params: params, map: [:]) == expected, "\(name): \(scenario.name)")
+            #expect(repository.fallbackToEmbedded(params: params, map: ["title": "Custom title"]).title == "Custom title")
+            #expect(repository.fallbackToEmbedded(params: params, map: ["title": ""]).title.isEmpty)
+        }
+        #expect(LoginIDCollectStringsEmbeddedRepositoryImpl(localInfo: nil).fallbackToEmbedded(params: params, map: [:]) == face)
+        let oldSystem = LoginIDCollectStringsEmbeddedRepositoryImpl(
+            localInfo: StringsProviderLocalInfo(isSystemFidoCapable: false, biometryType: .touchID, isBiometryUsable: true)
+        )
+        #expect(oldSystem.fallbackToEmbedded(params: params, map: [:]) == otp)
+    }
+
+    @Test(arguments: StringsProviderContractTests.loginForms)
+    func `Server login titles select each identifier path and preserve the OTP gate`(
+        name: String, loginIDTypes: [LoginIDType], serverKey: String, prompt: String, placeholder: String, error: String
+    ) async throws {
+        let scenarios: [(name: String, type: LABiometryType, usable: Bool, enrolled: Bool?, lockedOut: Bool?, fido: Bool, expectedTitle: String, expectedMessage: String)] = [
+            ("usable Touch ID", .touchID, true, true, false, true, "Touch translation", "Biometric instruction"),
+            ("not enrolled Touch ID", .touchID, false, false, false, true, "Touch translation", "Biometric instruction"),
+            ("locked out Touch ID", .touchID, false, true, true, true, "Touch translation", "Biometric instruction"),
+            ("usable Face ID", .faceID, true, true, false, true, "Legacy translation", "Biometric instruction"),
+            ("pre-FIDO usable Touch ID", .touchID, true, true, false, false, "OTP translation", "OTP instruction"),
+            ("pre-FIDO not enrolled Touch ID", .touchID, false, false, false, false, "OTP translation", "OTP instruction"),
+        ]
+        for scenario in scenarios {
+            let locales = ControlledServerLocaleDataSourceProvider()
+            let repository = LoginIDCollectStringsServerRepositoryImpl(
+                localInfo: StringsProviderLocalInfo(
+                    isSystemFidoCapable: scenario.fido, biometryType: scenario.type, isBiometryUsable: scenario.usable,
+                    isBiometryEnrolled: scenario.enrolled, isBiometryLockedOut: scenario.lockedOut
+                ), serverLocaleProvider: locales
+            )
+            var iterator = repository.getStrings(
+                languageTag: .default,
+                params: LoginIDCollectStringsParams(loginIDTypes: loginIDTypes + loginIDTypes + [.credentialID])
+            ).makeAsyncIterator()
+            await locales.waitForSubscriptions(to: [.default])
+            locales.yield(PathLocaleDataSource(content: [
+                "steps": .dictionary(["login-id-collect": .dictionary([
+                    "title-touch-id-ios": .string("Ancestor Touch translation"),
+                    serverKey: .dictionary([
+                        "title-touch-id-ios": .string("Touch translation"),
+                        "title-ios": .string("Legacy translation"),
+                        "message": .string("Biometric instruction"),
+                        "no-biometrics": .dictionary([
+                            "title-ios": .string("OTP translation"), "message": .string("OTP instruction"),
+                        ]),
+                    ]),
+                ])]),
+            ]), for: .default)
+            let result = try await requireNextValue(from: &iterator)
+            #expect(result["title"] == scenario.expectedTitle, "\(name): \(scenario.name)")
+            #expect(result["message"] == scenario.expectedMessage, "\(name): \(scenario.name)")
+        }
+    }
+
+    @Test func `Touch wording keeps unsupported login ID sets empty`() {
+        let repository = LoginIDCollectStringsEmbeddedRepositoryImpl(
+            localInfo: StringsProviderLocalInfo(isSystemFidoCapable: true, biometryType: .touchID, isBiometryUsable: true)
+        )
+        let empty = LoginIDCollectStrings(title: "", message: "", placeholder: "", cancel: "", cta: "", error: "")
+        for types: [LoginIDType] in [[], [.anonymous, .credentialID]] {
+            #expect(LoginIDCollectStrings.default(loginIDTypes: types, isSystemFidoCapable: true, isTouchID: true) == empty)
+            #expect(LoginIDCollectStrings.default(loginIDTypes: types, isSystemFidoCapable: false, isTouchID: true) == empty)
+            #expect(repository.fallbackToEmbedded(params: LoginIDCollectStringsParams(loginIDTypes: types), map: [:]) == empty)
+        }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func `Touch title uses normal locale fallback across old new and mixed payloads`() async throws {
+        let shutdownToken = ShutdownToken()
+        defer { shutdownToken.cancel() }
+        let exact = LanguageTag(language: "fr", country: "CA")
+        let language = exact.toLanguageOnly()
+        let localInfo = StringsProviderLocalInfo(
+            isSystemFidoCapable: true, biometryType: .touchID, isBiometryUsable: false, isBiometryEnrolled: false
+        )
+        let localeProvider = ControlledServerLocaleDataSourceProvider()
+        let provider = LoginIDCollectStringsProviderImpl(
+            languageTagsProvider: ControlledLanguageTagsProvider(tags: [exact]),
+            embeddedRepository: LoginIDCollectStringsEmbeddedRepositoryImpl(localInfo: localInfo),
+            serverRepository: LoginIDCollectStringsServerRepositoryImpl(localInfo: localInfo, serverLocaleProvider: localeProvider),
+            taskScope: TaskScope(shutdownToken: shutdownToken)
+        )
+        var iterator = provider.getStrings(params: LoginIDCollectStringsParams(loginIDTypes: [.email])).makeAsyncIterator()
+        await localeProvider.waitForSubscriptions(to: [exact, language, .default])
+        for tag in [exact, language, .default] {
+            localeProvider.yield(PathLocaleDataSource(languageTag: tag, content: [
+                "steps": .dictionary(["login-id-collect": .dictionary(["title-ios": .string("ACME legacy Face")])]),
+            ]), for: tag)
+        }
+        #expect(try await requireNextValue(from: &iterator).title == "Sign In with Touch ID")
+
+        localeProvider.yield(PathLocaleDataSource(content: [
+            "steps": .dictionary(["login-id-collect": .dictionary(["title-touch-id-ios": .string("English Touch")])]),
+        ]), for: .default)
+        #expect(try await requireNextValue(from: &iterator).title == "English Touch")
+
+        localeProvider.yield(PathLocaleDataSource(languageTag: language, content: [
+            "steps": .dictionary(["login-id-collect": .dictionary(["title-touch-id-ios": .string("French Touch")])]),
+        ]), for: language)
+        #expect(try await requireNextValue(from: &iterator).title == "French Touch")
+
+        let legacyRegion: [String: JSONValue] = [
+            "steps": .dictionary(["login-id-collect": .dictionary([
+                "title-ios": .string("ACME regional Face"),
+                "email": .dictionary(["message": .string("Regional email prompt")]),
+            ])]),
+        ]
+        localeProvider.yield(PathLocaleDataSource(languageTag: exact, content: legacyRegion), for: exact)
+        let mixed = try await requireNextValue(from: &iterator)
+        #expect(mixed.title == "French Touch")
+        #expect(mixed.message == "Regional email prompt")
+
+        let updatedRegion: [String: JSONValue] = [
+            "steps": .dictionary(["login-id-collect": .dictionary([
+                "title-ios": .string("ACME regional Face"),
+                "title-android": .string("Android fingerprint"),
+                "title-touch-id-ios": .string("Regional Touch"),
+                "email": .dictionary([
+                    "title-touch-id": .string("Shared email Touch"),
+                    "title-touch-id-ios": .string("ACME email Touch"),
+                ]),
+            ])]),
+        ]
+        localeProvider.yield(PathLocaleDataSource(languageTag: exact, content: updatedRegion), for: exact)
+        #expect(try await requireNextValue(from: &iterator).title == "ACME email Touch")
+        let legacyLookup = ServerLocaleContent(languageTag: exact, content: updatedRegion)
+        #expect(legacyLookup.getString(localeKeys: ["steps", "login-id-collect", "email", "title"]) == "ACME regional Face")
+
+        localeProvider.yield(PathLocaleDataSource(languageTag: exact, content: [
+            "steps": .dictionary(["login-id-collect": .dictionary(["title-touch-id-ios": .string("")])]),
+        ]), for: exact)
+        #expect(try await requireNextValue(from: &iterator).title.isEmpty)
+
+        localeProvider.yield(nil, for: exact)
+        #expect(try await requireNextValue(from: &iterator).title == "French Touch")
+        localeProvider.yield(nil, for: language)
+        #expect(try await requireNextValue(from: &iterator).title == "English Touch")
+        localeProvider.yield(nil, for: .default)
+        #expect(try await requireNextValue(from: &iterator).title == "Sign In with Touch ID")
     }
 
     @Test func `Email verification provider emits server backed updates with embedded fallback`() async throws {
@@ -445,14 +639,23 @@ private final class ControlledServerLocaleDataSourceProvider: ServerLocaleDataSo
 private struct PathLocaleDataSource: ServerLocaleDataSource {
     let languageTag: LanguageTag
     let values: [String: String]
+    private let content: ServerLocaleContent?
 
     init(languageTag: LanguageTag = .default, values: [String: String]) {
         self.languageTag = languageTag
         self.values = values
+        self.content = nil
+    }
+
+    init(languageTag: LanguageTag = .default, content: [String: JSONValue]) {
+        self.languageTag = languageTag
+        self.values = [:]
+        self.content = ServerLocaleContent(languageTag: languageTag, content: content)
     }
 
     func getString(key: String...) -> String? {
-        values[key.joined(separator: ".")]
+        if let content { return content.getString(localeKeys: key) }
+        return values[key.joined(separator: ".")]
     }
 }
 
@@ -464,8 +667,11 @@ private struct StringsProviderLocalInfo: LocalInfo {
     let correlationId = "correlation-strings-provider-tests"
     let isDebuggable = true
     let isSystemFidoCapable: Bool
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = false
+    var biometryType: LABiometryType = .none
+    var isBiometryUsable = false
+    var isBiometryEnrolled: Bool? = nil
+    var isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 }

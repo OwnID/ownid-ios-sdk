@@ -3,7 +3,7 @@ import Foundation
 /// Authenticates the user with Apple through OwnID OIDC.
 ///
 /// The operation uses the access token from ``SignInWithAppleOperationParams`` or the current OwnID context when
-/// available, then starts an Apple OIDC challenge and presents the system Apple Sign-In UI through OwnID Core's default
+/// available, then starts an Apple OIDC challenge and presents the system Sign in with Apple UI through OwnID Core's default
 /// Apple provider.
 ///
 /// On success, the controller completes with ``OperationResult/success(_:)`` containing ``AccessTokenWithUserInfo``.
@@ -14,8 +14,8 @@ import Foundation
 /// ``OperationController/abort(reason:)`` while provider UI is active requests best-effort cancellation from both the
 /// Apple provider and the OwnID challenge.
 ///
-/// ``availability(params:)`` verifies SDK dependencies and parameter type only; it does not prove that system Apple
-/// Sign-In UI presentation will succeed.
+/// ``availability(params:)`` verifies SDK dependencies and parameter type only; it does not prove that system
+/// Sign in with Apple UI presentation will succeed.
 ///
 /// Keep the returned controller strongly referenced while the operation is active. If you need to stop an active
 /// operation, call ``OperationController/abort(reason:)``.
@@ -34,7 +34,7 @@ public struct SignInWithAppleOperationParams: CapabilityParams {
     public let accessToken: AccessToken?
     internal let traceParent: String?
 
-    /// Creates Apple Sign-In operation parameters.
+    /// Creates Sign in with Apple operation parameters.
     ///
     /// - Parameters:
     ///   - accessToken: Existing access token, if available. Defaults to `nil`.
@@ -52,7 +52,7 @@ public struct SignInWithAppleOperationParams: CapabilityParams {
 /// Controller for ``SignInWithAppleOperation`` that resolves to ``AccessTokenWithUserInfo``.
 public typealias SignInWithAppleOperationController = any OperationController<AccessTokenWithUserInfo, SignInWithAppleOperationFailure>
 
-/// State value used by the Apple Sign-In operation runtime.
+/// State value used by the Sign in with Apple operation runtime.
 ///
 /// States progress from ``created`` through ``preparing`` and ``active(apiController:)`` to ``completed(result:)`` with an
 /// ``OperationResult`` containing ``AccessTokenWithUserInfo``.
@@ -69,14 +69,14 @@ public enum SignInWithAppleOperationState: OperationState {
 
 /// Failure payload returned by ``SignInWithAppleOperation``.
 ///
-/// Every failure is terminal for the current Apple Sign-In operation run. Branch on the category to decide whether to
+/// Every failure is terminal for the current Sign in with Apple operation run. Branch on the category to decide whether to
 /// offer another auth path, retry from a new operation, or fix provider/platform integration. Use
 /// ``OperationFailure/errorCode`` as a localization key; use `apiFailure`, `underlyingError`, `challengeID`, and
 /// `capability` for diagnostics.
 public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConvertible {
     /// Input supplied by the app or generated request is invalid.
     public enum Input: Sendable {
-        /// - About: The Apple Sign-In request was rejected before the operation could continue.
+        /// - About: The Sign in with Apple request was rejected before the operation could continue.
         /// - End-user: No direct user action unless the app can collect corrected input.
         /// - Developer action: Inspect access-token context and `apiFailure`.
         case invalidRequest(errorCode: ErrorCode, message: String, apiFailure: (any APIFailure)? = nil)
@@ -84,7 +84,7 @@ public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConve
 
     /// Access policy failures returned by OwnID.
     public enum Access: Sendable {
-        /// - About: The caller is not allowed to start or complete Apple Sign-In in this context.
+        /// - About: The caller is not allowed to start or complete Sign in with Apple in this context.
         /// - End-user: Explain that the requested action is unavailable or offer another auth path.
         /// - Developer action: Check access token claims, app policy, operation requirements, and `apiFailure`.
         case forbidden(errorCode: ErrorCode, message: String, apiFailure: (any APIFailure)? = nil)
@@ -97,7 +97,7 @@ public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConve
         /// - Developer action: Do not create another challenge immediately; inspect challenge policy diagnostics.
         case maximumChallengesReached(errorCode: ErrorCode, message: String, apiFailure: (any APIFailure)? = nil)
         /// - About: The OIDC challenge is invalid, expired, or no longer usable.
-        /// - End-user: Ask the user to start a new Apple Sign-In attempt.
+        /// - End-user: Ask the user to start a new Sign in with Apple attempt.
         /// - Developer action: Treat the current `challengeID` as terminal and start a new challenge before retrying.
         case invalid(errorCode: ErrorCode, message: String, challengeID: ChallengeID, apiFailure: (any APIFailure)? = nil)
         /// - About: The OIDC challenge reached its attempt limit.
@@ -108,7 +108,7 @@ public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConve
 
     /// App, SDK, provider, or platform integration failures.
     public enum Integration: Sendable {
-        /// - About: Apple Sign-In provider, platform UI, or backend dependency failed.
+        /// - About: Sign in with Apple provider, platform UI, or backend dependency failed.
         /// - End-user: Show a temporary failure state or offer another auth path.
         /// - Developer action: Inspect `apiFailure` and `underlyingError`; verify provider setup and platform availability.
         case providerFailed(
@@ -117,7 +117,7 @@ public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConve
             apiFailure: (any APIFailure)? = nil,
             underlyingError: (any Error & Sendable)? = nil
         )
-        /// - About: A provider capability required by Apple Sign-In is not configured.
+        /// - About: A provider capability required by Sign in with Apple is not configured.
         /// - End-user: No direct user action. Offer another available auth path when possible.
         /// - Developer action: Configure the missing `capability` for the app and deployment environment.
         case missingProvider(errorCode: ErrorCode, message: String, capability: String, apiFailure: (any APIFailure)? = nil)
@@ -132,7 +132,7 @@ public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConve
     /// SDK, app, provider, backend, or platform integration failed.
     case integration(Integration)
     /// - About: The operation stopped because of an unexpected SDK/runtime failure or an internal invariant violation.
-    /// - End-user: Show a generic Apple Sign-In failure state and offer another app-level path.
+    /// - End-user: Show a generic Sign in with Apple failure state and offer another app-level path.
     /// - Developer action: Log operation context, inspect `apiFailure` or `underlyingError`, and do not continue this controller.
     case unexpected(
         errorCode: ErrorCode = .unknown,
@@ -207,7 +207,7 @@ public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConve
 /// Authenticates the user with Google through OwnID OIDC.
 ///
 /// The operation uses the access token from ``SignInWithGoogleOperationParams`` or the current OwnID context when
-/// available, then starts a Google OIDC challenge and delegates Google UI to the registered ``SignInWithGoogle``
+/// available, then starts a Google OIDC challenge and delegates Google UI to the registered ``GoogleSignInProvider``
 /// provider. The app/provider integration owns Google SDK setup, UI presentation details, provider session state, and
 /// provider-specific failure mapping.
 ///
@@ -220,7 +220,7 @@ public enum SignInWithAppleOperationFailure: OperationFailure, CustomStringConve
 /// Google provider and the OwnID challenge.
 ///
 /// ``availability(params:)`` verifies SDK dependencies and parameter type only; it does not prove that provider UI or
-/// the Google account picker will succeed. Requires a ``SignInWithGoogle`` capability registered in the active OwnID
+/// the Google account picker will succeed. Requires a ``GoogleSignInProvider`` capability registered in the active OwnID
 /// scope.
 ///
 /// Keep the returned controller strongly referenced while the operation is active. If you need to stop an active
@@ -240,7 +240,7 @@ public struct SignInWithGoogleOperationParams: CapabilityParams {
     public let accessToken: AccessToken?
     internal let traceParent: String?
 
-    /// Creates Google Sign-In operation parameters.
+    /// Creates Sign in with Google operation parameters.
     ///
     /// - Parameters:
     ///   - accessToken: Existing access token, if available. Defaults to `nil`.
@@ -258,7 +258,7 @@ public struct SignInWithGoogleOperationParams: CapabilityParams {
 /// Controller for ``SignInWithGoogleOperation`` that resolves to ``AccessTokenWithUserInfo``.
 public typealias SignInWithGoogleOperationController = any OperationController<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>
 
-/// State value used by the Google Sign-In operation runtime.
+/// State value used by the Sign in with Google operation runtime.
 ///
 /// States progress from ``created`` through ``preparing`` and ``active(apiController:)`` to ``completed(result:)`` with an
 /// ``OperationResult`` containing ``AccessTokenWithUserInfo``.
@@ -275,14 +275,14 @@ public enum SignInWithGoogleOperationState: OperationState {
 
 /// Failure payload returned by ``SignInWithGoogleOperation``.
 ///
-/// Every failure is terminal for the current Google Sign-In operation run. Branch on the category to decide whether to
+/// Every failure is terminal for the current Sign in with Google operation run. Branch on the category to decide whether to
 /// offer another auth path, retry from a new operation, or fix provider/platform integration. Use
 /// ``OperationFailure/errorCode`` as a localization key; use `apiFailure`, `underlyingError`, `challengeID`, and
 /// `capability` for diagnostics.
 public enum SignInWithGoogleOperationFailure: OperationFailure, CustomStringConvertible {
     /// Input supplied by the app or generated request is invalid.
     public enum Input: Sendable {
-        /// - About: The Google Sign-In request was rejected before the operation could continue.
+        /// - About: The Sign in with Google request was rejected before the operation could continue.
         /// - End-user: No direct user action unless the app can collect corrected input.
         /// - Developer action: Inspect access-token context and `apiFailure`.
         case invalidRequest(errorCode: ErrorCode, message: String, apiFailure: (any APIFailure)? = nil)
@@ -290,7 +290,7 @@ public enum SignInWithGoogleOperationFailure: OperationFailure, CustomStringConv
 
     /// Access policy failures returned by OwnID.
     public enum Access: Sendable {
-        /// - About: The caller is not allowed to start or complete Google Sign-In in this context.
+        /// - About: The caller is not allowed to start or complete Sign in with Google in this context.
         /// - End-user: Explain that the requested action is unavailable or offer another auth path.
         /// - Developer action: Check access token claims, app policy, operation requirements, and `apiFailure`.
         case forbidden(errorCode: ErrorCode, message: String, apiFailure: (any APIFailure)? = nil)
@@ -303,7 +303,7 @@ public enum SignInWithGoogleOperationFailure: OperationFailure, CustomStringConv
         /// - Developer action: Do not create another challenge immediately; inspect challenge policy diagnostics.
         case maximumChallengesReached(errorCode: ErrorCode, message: String, apiFailure: (any APIFailure)? = nil)
         /// - About: The OIDC challenge is invalid, expired, or no longer usable.
-        /// - End-user: Ask the user to start a new Google Sign-In attempt.
+        /// - End-user: Ask the user to start a new Sign in with Google attempt.
         /// - Developer action: Treat the current `challengeID` as terminal and start a new challenge before retrying.
         case invalid(errorCode: ErrorCode, message: String, challengeID: ChallengeID, apiFailure: (any APIFailure)? = nil)
         /// - About: The OIDC challenge reached its attempt limit.
@@ -314,7 +314,7 @@ public enum SignInWithGoogleOperationFailure: OperationFailure, CustomStringConv
 
     /// App, SDK, provider, or platform integration failures.
     public enum Integration: Sendable {
-        /// - About: Google Sign-In provider, platform UI, or backend dependency failed.
+        /// - About: Sign in with Google provider, platform UI, or backend dependency failed.
         /// - End-user: Show a temporary failure state or offer another auth path.
         /// - Developer action: Inspect `apiFailure` and `underlyingError`; verify provider setup and platform availability.
         case providerFailed(
@@ -323,7 +323,7 @@ public enum SignInWithGoogleOperationFailure: OperationFailure, CustomStringConv
             apiFailure: (any APIFailure)? = nil,
             underlyingError: (any Error & Sendable)? = nil
         )
-        /// - About: A provider capability required by Google Sign-In is not configured.
+        /// - About: A provider capability required by Sign in with Google is not configured.
         /// - End-user: No direct user action. Offer another available auth path when possible.
         /// - Developer action: Configure the missing `capability` for the app and deployment environment.
         case missingProvider(errorCode: ErrorCode, message: String, capability: String, apiFailure: (any APIFailure)? = nil)
@@ -338,7 +338,7 @@ public enum SignInWithGoogleOperationFailure: OperationFailure, CustomStringConv
     /// SDK, app, provider, backend, or platform integration failed.
     case integration(Integration)
     /// - About: The operation stopped because of an unexpected SDK/runtime failure or an internal invariant violation.
-    /// - End-user: Show a generic Google Sign-In failure state and offer another app-level path.
+    /// - End-user: Show a generic Sign in with Google failure state and offer another app-level path.
     /// - Developer action: Log operation context, inspect `apiFailure` or `underlyingError`, and do not continue this controller.
     case unexpected(
         errorCode: ErrorCode = .unknown,

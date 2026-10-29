@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -929,8 +930,11 @@ private struct StubNetworkLocalInfo: LocalInfo {
     let correlationId: String
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = false
+    let biometryType: LABiometryType = .none
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 }

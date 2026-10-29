@@ -10,6 +10,270 @@ import UIKit
 @Suite(.serialized)
 struct VerificationDefaultUIRuntimeTests {
 
+    @Test func `Terminal verification stops strings observation without restarting or retaining the model`() async throws {
+        let states = VerificationContentStream<Int>()
+        let strings = VerificationContentStream<String?>()
+        var model: VerificationOperationContentModel<Int, String>? = verificationContentModel(states: states, strings: strings)
+        weak var weakModel = model
+        var observationFinished = false
+        let observation = Task { [model = model!] in
+            defer { observationFinished = true }
+            await model.observe()
+        }
+        defer { observation.cancel() }
+        try await waitForVerificationObservation { states.subscriptionCount == 1 && strings.subscriptionCount == 1 }
+
+        strings.yield("Initial strings")
+        try await waitForVerificationObservation { model?.resolvedStrings == "Initial strings" }
+        states.yield(2)
+        try await waitForVerificationObservation { strings.cancellationCount == 1 }
+        try await waitForVerificationObservation { observationFinished }
+        await observation.value
+
+        #expect(model?.operationState == 2)
+        var terminalProbeFinished = false
+        let terminalProbe = Task { [model = model!] in
+            defer { terminalProbeFinished = true }
+            await model.observe()
+        }
+        defer { terminalProbe.cancel() }
+        try await waitForVerificationObservation { terminalProbeFinished }
+        await terminalProbe.value
+        #expect(states.subscriptionCount == 1)
+        #expect(strings.subscriptionCount == 1)
+        model = nil
+        #expect(weakModel == nil)
+    }
+
+    @Test func `Canceled verification observation releases subscriptions and reappears with fresh streams and retained values`() async throws {
+        let states = VerificationContentStream<Int>()
+        let strings = VerificationContentStream<String?>()
+        let model = verificationContentModel(states: states, strings: strings)
+        #expect(states.subscriptionCount == 0)
+        #expect(strings.subscriptionCount == 0)
+
+        var firstObservationFinished = false
+        let firstObservation = Task {
+            defer { firstObservationFinished = true }
+            await model.observe()
+        }
+        defer { firstObservation.cancel() }
+        try await waitForVerificationObservation { states.subscriptionCount == 1 && strings.subscriptionCount == 1 }
+        states.yield(1)
+        strings.yield("First appearance")
+        try await waitForVerificationObservation { model.operationState == 1 && model.resolvedStrings == "First appearance" }
+
+        firstObservation.cancel()
+        try await waitForVerificationObservation { firstObservationFinished }
+        await firstObservation.value
+        #expect(states.cancellationCount == 1)
+        #expect(strings.cancellationCount == 1)
+
+        var nextObservationFinished = false
+        let nextObservation = Task {
+            defer { nextObservationFinished = true }
+            await model.observe()
+        }
+        defer { nextObservation.cancel() }
+        try await waitForVerificationObservation { states.subscriptionCount == 2 && strings.subscriptionCount == 2 }
+        #expect(model.operationState == 1)
+        #expect(model.resolvedStrings == "First appearance")
+        states.yield(2)
+        strings.yield("Stale appearance")
+        strings.yield(nil, subscription: 1)
+        strings.yield("Second appearance", subscription: 1)
+        states.yield(0, subscription: 1)
+        try await waitForVerificationObservation { model.operationState == 0 && model.resolvedStrings == "Second appearance" }
+
+        nextObservation.cancel()
+        try await waitForVerificationObservation { nextObservationFinished }
+        await nextObservation.value
+        #expect(states.cancellationCount == 2)
+        #expect(strings.cancellationCount == 2)
+    }
+
+    @Test func `Finished strings leave verification state active and state completion cancels remaining strings`() async throws {
+        let states = VerificationContentStream<Int>()
+        let strings = VerificationContentStream<String?>()
+        let model = verificationContentModel(states: states, strings: strings)
+        var firstObservationFinished = false
+        let firstObservation = Task {
+            defer { firstObservationFinished = true }
+            await model.observe()
+        }
+        defer { firstObservation.cancel() }
+        try await waitForVerificationObservation { states.subscriptionCount == 1 && strings.subscriptionCount == 1 }
+
+        strings.yield("Embedded strings")
+        strings.finish()
+        try await waitForVerificationObservation { model.resolvedStrings == "Embedded strings" }
+        states.yield(1)
+        try await waitForVerificationObservation { model.operationState == 1 }
+        states.finish()
+        try await waitForVerificationObservation { firstObservationFinished }
+        await firstObservation.value
+
+        var nextObservationFinished = false
+        let nextObservation = Task {
+            defer { nextObservationFinished = true }
+            await model.observe()
+        }
+        defer { nextObservation.cancel() }
+        try await waitForVerificationObservation { states.subscriptionCount == 2 && strings.subscriptionCount == 2 }
+        states.finish(subscription: 1)
+        try await waitForVerificationObservation { strings.cancellationCount == 1 }
+        try await waitForVerificationObservation { nextObservationFinished }
+        await nextObservation.value
+        #expect(model.operationState == 1)
+        #expect(model.resolvedStrings == "Embedded strings")
+    }
+
+    @Test func `Email content observes busy and wrong-code states after loading and resubscribes after removal`() async throws {
+        let controller = EmailVerificationOperationControllerImpl(
+            operationID: OperationID(type: .emailVerification, id: "hosted-email-verification"),
+            onUserAborted: { _ in }
+        )
+        let strings = VerificationContentStream<EmailVerificationStrings?>()
+        let recorder = SubmittedCodeRecorder()
+        let apiController = HostedEmailVerificationAPIController(challenge: verificationChallenge(length: 4))
+
+        func showState(isBusy: Bool = false, error: UIError? = nil) {
+            controller.state = .active(
+                uiState: EmailVerificationUIState(
+                    challenge: apiController.challenge,
+                    isBusy: isBusy,
+                    error: error,
+                    onCodeEntered: { code in Task { @MainActor in recorder.record(code) } },
+                    onCancel: {},
+                    onNotYou: {},
+                    onResend: {}
+                ),
+                apiController: apiController
+            )
+        }
+
+        func makeContent() -> EmailVerificationOperationContentView {
+            EmailVerificationOperationContentView(
+                controller: controller,
+                uiProvider: EmailVerificationUIDefaultProvider(),
+                stringsProvider: HostedEmailVerificationStringsProvider(strings: strings),
+                isReadyForInitialFocus: false,
+                errorTextProvider: nil,
+                onMissingRenderer: { Issue.record("Expected the default verification renderer") }
+            )
+        }
+
+        let host = SwiftUIRuntimeHost(rootView: AnyView(makeContent()))
+        defer { host.close() }
+        try await waitForHostedVerification(host: host) { strings.subscriptionCount == 1 }
+        #expect(host.textFields().isEmpty)
+
+        strings.yield(.default)
+        await host.settle(cycles: 20)
+        #expect(host.textFields().isEmpty)
+        showState()
+        try await waitForHostedVerification(host: host) { !host.textFields().isEmpty }
+
+        let textField = try #require(host.textFields().first)
+        await enterText("1234", in: textField, host: host)
+        try await waitForHostedVerification(host: host) { recorder.codes == ["1234"] }
+
+        showState(isBusy: true)
+        try await waitForHostedVerification(host: host) { acceptsVerificationInput(textField) == false }
+
+        showState(error: UIError(errorCode: .verificationCodeWrong, localizedMessage: "Wrong code"))
+        try await waitForHostedVerification(host: host) { host.textFields().first?.text == "" }
+        let reentryField = try #require(host.textFields().first)
+        #expect(acceptsVerificationInput(reentryField) == true)
+        await enterText("5", in: reentryField, host: host)
+        #expect(reentryField.text == "5")
+        #expect(strings.subscriptionCount == 1)
+        #expect(strings.cancellationCount == 0)
+
+        host.update(rootView: AnyView(EmptyView()))
+        try await waitForHostedVerification(host: host) { strings.cancellationCount == 1 }
+        host.update(rootView: AnyView(makeContent()))
+        try await waitForHostedVerification(host: host) { strings.subscriptionCount == 2 }
+        strings.yield(.default, subscription: 1)
+        try await waitForHostedVerification(host: host) { !host.textFields().isEmpty }
+        let reappearedField = try #require(host.textFields().first)
+        showState(isBusy: true)
+        try await waitForHostedVerification(host: host) { acceptsVerificationInput(reappearedField) == false }
+    }
+
+    @Test func `Phone content observes busy and wrong-code states after loading and resubscribes after removal`() async throws {
+        let controller = PhoneVerificationOperationControllerImpl(
+            operationID: OperationID(type: .phoneNumberVerification, id: "hosted-phone-verification"),
+            onUserAborted: { _ in }
+        )
+        let strings = VerificationContentStream<PhoneVerificationStrings?>()
+        let recorder = SubmittedCodeRecorder()
+        let apiController = HostedPhoneVerificationAPIController(challenge: verificationChallenge(length: 4))
+
+        func showState(isBusy: Bool = false, error: UIError? = nil) {
+            controller.state = .active(
+                uiState: PhoneVerificationUIState(
+                    challenge: apiController.challenge,
+                    isBusy: isBusy,
+                    error: error,
+                    onCodeEntered: { code in Task { @MainActor in recorder.record(code) } },
+                    onCancel: {},
+                    onNotYou: {},
+                    onResend: {}
+                ),
+                apiController: apiController
+            )
+        }
+
+        func makeContent() -> PhoneVerificationOperationContentView {
+            PhoneVerificationOperationContentView(
+                controller: controller,
+                uiProvider: PhoneVerificationUIDefaultProvider(),
+                stringsProvider: HostedPhoneVerificationStringsProvider(strings: strings),
+                isReadyForInitialFocus: false,
+                errorTextProvider: nil,
+                onMissingRenderer: { Issue.record("Expected the default verification renderer") }
+            )
+        }
+
+        let host = SwiftUIRuntimeHost(rootView: AnyView(makeContent()))
+        defer { host.close() }
+        try await waitForHostedVerification(host: host) { strings.subscriptionCount == 1 }
+        #expect(host.textFields().isEmpty)
+
+        showState()
+        await host.settle(cycles: 20)
+        #expect(host.textFields().isEmpty)
+        strings.yield(.default)
+        try await waitForHostedVerification(host: host) { !host.textFields().isEmpty }
+
+        let textField = try #require(host.textFields().first)
+        await enterText("1234", in: textField, host: host)
+        try await waitForHostedVerification(host: host) { recorder.codes == ["1234"] }
+
+        showState(isBusy: true)
+        try await waitForHostedVerification(host: host) { acceptsVerificationInput(textField) == false }
+
+        showState(error: UIError(errorCode: .verificationCodeWrong, localizedMessage: "Wrong code"))
+        try await waitForHostedVerification(host: host) { host.textFields().first?.text == "" }
+        let reentryField = try #require(host.textFields().first)
+        #expect(acceptsVerificationInput(reentryField) == true)
+        await enterText("5", in: reentryField, host: host)
+        #expect(reentryField.text == "5")
+        #expect(strings.subscriptionCount == 1)
+        #expect(strings.cancellationCount == 0)
+
+        host.update(rootView: AnyView(EmptyView()))
+        try await waitForHostedVerification(host: host) { strings.cancellationCount == 1 }
+        host.update(rootView: AnyView(makeContent()))
+        try await waitForHostedVerification(host: host) { strings.subscriptionCount == 2 }
+        strings.yield(.default, subscription: 1)
+        try await waitForHostedVerification(host: host) { !host.textFields().isEmpty }
+        let reappearedField = try #require(host.textFields().first)
+        showState(isBusy: true)
+        try await waitForHostedVerification(host: host) { acceptsVerificationInput(reappearedField) == false }
+    }
+
     @Test func `OTP bridge configures one-time-code text input traits`() async throws {
         let host = SwiftUIRuntimeHost(
             rootView: verificationView(description: "Verification code")
@@ -295,5 +559,109 @@ private final class SubmittedCodeRecorder {
 
     func record(_ code: String) {
         codes.append(code)
+    }
+}
+
+@MainActor
+private func verificationContentModel(
+    states: VerificationContentStream<Int>,
+    strings: VerificationContentStream<String?>
+) -> VerificationOperationContentModel<Int, String> {
+    VerificationOperationContentModel(
+        initialState: 0,
+        makeStateStream: { states.makeStream() },
+        makeStringsStream: { strings.makeStream() },
+        shouldFinishStateObservation: { $0 == 2 }
+    )
+}
+
+@MainActor
+private func waitForVerificationObservation(_ condition: @escaping @MainActor @Sendable () -> Bool) async throws {
+    try await withSwiftUITestTimeout("verification observation", seconds: 2) { @MainActor in
+        while !condition() {
+            try Task.checkCancellation()
+            await Task.yield()
+        }
+    }
+}
+
+@MainActor
+private func waitForHostedVerification<Content: View>(
+    host: SwiftUIRuntimeHost<Content>,
+    condition: @escaping @MainActor @Sendable () -> Bool
+) async throws {
+    try await withSwiftUITestTimeout("hosted verification state", seconds: 2) { @MainActor in
+        while !condition() {
+            try Task.checkCancellation()
+            await host.settle(cycles: 1)
+        }
+    }
+}
+
+@MainActor
+private func acceptsVerificationInput(_ textField: UITextField) -> Bool? {
+    textField.delegate?.textField?(
+        textField,
+        shouldChangeCharactersIn: NSRange(location: 0, length: 0),
+        replacementString: "5"
+    )
+}
+
+private struct HostedEmailVerificationStringsProvider: EmailVerificationStringsProvider {
+    let strings: VerificationContentStream<EmailVerificationStrings?>
+
+    func getStrings(params: EmailVerificationStringsParams) -> AsyncStream<EmailVerificationStrings?> {
+        strings.makeStream()
+    }
+}
+
+private struct HostedEmailVerificationAPIController: EmailVerificationAPIController {
+    let challenge: VerificationChallenge
+
+    func complete(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure> { .canceled }
+    func resend() async -> APIResult<Void, EmailVerificationResendAPIFailure> { .canceled }
+    func cancel(reason: Reason) async -> APIResult<Void, EmailVerificationCancelAPIFailure> { .canceled }
+}
+
+private struct HostedPhoneVerificationStringsProvider: PhoneVerificationStringsProvider {
+    let strings: VerificationContentStream<PhoneVerificationStrings?>
+
+    func getStrings(params: PhoneVerificationStringsParams) -> AsyncStream<PhoneVerificationStrings?> {
+        strings.makeStream()
+    }
+}
+
+private struct HostedPhoneVerificationAPIController: PhoneVerificationAPIController {
+    let challenge: VerificationChallenge
+
+    func complete(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure> { .canceled }
+    func resend() async -> APIResult<Void, PhoneVerificationResendAPIFailure> { .canceled }
+    func cancel(reason: Reason) async -> APIResult<Void, PhoneVerificationCancelAPIFailure> { .canceled }
+}
+
+private final class VerificationContentStream<Value: Sendable>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuations: [AsyncStream<Value>.Continuation] = []
+    private var canceledSubscriptions = 0
+
+    var subscriptionCount: Int { lock.withLock { continuations.count } }
+    var cancellationCount: Int { lock.withLock { canceledSubscriptions } }
+
+    func makeStream() -> AsyncStream<Value> {
+        AsyncStream { continuation in
+            continuation.onTermination = { [weak self] termination in
+                guard case .cancelled = termination, let self else { return }
+                self.lock.withLock { self.canceledSubscriptions += 1 }
+            }
+            lock.withLock { continuations.append(continuation) }
+        }
+    }
+
+    func yield(_ value: Value, subscription: Int = 0) {
+        lock.withLock { continuations[subscription] }.yield(value)
+    }
+
+    func finish(subscription: Int = 0) {
+        lock.withLock { continuations[subscription] }.finish()
     }
 }

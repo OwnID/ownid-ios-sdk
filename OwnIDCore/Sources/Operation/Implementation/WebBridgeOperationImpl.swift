@@ -70,8 +70,6 @@ internal final class WebBridgeOperationImpl: WebBridgeOperation, @unchecked Send
         self.stream = stream
         self.controller = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -300,6 +298,7 @@ internal final class WebBridgeOperationImpl: WebBridgeOperation, @unchecked Send
     }
 
     private func enqueueStart(params: WebBridgeOperationParams?) {
+        guard controller._attachOwner(self) else { return }
         let stream = self.stream
         taskScope.spawn { [stream] in
             await stream.yield(.start(params))

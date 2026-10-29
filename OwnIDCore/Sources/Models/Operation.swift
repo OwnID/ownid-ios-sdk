@@ -79,6 +79,7 @@ public enum OperationType: String, Codable, Sendable, CaseIterable {
     case faceKeyVerification = "FaceKeyVerification"
     case faceKeyCreation = "FaceKeyCreation"
     case faceKeyEnrollment = "FaceKeyEnrollment"
+    case idDocVerification = "IdDocVerification"
 }
 
 extension OperationType {

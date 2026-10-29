@@ -25,6 +25,7 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
     internal let operationType: OperationType
     internal let operationID: OperationID
     private let operationRegistry: OperationRegistryImpl
+    private let appConfigProvider: any AppConfigProvider
     private let loginIDConfig: any LoginIDConfigurationProvider
     private let loginIDValidator: any LoginIDValidator
     private let ui: any LoginIDCollectUI
@@ -36,6 +37,9 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
     private enum TaskRefKey { case timeout, errorStrings }
     private let taskRefs = OperationTaskRefs<TaskRefKey>()
     private var errorStrings: ErrorStrings = .default
+    private let startLock = NSLock()
+    private var runtimeStarted = false
+    private var configurationVersion: Int?
 
     private let stream: OperationEventStream<Event>
     private static let collectableLoginIDTypes: Set<LoginIDType> = [.email, .phoneNumber, .userName]
@@ -44,6 +48,7 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
     internal init(
         operationType: OperationType,
         operationRegistry: OperationRegistryImpl,
+        appConfigProvider: any AppConfigProvider,
         loginIDConfig: any LoginIDConfigurationProvider,
         loginIDValidator: any LoginIDValidator,
         ui: any LoginIDCollectUI,
@@ -64,6 +69,7 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
         self.operationType = operationType
         self.operationID = operationID
         self.operationRegistry = operationRegistry
+        self.appConfigProvider = appConfigProvider
         self.loginIDConfig = loginIDConfig
         self.loginIDValidator = loginIDValidator
         self.ui = ui
@@ -75,8 +81,6 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
         self.stream = stream
         self.controller = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -84,12 +88,15 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
         if let provider = errorStringsProvider {
             self.taskRefs.replace(
                 .errorStrings,
-                with: taskScope.spawn { [weak self] in
-                    guard let self else { return }
-                    for await maybeStrings in provider.getStrings(params: ErrorStringsParams()) {
-                        if Task.isCancelled { break }
-                        let strings = maybeStrings ?? .default
-                        await self.stream.yield(.errorStringsUpdated(strings))
+                with: taskScope.spawn { [weak self, stream] in
+                    if let self, !(await self.checkConfiguration()) { return }
+                    let updates = provider.getStrings(params: ErrorStringsParams())
+                    if let self, !(await self.checkConfiguration()) { return }
+                    for await maybeStrings in updates {
+                        if let self, !(await self.checkConfiguration()) { return }
+                        if !Task.isCancelled {
+                            await stream.yield(.errorStringsUpdated(maybeStrings ?? .default))
+                        }
                     }
                 }
             )
@@ -98,7 +105,7 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
         taskScope.spawn(
             onCancel: { [stream = self.stream] in Task { await stream.finish() } }
         ) { [weak self, stream = self.stream] in
-            for await event in stream.sequence {
+            eventLoop: for await event in stream.sequence {
                 if Task.isCancelled { break }
                 guard let self else { break }
 
@@ -106,13 +113,23 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                 case .start(let params):
                     let state = await MainActor.run { self.controller.state }
                     guard case .created = state else { break }
-                    await MainActor.run { self.operationRegistry.register(controller: self.controller) }
+                    let didRegister = await MainActor.run { () -> Bool in
+                        guard case .created = self.controller.state, self.configurationChangeFailure() == nil else { return false }
+                        self.operationRegistry.register(controller: self.controller)
+                        return true
+                    }
+                    guard didRegister else {
+                        _ = await self.checkConfiguration()
+                        continue
+                    }
+                    guard await self.checkConfiguration() else { continue }
 
                     let params = params ?? LoginIDCollectOperationParams()
 
                     let collectableTypes = self.loginIDConfig.configuration.supportedTypes.filter {
                         Self.collectableLoginIDTypes.contains($0)
                     }
+                    guard await self.checkConfiguration() else { continue }
                     guard !collectableTypes.isEmpty else {
                         await self.completeOperation(
                             .failure(
@@ -148,6 +165,7 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                         loginIDValue = provided.id
                     } else if let rawLoginID = self.context?.rawLoginID {
                         if let loginID = try? self.loginIDValidator.appendWithType(rawLoginID) {
+                            guard await self.checkConfiguration() else { continue }
                             guard collectableTypes.contains(loginID.type) else {
                                 await self.completeOperation(
                                     .failure(
@@ -171,6 +189,7 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                     } else {
                         loginIDValue = ""
                     }
+                    guard await self.checkConfiguration() else { continue }
 
                     self.taskRefs.replace(
                         .timeout,
@@ -205,17 +224,22 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
 
                     let didActivate = await MainActor.run { () -> Bool in
                         if case .completed = self.controller.state { return false }
+                        guard self.configurationChangeFailure() == nil else { return false }
                         self.controller.state = .active(uiState: uiState)
                         return true
                     }
                     guard didActivate else {
                         self.taskRefs.clear(.timeout)
+                        _ = await self.checkConfiguration()
                         continue
                     }
 
-                    let startError = await MainActor.run {
-                        self.ui.start(controller: self.controller)
+                    let startError = await MainActor.run { () -> LoginIDCollectOperationFailure.Integration? in
+                        if case .completed = self.controller.state { return nil }
+                        guard self.configurationChangeFailure() == nil else { return nil }
+                        return self.ui.start(controller: self.controller)
                     }
+                    guard await self.checkConfiguration() else { continue }
                     if let startError {
                         self.taskRefs.clear(.timeout)
                         await self.stream.yield(.complete(.failure(.integration(startError))))
@@ -240,9 +264,15 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                                 onContinue: uiState.onContinue,
                                 onCancel: uiState.onCancel
                             )
-                            await MainActor.run { self.controller.state = .active(uiState: newState) }
+                            await MainActor.run {
+                                if case .completed = self.controller.state { return }
+                                guard self.configurationChangeFailure() == nil else { return }
+                                self.controller.state = .active(uiState: newState)
+                            }
+                            _ = await self.checkConfiguration()
 
                         case .continue:
+                            guard await self.checkConfiguration() else { continue }
                             var acceptedLoginID: LoginID?
                             var lastValidationErrorCode: ErrorCode?
 
@@ -253,6 +283,7 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                                     let validationError = error as! LoginIDValidationError
                                     lastValidationErrorCode = validationError.errorCode
                                 }
+                                guard await self.checkConfiguration() else { continue eventLoop }
                                 if acceptedLoginID != nil { break }
                             }
 
@@ -269,7 +300,12 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                                     onContinue: uiState.onContinue,
                                     onCancel: uiState.onCancel
                                 )
-                                await MainActor.run { self.controller.state = .active(uiState: newState) }
+                                await MainActor.run {
+                                    if case .completed = self.controller.state { return }
+                                    guard self.configurationChangeFailure() == nil else { return }
+                                    self.controller.state = .active(uiState: newState)
+                                }
+                                _ = await self.checkConfiguration()
                             }
 
                         case .cancel:
@@ -284,6 +320,9 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                 case .errorStringsUpdated(let newStrings):
                     self.errorStrings = newStrings
                     let state = await MainActor.run { self.controller.state }
+                    if case .active = state {
+                        guard await self.checkConfiguration() else { continue }
+                    }
                     if case .active(let uiState) = state, let currentError = uiState.error {
                         let newState = LoginIDCollectUIState(
                             loginIDValue: uiState.loginIDValue,
@@ -293,7 +332,12 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
                             onContinue: uiState.onContinue,
                             onCancel: uiState.onCancel
                         )
-                        await MainActor.run { self.controller.state = .active(uiState: newState) }
+                        await MainActor.run {
+                            if case .completed = self.controller.state { return }
+                            guard self.configurationChangeFailure() == nil else { return }
+                            self.controller.state = .active(uiState: newState)
+                        }
+                        _ = await self.checkConfiguration()
                     }
 
                 case .abort(let reason):
@@ -322,11 +366,16 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
 
     @discardableResult
     internal func start(params: LoginIDCollectOperationParams? = nil) -> any OperationController<LoginID, LoginIDCollectOperationFailure> {
-        let stream = self.stream
-        taskScope.spawn { [stream] in
-            await stream.yield(.start(params))
+        startLock.withLock { () -> LoginIDCollectOperationControllerImpl in
+            guard !runtimeStarted, controller._attachOwner(self) else { return controller }
+            configurationVersion = appConfigProvider.currentConfig?.localVersion
+            runtimeStarted = true
+            let stream = self.stream
+            taskScope.spawn { [stream] in
+                await stream.yield(.start(params))
+            }
+            return controller
         }
-        return controller
     }
 
     internal func availability(params: (any CapabilityParams)?) async -> Availability {
@@ -369,10 +418,21 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
         .unexpected(message: "\(Self.self): Unexpected event [\(eventDescription)] for state [\(state)]")
     }
 
+    private func configurationChangeFailure() -> LoginIDCollectOperationFailure? {
+        let (started, version) = startLock.withLock { (runtimeStarted, configurationVersion) }
+        guard started, appConfigProvider.currentConfig?.localVersion != version else { return nil }
+        return .unexpected(errorCode: .integrationError, message: "App configuration changed. Restart the operation.")
+    }
+
+    private func checkConfiguration() async -> Bool {
+        guard let failure = configurationChangeFailure() else { return true }
+        await completeOperation(.failure(failure))
+        return false
+    }
+
     private func completeOperation(_ result: OperationResult<LoginID, LoginIDCollectOperationFailure>) async {
         self.taskRefs.clear([.timeout, .errorStrings])
-        let didSettle = await self.markCompletedIfNeeded(result)
-        guard didSettle else { return }
+        guard let result = await self.markCompletedIfNeeded(result) else { return }
         await MainActor.run { self.operationRegistry.unregister(id: self.operationID) }
         self.controller._releaseOwner()
         result
@@ -389,10 +449,20 @@ internal final class LoginIDCollectOperationImpl: LoginIDCollectOperation, @unch
     }
 
     @MainActor
-    private func markCompletedIfNeeded(_ result: OperationResult<LoginID, LoginIDCollectOperationFailure>) -> Bool {
-        if case .completed = self.controller.state { return false }
-        self.controller.state = .completed(result: result)
-        return true
+    private func markCompletedIfNeeded(
+        _ result: OperationResult<LoginID, LoginIDCollectOperationFailure>
+    ) -> OperationResult<LoginID, LoginIDCollectOperationFailure>? {
+        if case .completed = self.controller.state { return nil }
+        let selected: OperationResult<LoginID, LoginIDCollectOperationFailure>
+        if case .canceled = result {
+            selected = result
+        } else if let failure = configurationChangeFailure() {
+            selected = .failure(failure)
+        } else {
+            selected = result
+        }
+        self.controller.state = .completed(result: selected)
+        return selected
     }
 
     private func handleShutdown() {
@@ -413,6 +483,7 @@ extension LoginIDCollectOperationImpl {
             return LoginIDCollectOperationImpl(
                 operationType: .loginIDCollect,
                 operationRegistry: try resolver.getOrThrow(type: (any OperationRegistry).self) as! OperationRegistryImpl,
+                appConfigProvider: try resolver.getOrThrow(type: (any AppConfigProvider).self),
                 loginIDConfig: try resolver.getOrThrow(type: (any LoginIDConfigurationProvider).self),
                 loginIDValidator: try resolver.getOrThrow(type: (any LoginIDValidator).self),
                 ui: try resolver.getOrThrow(type: (any LoginIDCollectUI).self),

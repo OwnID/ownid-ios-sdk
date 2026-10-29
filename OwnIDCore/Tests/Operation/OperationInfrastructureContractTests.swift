@@ -6,6 +6,101 @@ import Testing
 // Covers: API-010, API-020, API-230, OPS-010, OPS-020, OPS-030, OPS-040, OPS-050, OPS-060, OPS-070
 struct OperationInfrastructureContractTests {
 
+    @MainActor
+    @Test(arguments: [
+        OperationType.loginIDCollect, .emailVerification, .phoneNumberVerification, .passkeyCreation, .passkeyAuth,
+        .passkeyEnrollment, .sessionCreation, .oidcAuthenticationApple, .oidcAuthenticationGoogle, .webBridge,
+    ])
+    func `Real availability only runtime releases before instance scope shutdown`(_ type: OperationType) async throws {
+        let scope = testTaskScope()
+        defer { scope.shutdown() }
+        let strings = OperationLifetimeStringsProvider()
+        var operation: (any OperationCapability & Sendable)? = try makeLifetimeOperation(type, scope: scope, strings: strings)
+        let lifetime = OperationRuntimeWeakReference(operation! as AnyObject)
+
+        _ = await operation?.availability(params: nil)
+        let observesStrings = [OperationType.loginIDCollect, .emailVerification, .phoneNumberVerification].contains(type)
+        if observesStrings {
+            _ = try await strings.started.waitForFirst("idle strings subscription started") { _ in true }
+        }
+        #expect(lifetime.isRetained)
+        operation = nil
+
+        try await waitForOperationRuntimeRelease(lifetime)
+        if observesStrings {
+            _ = try await strings.terminated.waitForFirst("idle strings subscription canceled") { _ in true }
+        }
+        // Keep the instance-owned scope alive until after the weak-reference assertion.
+        #expect(scope.spawn {} == nil) // Runtime deinit, rather than instance shutdown, closed it.
+    }
+
+    @MainActor
+    @Test(arguments: [false, true])
+    func `Started controller retains runtime until abort or shutdown`(shutdown: Bool) async throws {
+        let scope = testTaskScope()
+        defer { scope.shutdown() }
+        let registry = OperationRegistryImpl(logger: nil)
+        let ui = FakeLoginIDCollectUI()
+        var operation: LoginIDCollectOperationImpl? = makeLifetimeCollectOperation(scope: scope, registry: registry, ui: ui)
+        let lifetime = OperationRuntimeWeakReference(operation!)
+        let startedController = operation!.start() as? LoginIDCollectOperationControllerImpl
+        let controller = try #require(startedController)
+        let settlement = CapturedValue<OperationResult<LoginID, LoginIDCollectOperationFailure>>()
+        let settlementTask = Task { await settlement.set(await controller.whenSettled()) }
+        defer {
+            controller.cancel(.systemError(details: "lifetime test teardown"))
+            settlementTask.cancel()
+        }
+        _ = try await withOperationTimeout("controller-only UI startup") { try await ui.controller.waitUnlessCancelled() }
+        operation = nil
+
+        #expect(lifetime.isRetained)
+        if shutdown {
+            scope.shutdown()
+        } else {
+            controller.abort(reason: .userClose(details: "lifetime test"))
+        }
+        let result = try await withOperationTimeout("controller-only operation settlement") {
+            try await settlement.waitUnlessCancelled()
+        }
+        _ = try requireOperationCancellation(result)
+        try await waitForOperationRuntimeRelease(lifetime)
+        #expect(registry.operations.isEmpty)
+    }
+
+    @MainActor
+    @Test(arguments: [false, true])
+    func `Terminal runtime start cannot restore controller owner after settlement or early shutdown`(shutdownBeforeStart: Bool)
+        async throws
+    {
+        let scope = testTaskScope()
+        defer { scope.shutdown() }
+        let ui = FakeLoginIDCollectUI()
+        var operation: LoginIDCollectOperationImpl? = makeLifetimeCollectOperation(scope: scope, ui: ui)
+        let lifetime = OperationRuntimeWeakReference(operation!)
+        if shutdownBeforeStart { scope.shutdown() }
+        let startedController = operation!.start(params: LoginIDCollectOperationParams(loginID: testLoginID()))
+            as? LoginIDCollectOperationControllerImpl
+        let controller = try #require(startedController)
+        let settlement = CapturedValue<OperationResult<LoginID, LoginIDCollectOperationFailure>>()
+        let settlementTask = Task { await settlement.set(await controller.whenSettled()) }
+        defer {
+            controller.cancel(.systemError(details: "lifetime test teardown"))
+            settlementTask.cancel()
+        }
+        _ = try await withOperationTimeout("terminal operation settlement") { try await settlement.waitUnlessCancelled() }
+
+        let repeatedController = operation!.start() as? LoginIDCollectOperationControllerImpl
+        let repeated = try #require(repeatedController)
+        #expect(controller === repeated)
+        #expect(ui.startCount.get() == 0)
+        operation = nil
+
+        try await waitForOperationRuntimeRelease(lifetime)
+        // Retaining the settled controller must not retain a restarted owner.
+        _ = repeated.operationID
+    }
+
     @Test func `Direct API entry starts only while operation entry owns availability preflight`() async throws {
         let apiRecorder = APIEntryRecorder()
         let apiContainer = DIContainerImpl(scopeName: "api-entry-start-only")
@@ -187,6 +282,7 @@ struct OperationInfrastructureContractTests {
         let operation = LoginIDCollectOperationImpl(
             operationType: .loginIDCollect,
             operationRegistry: registry,
+            appConfigProvider: FakeAppConfigProvider(),
             loginIDConfig: FakeLoginIDConfigurationProvider(
                 configuration: LoginIDConfiguration(
                     supportedTypes: [.email],
@@ -205,15 +301,18 @@ struct OperationInfrastructureContractTests {
         async let firstStart = startAfterGate(operation, gate: startGate)
         async let secondStart = startAfterGate(operation, gate: startGate)
         let (firstAny, secondAny) = await (firstStart, secondStart)
-        let first = try #require(firstAny as? LoginIDCollectOperationControllerImpl)
-        let second = try #require(secondAny as? LoginIDCollectOperationControllerImpl)
+        let firstController = firstAny as? LoginIDCollectOperationControllerImpl
+        let secondController = secondAny as? LoginIDCollectOperationControllerImpl
+        let first = try #require(firstController)
+        let second = try #require(secondController)
 
         try #require(first === second)
 
         let presentedAny = try await withOperationTimeout("real operation controller presentation") {
             try await ui.controller.waitUnlessCancelled()
         }
-        let presented = try #require(presentedAny as? LoginIDCollectOperationControllerImpl)
+        let presentedController = presentedAny as? LoginIDCollectOperationControllerImpl
+        let presented = try #require(presentedController)
         let registered = await MainActor.run {
             registry.operations[operation.operationID] as? LoginIDCollectOperationControllerImpl
         }
@@ -591,5 +690,119 @@ private func assertDiscoverResolutionFailure(
     let unexpectedError = try #require(underlyingError as? APIUnexpectedError, sourceLocation: sourceLocation)
     guard case .runtime = unexpectedError.cause else {
         return try #require(nil as Void?, "Expected runtime unexpected cause", sourceLocation: sourceLocation)
+    }
+}
+
+@MainActor
+private final class OperationRuntimeWeakReference {
+    private weak var value: AnyObject?
+    var isRetained: Bool { value != nil }
+    init(_ value: AnyObject) { self.value = value }
+}
+
+@MainActor
+private func waitForOperationRuntimeRelease(_ lifetime: OperationRuntimeWeakReference) async throws {
+    try await withOperationTimeout("operation runtime released") {
+        while await lifetime.isRetained {
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+    }
+}
+
+private final class OperationLifetimeStringsProvider: ErrorStringsProvider, Sendable {
+    let started = AsyncSignalRecorder<Void>()
+    let terminated = AsyncSignalRecorder<Void>()
+
+    func getStrings(params: ErrorStringsParams) -> AsyncStream<ErrorStrings?> {
+        AsyncStream { continuation in
+            continuation.onTermination = { [terminated] _ in terminated.append(()) }
+            started.append(())
+            continuation.yield(.default)
+        }
+    }
+}
+
+@MainActor
+private func makeLifetimeCollectOperation(
+    scope: TaskScope,
+    registry: OperationRegistryImpl = OperationRegistryImpl(logger: nil),
+    ui: FakeLoginIDCollectUI = FakeLoginIDCollectUI(),
+    strings: (any ErrorStringsProvider)? = nil
+) -> LoginIDCollectOperationImpl {
+    LoginIDCollectOperationImpl(
+        operationType: .loginIDCollect, operationRegistry: registry,
+        appConfigProvider: FakeAppConfigProvider(),
+        loginIDConfig: FakeLoginIDConfigurationProvider(
+            configuration: LoginIDConfiguration(supportedTypes: [.email], validationRegexes: [.email: nil])
+        ),
+        loginIDValidator: FakeLoginIDValidator(), ui: ui, taskScope: scope,
+        errorStringsProvider: strings, context: nil, logger: nil
+    )
+}
+
+@MainActor
+private func makeLifetimeOperation(
+    _ type: OperationType, scope: TaskScope, strings: any ErrorStringsProvider
+) throws -> any OperationCapability & Sendable {
+    let registry = OperationRegistryImpl(logger: nil)
+    switch type {
+    case .loginIDCollect:
+        return makeLifetimeCollectOperation(scope: scope, registry: registry, strings: strings)
+    case .emailVerification:
+        return EmailVerificationOperationImpl(
+            operationType: type, operationRegistry: registry, ui: FakeEmailVerificationUI(),
+            api: FakeEmailVerificationAPI(startResult: .canceled), taskScope: scope,
+            errorStringsProvider: strings, context: nil, loginIDValidator: FakeLoginIDValidator(), logger: nil
+        )
+    case .phoneNumberVerification:
+        return PhoneVerificationOperationImpl(
+            operationType: type, operationRegistry: registry, ui: FakePhoneVerificationUI(),
+            api: FakePhoneVerificationAPI(startResult: .canceled), taskScope: scope,
+            errorStringsProvider: strings, context: nil, loginIDValidator: FakeLoginIDValidator(), logger: nil
+        )
+    case .passkeyCreation:
+        return PasskeyAttestationOperationImpl(
+            operationType: type, operationRegistry: registry,
+            ui: FakePasskeyAttestationUI(result: .success(testAttestationResult())),
+            api: FakePasskeyAttestationAPI(apiController: FakePasskeyAttestationAPIController()), taskScope: scope,
+            context: nil, loginIDValidator: FakeLoginIDValidator(), logger: nil
+        )
+    case .passkeyAuth:
+        return PasskeyAssertionOperationImpl(
+            operationType: type, operationRegistry: registry,
+            ui: FakePasskeyAssertionUI(result: .success(testAssertionResult())),
+            api: FakePasskeyAssertionAPI(apiController: FakePasskeyAssertionAPIController()), taskScope: scope,
+            context: nil, loginIDValidator: FakeLoginIDValidator(), logger: nil
+        )
+    case .passkeyEnrollment:
+        return PasskeyEnrollOperationImpl(
+            operationType: type, operationRegistry: registry, api: FakePasskeyEnrollAPI(), taskScope: scope,
+            context: nil, logger: nil
+        )
+    case .sessionCreation:
+        return LoginOperationImpl(
+            operationType: type, operationRegistry: registry, loginIDValidator: FakeLoginIDValidator(),
+            loginAPI: FakeLoginAPI(result: .canceled), discoverAPI: FakeDiscoverAPI(result: .canceled),
+            context: nil, logger: nil, taskScope: scope
+        )
+    case .oidcAuthenticationApple:
+        return SignInWithAppleOperationImpl(
+            operationType: type, operationRegistry: registry, ui: FakeAppleSignInUI(),
+            api: FakeOIDCAPI(startResult: .canceled), taskScope: scope, context: nil, logger: nil
+        )
+    case .oidcAuthenticationGoogle:
+        return SignInWithGoogleOperationImpl(
+            operationType: type, operationRegistry: registry, ui: FakeGoogleSignInUI(),
+            api: FakeOIDCAPI(startResult: .canceled), taskScope: scope, context: nil, logger: nil
+        )
+    case .webBridge:
+        return WebBridgeOperationImpl(
+            operationType: type, operationRegistry: registry,
+            configuration: try OwnIDConfigurationImpl(appID: "operationlifetime"),
+            appConfigProvider: ThrowingWebBridgeAppConfigProvider(), localInfo: WebBridgeRuntimePluginLocalInfo(),
+            ui: CapturingWebBridgeUI(), webBridge: CapturingWebBridge(), taskScope: scope, logger: nil
+        )
+    default:
+        preconditionFailure("No runtime for operation lifetime case: \(type)")
     }
 }

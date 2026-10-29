@@ -15,10 +15,13 @@ internal struct LocalInfoImpl: LocalInfo {
     #endif
 
     let isSystemFidoCapable: Bool
-    let isDeviceSecured: Bool
-    let isFaceHardwarePresent: Bool
-    let isFingerprintHardwarePresent: Bool
-    let isStrongBiometricEnabled: Bool
+    let biometryType: LABiometryType
+    let isBiometryUsable: Bool
+    let isBiometryEnrolled: Bool?
+    let isBiometryLockedOut: Bool?
+    let biometryLocalizedName: String?
+    let biometryIconSystemName: String?
+    let isPasscodeSet: Bool?
 
     private static func resolveModuleResources() -> [(name: String, bundle: Bundle?)] {
         #if SWIFT_PACKAGE
@@ -77,14 +80,45 @@ internal struct LocalInfoImpl: LocalInfo {
             self.isSystemFidoCapable = false
         }
 
-        let ctx = LAContext()
-        let isStrongBiometricEnabled = ctx.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
-        let biometryType = ctx.biometryType
+        if #available(iOS 18.0, *) {
+            let state = LAEnvironment.currentUser.state
+            let biometry = state.biometry
+            self.biometryType = biometry?.biometryType ?? .none
+            self.isBiometryUsable = biometry?.isUsable ?? false
+            self.isBiometryEnrolled = biometry?.isEnrolled
+            self.isBiometryLockedOut = biometry?.isLockedOut
+            self.biometryLocalizedName = biometry?.localizedName
+            self.biometryIconSystemName = biometry?.iconSystemName
+            self.isPasscodeSet = state.userPassword?.isSet
+        } else {
+            let ctx = LAContext()
+            self.isBiometryUsable = ctx.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+            let biometryType = ctx.biometryType
+            self.biometryType = biometryType
+            self.isBiometryEnrolled = nil
+            self.isBiometryLockedOut = nil
 
-        self.isDeviceSecured = ctx.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
-        self.isFaceHardwarePresent = (biometryType == .faceID)
-        self.isFingerprintHardwarePresent = (biometryType == .touchID)
-        self.isStrongBiometricEnabled = isStrongBiometricEnabled
+            switch biometryType {
+            case .faceID:
+                self.biometryLocalizedName = "Face ID"
+                self.biometryIconSystemName = "faceid"
+            case .touchID:
+                self.biometryLocalizedName = "Touch ID"
+                self.biometryIconSystemName = "touchid"
+            default:
+                self.biometryLocalizedName = nil
+                self.biometryIconSystemName = nil
+            }
+
+            var error: NSError?
+            if ctx.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+                self.isPasscodeSet = true
+            } else if let error, error.domain == LAErrorDomain, error.code == LAError.Code.passcodeNotSet.rawValue {
+                self.isPasscodeSet = false
+            } else {
+                self.isPasscodeSet = nil
+            }
+        }
     }
 
     private struct DeviceInfo {
@@ -152,6 +186,9 @@ internal struct LocalInfoImpl: LocalInfo {
             case "iPhone18,3": return "iPhone 17"
             case "iPhone18,4": return "iPhone Air"
             case "iPhone18,5": return "iPhone 17e"
+            case "iPhone19,2": return "iPhone 18 Pro"
+            case "iPhone19,3", "iPhone19,7": return "iPhone 18 Pro Max"
+            case "iPhone19,4": return "iPhone Duo"
             case "iPhone8,4": return "iPhone SE"
             case "iPhone12,8": return "iPhone SE (2nd generation)"
             case "iPhone14,6": return "iPhone SE (3rd generation)"
@@ -161,7 +198,7 @@ internal struct LocalInfoImpl: LocalInfo {
             case "iPad11,6", "iPad11,7": return "iPad (8th generation)"
             case "iPad12,1", "iPad12,2": return "iPad (9th generation)"
             case "iPad13,18", "iPad13,19": return "iPad (10th generation)"
-            case "iPad15,7", "iPad15,8": return "iPad (11th generation)"
+            case "iPad15,7", "iPad15,8": return "iPad (A16)"
             case "iPad5,3", "iPad5,4": return "iPad Air 2"
             case "iPad11,3", "iPad11,4": return "iPad Air (3rd generation)"
             case "iPad13,1", "iPad13,2": return "iPad Air (4th generation)"

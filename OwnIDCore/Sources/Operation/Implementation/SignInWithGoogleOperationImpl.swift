@@ -3,7 +3,7 @@ import Foundation
 internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @unchecked Sendable {
     enum Event: Sendable {
         case start(SignInWithGoogleOperationParams?)
-        case signIn(SocialResult)
+        case signIn(SocialSignInResult)
         case abort(Reason)
         case complete(OperationResult<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>)
     }
@@ -18,6 +18,7 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
     private let logger: OwnIDLogRouter?
     private let unsatisfiedDependencies: [String]?
 
+    @MainActor private var pendingAbortReason: Reason?
     @MainActor @BroadcastedState private var state: SignInWithGoogleOperationState = .created
     @MainActor internal func stateStream() -> AsyncStream<SignInWithGoogleOperationState> { _state.stream() }
 
@@ -58,8 +59,6 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
         self.stream = stream
         self.controllerImpl = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -67,17 +66,21 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
         taskScope.spawn(
             onCancel: { [stream = self.stream] in Task { await stream.finish() } }
         ) { [weak self, stream = self.stream] in
+            var isFinishing = false
+            var apiCancellationRequested = false
             for await event in stream.sequence {
                 if Task.isCancelled { break }
                 guard let self else { break }
 
                 switch event {
                 case .start(let params):
-                    let state = await MainActor.run { self.state }
-                    if case .created = state {
-                        await MainActor.run { self.operationRegistry.register(controller: self.controller) }
-                        await MainActor.run { self.state = .preparing }
-
+                    let didBegin = await MainActor.run {
+                        guard case .created = self.state, self.pendingAbortReason == nil else { return false }
+                        self.operationRegistry.register(controller: self.controller)
+                        self.state = .preparing
+                        return true
+                    }
+                    if didBegin {
                         taskScope.spawn { [weak self] in
                             guard let self else { return }
                             let params = params ?? SignInWithGoogleOperationParams()
@@ -90,31 +93,34 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
                             )
                             switch apiResult {
                             case .success(let apiController):
-                                guard await self.isAlive() else { return }
-                                self.taskRefs.replace(
-                                    .timeout,
-                                    with: taskScope.spawn { [weak self] in
-                                        guard let self else { return }
-                                        do {
-                                            let total = UInt64(apiController.challenge.timeout.milliseconds) * 1_000_000 + 2_000_000_000
-                                            try await Task.sleep(nanoseconds: total)
-                                            await self.stream.yield(.abort(.timeout))
-                                        } catch {}
-                                    }
-                                )
-                                await MainActor.run { self.state = .active(apiController: apiController) }
-                                let ui = self.ui
-                                let clientID = apiController.challenge.clientID
-                                let nonce = apiController.challenge.challengeID.value
-                                self.taskRefs.replace(
-                                    .ui,
-                                    with: taskScope.spawnOnMain { [weak self] in
-                                        guard let self else { return }
-                                        guard await self.isAlive() else { return }
-                                        let socialResult = await ui.signIn(clientID: clientID, nonce: nonce)
-                                        await self.stream.yield(.signIn(socialResult))
-                                    }
-                                )
+                                await MainActor.run {
+                                    guard case .preparing = self.state, self.pendingAbortReason == nil else { return }
+                                    self.state = .active(apiController: apiController)
+                                    self.taskRefs.replace(
+                                        .timeout,
+                                        with: taskScope.spawn { [weak self] in
+                                            guard let self else { return }
+                                            do {
+                                                let total = UInt64(apiController.challenge.timeout.milliseconds) * 1_000_000 + 2_000_000_000
+                                                try await Task.sleep(nanoseconds: total)
+                                                await self.stream.yield(.abort(.timeout))
+                                            } catch {}
+                                        }
+                                    )
+                                    let ui = self.ui
+                                    let clientID = apiController.challenge.clientID
+                                    let nonce = apiController.challenge.challengeID.value
+                                    self.taskRefs.replace(
+                                        .ui,
+                                        with: taskScope.spawnOnMain { [weak self] in
+                                            guard let self else { return }
+                                            guard !Task.isCancelled else { return }
+                                            guard case .active = self.state, self.pendingAbortReason == nil else { return }
+                                            let socialResult = await ui.signIn(clientID: clientID, nonce: nonce)
+                                            await self.stream.yield(.signIn(socialResult))
+                                        }
+                                    )
+                                }
                             case .failure(let apiError):
                                 self.logger?.logI(
                                     source: self,
@@ -130,12 +136,19 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
                     }
 
                 case .signIn(let socialResult):
-                    let state = await MainActor.run { self.state }
+                    guard !isFinishing else { break }
+                    let state = await MainActor.run {
+                        self.pendingAbortReason == nil ? self.state : nil
+                    }
+                    guard let state else { break }
                     switch state {
                     case .created, .preparing:
                         let error = self.unexpectedEventError(eventDescription: ".signIn", state: state)
                         await self.stream.yield(.complete(.failure(error)))
                     case .active(let apiController):
+                        // The provider has finished; the challenge timer no longer owns cancellation.
+                        isFinishing = true
+                        self.taskRefs.clear(.timeout)
                         switch socialResult {
                         case .success(_, let idToken):
                             taskScope.spawn { [weak self] in
@@ -153,8 +166,8 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
                                 )
                             }
                         case .canceled(let reason):
-                            taskScope.spawn { [weak self] in
-                                guard let self else { return }
+                            apiCancellationRequested = true
+                            taskScope.spawn { [self] in
                                 let apiResult = await apiController.cancel(reason: reason)
                                 switch apiResult {
                                 case .success:
@@ -175,8 +188,8 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
                                 await self.stream.yield(.complete(.canceled(reason)))
                             }
                         case .fail(let error):
-                            taskScope.spawn { [weak self] in
-                                guard let self else { return }
+                            apiCancellationRequested = true
+                            taskScope.spawn { [self] in
                                 let apiResult = await apiController.cancel(reason: Reason.systemError(details: "Authorization failed"))
                                 switch apiResult {
                                 case .success:
@@ -214,26 +227,37 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
                     }
 
                 case .abort(let reason):
-                    let state = await MainActor.run { self.state }
+                    if case .timeout = reason, isFinishing { break }
+                    let state: SignInWithGoogleOperationState? = await MainActor.run {
+                        guard self.pendingAbortReason == nil else { return nil }
+                        if case .completed = self.state { return nil }
+                        self.pendingAbortReason = reason
+                        self.taskRefs.clear(.ui)
+                        return self.state
+                    }
+                    guard let state else { break }
                     switch state {
-                    case .created, .preparing: await self.stream.yield(.complete(.canceled(reason)))
+                    case .created, .preparing:
+                        await self.stream.yield(.complete(.canceled(reason)))
                     case .active(let apiController):
-                        taskScope.spawnOnMain { [weak self] in self?.ui.cancel() }
-                        self.taskRefs.clear([.timeout, .ui])
-                        taskScope.spawn { [weak self] in
-                            guard let self else { return }
-                            let apiResult = await apiController.cancel(reason: reason)
-                            switch apiResult {
-                            case .success:
-                                break
-                            case .failure(let error):
-                                self.logger?.logI(
-                                    source: self,
-                                    prefix: "Event.Abort",
-                                    message: "API cancel failed: \(error.message)"
-                                )
-                            case .canceled:
-                                self.logger?.logI(source: self, prefix: "Event.Abort", message: "API cancel canceled")
+                        taskScope.spawnOnMain { [self] in self.ui.cancel() }
+                        self.taskRefs.clear(.timeout)
+                        if !apiCancellationRequested {
+                            apiCancellationRequested = true
+                            taskScope.spawn { [self] in
+                                let apiResult = await apiController.cancel(reason: reason)
+                                switch apiResult {
+                                case .success:
+                                    break
+                                case .failure(let error):
+                                    self.logger?.logI(
+                                        source: self,
+                                        prefix: "Event.Abort",
+                                        message: "API cancel failed: \(error.message)"
+                                    )
+                                case .canceled:
+                                    self.logger?.logI(source: self, prefix: "Event.Abort", message: "API cancel canceled")
+                                }
                             }
                         }
                         await self.stream.yield(.complete(.canceled(reason)))
@@ -241,7 +265,12 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
                         break
                     }
 
-                case .complete(let result):
+                case .complete(let completion):
+                    let result = await MainActor.run {
+                        self.pendingAbortReason.map {
+                            OperationResult<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>.canceled($0)
+                        } ?? completion
+                    }
                     self.taskRefs.clear([.timeout, .ui])
                     let didSettle = await self.markCompletedIfNeeded(result)
                     guard didSettle else { break }
@@ -270,6 +299,7 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
 
     @discardableResult
     internal func start(params: SignInWithGoogleOperationParams? = nil) -> SignInWithGoogleOperationController {
+        guard controllerImpl._attachOwner(self) else { return controller }
         let stream = self.stream
         taskScope.spawn { [stream] in
             await stream.yield(.start(params))
@@ -299,6 +329,7 @@ internal final class SignInWithGoogleOperationImpl: SignInWithGoogleOperation, @
     private func markCompletedIfNeeded(_ result: OperationResult<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>) -> Bool {
         if case .completed = self.state { return false }
         self.state = .completed(result: result)
+        self.taskRefs.clear(.ui)
         return true
     }
 

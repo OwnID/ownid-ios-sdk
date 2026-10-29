@@ -92,10 +92,10 @@ struct OwnIDProviderContractTests {
     }
 
     @Test @MainActor func `Sign in with Google builder uses default and typed availability and handlers`() async throws {
-        let params = SignInWithSocialParams(clientID: "google-client", nonce: "nonce")
+        let params = SocialSignInParams(clientID: "google-client", nonce: "nonce")
         let expectedWindow = UIWindow(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
         let calls = LockedStrings()
-        var builder = SignInWithGoogleBuilder()
+        var builder = GoogleSignInProviderBuilder()
 
         builder.isAvailable { params in
             params.clientID == "google-client" && params.nonce == "nonce"
@@ -156,9 +156,9 @@ struct OwnIDProviderContractTests {
         let passwordError = try #require((await passwordBuilder.build().authenticate(params: passwordParams)).failureValue)
         #expect(passwordError as? ProviderTestError === passwordFailure)
 
-        let socialParams = SignInWithSocialParams(clientID: "google-client", nonce: "nonce")
+        let socialParams = SocialSignInParams(clientID: "google-client", nonce: "nonce")
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
-        var canceledGoogleBuilder = SignInWithGoogleBuilder()
+        var canceledGoogleBuilder = GoogleSignInProviderBuilder()
         canceledGoogleBuilder.signIn { _, _ in .canceled(reason: .userClose(details: "dismissed")) }
 
         let cancellation = try requireSocialCancellation(
@@ -170,7 +170,7 @@ struct OwnIDProviderContractTests {
         }
         #expect(details == "dismissed")
 
-        var failedGoogleBuilder = SignInWithGoogleBuilder()
+        var failedGoogleBuilder = GoogleSignInProviderBuilder()
         let googleFailure = ProviderTestError("google")
         failedGoogleBuilder.signIn { _, _ in .fail(error: .general("google-provider-failed", googleFailure)) }
 
@@ -192,18 +192,18 @@ struct OwnIDProviderContractTests {
             configuration: try OwnIDConfigurationImpl(appID: "ABC123")
         )
 
-        #expect(root.getOrNil(type: (any SignInWithApple).self) != nil)
-        #expect(root.getOrNil(type: (any SignInWithGoogle).self) == nil)
+        #expect(root.getOrNil(type: (any AppleSignInProvider).self) != nil)
+        #expect(root.getOrNil(type: (any GoogleSignInProvider).self) == nil)
 
         let child = root.withProviders("google-provider") { registrar in
-            registrar.signInWithGoogle { builder in
+            registrar.googleSignIn { builder in
                 builder.signIn { _, _ in .success(id: "google-id", idToken: "id-token") }
             }
         }
 
-        #expect(root.getOrNil(type: (any SignInWithGoogle).self) == nil)
-        #expect(child.getOrNil(type: (any SignInWithApple).self) != nil)
-        #expect(child.getOrNil(type: (any SignInWithGoogle).self) != nil)
+        #expect(root.getOrNil(type: (any GoogleSignInProvider).self) == nil)
+        #expect(child.getOrNil(type: (any AppleSignInProvider).self) != nil)
+        #expect(child.getOrNil(type: (any GoogleSignInProvider).self) != nil)
     }
 
     @Test func `Provider registration no-op last-wins and scope mutation semantics`() async throws {
@@ -443,13 +443,13 @@ extension Result {
 }
 
 private func requireSocialSuccess(
-    _ result: SocialResult,
+    _ result: SocialSignInResult,
     sourceLocation: SourceLocation = SourceLocation(fileID: #fileID, filePath: #filePath, line: #line, column: #column)
 ) throws -> (id: String, idToken: String) {
     guard case .success(let id, let idToken) = result else {
         return try #require(
             nil as (id: String, idToken: String)?,
-            "Expected successful Google sign-in, got \(result)",
+            "Expected successful Sign in with Google, got \(result)",
             sourceLocation: sourceLocation
         )
     }
@@ -458,7 +458,7 @@ private func requireSocialSuccess(
 }
 
 private func requireSocialCancellation(
-    _ result: SocialResult,
+    _ result: SocialSignInResult,
     sourceLocation: SourceLocation = SourceLocation(fileID: #fileID, filePath: #filePath, line: #line, column: #column)
 ) throws -> Reason {
     guard case .canceled(let reason) = result else {
@@ -473,12 +473,12 @@ private func requireSocialCancellation(
 }
 
 private func requireSocialFailure(
-    _ result: SocialResult,
+    _ result: SocialSignInResult,
     sourceLocation: SourceLocation = SourceLocation(fileID: #fileID, filePath: #filePath, line: #line, column: #column)
-) throws -> SocialResult.Error {
+) throws -> SocialSignInResult.Error {
     guard case .fail(let error) = result else {
         return try #require(
-            nil as SocialResult.Error?,
+            nil as SocialSignInResult.Error?,
             "Expected Google failure, got \(result)",
             sourceLocation: sourceLocation
         )

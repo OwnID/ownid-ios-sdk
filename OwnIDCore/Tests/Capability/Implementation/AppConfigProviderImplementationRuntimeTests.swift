@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -22,7 +23,8 @@ struct AppConfigProviderImplementationRuntimeTests {
         #expect(streamedConfig == config)
         #expect(harness.loginIDConfiguration.configuration.supportedTypes == [.email, .phoneNumber])
         #expect(harness.loginIDConfiguration.configuration.validationRegexes[.email] != nil)
-        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == config)
+        #expect(config.localVersion == 0)
+        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == config.withLocalVersion(-1))
         #expect(await harness.provider.isNetworkMonitoringActiveForTest() == false)
         #expect(await harness.network.requestCount == 1)
     }
@@ -63,7 +65,7 @@ struct AppConfigProviderImplementationRuntimeTests {
 
         let config = try await harness.provider.getOrFetchConfig()
 
-        #expect(config == storedConfig)
+        #expect(config == storedConfig.withLocalVersion(0))
         #expect(harness.loginIDConfiguration.configuration.supportedTypes == [.userName])
         #expect(await harness.provider.isNetworkMonitoringActiveForTest() == true)
     }
@@ -105,7 +107,8 @@ struct AppConfigProviderImplementationRuntimeTests {
 
         #expect(initialConfig == .default)
         #expect(retriedConfig.displayName == "Retried Config")
-        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == retriedConfig)
+        #expect(retriedConfig.localVersion == 0)
+        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == retriedConfig.withLocalVersion(-1))
         #expect(await harness.provider.isNetworkMonitoringActiveForTest() == false)
     }
 
@@ -134,7 +137,7 @@ struct AppConfigProviderImplementationRuntimeTests {
 
         #expect(retriedConfig.displayName == "Retried Network Config")
         #expect(harness.loginIDConfiguration.configuration.supportedTypes == [.email, .phoneNumber])
-        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == retriedConfig)
+        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == retriedConfig.withLocalVersion(-1))
         #expect(await harness.provider.isNetworkMonitoringActiveForTest() == false)
         #expect(await harness.network.requestCount == 2)
     }
@@ -268,6 +271,105 @@ struct AppConfigProviderImplementationRuntimeTests {
         externalSession.invalidateAndCancel()
         try await externalDelegate.waitForInvalidation()
         #expect(externalDelegate.invalidationCount == 1)
+    }
+
+    @Test func `First remote payload equal to built in fallback receives version zero`() async throws {
+        let network = ScriptedAppConfigNetwork([.stallUntilResolved])
+        let harness = try Self.makeHarness(network: network, bootstrapTimeoutNanoseconds: 0)
+        defer { harness.cleanup() }
+        #expect(harness.provider.currentConfig == nil)
+        let emissions = AsyncSignalRecorder<AppConfig>()
+        let observation = Task {
+            for await config in harness.provider.configStream { emissions.append(config) }
+        }
+        defer { observation.cancel() }
+
+        let fallback = try await withTestTimeout("built in app config fallback") {
+            try await harness.provider.getOrFetchConfig()
+        }
+        #expect(fallback.localVersion == -1)
+        _ = try await emissions.waitForCount(1, "built in fallback publication") { _ in true }
+        try await Self.waitForRequest(network)
+        let body = try JSONCoderImpl().encodeToString(AppConfig.default)
+        await network.resolveNextStall(with: .success(body))
+
+        let values = try await emissions.waitForCount(2, "first remote publication") { _ in true }
+        #expect(values.map(\.localVersion) == [-1, 0])
+        #expect(harness.provider.currentConfig == AppConfig.default.withLocalVersion(0))
+        try await Self.waitForAttemptCleanup(harness)
+        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == .default)
+    }
+
+    @Test func `Equal remote payload retains cache version restores persistence and stops background work`() async throws {
+        let network = ScriptedAppConfigNetwork([.stallUntilResolved])
+        let harness = try Self.makeHarness(network: network, bootstrapTimeoutNanoseconds: 0)
+        defer { harness.cleanup() }
+        try Self.writeCache(.default.withLocalVersion(91), to: harness.cacheFileURL)
+        let emissions = AsyncSignalRecorder<AppConfig>()
+        let observation = Task {
+            for await config in harness.provider.configStream { emissions.append(config) }
+        }
+        defer { observation.cancel() }
+
+        let cached = try await withTestTimeout("stored app config publication") {
+            try await harness.provider.getOrFetchConfig()
+        }
+        #expect(cached.localVersion == 0)
+        _ = try await emissions.waitForCount(1, "cached publication") { _ in true }
+        try await Self.waitForRequest(network)
+        try FileManager.default.removeItem(at: harness.cacheFileURL)
+        let body = try JSONCoderImpl().encodeToString(AppConfig.default)
+        await network.resolveNextStall(with: .success(body))
+        try await Self.waitForAttemptCleanup(harness)
+
+        #expect(harness.provider.currentConfig == cached)
+        #expect(try Self.cachedConfig(at: harness.cacheFileURL) == cached.withLocalVersion(-1))
+        do {
+            _ = try await emissions.waitForCount(2, "unexpected equal configuration publication", seconds: 1) { _ in true }
+            Issue.record("Equal configuration emitted another snapshot")
+        } catch TestTimeoutError.timedOut(_) {}
+        #expect(emissions.entries.count == 1)
+        #expect(await network.requestCount == 1)
+    }
+
+    @Test func `Changed remote content advances a cached version and another instance starts at zero`() async throws {
+        let body = Self.remoteConfigBody(displayName: "Changed", logLevel: "Debug")
+        let network = ScriptedAppConfigNetwork([.stallUntilResolved])
+        let harness = try Self.makeHarness(network: network, bootstrapTimeoutNanoseconds: 0)
+        defer { harness.cleanup() }
+        try Self.writeCache(.default, to: harness.cacheFileURL)
+        let cached = try await withTestTimeout("stored app config before remote change") {
+            try await harness.provider.getOrFetchConfig()
+        }
+        #expect(cached.localVersion == 0)
+        try await Self.waitForRequest(network)
+        await network.resolveNextStall(with: .success(body))
+        try await Self.waitForAttemptCleanup(harness)
+        #expect(harness.provider.currentConfig?.localVersion == 1)
+        #expect(harness.provider.currentConfig?.displayName == "Changed")
+
+        let other = try Self.makeHarness(network: ScriptedAppConfigNetwork([.success(body)]))
+        defer { other.cleanup() }
+        let fresh = try await withTestTimeout("another instance app config publication") {
+            try await other.provider.getOrFetchConfig()
+        }
+        #expect(fresh.localVersion == 0)
+    }
+
+    private static func waitForRequest(_ network: ScriptedAppConfigNetwork) async throws {
+        try await withTestTimeout("app config request") {
+            while await network.requestCount == 0 {
+                try await Task.sleep(nanoseconds: 1_000_000)
+            }
+        }
+    }
+
+    private static func waitForAttemptCleanup(_ harness: AppConfigProviderRuntimeHarness) async throws {
+        try await withTestTimeout("app config successful attempt cleanup") {
+            while await harness.provider.isNetworkMonitoringActiveForTest() {
+                try await Task.sleep(nanoseconds: 1_000_000)
+            }
+        }
     }
 
     private static func makeHarness(
@@ -659,10 +761,13 @@ private struct AppConfigProviderLocalInfo: LocalInfo {
     let correlationId = "app-config-correlation"
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = false
+    let biometryType: LABiometryType = .none
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 }
 
 private struct AppConfigProviderLanguageTagsProvider: LanguageTagsProvider {

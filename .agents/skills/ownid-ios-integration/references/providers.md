@@ -12,7 +12,7 @@ Source docs:
 
 SDK contracts: `OwnID.setProviders`, `withProviders`,
 `OwnIDProvidersRegistrar`, `SessionCreate`, `PasswordAuthenticate`,
-`SignInWithSocial`, and `UIContextProvider`.
+`SocialSignIn`, and `UIContextProvider`.
 
 ## Contents
 
@@ -58,7 +58,7 @@ Provider categories:
 - Use `isAvailable` when a provider can handle only some requests.
 - Complete each provider registration with its required handler: `create` for
   `sessionCreate`, `authenticate` for `passwordAuthenticate`, and `signIn` for
-  `signInWithGoogle`.
+  `googleSignIn`.
 - For a direct UI-backed call with a known owner, bind `uiContext(window)` or
   `uiContext(windowScene)` in scoped `withProviders` on the main actor. Use a
   top-level binding only when later top-level calls should follow that same
@@ -91,7 +91,7 @@ Critical contracts:
 - `passwordAuthenticate.authenticate` verifies user-entered passwords through
   the app backend or identity provider and returns Swift
   `Result<SessionOutput, any Error & Sendable>`.
-- Google/social provider handlers return `SocialResult`.
+- Google/social provider handlers return `SocialSignInResult`.
 - Custom social `signIn` handlers receive the selected `UIWindow`; use that exact
   window as the provider SDK's presentation anchor. See [UI Context](../../../../docs/setup/providers.md#ui-context).
 - A custom `UIContextProvider` is authoritative. If it returns `.failure`, the

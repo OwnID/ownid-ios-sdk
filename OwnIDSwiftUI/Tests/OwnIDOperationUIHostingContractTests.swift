@@ -10,6 +10,39 @@ import UIKit
 @Suite(.serialized)
 struct OwnIDOperationUIHostingContractTests {
 
+    @MainActor
+    @Test func `Canceled snapshot wait finishes and recorder remains reusable`() async throws {
+        let recorder = RuntimeSnapshotRecorder<Int>()
+        let host = SwiftUIRuntimeHost(rootView: EmptyView())
+        defer { host.close() }
+        var finished = false
+        let pending = Task {
+            defer { finished = true }
+            do {
+                _ = try await recorder.waitForSnapshot(matching: { _ in true }, host: host)
+                Issue.record("Expected canceled snapshot wait to throw")
+            } catch {
+                #expect(Task.isCancelled)
+            }
+        }
+        defer {
+            pending.cancel()
+            recorder.record(1)
+        }
+        await host.settle()
+        pending.cancel()
+        try await withSwiftUITestTimeout("Canceled snapshot wait finishes", seconds: 2) { @MainActor in
+            while !finished {
+                try Task.checkCancellation()
+                await Task.yield()
+            }
+        }
+
+        recorder.record(2)
+        let snapshot = try await recorder.waitForSnapshot(matching: { $0 == 2 }, host: host)
+        #expect(snapshot == 2)
+    }
+
     @Test func `App hosted entry preserves operation params and replaces SDK UI container`() async throws {
         let recorder = AppHostedLoginIDCollectRecorder()
         let parentContainer = DIContainerImpl(scopeName: "operation-ui-hosting-parent")

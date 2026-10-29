@@ -384,25 +384,25 @@ final class OperationViewModel: ObservableObject {
         Task { @MainActor [weak self] in
             guard let self else { return }
 
-            log.add("Sign In with Apple started")
+            log.add("Sign in with Apple started")
 
             await ownID.ops
                 .withContext { context in
                     context.authz = self.screenState.accessToken.map { .fromToken($0) }
                 }
-                .socialLogin.signInWithApple.start()
+                .socialLogin.appleSignIn.start()
                 .whenSettled()
                 .onSuccess { response in
                     self.screenState.loginID = response.loginID.id
                     self.screenState.loginIDType = response.loginID.type
                     self.screenState.accessToken = response.accessToken
-                    self.log.add("Sign In with Apple succeeded: \(response)")
+                    self.log.add("Sign in with Apple succeeded: \(response)")
                 }
                 .onCanceled { reason in
-                    self.log.add("Sign In with Apple canceled: \(reason)")
+                    self.log.add("Sign in with Apple canceled: \(reason)")
                 }
                 .onError { error in
-                    self.log.add("Sign In with Apple failed: \(error)")
+                    self.log.add("Sign in with Apple failed: \(error)")
                 }
         }
     }
@@ -411,25 +411,25 @@ final class OperationViewModel: ObservableObject {
         Task { @MainActor [weak self] in
             guard let self else { return }
 
-            log.add("Sign In with Google started")
+            log.add("Sign in with Google started")
 
             await ownID.ops
                 .withContext { context in
                     context.authz = self.screenState.accessToken.map { .fromToken($0) }
                 }
-                .socialLogin.signInWithGoogle.start()
+                .socialLogin.googleSignIn.start()
                 .whenSettled()
                 .onSuccess { response in
                     self.screenState.loginID = response.loginID.id
                     self.screenState.loginIDType = response.loginID.type
                     self.screenState.accessToken = response.accessToken
-                    self.log.add("Sign In with Google succeeded: \(response)")
+                    self.log.add("Sign in with Google succeeded: \(response)")
                 }
                 .onCanceled { reason in
-                    self.log.add("Sign In with Google canceled: \(reason)")
+                    self.log.add("Sign in with Google canceled: \(reason)")
                 }
                 .onError { error in
-                    self.log.add("Sign In with Google failed: \(error)")
+                    self.log.add("Sign in with Google failed: \(error)")
                 }
         }
     }

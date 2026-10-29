@@ -50,7 +50,7 @@ struct PhoneVerificationAPIImplementationMappingTests {
 
         #expect(controller.challenge.challengeID == ChallengeID("controller-challenge"))
         #expect(controller.challenge.channel == OperationChannel(channel: "+1******4567", id: "phone-channel-id"))
-        #expect((await controller.completeWithCode(code: "654321")).getOrNil() == .accessToken(AccessToken(token: "verified-access-token")))
+        #expect((await controller.complete(code: "654321")).getOrNil() == .accessToken(AccessToken(token: "verified-access-token")))
         #expect((await controller.resend()).getOrNil() != nil)
         #expect((await controller.cancel(reason: .moveToOtherChallenge)).getOrNil() != nil)
 
@@ -177,7 +177,7 @@ struct PhoneVerificationAPIImplementationMappingTests {
         let completeNetwork = APIRecordingNetwork(suspendingAfter: [])
         let controller = makeController(network: completeNetwork, challengeID: "cancel-complete-challenge")
         let completeTask = Task {
-            await controller.completeWithCode(code: "123456")
+            await controller.complete(code: "123456")
         }
         await confirmation("phone complete request was sent before task cancellation") { requestSent in
             await completeNetwork.waitForRequestCount(1)
@@ -284,7 +284,45 @@ struct PhoneVerificationAPIImplementationMappingTests {
         }
     }
 
+    @Test func `Phone verification start validates verification attempts independently of resend attempts`() throws {
+        for attempts in [-1, 0] {
+            let result = try makeStartCall().mapHttpSuccess(
+                success(code: 201, path: "verifications/phone/start", body: startBody(challengeID: "challenge-123", attempts: attempts))
+            )
+            assertStartUnexpected(result)
+            guard case .failure(.unexpected(_, _, let underlyingError)) = result,
+                  let error = underlyingError as? APIUnexpectedError,
+                  case .apiContract = error.cause else {
+                Issue.record("Expected API contract failure for verification attempts \(attempts)")
+                continue
+            }
+        }
+
+        for attempts in [1, 11] {
+            let challenge = try #require(
+                makeStartCall().mapHttpSuccess(
+                    success(
+                        code: 201,
+                        path: "verifications/phone/start",
+                        body: startBody(challengeID: "challenge-123", resendAttempts: "0", attempts: attempts)
+                    )
+                ).getOrNil()
+            )
+            #expect(challenge.attempts == attempts)
+            #expect(challenge.resendPolicy.attempts == 0)
+        }
+    }
+
     @Test func `Phone verification calls map success responses`() throws {
+        for (attempts, expected) in [("0", 0), ("10", 10), ("1.0", 1), ("1e0", 1)] {
+            let challenge = try #require(
+                makeStartCall().mapHttpSuccess(
+                    success(code: 201, path: "verifications/phone/start", body: startBody(challengeID: "challenge-123", resendAttempts: attempts))
+                ).getOrNil()
+            )
+            #expect(challenge.resendPolicy.attempts == expected)
+        }
+
         assertStartChallenge(
             try makeStartCall().mapHttpSuccess(
                 success(
@@ -349,6 +387,19 @@ struct PhoneVerificationAPIImplementationMappingTests {
     }
 
     @Test func `Phone verification maps invalid start challenge body to unexpected`() throws {
+        for attempts in ["-1", "11", #""1""#, "1.5", "null", "true"] {
+            let result = try makeStartCall().mapHttpSuccess(
+                success(code: 201, path: "verifications/phone/start", body: startBody(challengeID: "challenge-123", resendAttempts: attempts))
+            )
+            assertStartUnexpected(result)
+            guard case .failure(.unexpected(_, _, let underlyingError)) = result,
+                  let error = underlyingError as? APIUnexpectedError,
+                  case .apiContract = error.cause else {
+                Issue.record("Expected API contract failure for resend attempts \(attempts)")
+                continue
+            }
+        }
+
         assertStartUnexpected(
             try makeStartCall().mapHttpSuccess(
                 success(
@@ -605,13 +656,13 @@ struct PhoneVerificationAPIImplementationMappingTests {
         return builder.build(scopeName: "phone-test")
     }
 
-    private func startBody(challengeID: String) -> String {
+    private func startBody(challengeID: String, resendAttempts: String = "3", attempts: Int = 5) -> String {
         """
         {
           "challengeId": "\(challengeID)",
-          "resendPolicy": {"allow": true, "attempts": 3, "debounce": 1},
+          "resendPolicy": {"allow": true, "attempts": \(resendAttempts), "debounce": 1},
           "timeout": 30000,
-          "attempts": 5,
+          "attempts": \(attempts),
           "channel": {"channel": "+1******4567", "id": "phone-channel-id"},
           "methods": {"otp": {"length": 6}}
         }

@@ -7,7 +7,7 @@ import UIKit
 /// ``OwnID/withProviders(_:_:)`` creates a child scope whose providers override inherited providers of the same type;
 /// ``OwnID/setProviders(_:)`` updates the current scope in place.
 ///
-/// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, ``SignInWithGoogle``, and
+/// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, ``GoogleSignInProvider``, and
 /// ``UIContextProvider``. Registering the same provider type more than once in one block uses the last provider. A block
 /// that registers no providers leaves the current scope unchanged.
 ///
@@ -16,13 +16,13 @@ import UIKit
 /// external SDK/session state and failure mapping. Provider callbacks run on the main actor where their protocol
 /// requires it.
 ///
-/// ``SignInWithApple`` is registered by OwnID Core and is not configured through this registrar.
+/// ``AppleSignInProvider`` is registered by OwnID Core and is not configured through this registrar.
 public struct OwnIDProvidersRegistrar {
     private let resolver: any DIContainerResolver
 
     private var sessionCreate: (any SessionCreate)?
     private var passwordAuthenticate: (any PasswordAuthenticate)?
-    private var signInWithGoogle: (any SignInWithGoogle)?
+    private var googleSignIn: (any GoogleSignInProvider)?
     private var uiContextProvider: (any UIContextProvider)?
 
     internal init(resolver: any DIContainerResolver) {
@@ -81,16 +81,16 @@ public struct OwnIDProvidersRegistrar {
         passwordAuthenticate = builder.build()
     }
 
-    /// Registers the ``SignInWithGoogle`` provider for this registrar.
+    /// Registers the ``GoogleSignInProvider`` provider for this registrar.
     ///
     /// If called multiple times, the last provider wins. The block must set a `signIn` handler; omitting it fails a
     /// precondition before registration completes.
     ///
     /// - Parameter block: Configuration block for the provider.
-    public mutating func signInWithGoogle(_ block: (inout SignInWithGoogleBuilder) -> Void) {
-        var builder = SignInWithGoogleBuilder()
+    public mutating func googleSignIn(_ block: (inout GoogleSignInProviderBuilder) -> Void) {
+        var builder = GoogleSignInProviderBuilder()
         block(&builder)
-        signInWithGoogle = builder.build()
+        googleSignIn = builder.build()
     }
 
     /// Registers a UI-context provider bound to this exact window.
@@ -135,12 +135,12 @@ public struct OwnIDProvidersRegistrar {
     internal func register(into registrar: any DIContainerRegistrar) {
         if let sessionCreate { registrar.register((any SessionCreate).self, instance: sessionCreate) }
         if let passwordAuthenticate { registrar.register((any PasswordAuthenticate).self, instance: passwordAuthenticate) }
-        if let signInWithGoogle { registrar.register((any SignInWithGoogle).self, instance: signInWithGoogle) }
+        if let googleSignIn { registrar.register((any GoogleSignInProvider).self, instance: googleSignIn) }
         if let uiContextProvider { registrar.register((any UIContextProvider).self, instance: uiContextProvider) }
     }
 
     internal var isEmpty: Bool {
-        sessionCreate == nil && passwordAuthenticate == nil && signInWithGoogle == nil && uiContextProvider == nil
+        sessionCreate == nil && passwordAuthenticate == nil && googleSignIn == nil && uiContextProvider == nil
     }
 
 }
@@ -238,29 +238,29 @@ internal struct PasswordAuthenticateClosure: PasswordAuthenticate {
     }
 }
 
-/// Builds a ``SignInWithGoogle`` provider for the current registration block.
+/// Builds a ``GoogleSignInProvider`` provider for the current registration block.
 ///
 /// `signIn` is required. ``isAvailable(_:)`` defaults to available, ``cancel(_:)`` defaults to a no-op, and
 /// ``signOut(_:)`` defaults to a no-op. The resulting provider is available for `nil` params, delegates typed
-/// ``SignInWithSocialParams`` to ``isAvailable(_:)``, and reports unavailable for other parameter types.
+/// ``SocialSignInParams`` to ``isAvailable(_:)``, and reports unavailable for other parameter types.
 ///
 /// OwnID invokes `signIn`, `cancel`, and `signOut` on the main actor. The `signIn` callback receives the presentation
 /// window selected for the request as its first argument. `isAvailable` is not main-actor isolated; dispatch to the
 /// main actor inside that closure when the provider SDK requires UI access.
 /// The provider owns cancellation support, local provider session state, ID-token handling, and failure mapping.
-public struct SignInWithGoogleBuilder {
-    private var availability: @Sendable (SignInWithSocialParams) async -> Bool = { _ in true }
-    private var signInHandler: (@Sendable @MainActor (UIWindow, SignInWithSocialParams) async -> SocialResult)?
+public struct GoogleSignInProviderBuilder {
+    private var availability: @Sendable (SocialSignInParams) async -> Bool = { _ in true }
+    private var signInHandler: (@Sendable @MainActor (UIWindow, SocialSignInParams) async -> SocialSignInResult)?
     private var cancelHandler: @Sendable @MainActor () -> Void = {}
     private var signOutHandler: @Sendable @MainActor () -> Void = {}
 
     /// Sets the availability check for this provider. If omitted, the provider is available.
-    public mutating func isAvailable(_ block: @escaping @Sendable (SignInWithSocialParams) async -> Bool) { availability = block }
+    public mutating func isAvailable(_ block: @escaping @Sendable (SocialSignInParams) async -> Bool) { availability = block }
 
-    /// Sets the Google sign-in handler.
+    /// Sets the Sign in with Google handler.
     ///
     /// - Parameter block: Main-actor callback receiving the presentation window and social sign-in parameters.
-    public mutating func signIn(_ block: @escaping @Sendable @MainActor (UIWindow, SignInWithSocialParams) async -> SocialResult) {
+    public mutating func signIn(_ block: @escaping @Sendable @MainActor (UIWindow, SocialSignInParams) async -> SocialSignInResult) {
         signInHandler = block
     }
 
@@ -270,9 +270,9 @@ public struct SignInWithGoogleBuilder {
     /// Sets the Google sign-out handler. If omitted, sign-out is a no-op.
     public mutating func signOut(_ block: @escaping @Sendable @MainActor () -> Void) { signOutHandler = block }
 
-    internal func build() -> any SignInWithGoogle {
-        guard let signInHandler else { preconditionFailure("signInWithGoogle requires a signIn handler") }
-        return SignInWithGoogleClosure(
+    internal func build() -> any GoogleSignInProvider {
+        guard let signInHandler else { preconditionFailure("googleSignIn requires a signIn handler") }
+        return GoogleSignInProviderClosure(
             availability: availability,
             signInHandler: signInHandler,
             cancelHandler: cancelHandler,
@@ -281,19 +281,19 @@ public struct SignInWithGoogleBuilder {
     }
 }
 
-internal struct SignInWithGoogleClosure: SignInWithGoogle {
-    internal let availability: @Sendable (SignInWithSocialParams) async -> Bool
-    internal let signInHandler: @Sendable @MainActor (UIWindow, SignInWithSocialParams) async -> SocialResult
+internal struct GoogleSignInProviderClosure: GoogleSignInProvider {
+    internal let availability: @Sendable (SocialSignInParams) async -> Bool
+    internal let signInHandler: @Sendable @MainActor (UIWindow, SocialSignInParams) async -> SocialSignInResult
     internal let cancelHandler: @Sendable @MainActor () -> Void
     internal let signOutHandler: @Sendable @MainActor () -> Void
 
     public func isAvailable(params: (any CapabilityParams)?) async -> Bool {
         guard let params else { return true }
-        guard let typed = params as? SignInWithSocialParams else { return false }
+        guard let typed = params as? SocialSignInParams else { return false }
         return await availability(typed)
     }
 
-    @MainActor public func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor public func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         await signInHandler(window, params)
     }
 
@@ -323,7 +323,7 @@ extension DIContainerRegistrar where Self: DIContainerResolver {
     /// replace providers of the same type only in that child scope. If the same provider type is registered more than once in
     /// `block`, the last provider wins.
     ///
-    /// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, ``SignInWithGoogle``, and
+    /// Supported provider types are ``SessionCreate``, ``PasswordAuthenticate``, ``GoogleSignInProvider``, and
     /// ``UIContextProvider``.
     ///
     /// If no providers are defined, returns this container.

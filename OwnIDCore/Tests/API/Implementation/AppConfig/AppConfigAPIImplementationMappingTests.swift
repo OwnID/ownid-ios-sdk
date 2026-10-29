@@ -83,6 +83,20 @@ struct AppConfigAPIImplementationMappingTests {
         #expect(config.logLevel == .warning)
     }
 
+    @Test func `Runtime version is excluded from cache JSON and ignored in incoming cache and wire JSON`() throws {
+        let encoded = try coder.encodeToString(AppConfig.default.withLocalVersion(17))
+        #expect(!encoded.contains("localVersion"))
+        let incoming = "{\"localVersion\":999," + String(encoded.dropFirst())
+
+        let decoded = try coder.decodeFromString(incoming, as: AppConfig.self)
+        #expect(decoded == .default)
+        #expect(decoded.localVersion == -1)
+
+        let mapped = try requireSuccess(makeCall().mapHttpSuccess(success(code: 200, body: incoming)))
+        #expect(mapped == .default)
+        #expect(mapped.localVersion == -1)
+    }
+
     @Test func `Maps bad-request DTO failures`() throws {
         let invalidArgument = try makeCall().mapHttpError(
             httpError(

@@ -67,8 +67,6 @@ internal final class PasskeyAssertionOperationImpl: PasskeyAssertionOperation, @
         self.stream = stream
         self.controllerImpl = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -89,6 +87,7 @@ internal final class PasskeyAssertionOperationImpl: PasskeyAssertionOperation, @
 
                         taskScope.spawn { [weak self] in
                             guard let self else { return }
+                            let readinessParams = params
                             let params = params ?? PasskeyAssertionOperationParams()
                             let accessToken = params.accessToken ?? self.context?.accessToken
                             var loginID: LoginID?
@@ -120,6 +119,16 @@ internal final class PasskeyAssertionOperationImpl: PasskeyAssertionOperation, @
                                         )
                                     )
                                 )
+                                return
+                            }
+
+                            let available = await self.ui.isAvailable(params: readinessParams)
+                            guard await self.isAlive() else { return }
+                            guard available else {
+                                let failure = PasskeyAssertionOperationFailure.integration(
+                                    .providerFailed(errorCode: .integrationError, message: "PasskeyAssertionUI is unavailable")
+                                )
+                                await self.stream.yield(.complete(.failure(failure)))
                                 return
                             }
 
@@ -301,6 +310,7 @@ internal final class PasskeyAssertionOperationImpl: PasskeyAssertionOperation, @
 
     @discardableResult
     internal func start(params: PasskeyAssertionOperationParams? = nil) -> PasskeyAssertionOperationController {
+        guard controllerImpl._attachOwner(self) else { return controller }
         let stream = self.stream
         taskScope.spawn { [stream] in
             await stream.yield(.start(params))
@@ -342,6 +352,9 @@ internal final class PasskeyAssertionOperationImpl: PasskeyAssertionOperation, @
             return .unavailable("LoginID or AccessToken required")
         }
 
+        guard await ui.isAvailable(params: operationParams) else {
+            return .unavailable("PasskeyAssertionUI is unavailable")
+        }
         return .available
     }
 

@@ -111,7 +111,7 @@ public protocol EmailVerificationAPIController: Sendable {
     ///   wrong-code challenge, or ``APIResult/canceled`` if the surrounding task is canceled first.
     ///
     /// OpenAPI source: `completeEmailVerification` operation; `CompleteVerificationRequest` request schema.
-    func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure>
+    func complete(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure>
 
     /// Requests a new verification code to be sent.
     ///
@@ -323,7 +323,7 @@ public enum EmailVerificationStartAPIFailure: APIFailure, CustomStringConvertibl
     }
 }
 
-/// Native failure hierarchy returned by ``EmailVerificationAPIController/completeWithCode(code:)``.
+/// Native failure hierarchy returned by ``EmailVerificationAPIController/complete(code:)``.
 ///
 /// Direct cases correspond to OpenAPI error response components for the `completeEmailVerification` operation, plus
 /// ``EmailVerificationCompleteAPIFailure/unexpected(errorCode:message:underlyingError:)`` for SDK-side failures.
@@ -801,7 +801,7 @@ public protocol PhoneVerificationAPIController: Sendable {
     ///   wrong-code challenge, or ``APIResult/canceled`` if the surrounding task is canceled first.
     ///
     /// OpenAPI source: `completePhoneVerification` operation; `CompleteVerificationRequest` request schema.
-    func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure>
+    func complete(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure>
 
     /// Requests a new verification code to be sent.
     ///
@@ -1013,7 +1013,7 @@ public enum PhoneVerificationStartAPIFailure: APIFailure, CustomStringConvertibl
     }
 }
 
-/// Native failure hierarchy returned by ``PhoneVerificationAPIController/completeWithCode(code:)``.
+/// Native failure hierarchy returned by ``PhoneVerificationAPIController/complete(code:)``.
 ///
 /// Direct cases correspond to OpenAPI error response components for the `completePhoneVerification` operation, plus
 /// ``PhoneVerificationCompleteAPIFailure/unexpected(errorCode:message:underlyingError:)`` for SDK-side failures.

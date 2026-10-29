@@ -51,7 +51,8 @@ extension PasskeyResult.Error: CustomStringConvertible {
 
 /// FIDO2/WebAuthn passkey operations (create and get credentials).
 ///
-/// - Only registered on iOS 16+; unavailable on earlier versions.
+/// - Platform passkeys require iOS 16 or later. On earlier versions, the default capability reports unavailable
+///   and credential calls return ``PasskeyResult/failure(_:)``.
 /// - Overlapping requests on the same capability instance are not supported. If a request is already running,
 ///   a new one fails immediately.
 /// - Calls are `@MainActor` and use the supplied window as the AuthenticationServices presentation anchor.

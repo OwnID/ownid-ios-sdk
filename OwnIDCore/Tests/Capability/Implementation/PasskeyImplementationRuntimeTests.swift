@@ -824,3 +824,26 @@ extension Array where Element == ASAuthorizationPlatformPublicKeyCredentialDescr
         map { ($0 as ASAuthorizationPublicKeyCredentialDescriptor).credentialID }
     }
 }
+
+// Covers: PASSKEY-CAPABILITY-060
+@MainActor
+@Suite(.serialized)
+struct UnavailablePasskeyImplementationTests {
+    @Test func `Unavailable capability returns failures with its original cause`() async throws {
+        let cause = NSError(domain: "passkey.unavailable.test", code: 42)
+        let passkey = UnavailablePasskey(message: "Passkey unavailable", error: cause)
+        #expect(await passkey.isAvailable(params: nil) == false)
+        let window = UIWindow(frame: .zero)
+        let assertion = await passkey.getCredential(window: window, assertionOptions: testAssertionOptions())
+        let attestation = await passkey.createCredential(window: window, attestationOptions: testAttestationOptions())
+        guard case .failure(.general(let assertionMessage, let assertionCause, _)) = assertion,
+              case .failure(.general(let attestationMessage, let attestationCause, _)) = attestation else {
+            Issue.record("Expected typed unavailable credential failures")
+            return
+        }
+        #expect(assertionMessage == "Passkey unavailable")
+        #expect(attestationMessage == "Passkey unavailable")
+        #expect((assertionCause as NSError?) === cause)
+        #expect((attestationCause as NSError?) === cause)
+    }
+}

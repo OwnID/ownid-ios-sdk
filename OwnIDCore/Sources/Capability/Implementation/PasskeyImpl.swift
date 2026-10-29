@@ -386,3 +386,25 @@ extension PasskeyImpl: ASAuthorizationControllerPresentationContextProviding {
         return window
     }
 }
+
+internal final class UnavailablePasskey: PasskeyProtocol {
+    private let message: String
+    private let error: (any Error & Sendable)?
+
+    internal init(message: String, error: (any Error)? = nil) {
+        self.message = message
+        self.error = error?.asSendableError()
+    }
+
+    internal func isAvailable(params: (any CapabilityParams)?) async -> Bool { false }
+
+    @MainActor
+    internal func getCredential(window: UIWindow, assertionOptions: AssertionOptions) async -> PasskeyResult<AssertionResult> {
+        .failure(.general(message, error))
+    }
+
+    @MainActor
+    internal func createCredential(window: UIWindow, attestationOptions: AttestationOptions) async -> PasskeyResult<AttestationResult> {
+        .failure(.general(message, error))
+    }
+}

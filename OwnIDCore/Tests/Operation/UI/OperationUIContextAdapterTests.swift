@@ -9,12 +9,86 @@ import UIKit
 @Suite(.serialized)
 struct OperationUIContextAdapterTests {
 
+    @Test func `Passkey availability preserves params without resolving a host`() async {
+        let passkey = RecordingPasskeyCapability()
+        let assertion = PasskeyAssertionUIImpl(
+            uiContextProvider: { Issue.record("Preflight must not resolve a host"); throw AdapterTestError.contextUnavailable },
+            passkey: passkey,
+            logger: nil
+        )
+        let attestation = PasskeyAttestationUIImpl(
+            uiContextProvider: { Issue.record("Preflight must not resolve a host"); throw AdapterTestError.contextUnavailable },
+            passkey: passkey,
+            logger: nil
+        )
+        let params = AdapterAvailabilityParams()
+        passkey.available = false
+        #expect(await assertion.isAvailable(params: nil) == false)
+        #expect(await attestation.isAvailable(params: params) == false)
+        passkey.available = true
+        #expect(await assertion.isAvailable(params: params))
+        #expect(await attestation.isAvailable(params: nil))
+        #expect(passkey.availabilityParams.count == 4)
+        #expect(passkey.availabilityParams[0] == nil)
+        #expect(passkey.availabilityParams[1] as? AdapterAvailabilityParams === params)
+        #expect(passkey.availabilityParams[2] as? AdapterAvailabilityParams === params)
+        #expect(passkey.availabilityParams[3] == nil)
+        #expect(passkey.assertionCallCount == 0)
+        #expect(passkey.attestationCallCount == 0)
+    }
+
+    @Test func `Default passkey adapters retain their provider after the binding changes`() async throws {
+        let container = DIContainerImpl(scopeName: "passkey-ui-identity")
+        container.injectInstanceDefaults(instanceName: .default, configuration: try OwnIDConfigurationImpl(appID: "ABC123"))
+        let original = RecordingPasskeyCapability()
+        let replacement = RecordingPasskeyCapability()
+        container.register((any PasskeyProtocol).self, instance: original)
+        container.register((any UIContextProvider).self, instance: FixedUIContextProvider(window: makeTestWindow()))
+        let assertion = try container.getOrThrow(type: (any PasskeyAssertionUI).self)
+        let attestation = try container.getOrThrow(type: (any PasskeyAttestationUI).self)
+        #expect(await assertion.isAvailable(params: nil))
+        #expect(await attestation.isAvailable(params: nil))
+
+        container.register((any PasskeyProtocol).self, instance: replacement)
+        _ = await assertion.getCredential(options: testAssertionOptions())
+        _ = await attestation.createCredential(options: testAttestationOptions())
+
+        #expect(original.assertionCallCount == 1)
+        #expect(original.attestationCallCount == 1)
+        #expect(replacement.assertionCallCount == 0)
+        #expect(replacement.attestationCallCount == 0)
+    }
+
+    @Test(arguments: [false, true])
+    func `Passkey resolution errors become failed operations`(throwFromFactory: Bool) async throws {
+        let container = DIContainerImpl(scopeName: "passkey-resolution-failure")
+        container.injectInstanceDefaults(instanceName: .default, configuration: try OwnIDConfigurationImpl(appID: "ABC123"))
+        if throwFromFactory {
+            container.registerFactory { _ -> any PasskeyProtocol in throw AdapterTestError.contextUnavailable }
+        } else {
+            container.remove((any PasskeyProtocol).self)
+        }
+        let assertion = try container.getOrThrow(type: (any PasskeyAssertionOperation).self)
+        let attestation = try container.getOrThrow(type: (any PasskeyAttestationOperation).self)
+        let assertionResult = await assertion.start(params: PasskeyAssertionOperationParams(loginID: testLoginID())).whenSettled()
+        let attestationResult = await attestation.start(params: PasskeyAttestationOperationParams(loginID: testLoginID())).whenSettled()
+        let assertionFailure = try requireOperationFailure(assertionResult)
+        let attestationFailure = try requireOperationFailure(attestationResult)
+        guard case .unexpected = assertionFailure,
+              case .unexpected = attestationFailure else {
+            Issue.record("Expected protected operation construction failures")
+            return
+        }
+        #expect(assertionFailure.message.contains("Passkey"))
+        #expect(attestationFailure.message.contains("Passkey"))
+    }
+
     @Test func `Passkey assertion forwards the resolved window and options`() async throws {
         let window = makeTestWindow()
         let passkey = RecordingPasskeyCapability()
         let adapter = PasskeyAssertionUIImpl(
             uiContextProvider: { FixedUIContextProvider(window: window) },
-            passkeyProvider: { passkey },
+            passkey: passkey,
             logger: nil
         )
         let options = testAssertionOptions("adapter-assertion-challenge")
@@ -32,7 +106,7 @@ struct OperationUIContextAdapterTests {
         let passkey = RecordingPasskeyCapability()
         let adapter = PasskeyAttestationUIImpl(
             uiContextProvider: { FixedUIContextProvider(window: window) },
-            passkeyProvider: { passkey },
+            passkey: passkey,
             logger: nil
         )
         let options = testAttestationOptions("adapter-attestation-challenge")
@@ -82,7 +156,7 @@ struct OperationUIContextAdapterTests {
                 case .assertion:
                     let adapter = PasskeyAssertionUIImpl(
                         uiContextProvider: { FixedUIContextProvider(window: window) },
-                        passkeyProvider: { passkey },
+                        passkey: passkey,
                         logger: nil
                     )
                     let result = await adapter.getCredential(options: testAssertionOptions())
@@ -90,7 +164,7 @@ struct OperationUIContextAdapterTests {
                 case .attestation:
                     let adapter = PasskeyAttestationUIImpl(
                         uiContextProvider: { FixedUIContextProvider(window: window) },
-                        passkeyProvider: { passkey },
+                        passkey: passkey,
                         logger: nil
                     )
                     let result = await adapter.createCredential(options: testAttestationOptions())
@@ -111,7 +185,7 @@ struct OperationUIContextAdapterTests {
         let sink = LogCapture()
         let adapter = PasskeyAssertionUIImpl(
             uiContextProvider: { FixedUIContextProvider(failure: contextError) },
-            passkeyProvider: { passkey },
+            passkey: passkey,
             logger: testLogRouter(sink: sink)
         )
 
@@ -162,7 +236,7 @@ struct OperationUIContextAdapterTests {
             let window = makeTestWindow()
             let cause = NSError(domain: "adapter.apple.test", code: 42)
             let reason = Reason.userClose(details: "Apple dismissed")
-            let providerResult: SocialResult =
+            let providerResult: SocialSignInResult =
                 switch terminal {
                 case .success: .success(id: "apple-user", idToken: "apple-token")
                 case .failure: .fail(error: .general("provider failed", cause))
@@ -199,19 +273,127 @@ struct OperationUIContextAdapterTests {
     @Test func `Google UI adapter forwards the resolved window and provider result`() async throws {
         let window = makeTestWindow()
         let provider = RecordingSocialProvider(result: .success(id: "google-user", idToken: "google-token"))
+        let providerLookups = Locked(0)
         let adapter = SignInWithGoogleUIImpl(
             uiContextProvider: { FixedUIContextProvider(window: window) },
-            provider: { provider },
+            provider: { providerLookups.mutate { $0 += 1 }; return provider },
             logger: nil
         )
 
         let result = await adapter.signIn(clientID: "google-client", nonce: "google-nonce")
 
         #expect(result.isSuccess)
+        #expect(providerLookups.get() == 1)
+        #expect(provider.availabilityParams.count == 1)
+        #expect(provider.availabilityParams.first?.clientID == "google-client")
+        #expect(provider.availabilityParams.first?.nonce == "google-nonce")
         #expect(provider.receivedWindow === window)
         #expect(provider.receivedParams?.clientID == "google-client")
         #expect(provider.receivedParams?.nonce == "google-nonce")
         #expect(provider.signInCallCount == 1)
+    }
+
+    @Test func `Google unavailable readiness fails the operation without resolving a window`() async throws {
+        let provider = RecordingSocialProvider()
+        provider.available = false
+        let adapter = SignInWithGoogleUIImpl(
+            uiContextProvider: { Issue.record("Unavailable Google must not resolve a window"); throw AdapterTestError.contextUnavailable },
+            provider: { provider },
+            logger: nil
+        )
+        let scope = testTaskScope()
+        defer { scope.shutdown() }
+        let api = FakeOIDCAPIController(
+            challenge: testSocialChallenge(provider: .google),
+            completeResult: .success(testSocialToken(provider: .google))
+        )
+        let operation = SignInWithGoogleOperationImpl(
+            operationType: .oidcAuthenticationGoogle, operationRegistry: OperationRegistryImpl(logger: nil),
+            ui: adapter, api: FakeOIDCAPI(controller: api), taskScope: scope, context: nil, logger: nil
+        )
+        let controller = operation.start()
+        let settlement = CapturedValue<OperationResult<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>>()
+        Task { await settlement.set(await controller.whenSettled()) }
+        let result = try await withOperationTimeout("Unavailable Google operation settles") {
+            try await settlement.waitUnlessCancelled()
+        }
+
+        let failure = try requireOperationFailure(result)
+        guard case .integration(.providerFailed(let code, _, _, _)) = failure else {
+            Issue.record("Expected unavailable readiness to report provider failure")
+            return
+        }
+        #expect(code == .oidcFailed)
+        #expect(provider.availabilityParams.count == 1)
+        #expect(provider.availabilityParams.first?.clientID == api.challenge.clientID)
+        #expect(provider.availabilityParams.first?.nonce == api.challenge.challengeID.value)
+        #expect(provider.signInCallCount == 0)
+        #expect(api.idTokens.get().isEmpty)
+        #expect(api.cancelReasons.get().count == 1)
+    }
+
+    @Test func `Google canceled readiness ignores a late available result`() async throws {
+        let provider = RecordingSocialProvider()
+        provider.waitsForAvailability = true
+        let adapter = SignInWithGoogleUIImpl(
+            uiContextProvider: { Issue.record("Canceled Google must not resolve a window"); throw AdapterTestError.contextUnavailable },
+            provider: { provider },
+            logger: nil
+        )
+        let task = Task { @MainActor in await adapter.signIn(clientID: "client", nonce: "nonce") }
+        defer { task.cancel(); provider.finishAvailability(true) }
+        try await withOperationTimeout("Google readiness entered") { try await provider.availabilityEntered.waitUnlessCancelled() }
+        task.cancel()
+        provider.finishAvailability(true)
+        let result = await task.value
+
+        guard case .canceled = result else {
+            Issue.record("Expected canceled readiness to remain canceled")
+            return
+        }
+        #expect(provider.availabilityParams.count == 1)
+        #expect(provider.signInCallCount == 0)
+    }
+
+    @Test(arguments: [false, true])
+    func `Google operation cancellation during readiness prevents late acquisition`(shutdown: Bool) async throws {
+        let provider = RecordingSocialProvider()
+        provider.waitsForAvailability = true
+        let adapter = SignInWithGoogleUIImpl(
+            uiContextProvider: { Issue.record("Ended Google operation must not resolve a window"); throw AdapterTestError.contextUnavailable },
+            provider: { provider },
+            logger: nil
+        )
+        let observedUI = ObservedGoogleReadinessUI(adapter)
+        let scope = testTaskScope()
+        defer { scope.shutdown(); provider.finishAvailability(true) }
+        let api = FakeOIDCAPIController(
+            challenge: testSocialChallenge(provider: .google),
+            completeResult: .success(testSocialToken(provider: .google))
+        )
+        let operation = SignInWithGoogleOperationImpl(
+            operationType: .oidcAuthenticationGoogle, operationRegistry: OperationRegistryImpl(logger: nil),
+            ui: observedUI, api: FakeOIDCAPI(controller: api), taskScope: scope, context: nil, logger: nil
+        )
+        let controller = operation.start()
+        let settlement = CapturedValue<OperationResult<AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>>()
+        Task { await settlement.set(await controller.whenSettled()) }
+        try await withOperationTimeout("Operation Google readiness entered") { try await provider.availabilityEntered.waitUnlessCancelled() }
+        let reason = Reason.userClose(details: "Canceled while checking Google readiness")
+        if shutdown { scope.shutdown() } else { controller.abort(reason: reason) }
+        let result = try await withOperationTimeout("Google operation settles before readiness returns") {
+            try await settlement.waitUnlessCancelled()
+        }
+        let actualReason = try requireOperationCancellation(result)
+        #expect(actualReason.description == (shutdown ? Reason.systemError(details: "Operation canceled") : reason).description)
+        provider.finishAvailability(true)
+        try await withOperationTimeout("Late Google readiness continuation returns") { try await observedUI.returned.waitUnlessCancelled() }
+        #expect(provider.signInCallCount == 0)
+        #expect(api.idTokens.get().isEmpty)
+        if !shutdown {
+            _ = try await withOperationTimeout("Google abort cancels challenge") { try await api.cancelReason.waitUnlessCancelled() }
+            #expect(api.cancelReasons.get().count == 1)
+        }
     }
 
     @Test func `Google UI adapter preserves provider failures and cancellations exactly`() async throws {
@@ -219,7 +401,7 @@ struct OperationUIContextAdapterTests {
             let window = makeTestWindow()
             let cause = NSError(domain: "adapter.google.test", code: 42)
             let reason = Reason.userClose(details: "Google dismissed")
-            let providerResult: SocialResult =
+            let providerResult: SocialSignInResult =
                 switch terminal {
                 case .failure: .fail(error: .general("provider failed", cause))
                 case .canceled: .canceled(reason: reason)
@@ -386,6 +568,8 @@ struct OperationUIContextAdapterTests {
     }
 }
 
+private final class AdapterAvailabilityParams: CapabilityParams, Sendable {}
+
 private enum AdapterTestError: Error, Sendable {
     case contextUnavailable
 }
@@ -449,6 +633,14 @@ private final class FixedUIContextProvider: UIContextProvider, @unchecked Sendab
 private final class RecordingPasskeyCapability: PasskeyProtocol, @unchecked Sendable {
     private let assertionResult: PasskeyResult<AssertionResult>
     private let attestationResult: PasskeyResult<AttestationResult>
+    var available = true
+    private(set) var availabilityParams: [(any CapabilityParams)?] = []
+
+    func isAvailable(params: (any CapabilityParams)?) async -> Bool {
+        availabilityParams.append(params)
+        return available
+    }
+
     private(set) var receivedWindow: UIWindow?
     private(set) var receivedAssertionOptions: AssertionOptions?
     private(set) var receivedAttestationOptions: AttestationOptions?
@@ -479,24 +671,59 @@ private final class RecordingPasskeyCapability: PasskeyProtocol, @unchecked Send
 }
 
 @MainActor
-private final class RecordingSocialProvider: SignInWithApple, SignInWithGoogle, @unchecked Sendable {
-    private let result: SocialResult
-    private var continuations: [CheckedContinuation<SocialResult, Never>] = []
+private final class ObservedGoogleReadinessUI: SignInWithGoogleUI {
+    private let adapter: SignInWithGoogleUIImpl
+    let returned = MainActorCapturedValue<Void>()
+
+    init(_ adapter: SignInWithGoogleUIImpl) { self.adapter = adapter }
+
+    func signIn(clientID: String, nonce: String?) async -> SocialSignInResult {
+        let result = await adapter.signIn(clientID: clientID, nonce: nonce)
+        returned.set(())
+        return result
+    }
+
+    func cancel() { adapter.cancel() }
+}
+
+@MainActor
+private final class RecordingSocialProvider: AppleSignInProvider, GoogleSignInProvider, @unchecked Sendable {
+    private let result: SocialSignInResult
+    private var continuations: [CheckedContinuation<SocialSignInResult, Never>] = []
     private var startedWaiters: [CheckedContinuation<Void, Never>] = []
     private(set) var receivedWindow: UIWindow?
-    private(set) var receivedParams: SignInWithSocialParams?
+    private(set) var receivedParams: SocialSignInParams?
     private(set) var signInCallCount = 0
     private(set) var cancelCallCount = 0
     private var waitsForCompletion = false
+    var available = true
+    var waitsForAvailability = false
+    private(set) var availabilityParams: [SocialSignInParams] = []
+    let availabilityEntered = MainActorCapturedValue<Void>()
+    private var availabilityContinuation: CheckedContinuation<Bool, Never>?
 
-    init(result: SocialResult = .success(id: "provider-user", idToken: "provider-token"), waitsForCompletion: Bool = false) {
+    init(result: SocialSignInResult = .success(id: "provider-user", idToken: "provider-token"), waitsForCompletion: Bool = false) {
         self.result = result
         self.waitsForCompletion = waitsForCompletion
     }
 
-    func isAvailable(params: (any CapabilityParams)?) async -> Bool { true }
+    func isAvailable(params: (any CapabilityParams)?) async -> Bool {
+        if let params = params as? SocialSignInParams { availabilityParams.append(params) }
+        availabilityEntered.set(())
+        if waitsForAvailability {
+            let result = await withCheckedContinuation { availabilityContinuation = $0 }
+            return result
+        }
+        return available
+    }
 
-    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    func finishAvailability(_ available: Bool) {
+        let continuation = availabilityContinuation
+        availabilityContinuation = nil
+        continuation?.resume(returning: available)
+    }
+
+    func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         receivedWindow = window
         receivedParams = params
         signInCallCount += 1
@@ -533,12 +760,12 @@ private final class RecordingSocialProvider: SignInWithApple, SignInWithGoogle, 
         }
     }
 
-    func finish(_ result: SocialResult) {
+    func finish(_ result: SocialSignInResult) {
         guard !continuations.isEmpty else { return }
         continuations.removeFirst().resume(returning: result)
     }
 
-    func finishAll(_ result: SocialResult) {
+    func finishAll(_ result: SocialSignInResult) {
         let pending = continuations
         continuations.removeAll()
         pending.forEach { $0.resume(returning: result) }
@@ -552,7 +779,7 @@ extension PasskeyResult {
     }
 }
 
-extension SocialResult {
+extension SocialSignInResult {
     fileprivate var isSuccess: Bool {
         if case .success = self { return true }
         return false

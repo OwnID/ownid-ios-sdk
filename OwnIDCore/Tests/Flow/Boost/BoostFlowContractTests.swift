@@ -836,6 +836,7 @@ struct BoostFlowContractTests {
             loginResult: .success(
                 authRequiredLoginResponse(
                     operations: [
+                        authRequirement(.idDocVerification),
                         authRequirement(.emailVerification, channelID: "default-email-channel"),
                         authRequirement(.phoneNumberVerification, channelID: "default-phone-channel"),
                         authRequirement(.passkeyAuth),
@@ -963,6 +964,26 @@ struct BoostFlowContractTests {
                 authRequiredLoginResponse(
                     operations: [authRequirement(.phoneNumberVerification, channelID: "excluded-phone-channel")]
                 )
+            ),
+            loginIDCollectResult: .success(loginID)
+        )
+        let flow = makeBoostLoginFlow(harness: harness)
+        let context = BoostFlowContext { $0.allowedAuthOperations = [.emailVerification] }
+
+        let failure = try await requireFailure(flow.start(context).whenSettled())
+
+        try requireLoginInsufficientAuthFailure(failure, expectedMessageFragment: nil)
+        #expect(harness.emailVerification.startParams.isEmpty)
+        #expect(harness.phoneVerification.startParams.isEmpty)
+        #expect(harness.passkeyAssertion.startParams.isEmpty)
+        #expect(harness.passkeyAttestation.startParams.isEmpty)
+    }
+
+    @Test func `Boost login unsupported requirement fails when passkeys are not allowed`() async throws {
+        let loginID = FlowFixtures.loginID("unsupported-requirement", type: .userName)
+        let harness = FlowTestHarness(
+            loginResult: .success(
+                authRequiredLoginResponse(operations: [authRequirement(.idDocVerification)])
             ),
             loginIDCollectResult: .success(loginID)
         )

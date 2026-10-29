@@ -64,6 +64,10 @@ struct LoginDiscoverAPIImplementationMappingTests {
                     "type": "EmailVerification",
                     "score": 5,
                     "channels": [{"channel": "u***@example.test", "id": "email-1"}]
+                  },
+                  {
+                    "type": "IdDocVerification",
+                    "score": 5
                   }
                 ]
               }
@@ -83,6 +87,13 @@ struct LoginDiscoverAPIImplementationMappingTests {
         let malformedNoSessionBody = #"{"reason":"missing no-session branch"}"#
         try assertDiscoverUnexpected(discoverCall.mapHttpSuccess(success(code: 206, body: malformedNoSessionBody)))
         try assertLoginUnexpected(loginCall.mapHttpSuccess(success(code: 206, body: malformedNoSessionBody)))
+    }
+
+    @Test func `Discover and login reject unknown operation types`() throws {
+        let body = #"{"authRequirements":{"targetScore":1,"operations":[{"type":"IdDocumentVerification","score":1}]}}"#
+
+        try assertDiscoverUnexpected(try makeDiscoverCall().mapHttpSuccess(success(code: 206, body: body)))
+        try assertLoginUnexpected(try makeLoginCall().mapHttpSuccess(success(code: 206, body: body)))
     }
 
     @Test func `Discover and login reject negative auth requirement scores and allow zero`() throws {
@@ -578,10 +589,13 @@ struct LoginDiscoverAPIImplementationMappingTests {
     private func assertAuthRequired(_ authRequired: LoginResponse.AuthRequired, file: StaticString, line: UInt) {
         #expect(authRequired.reason == "step-up")
         #expect(authRequired.authRequirements.targetScore == 10)
-        #expect(authRequired.authRequirements.operations.count == 1)
+        #expect(authRequired.authRequirements.operations.count == 2)
         #expect(authRequired.authRequirements.operations.first?.type == .emailVerification)
         #expect(authRequired.authRequirements.operations.first?.score == 5)
         #expect(authRequired.authRequirements.operations.first?.channels == [OperationChannel(channel: "u***@example.test", id: "email-1")])
+        #expect(authRequired.authRequirements.operations.last?.type == .idDocVerification)
+        #expect(authRequired.authRequirements.operations.last?.score == 5)
+        #expect(authRequired.authRequirements.operations.last?.channels == nil)
     }
 
     private func assertDiscoverInvalidLoginID(

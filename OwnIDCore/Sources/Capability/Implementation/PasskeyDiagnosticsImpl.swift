@@ -163,10 +163,18 @@ internal final class PasskeyDiagnosticsImpl: PasskeyDiagnostics {
 
         var builder = "\nPasskeyDiagnostics: \(summary.rawValue)\n"
         builder += "AASA/CDN entries do not verify the installed app association.\n"
-        builder += "Env: Application bundleId=\(bundleId), version=\(localInfo.appVersion), debuggable=\(localInfo.isDebuggable)\n"
+        builder += "Env: Application bundleId=\(bundleId), version=\(localInfo.appVersion), sdkDebuggable=\(localInfo.isDebuggable)\n"
         builder += "Env: correlationId=\(localInfo.correlationId)\n"
+        builder += "Env: isSystemFidoCapable=\(localInfo.isSystemFidoCapable)\n"
+        func format(_ value: Bool?) -> String {
+            value.map { $0 ? "true" : "false" } ?? "unknown"
+        }
         builder +=
-            "Env: isSystemFidoCapable=\(localInfo.isSystemFidoCapable), isDeviceSecured=\(localInfo.isDeviceSecured), isStrongBiometricEnabled=\(localInfo.isStrongBiometricEnabled)\n"
+            "Env: Initial process snapshot: biometryType=\(localInfo.biometryType.diagnosticName)"
+            + ", isBiometryUsable=\(localInfo.isBiometryUsable)"
+            + ", isBiometryEnrolled=\(format(localInfo.isBiometryEnrolled))"
+            + ", isBiometryLockedOut=\(format(localInfo.isBiometryLockedOut))"
+            + ", isPasscodeSet=\(format(localInfo.isPasscodeSet))\n"
         if !aasaApps.isEmpty || !cdnApps.isEmpty {
             func formatList(_ items: [String]) -> String {
                 items.isEmpty ? "-" : items.joined(separator: ", ")

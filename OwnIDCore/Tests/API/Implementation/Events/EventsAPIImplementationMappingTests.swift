@@ -88,6 +88,21 @@ struct EventsAPIImplementationMappingTests {
         #expect(stepInsights["clicksCount"] as? Int == 2)
     }
 
+    @Test func `Request serializes IdDocVerification step type`() throws {
+        let call = try EventsAPICall(
+            apiBaseURL: baseURL,
+            coder: coder,
+            userJourney: userJourneySummary(operationType: .idDocVerification),
+            traceParent: traceParent
+        )
+        let body = try bodyObject(from: call.request.buildURLRequest())
+        let eventInfo = try #require(body["eventInfo"] as? [String: Any])
+        let flow = try #require((eventInfo["flows"] as? [[String: Any]])?.first)
+        let step = try #require((flow["steps"] as? [[String: Any]])?.first)
+
+        #expect(step["operationType"] as? String == "IdDocVerification")
+    }
+
     @Test func `Analytics enum wire values remain stable`() {
         let sources: [FlowInfo.Source] = [
             .widgetButton,
@@ -241,7 +256,7 @@ struct EventsAPIImplementationMappingTests {
         )
     }
 
-    private func userJourneySummary() -> UserJourneySummary {
+    private func userJourneySummary(operationType: OperationType = .passkeyAuth) -> UserJourneySummary {
         UserJourneySummary(
             id: "journey-1",
             reporter: .init(
@@ -273,7 +288,7 @@ struct EventsAPIImplementationMappingTests {
                         ),
                         steps: [
                             Step(
-                                operationType: .passkeyAuth,
+                                operationType: operationType,
                                 name: "passkey",
                                 status: .failed,
                                 startedAt: Date(timeIntervalSince1970: 1_704_067_201.123),

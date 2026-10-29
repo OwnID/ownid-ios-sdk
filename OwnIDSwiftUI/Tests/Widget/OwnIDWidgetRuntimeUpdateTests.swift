@@ -1231,7 +1231,7 @@ struct OwnIDWidgetRuntimeUpdateTests {
             viewModel: viewModel,
             widgetStrings: BoostWidgetStrings(skipPassword: widgetButtonTitle, or: "or")
         )
-        .iconButton { isBusy, isEnabled, action, accessibilityLabel in
+        .iconButton { isBusy, isEnabled, action, accessibilityLabel, _ in
             RecordingWidgetButton(
                 isBusy: isBusy,
                 isEnabled: isEnabled,
@@ -1264,7 +1264,7 @@ struct OwnIDWidgetRuntimeUpdateTests {
             viewModel: viewModel,
             widgetStrings: BoostWidgetStrings(skipPassword: widgetButtonTitle, or: "or")
         )
-        .iconButton { isBusy, isEnabled, action, accessibilityLabel in
+        .iconButton { isBusy, isEnabled, action, accessibilityLabel, _ in
             RecordingWidgetButton(
                 isBusy: isBusy,
                 isEnabled: isEnabled,

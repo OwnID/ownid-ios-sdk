@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -7,7 +8,8 @@ import Testing
 @Suite(.serialized)
 struct RunDiagnosticImplementationRuntimeTests {
 
-    @Test func `Valid previous run rotates once and forwards one diagnostic`() async throws {
+    @Test(arguments: [false, true])
+    func `Valid previous run rotates once and forwards one diagnostic`(hasCrashExit: Bool) async throws {
         let storage = RunDiagnosticStorage(
             strings: ["RUN_RECORD": #"{"correlationId":"previous-correlation","processId":321}"#]
         )
@@ -22,6 +24,7 @@ struct RunDiagnosticImplementationRuntimeTests {
             localLoggerProvider: { nil },
             exitProvider: { processID in
                 exitProcessIDs.append(processID)
+                guard hasCrashExit else { return nil }
                 return PreviousRun.Exit(
                     diagnosticType: "crash",
                     terminationReason: "synthetic forwarding fixture",
@@ -40,18 +43,23 @@ struct RunDiagnosticImplementationRuntimeTests {
         let payload = try Self.payload(from: request)
         let metadata = try #require(payload["metadata"] as? [String: Any])
         let previousRun = try #require(metadata["previousRun"] as? [String: Any])
-        let exit = try #require(previousRun["exit"] as? [String: Any])
         let currentRun = try Self.jsonObject(from: try #require(storage.string(forKey: "RUN_RECORD")))
 
         #expect(storage.putAttempts == 1)
         #expect(exitProcessIDs.entries == [321])
+        #expect(payload["level"] as? String == (hasCrashExit ? "Warning" : "Information"))
         #expect(previousRun["correlationId"] as? String == "previous-correlation")
         #expect(previousRun["processId"] as? Int == 321)
-        #expect(exit["diagnosticType"] as? String == "crash")
-        #expect(exit["terminationReason"] as? String == "synthetic forwarding fixture")
-        #expect(exit["signal"] as? Int == 9)
-        #expect(exit["exceptionType"] as? Int == 10)
-        #expect(exit["exceptionCode"] as? String == "0x2a")
+        if hasCrashExit {
+            let exit = try #require(previousRun["exit"] as? [String: Any])
+            #expect(exit["diagnosticType"] as? String == "crash")
+            #expect(exit["terminationReason"] as? String == "synthetic forwarding fixture")
+            #expect(exit["signal"] as? Int == 9)
+            #expect(exit["exceptionType"] as? Int == 10)
+            #expect(exit["exceptionCode"] as? String == "0x2a")
+        } else {
+            #expect(previousRun["exit"] == nil)
+        }
         #expect(currentRun["correlationId"] as? String == "current-correlation")
         #expect(currentRun["processId"] as? Int == 654)
     }
@@ -306,6 +314,8 @@ private struct RunDiagnosticAppConfigProvider: AppConfigProvider {
         logLevel: .debug
     )
 
+    var currentConfig: AppConfig? { config }
+
     var configStream: AsyncStream<AppConfig> {
         AsyncStream { continuation in
             continuation.yield(config)
@@ -323,10 +333,13 @@ private struct RunDiagnosticLocalInfo: LocalInfo {
     let correlationId = "server-logger-correlation"
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = true
+    let biometryType: LABiometryType = .none
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 }
 
 private enum RunDiagnosticTestError: Error, Sendable {

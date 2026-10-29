@@ -68,7 +68,7 @@ struct WebBridgeSocialPluginRuntimeTests {
             coder: coder
         )
 
-        #expect(error["message"]?.stringValue?.contains("\(providerKind.displayName) Sign In is not supported") == true)
+        #expect(error["message"]?.stringValue?.contains("Sign in with \(providerKind.displayName) is not supported") == true)
         #expect(error["type"] == .string("UNKNOWN"))
     }
 
@@ -182,8 +182,8 @@ struct WebBridgeSocialPluginRuntimeTests {
         logger: OwnIDLogRouter? = nil
     ) -> WebBridgeSocialPlugin {
         WebBridgeSocialPlugin(
-            signInWithApple: providers.apple,
-            signInWithGoogle: providers.google,
+            appleSignIn: providers.apple,
+            googleSignIn: providers.google,
             uiContextProvider: uiContextProvider,
             coder: coder,
             logger: logger
@@ -215,16 +215,16 @@ private enum WebBridgeSocialProviderKind: String, CaseIterable, CustomTestString
         }
     }
 
-    func makeProviderSet<Provider: SignInWithSocial>(provider: Provider) -> WebBridgeSocialProviderSet {
+    func makeProviderSet<Provider: SocialSignIn>(provider: Provider) -> WebBridgeSocialProviderSet {
         switch self {
         case .apple:
-            guard let provider = provider as? any SignInWithApple else {
-                fatalError("Expected an Apple sign-in provider")
+            guard let provider = provider as? any AppleSignInProvider else {
+                fatalError("Expected a Sign in with Apple provider")
             }
             return .apple(provider)
         case .google:
-            guard let provider = provider as? any SignInWithGoogle else {
-                fatalError("Expected a Google sign-in provider")
+            guard let provider = provider as? any GoogleSignInProvider else {
+                fatalError("Expected a Sign in with Google provider")
             }
             return .google(provider)
         }
@@ -235,7 +235,7 @@ private struct WebBridgeSocialProviderCase: CustomTestStringConvertible, Sendabl
     let provider: WebBridgeSocialProviderKind
     let description: String
     let available: Bool
-    let result: SocialResult
+    let result: SocialSignInResult
     let expected: ExpectedResult
     let expectedEvents: [String]
 
@@ -250,7 +250,7 @@ private struct WebBridgeSocialProviderCase: CustomTestStringConvertible, Sendabl
                 description: "unavailable",
                 available: false,
                 result: .success(id: "provider-user", idToken: "id-token"),
-                expected: .error("\(provider.displayName) Sign In is unavailable", "UNKNOWN"),
+                expected: .error("Sign in with \(provider.displayName) is unavailable", "UNKNOWN"),
                 expectedEvents: ["available"]
             ),
             .init(
@@ -287,31 +287,31 @@ private struct WebBridgeSocialProviderCase: CustomTestStringConvertible, Sendabl
 }
 
 private struct WebBridgeSocialProviderSet {
-    let apple: (any SignInWithApple)?
-    let google: (any SignInWithGoogle)?
+    let apple: (any AppleSignInProvider)?
+    let google: (any GoogleSignInProvider)?
 
     static let empty = WebBridgeSocialProviderSet(apple: nil, google: nil)
 
-    static func apple(_ provider: any SignInWithApple) -> WebBridgeSocialProviderSet {
+    static func apple(_ provider: any AppleSignInProvider) -> WebBridgeSocialProviderSet {
         WebBridgeSocialProviderSet(apple: provider, google: nil)
     }
 
-    static func google(_ provider: any SignInWithGoogle) -> WebBridgeSocialProviderSet {
+    static func google(_ provider: any GoogleSignInProvider) -> WebBridgeSocialProviderSet {
         WebBridgeSocialProviderSet(apple: nil, google: provider)
     }
 }
 
-private final class RecordingWebBridgeSocialProvider: SignInWithApple, SignInWithGoogle, @unchecked Sendable {
+private final class RecordingWebBridgeSocialProvider: AppleSignInProvider, GoogleSignInProvider, @unchecked Sendable {
     private let lock = NSLock()
     private let available: Bool
-    private let result: SocialResult
+    private let result: SocialSignInResult
     private var recordedEvents: [String] = []
-    private var recordedSignInParams: [SignInWithSocialParams] = []
+    private var recordedSignInParams: [SocialSignInParams] = []
     private var recordedSignInWindows: [UIWindow] = []
 
     init(
         available: Bool = true,
-        result: SocialResult = .success(id: "provider-user", idToken: "id-token")
+        result: SocialSignInResult = .success(id: "provider-user", idToken: "id-token")
     ) {
         self.available = available
         self.result = result
@@ -321,7 +321,7 @@ private final class RecordingWebBridgeSocialProvider: SignInWithApple, SignInWit
         lock.withLock { recordedEvents }
     }
 
-    var signInParams: [SignInWithSocialParams] {
+    var signInParams: [SocialSignInParams] {
         lock.withLock { recordedSignInParams }
     }
 
@@ -334,7 +334,7 @@ private final class RecordingWebBridgeSocialProvider: SignInWithApple, SignInWit
         return available
     }
 
-    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         lock.withLock {
             recordedEvents.append("signIn")
             recordedSignInParams.append(params)
@@ -349,12 +349,12 @@ private final class RecordingWebBridgeSocialProvider: SignInWithApple, SignInWit
 }
 
 @MainActor
-private final class BlockingWebBridgeSocialProvider: SignInWithGoogle, @unchecked Sendable {
+private final class BlockingWebBridgeSocialProvider: GoogleSignInProvider, @unchecked Sendable {
     let started = AsyncSignalRecorder<Int>()
     let cancellationObserved = AsyncSignalRecorder<Int>()
 
     private let lock = NSLock()
-    private var signInContinuation: CheckedContinuation<SocialResult, Never>?
+    private var signInContinuation: CheckedContinuation<SocialSignInResult, Never>?
     private var recordedCancelCount = 0
 
     var cancelCount: Int {
@@ -365,7 +365,7 @@ private final class BlockingWebBridgeSocialProvider: SignInWithGoogle, @unchecke
         true
     }
 
-    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         started.append(1)
         return await withCheckedContinuation { continuation in
             lock.withLock { signInContinuation = continuation }
@@ -373,7 +373,7 @@ private final class BlockingWebBridgeSocialProvider: SignInWithGoogle, @unchecke
     }
 
     func cancel() {
-        let continuation = lock.withLock { () -> CheckedContinuation<SocialResult, Never>? in
+        let continuation = lock.withLock { () -> CheckedContinuation<SocialSignInResult, Never>? in
             recordedCancelCount += 1
             let continuation = signInContinuation
             signInContinuation = nil
@@ -387,7 +387,7 @@ private final class BlockingWebBridgeSocialProvider: SignInWithGoogle, @unchecke
 }
 
 @MainActor
-private final class CancellationBeforeInvocationSocialProvider: SignInWithGoogle, @unchecked Sendable {
+private final class CancellationBeforeInvocationSocialProvider: GoogleSignInProvider, @unchecked Sendable {
     let availabilityStarted = AsyncSignalRecorder<Int>()
 
     private(set) var signInCount = 0
@@ -399,7 +399,7 @@ private final class CancellationBeforeInvocationSocialProvider: SignInWithGoogle
         return true
     }
 
-    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         signInCount += 1
         return .success(id: "unexpected", idToken: "unexpected")
     }

@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -176,15 +177,104 @@ struct ServerLoggerRuntimeTests {
         #expect(metadata["correlationId"] as? String == harness.localInfo.correlationId)
         #expect(metadata["bundleId"] as? String == harness.localInfo.bundleID)
         #expect(metadata["isUserVerifyingPlatformAuthenticatorAvailable"] as? Bool == true)
-        #expect(metadata["isDeviceSecured"] as? Bool == true)
-        #expect(metadata["isFingerprintHardwarePresent"] as? Bool == false)
-        #expect(metadata["isFaceHardwarePresent"] as? Bool == true)
-        #expect(metadata["isStrongBiometricEnabled"] as? Bool == true)
+        #expect(metadata["biometryType"] as? String == "faceID")
+        try Self.expectJSONBool(metadata["isBiometryUsable"], equals: true)
+        try Self.expectJSONBool(metadata["isBiometryEnrolled"], equals: true)
+        try Self.expectJSONBool(metadata["isBiometryLockedOut"], equals: false)
+        try Self.expectJSONBool(metadata["isPasscodeSet"], equals: true)
+        #expect(metadata["isDeviceSecured"] == nil)
+        #expect(metadata["isFingerprintHardwarePresent"] == nil)
+        #expect(metadata["isFaceHardwarePresent"] == nil)
+        #expect(metadata["isStrongBiometricEnabled"] == nil)
+        #expect(metadata["biometryLocalizedName"] == nil)
+        #expect(metadata["biometryIconSystemName"] == nil)
         #expect(metadata["previousRun"] == nil)
     }
 
+    @Test(arguments: [
+        ("legacy unknown", false, nil, nil, nil),
+        ("not enrolled", false, false, false, true),
+        ("locked out", false, true, true, true),
+        ("no passcode", false, false, false, false),
+        ("usable", true, true, false, true),
+    ] as [(String, Bool, Bool?, Bool?, Bool?)])
+    func `Server logger preserves each authentication signal`(
+        scenario: String, usable: Bool, enrolled: Bool?, lockedOut: Bool?, passcode: Bool?
+    ) async throws {
+        var localInfo = ServerLoggerLocalInfo()
+        localInfo.isBiometryUsable = usable
+        localInfo.isBiometryEnrolled = enrolled
+        localInfo.isBiometryLockedOut = lockedOut
+        localInfo.isPasscodeSet = passcode
+        let harness = try Self.makeHarness(path: "authentication-\(scenario.replacingOccurrences(of: " ", with: "-"))", localInfo: localInfo)
+        defer { harness.shutdown() }
+        ServerLoggerTestURLProtocol.register(.http(statusCode: 202, body: "{}"), for: harness.eventsURL)
+        defer { ServerLoggerTestURLProtocol.unregister(harness.eventsURL) }
+        let logger = harness.makeLogger()
+        await harness.appConfigProvider.resolve(Self.appConfig(logLevel: .debug))
+        logger.log(level: .warn, className: "AuthMetadata", message: scenario, cause: nil)
+
+        try await withTestTimeout("authentication metadata request") {
+            await ServerLoggerTestURLProtocol.waitForRequest(to: harness.eventsURL)
+        }
+        let request = try #require(ServerLoggerTestURLProtocol.requests(for: harness.eventsURL).first)
+        let payload = try Self.payload(from: request)
+        let metadata = try #require(payload["metadata"] as? [String: Any])
+        try Self.expectJSONBool(metadata["isBiometryUsable"], equals: usable)
+        try Self.expectJSONBool(metadata["isBiometryEnrolled"], equals: enrolled)
+        try Self.expectJSONBool(metadata["isBiometryLockedOut"], equals: lockedOut)
+        try Self.expectJSONBool(metadata["isPasscodeSet"], equals: passcode)
+    }
+
+    @Test(arguments: try ServerLoggerRuntimeTests.biometryCases())
+    func `Server logger encodes known and future biometric types as stable strings`(
+        type: LABiometryType, expectedName: String, localizedName: String?, iconName: String?
+    ) async throws {
+        var localInfo = ServerLoggerLocalInfo()
+        localInfo.biometryType = type
+        localInfo.isBiometryUsable = false
+        localInfo.isBiometryEnrolled = nil
+        localInfo.isBiometryLockedOut = nil
+        localInfo.isPasscodeSet = true
+        localInfo.biometryLocalizedName = localizedName
+        localInfo.biometryIconSystemName = iconName
+        let harness = try Self.makeHarness(path: "biometric-type", localInfo: localInfo)
+        defer { harness.shutdown() }
+        ServerLoggerTestURLProtocol.register(.http(statusCode: 202, body: "{}"), for: harness.eventsURL)
+        defer { ServerLoggerTestURLProtocol.unregister(harness.eventsURL) }
+        let logger = harness.makeLogger()
+        await harness.appConfigProvider.resolve(Self.appConfig(logLevel: .debug))
+        logger.log(level: .warn, className: "AuthMetadata", message: expectedName, cause: nil)
+
+        try await withTestTimeout("biometric type metadata request") {
+            await ServerLoggerTestURLProtocol.waitForRequest(to: harness.eventsURL)
+        }
+        let request = try #require(ServerLoggerTestURLProtocol.requests(for: harness.eventsURL).first)
+        let payload = try Self.payload(from: request)
+        let metadata = try #require(payload["metadata"] as? [String: Any])
+        #expect(metadata["biometryType"] as? String == expectedName)
+    }
+
+    private static func biometryCases() throws -> [(LABiometryType, String, String?, String?)] {
+        var cases: [(LABiometryType, String, String?, String?)] = [
+            (.none, "none", nil, nil),
+            (.touchID, "touchID", "Touch ID", "touchid"),
+            (.faceID, "faceID", "Face ID", "faceid"),
+        ]
+        if #available(iOS 17.0, *) {
+            cases.append((.opticID, "opticID", nil, nil))
+        }
+        let futureType = try #require(LABiometryType(rawValue: 999))
+        cases.append((futureType, "unknown(999)", nil, nil))
+        return cases
+    }
+
     @Test func `Previous run metadata is attached only to its owning diagnostic`() async throws {
-        let harness = try Self.makeHarness(path: "previous-run")
+        var localInfo = ServerLoggerLocalInfo()
+        localInfo.isBiometryUsable = false
+        localInfo.isBiometryEnrolled = nil
+        localInfo.isBiometryLockedOut = nil
+        let harness = try Self.makeHarness(path: "previous-run", localInfo: localInfo)
         defer { harness.shutdown() }
 
         ServerLoggerTestURLProtocol.register(.http(statusCode: 202, body: "{}"), for: harness.eventsURL)
@@ -220,6 +310,11 @@ struct ServerLoggerRuntimeTests {
         let previousRun = try #require(metadata["previousRun"] as? [String: Any])
         let exit = try #require(previousRun["exit"] as? [String: Any])
 
+        #expect(metadata["biometryType"] as? String == "faceID")
+        try Self.expectJSONBool(metadata["isBiometryUsable"], equals: false)
+        #expect(metadata["isBiometryEnrolled"] == nil)
+        try Self.expectJSONBool(metadata["isBiometryLockedOut"], equals: nil)
+        try Self.expectJSONBool(metadata["isPasscodeSet"], equals: true)
         #expect(previousRun["correlationId"] as? String == "previous-correlation")
         #expect(previousRun["processId"] as? Int == 4_242)
         #expect(exit["diagnosticType"] as? String == "crash")
@@ -227,6 +322,23 @@ struct ServerLoggerRuntimeTests {
         #expect(exit["signal"] as? Int == 11)
         #expect(exit["exceptionType"] as? Int == 1)
         #expect(exit["exceptionCode"] as? String == "0xdeadbeef")
+
+        logger.log(level: .warn, className: "Ordinary", message: "following event", cause: nil)
+        let ordinaryRequest = try await withTestTimeout("ordinary diagnostic after previous run") {
+            try await ServerLoggerTestURLProtocol.waitForRequest(to: harness.eventsURL) { request in
+                guard let payload = try? Self.payload(from: request) else { return false }
+                return payload["message"] as? String == "Ordinary => following event"
+            }
+        }
+        let ordinaryPayload = try Self.payload(from: ordinaryRequest)
+        let ordinaryMetadata = try #require(ordinaryPayload["metadata"] as? [String: Any])
+        #expect(ordinaryMetadata["previousRun"] == nil)
+        #expect(ordinaryMetadata["correlationId"] as? String == harness.localInfo.correlationId)
+        #expect(ordinaryMetadata["biometryType"] as? String == "faceID")
+        try Self.expectJSONBool(ordinaryMetadata["isBiometryUsable"], equals: false)
+        try Self.expectJSONBool(ordinaryMetadata["isBiometryEnrolled"], equals: nil)
+        try Self.expectJSONBool(ordinaryMetadata["isBiometryLockedOut"], equals: nil)
+        try Self.expectJSONBool(ordinaryMetadata["isPasscodeSet"], equals: true)
     }
 
     @Test func `Server logger suppresses HTTP logging on diagnostics network requests`() async throws {
@@ -256,7 +368,10 @@ struct ServerLoggerRuntimeTests {
         #expect(request.suppressHttpLog)
     }
 
-    private static func makeHarness(path: String) throws -> ServerLoggerRuntimeHarness {
+    private static func makeHarness(
+        path: String,
+        localInfo: ServerLoggerLocalInfo = ServerLoggerLocalInfo()
+    ) throws -> ServerLoggerRuntimeHarness {
         let rootURL = try #require(URL(string: "https://server-logger-runtime.ownid.test/\(path)-\(UUID().uuidString)"))
         let configuration = try OwnIDConfigurationImpl(appID: "Diag123", env: .uat, region: .eu, rootURL: rootURL.absoluteString)
         let sessionConfiguration = URLSessionConfiguration.ephemeral
@@ -268,7 +383,6 @@ struct ServerLoggerRuntimeTests {
             httpLogger: nil
         )
         let provider = ScriptedAppConfigProvider()
-        let localInfo = ServerLoggerLocalInfo()
         let taskScope = TaskScope(shutdownToken: ShutdownToken())
 
         return ServerLoggerRuntimeHarness(
@@ -290,6 +404,16 @@ struct ServerLoggerRuntimeTests {
             ui: nil,
             logLevel: logLevel
         )
+    }
+
+    private static func expectJSONBool(_ actual: Any?, equals expected: Bool?) throws {
+        if let expected {
+            let number = try #require(actual as? NSNumber)
+            #expect(CFGetTypeID(number) == CFBooleanGetTypeID())
+            #expect(number.boolValue == expected)
+        } else {
+            #expect(actual == nil)
+        }
     }
 
     private static func payload(from request: URLRequest) throws -> [String: Any] {
@@ -410,7 +534,8 @@ func makeRoutedServerLoggerHarness(
 }
 
 private actor ScriptedAppConfigProvider: AppConfigProvider {
-    private var current: AppConfig?
+    private let current = Locked<AppConfig?>(nil)
+    nonisolated var currentConfig: AppConfig? { current.get() }
     private var fetchWaiters: [CheckedContinuation<Void, Never>] = []
     private var configWaiter: CheckedContinuation<AppConfig, any Error>?
     private var streamContinuations: [AsyncStream<AppConfig>.Continuation] = []
@@ -423,14 +548,14 @@ private actor ScriptedAppConfigProvider: AppConfigProvider {
 
     func getOrFetchConfig() async throws -> AppConfig {
         notifyFetchWaiters()
-        if let current { return current }
+        if let current = currentConfig { return current }
         return try await withCheckedThrowingContinuation { continuation in
             configWaiter = continuation
         }
     }
 
     func resolve(_ config: AppConfig) {
-        current = config
+        current.set(config)
         streamContinuations.forEach { $0.yield(config) }
         if let waiter = configWaiter {
             configWaiter = nil
@@ -447,7 +572,7 @@ private actor ScriptedAppConfigProvider: AppConfigProvider {
 
     private func register(_ continuation: AsyncStream<AppConfig>.Continuation) {
         streamContinuations.append(continuation)
-        if let current {
+        if let current = currentConfig {
             continuation.yield(current)
         }
     }
@@ -467,10 +592,13 @@ private struct ServerLoggerLocalInfo: LocalInfo {
     let correlationId = "diagnostics-correlation-id"
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = true
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = true
+    var biometryType: LABiometryType = .faceID
+    var isBiometryUsable = true
+    var isBiometryEnrolled: Bool? = true
+    var isBiometryLockedOut: Bool? = false
+    var biometryLocalizedName: String? = "Face ID"
+    var biometryIconSystemName: String? = "faceid"
+    var isPasscodeSet: Bool? = true
 }
 
 enum ServerLoggerTestURLProtocolRoute: Sendable {

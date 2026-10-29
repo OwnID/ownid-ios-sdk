@@ -266,6 +266,29 @@ struct CoreAPIContractTests {
         try assertUnexpected(bodyShape, errorCode: .unknown)
     }
 
+    // Covers: WIRE-270
+    @Test func `Bad request unions reject unsupported codes and preserve literal unknown`() {
+        let responseTypes: [any Decodable.Type] = [
+            InternalBadRequestErrorResponse.self,
+            InternalBadEnrollRequestErrorResponse.self,
+            InternalBadLoginIdRequestErrorResponse.self,
+            InternalBadChallengeRequestErrorResponse.self,
+            InternalBadVerificationRequestErrorResponse.self,
+            InternalBadCompleteVerificationRequestErrorResponse.self,
+            InternalBadResendRequestErrorResponse.self,
+        ]
+        let coder = JSONCoderImpl()
+
+        for responseType in responseTypes {
+            #expect(throws: DecodingError.self, "\(responseType) must reject unsupported codes") {
+                try coder.decodeFromString(#"{"errorCode":"new_backend_code","message":"x"}"#, as: responseType)
+            }
+            #expect(throws: Never.self, "\(responseType) must accept literal unknown") {
+                try coder.decodeFromString(#"{"errorCode":"unknown","message":"x"}"#, as: responseType)
+            }
+        }
+    }
+
     private func encodedString<T: Encodable>(_ value: T, encoder: JSONEncoder) throws -> String {
         let data = try encoder.encode(value)
         return try #require(String(data: data, encoding: .utf8))

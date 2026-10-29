@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 
 /// Instance-scoped server log sink for diagnostics allowed by remote ``AppConfig``.
 ///
@@ -32,10 +33,11 @@ internal final class ServerLogger: @unchecked Sendable {
         fileprivate let correlationId: String
         fileprivate let bundleId: String
         fileprivate let isUserVerifyingPlatformAuthenticatorAvailable: Bool
-        fileprivate let isDeviceSecured: Bool
-        fileprivate let isFingerprintHardwarePresent: Bool
-        fileprivate let isFaceHardwarePresent: Bool
-        fileprivate let isStrongBiometricEnabled: Bool
+        fileprivate let biometryType: String
+        fileprivate let isBiometryUsable: Bool
+        fileprivate let isBiometryEnrolled: Bool?
+        fileprivate let isBiometryLockedOut: Bool?
+        fileprivate let isPasscodeSet: Bool?
         fileprivate let previousRun: PreviousRun?
 
         fileprivate func with(previousRun: PreviousRun?) -> Metadata {
@@ -43,10 +45,11 @@ internal final class ServerLogger: @unchecked Sendable {
                 correlationId: correlationId,
                 bundleId: bundleId,
                 isUserVerifyingPlatformAuthenticatorAvailable: isUserVerifyingPlatformAuthenticatorAvailable,
-                isDeviceSecured: isDeviceSecured,
-                isFingerprintHardwarePresent: isFingerprintHardwarePresent,
-                isFaceHardwarePresent: isFaceHardwarePresent,
-                isStrongBiometricEnabled: isStrongBiometricEnabled,
+                biometryType: biometryType,
+                isBiometryUsable: isBiometryUsable,
+                isBiometryEnrolled: isBiometryEnrolled,
+                isBiometryLockedOut: isBiometryLockedOut,
+                isPasscodeSet: isPasscodeSet,
                 previousRun: previousRun
             )
         }
@@ -102,10 +105,11 @@ internal final class ServerLogger: @unchecked Sendable {
             correlationId: localInfo.correlationId,
             bundleId: localInfo.bundleID,
             isUserVerifyingPlatformAuthenticatorAvailable: localInfo.isSystemFidoCapable,
-            isDeviceSecured: localInfo.isDeviceSecured,
-            isFingerprintHardwarePresent: localInfo.isFingerprintHardwarePresent,
-            isFaceHardwarePresent: localInfo.isFaceHardwarePresent,
-            isStrongBiometricEnabled: localInfo.isStrongBiometricEnabled,
+            biometryType: localInfo.biometryType.diagnosticName,
+            isBiometryUsable: localInfo.isBiometryUsable,
+            isBiometryEnrolled: localInfo.isBiometryEnrolled,
+            isBiometryLockedOut: localInfo.isBiometryLockedOut,
+            isPasscodeSet: localInfo.isPasscodeSet,
             previousRun: nil
         )
 
@@ -121,7 +125,7 @@ internal final class ServerLogger: @unchecked Sendable {
         }
 
         var cont: AsyncStream<PostponedLog>.Continuation!
-        self.stream = AsyncStream<PostponedLog>(bufferingPolicy: .bufferingOldest(1000)) { continuation in
+        self.stream = AsyncStream<PostponedLog>(bufferingPolicy: .bufferingNewest(1000)) { continuation in
             cont = continuation
         }
         self.continuation = cont
@@ -316,5 +320,15 @@ extension AppConfig.LogLevel {
         case .error: return .error
         case .none: return .off
         }
+    }
+}
+
+extension LABiometryType {
+    internal var diagnosticName: String {
+        if self == .none { return "none" }
+        if self == .touchID { return "touchID" }
+        if self == .faceID { return "faceID" }
+        if #available(iOS 17.0, *), self == .opticID { return "opticID" }
+        return "unknown(\(rawValue))"
     }
 }

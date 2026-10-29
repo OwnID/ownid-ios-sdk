@@ -2,8 +2,8 @@ import Foundation
 
 /// Maps login ID collection server keys into typed strings and fills missing keys from embedded defaults.
 ///
-/// Embedded defaults depend on the collectable login ID types and whether the system can use passkeys. If no local
-/// device information is available, passkey-capable wording is used.
+/// Embedded defaults use Touch ID wording for Touch ID hardware regardless of enrollment or usability. Missing device
+/// information preserves the Face ID default; when passkeys are not supported, the defaults use one-time-code wording.
 internal final class LoginIDCollectStringsEmbeddedRepositoryImpl: LoginIDCollectStringsEmbeddedRepository {
 
     private let localInfo: (any LocalInfo)?
@@ -17,7 +17,8 @@ internal final class LoginIDCollectStringsEmbeddedRepositoryImpl: LoginIDCollect
         let isFidoPossible = localInfo?.isSystemFidoCapable ?? true
         let defaultStrings = LoginIDCollectStrings.default(
             loginIDTypes: params.loginIDTypes,
-            isSystemFidoCapable: isFidoPossible
+            isSystemFidoCapable: isFidoPossible,
+            isTouchID: localInfo?.biometryType == .touchID
         )
 
         return LoginIDCollectStrings(
@@ -89,7 +90,9 @@ internal final class LoginIDCollectStringsServerRepositoryImpl: LoginIDCollectSt
                     }
 
                     var strings = [String: String]()
-                    strings["title"] = fetchFidoDependentString("title")
+                    strings["title"] = fetchFidoDependentString(
+                        isFidoPossible && localInfo.biometryType == .touchID ? "title-touch-id" : "title"
+                    )
                     strings["message"] = fetchFidoDependentString("message")
                     strings["placeholder"] = fetchFidoDependentString("placeholder")
                     strings["cancel"] = dataSource.getString(key: self.prefix[0], self.prefix[1], typeKey, "cancel")

@@ -70,8 +70,6 @@ internal final class EmailVerificationOperationImpl: EmailVerificationOperation,
         self.stream = stream
         self.controller = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -79,12 +77,11 @@ internal final class EmailVerificationOperationImpl: EmailVerificationOperation,
         if let provider = errorStringsProvider {
             self.taskRefs.replace(
                 .errorStrings,
-                with: taskScope.spawn { [weak self] in
-                    guard let self else { return }
+                with: taskScope.spawn { [stream] in
                     for await maybeStrings in provider.getStrings(params: ErrorStringsParams()) {
-                        if Task.isCancelled { break }
-                        let strings = maybeStrings ?? .default
-                        await self.stream.yield(.errorStringsUpdated(strings))
+                        if !Task.isCancelled {
+                            await stream.yield(.errorStringsUpdated(maybeStrings ?? .default))
+                        }
                     }
                 }
             )
@@ -439,7 +436,7 @@ internal final class EmailVerificationOperationImpl: EmailVerificationOperation,
                             let apiEvent: Event.APIEvent
                             switch uiEvent {
                             case .codeEntered(let code):
-                                apiEvent = .complete(await apiController.completeWithCode(code: code))
+                                apiEvent = .complete(await apiController.complete(code: code))
                             case .resend:
                                 apiEvent = .resend(await apiController.resend())
                             case .cancel:
@@ -545,6 +542,7 @@ internal final class EmailVerificationOperationImpl: EmailVerificationOperation,
     internal func start(
         params: EmailVerificationOperationParams? = nil
     ) -> any OperationController<AccessOrProofToken, EmailVerificationOperationFailure> {
+        guard controller._attachOwner(self) else { return controller }
         let stream = self.stream
         taskScope.spawn { [stream] in
             await stream.yield(.start(params))

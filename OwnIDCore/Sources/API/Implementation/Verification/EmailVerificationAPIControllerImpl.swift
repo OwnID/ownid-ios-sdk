@@ -28,7 +28,7 @@ internal final class EmailVerificationAPIControllerImpl: EmailVerificationAPICon
         self.interceptor = interceptor
     }
 
-    func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure> {
+    func complete(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure> {
         do {
             let request = try EmailVerificationCompleteAPICall(
                 apiBaseURL: apiBaseURL,

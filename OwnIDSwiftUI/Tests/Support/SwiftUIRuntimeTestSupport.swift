@@ -179,11 +179,15 @@ final class RuntimeSnapshotRecorder<Snapshot: Sendable>: @unchecked Sendable {
 
         await host.settle(cycles: 20)
         return try await withSwiftUITestTimeout(description, seconds: 2) {
-            do {
-                return try await waitTask.value
-            } catch is CancellationError {
-                let values = await MainActor.run { self.values }
-                throw RuntimeSnapshotTimeoutError(context: description, snapshots: values)
+            try await withTaskCancellationHandler {
+                do {
+                    return try await waitTask.value
+                } catch is CancellationError {
+                    let values = await MainActor.run { self.values }
+                    throw RuntimeSnapshotTimeoutError(context: description, snapshots: values)
+                }
+            } onCancel: {
+                waitTask.cancel()
             }
         }
     }

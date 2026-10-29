@@ -71,7 +71,9 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
     private var stopConditionReached = false
     private var retryDelayIndex = 0
 
-    private var current: AppConfig?
+    private let currentLock = NSLock()
+    // Every access is protected by currentLock, including actor-isolated publication.
+    nonisolated(unsafe) private var current: AppConfig?
     private var bootstrapTimerTask: Task<Void, Never>?
     private var retryTimerTask: Task<Void, Never>?
 
@@ -80,8 +82,8 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
 
     init(
         apiBaseURL: any APIBaseURL,
-        localInfo: any LocalInfo,
-        languageTagsProvider: any LanguageTagsProvider,
+        localInfo: (any LocalInfo)?,
+        languageTagsProvider: (any LanguageTagsProvider)?,
         coder: any JSONCoder,
         configuration: any OwnIDConfiguration,
         loginIdConfigurationProvider: (any LoginIDConfigurationProvider)?,
@@ -100,7 +102,9 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
             appConfigNetwork = networkOverride
         } else {
             let sessionConfiguration = URLSessionConfiguration.default
-            sessionConfiguration.httpAdditionalHeaders = ["User-Agent": localInfo.userAgent]
+            if let localInfo {
+                sessionConfiguration.httpAdditionalHeaders = ["User-Agent": localInfo.userAgent]
+            }
             sessionConfiguration.tlsMinimumSupportedProtocolVersion = .TLSv12
             sessionConfiguration.timeoutIntervalForRequest = 5
             sessionConfiguration.timeoutIntervalForResource = 5
@@ -152,6 +156,10 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
         retryTimerTask?.cancel()
     }
 
+    nonisolated internal var currentConfig: AppConfig? {
+        currentLock.withLock { current }
+    }
+
     nonisolated internal var configStream: AsyncStream<AppConfig> {
         AsyncStream { continuation in
             let id = UUID()
@@ -162,12 +170,12 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
     internal func getOrFetchConfig() async throws -> AppConfig {
         startIfNeeded()
         try Task.checkCancellation()
-        if let current { return current }
+        if let current = currentConfig { return current }
 
         let waiterID = UUID()
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
-                if let current {
+                if let current = currentConfig {
                     continuation.resume(returning: current)
                 } else if Task.isCancelled {
                     continuation.resume(throwing: CancellationError())
@@ -212,7 +220,7 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
             Task { await self.reduce(.streamTerminated(id)) }
         }
         continuations[id] = continuation
-        if let current {
+        if let current = currentConfig {
             continuation.yield(current)
         }
     }
@@ -236,8 +244,12 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
             bootstrapCompleted = true
             bootstrapTimerTask?.cancel()
             bootstrapTimerTask = nil
-            if current == nil {
-                _ = applyIfChanged(cacheStore.load() ?? .default)
+            if currentConfig == nil {
+                if let stored = cacheStore.load() {
+                    _ = applyIfChanged(stored)
+                } else {
+                    _ = applyIfChanged(.default, isBuiltInDefault: true)
+                }
             }
             if !stopConditionReached {
                 retryEnabled = true
@@ -275,8 +287,12 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
                     bootstrapCompleted = true
                     bootstrapTimerTask?.cancel()
                     bootstrapTimerTask = nil
-                    if current == nil {
-                        _ = applyIfChanged(cacheStore.load() ?? .default)
+                    if currentConfig == nil {
+                        if let stored = cacheStore.load() {
+                            _ = applyIfChanged(stored)
+                        } else {
+                            _ = applyIfChanged(.default, isBuiltInDefault: true)
+                        }
                     }
                     if !stopConditionReached {
                         retryEnabled = true
@@ -358,12 +374,24 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
         }
     }
 
-    private func applyIfChanged(_ config: AppConfig) -> Bool {
-        if let current, current == config {
-            return false
-        }
+    private func applyIfChanged(_ config: AppConfig, isBuiltInDefault: Bool = false) -> Bool {
+        let published = currentLock.withLock { () -> AppConfig? in
+            if isBuiltInDefault {
+                if let current, current == .default { return nil }
+                current = .default
+                return .default
+            }
 
-        current = config
+            if let current, current.localVersion >= 0, config.withLocalVersion(current.localVersion) == current {
+                return nil
+            }
+
+            let published = config.withLocalVersion((current?.localVersion ?? -1) + 1)
+            current = published
+            return published
+        }
+        guard let config = published else { return false }
+
         updateLoginIdConfiguration(config)
 
         for continuation in continuations.values {

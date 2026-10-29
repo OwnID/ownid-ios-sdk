@@ -3,12 +3,12 @@ import GoogleSignIn
 import UIKit
 
 extension OwnIDProvidersRegistrar {
-    /// Registers a source-only GoogleSignIn implementation for Google social sign-in.
+    /// Registers a source-only GoogleSignInProvider implementation for Google social sign-in.
     ///
     /// ### Registration
     ///
     /// Call this helper inside ``OwnID/setProviders(_:)`` to register it in the current provider scope. Use
-    /// ``OwnID/withProviders(_:_:)`` when Google sign-in should be available only through the returned child scope.
+    /// ``OwnID/withProviders(_:_:)`` when Sign in with Google should be available only through the returned child scope.
     /// This source-only helper is not included in the `OwnIDCore` or `OwnIDSwiftUI` products. The host target must link
     /// `GoogleSignIn`.
     ///
@@ -42,14 +42,14 @@ extension OwnIDProvidersRegistrar {
     ///
     /// The helper maps outcomes as follows:
     ///
-    /// - Returns ``SocialResult/success(id:idToken:)`` only when GoogleSignIn supplies a non-empty ID token. The Google
+    /// - Returns ``SocialSignInResult/success(id:idToken:)`` only when GoogleSignIn supplies a non-empty ID token. The Google
     ///   user ID is included when available and may otherwise be empty.
-    /// - Returns ``SocialResult/canceled(reason:)`` for a thrown `CancellationError`, GoogleSignIn user cancellation, or
+    /// - Returns ``SocialSignInResult/canceled(reason:)`` for a thrown `CancellationError`, GoogleSignIn user cancellation, or
     ///   cooperative Swift task cancellation.
-    /// - Returns ``SocialResult/fail(error:)`` for an empty challenge web/server or iOS client ID, a missing callback
+    /// - Returns ``SocialSignInResult/fail(error:)`` for an empty challenge web/server or iOS client ID, a missing callback
     ///   URL scheme or presenter, a missing ID token, and non-cancellation GoogleSignIn failures.
     ///
-    /// Only one Google sign-in request can be active at a time across all registrations in the process. An overlapping
+    /// Only one Sign in with Google request can be active at a time across all registrations in the process. An overlapping
     /// request fails immediately, and a new request remains blocked until the active GoogleSignIn attempt completes.
     ///
     /// ### Cancellation
@@ -71,13 +71,13 @@ extension OwnIDProvidersRegistrar {
     ///     client ID.
     ///   - cancelHandler: Optional main-actor callback for app-owned cancellation cleanup.
     @MainActor
-    mutating func signInWithGoogleProvider(
+    mutating func googleSignInProvider(
         configurationProvider: @escaping (String) -> GIDConfiguration,
         cancelHandler: (() -> Void)? = nil
     ) {
         let logger = getOrNil(type: OwnIDLogRouter.self)
 
-        signInWithGoogle { provider in
+        googleSignIn { provider in
             provider.signIn { window, params in
                 await GoogleSignInProviderImplementation.signIn(
                     window: window,
@@ -102,15 +102,15 @@ private enum GoogleSignInProviderImplementation {
 
     static func signIn(
         window: UIWindow,
-        params: SignInWithSocialParams,
+        params: SocialSignInParams,
         configurationProvider: (String) -> GIDConfiguration,
         logger: OwnIDLogRouter?
-    ) async -> SocialResult {
+    ) async -> SocialSignInResult {
         guard !Task.isCancelled else {
             return .canceled(reason: .userClose())
         }
         guard !isActive else {
-            return .fail(error: .general("Another Google sign-in request is already in progress"))
+            return .fail(error: .general("Another Sign in with Google request is already in progress"))
         }
         isActive = true
         defer {
@@ -121,8 +121,8 @@ private enum GoogleSignInProviderImplementation {
             return .fail(error: .general("Google server clientID is empty"))
         }
         guard let presentingViewController = resolvePresentingViewController(in: window) else {
-            let message = "Cannot resolve a presenting view controller for Google Sign-In"
-            logger?.logW(source: OwnIDProvidersRegistrar.self, prefix: "signInWithGoogle", message: message)
+            let message = "Cannot resolve a presenting view controller for Sign in with Google"
+            logger?.logW(source: OwnIDProvidersRegistrar.self, prefix: "googleSignIn", message: message)
             return .fail(error: .general(message))
         }
 
@@ -149,7 +149,7 @@ private enum GoogleSignInProviderImplementation {
                 return .canceled(reason: .userClose())
             }
             guard let idToken = signInResult.user.idToken?.tokenString, !idToken.isEmpty else {
-                return .fail(error: .general("Google Sign-In did not return an ID token"))
+                return .fail(error: .general("Sign in with Google did not return an ID token"))
             }
             return .success(id: signInResult.user.userID ?? "", idToken: idToken)
         } catch is CancellationError {
@@ -164,11 +164,11 @@ private enum GoogleSignInProviderImplementation {
             }
             logger?.logW(
                 source: OwnIDProvidersRegistrar.self,
-                prefix: "signInWithGoogle",
-                message: "Google sign-in failed: \(error.localizedDescription)",
+                prefix: "googleSignIn",
+                message: "Sign in with Google failed: \(error.localizedDescription)",
                 cause: error
             )
-            return .fail(error: .general("Google Sign-In failed", error))
+            return .fail(error: .general("Sign in with Google failed", error))
         }
     }
 
@@ -202,7 +202,7 @@ private enum GoogleSignInProviderImplementation {
         return current
     }
 
-    static func configurationError(_ configuration: GIDConfiguration) -> SocialResult.Error? {
+    static func configurationError(_ configuration: GIDConfiguration) -> SocialSignInResult.Error? {
         guard !configuration.clientID.isEmpty else {
             return .general("Google iOS clientID is empty")
         }

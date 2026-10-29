@@ -27,8 +27,6 @@ public struct OwnIDAPI: Sendable, OwnIDNamespace {
 
     public let verifications: Verifications
 
-    public let enroll: Enroll
-
     /// OpenID Connect API.
     public let oidc: APIEntry<OIDCAPIParams?, any OIDCAPIController, OIDCStartAPIFailure>
 
@@ -37,7 +35,6 @@ public struct OwnIDAPI: Sendable, OwnIDNamespace {
         self.auth = Auth(container: container)
         self.passkeys = Passkeys(container: container)
         self.verifications = Verifications(container: container)
-        self.enroll = Enroll(container: container)
         self.oidc = apiEntry(
             container: container,
             runtimeType: (any OIDCAPI).self,
@@ -90,7 +87,7 @@ extension OwnIDAPI {
 
     /// Passkey API group.
     ///
-    /// Use these APIs to start passkey attestation or assertion directly.
+    /// Use these APIs to start passkey attestation or assertion directly, or enroll a proven passkey.
     public struct Passkeys: Sendable {
         /// Starts passkey creation.
         public let attestation:
@@ -98,6 +95,9 @@ extension OwnIDAPI {
 
         /// Starts passkey authentication.
         public let assertion: APIEntry<PasskeyAssertionAPIParams?, any PasskeyAssertionAPIController, PasskeyAssertionStartAPIFailure>
+
+        /// Enrolls a passkey with a proof token.
+        public let enroll: APIEntry<PasskeyEnrollAPIParams, Void, PasskeyEnrollAPIFailure>
 
         fileprivate init(container: any DIContainer) {
             self.attestation = apiEntry(
@@ -112,68 +112,99 @@ extension OwnIDAPI {
                 unexpectedFailure: PasskeyAssertionStartAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
-        }
-    }
-
-    /// Verification APIs.
-    ///
-    /// Each API starts a verification challenge and returns a controller for code entry, resend, and cancellation.
-    public struct Verifications: Sendable {
-        /// Starts email verification.
-        public let email: APIEntry<EmailVerificationAPIParams?, any EmailVerificationAPIController, EmailVerificationStartAPIFailure>
-
-        /// Starts phone verification.
-        public let phone: APIEntry<PhoneVerificationAPIParams?, any PhoneVerificationAPIController, PhoneVerificationStartAPIFailure>
-
-        fileprivate init(container: any DIContainer) {
-            self.email = apiEntry(
-                container: container,
-                runtimeType: (any EmailVerificationAPI).self,
-                unexpectedFailure: EmailVerificationStartAPIFailure.unexpected,
-                start: { runtime, params in await runtime.start(params: params) }
-            )
-            self.phone = apiEntry(
-                container: container,
-                runtimeType: (any PhoneVerificationAPI).self,
-                unexpectedFailure: PhoneVerificationStartAPIFailure.unexpected,
-                start: { runtime, params in await runtime.start(params: params) }
-            )
-        }
-    }
-
-    /// Credential enrollment API group.
-    ///
-    /// Each API enrolls one credential type using the token produced by the matching earlier verification or
-    /// attestation step.
-    public struct Enroll: Sendable {
-        /// Enrolls a passkey with a proof token.
-        public let passkey: APIEntry<PasskeyEnrollAPIParams, Void, PasskeyEnrollAPIFailure>
-
-        /// Enrolls an email address with a proof token.
-        public let email: APIEntry<EmailEnrollAPIParams, Void, EmailEnrollAPIFailure>
-
-        /// Enrolls a phone number with a proof token.
-        public let phone: APIEntry<PhoneEnrollAPIParams, Void, PhoneEnrollAPIFailure>
-
-        fileprivate init(container: any DIContainer) {
-            self.passkey = apiEntry(
+            self.enroll = apiEntry(
                 container: container,
                 runtimeType: (any PasskeyEnrollAPI).self,
                 unexpectedFailure: PasskeyEnrollAPIFailure.unexpected,
                 start: { runtime, params in await runtime.start(params: params) }
             )
-            self.email = apiEntry(
-                container: container,
-                runtimeType: (any EmailEnrollAPI).self,
-                unexpectedFailure: EmailEnrollAPIFailure.unexpected,
-                start: { runtime, params in await runtime.start(params: params) }
-            )
-            self.phone = apiEntry(
-                container: container,
-                runtimeType: (any PhoneEnrollAPI).self,
-                unexpectedFailure: PhoneEnrollAPIFailure.unexpected,
-                start: { runtime, params in await runtime.start(params: params) }
-            )
+        }
+    }
+
+    /// Verification and enrollment APIs.
+    ///
+    /// Each channel starts a verification challenge and returns a controller for code entry, resend, and cancellation.
+    /// Enrollment uses the proof token produced by the matching earlier proof step.
+    public struct Verifications: Sendable {
+        /// Email verification and enrollment APIs.
+        public let email: Email
+
+        /// Phone verification and enrollment APIs.
+        public let phone: Phone
+
+        fileprivate init(container: any DIContainer) {
+            self.email = Email(container: container)
+            self.phone = Phone(container: container)
+        }
+
+        public struct Email: Sendable {
+            private let verification:
+                APIEntry<EmailVerificationAPIParams?, any EmailVerificationAPIController, EmailVerificationStartAPIFailure>
+
+            /// Enrolls an email address with a proof token.
+            public let enroll: APIEntry<EmailEnrollAPIParams, Void, EmailEnrollAPIFailure>
+
+            fileprivate init(container: any DIContainer) {
+                self.verification = apiEntry(
+                    container: container,
+                    runtimeType: (any EmailVerificationAPI).self,
+                    unexpectedFailure: EmailVerificationStartAPIFailure.unexpected,
+                    start: { runtime, params in await runtime.start(params: params) }
+                )
+                self.enroll = apiEntry(
+                    container: container,
+                    runtimeType: (any EmailEnrollAPI).self,
+                    unexpectedFailure: EmailEnrollAPIFailure.unexpected,
+                    start: { runtime, params in await runtime.start(params: params) }
+                )
+            }
+
+            /// Starts email verification using the current context.
+            public func start() async -> APIResult<any EmailVerificationAPIController, EmailVerificationStartAPIFailure> {
+                await verification.start()
+            }
+
+            /// Starts email verification with optional request parameters.
+            public func start(params: EmailVerificationAPIParams?) async
+                -> APIResult<any EmailVerificationAPIController, EmailVerificationStartAPIFailure>
+            {
+                await verification.start(params: params)
+            }
+        }
+
+        public struct Phone: Sendable {
+            private let verification:
+                APIEntry<PhoneVerificationAPIParams?, any PhoneVerificationAPIController, PhoneVerificationStartAPIFailure>
+
+            /// Enrolls a phone number with a proof token.
+            public let enroll: APIEntry<PhoneEnrollAPIParams, Void, PhoneEnrollAPIFailure>
+
+            fileprivate init(container: any DIContainer) {
+                self.verification = apiEntry(
+                    container: container,
+                    runtimeType: (any PhoneVerificationAPI).self,
+                    unexpectedFailure: PhoneVerificationStartAPIFailure.unexpected,
+                    start: { runtime, params in await runtime.start(params: params) }
+                )
+                self.enroll = apiEntry(
+                    container: container,
+                    runtimeType: (any PhoneEnrollAPI).self,
+                    unexpectedFailure: PhoneEnrollAPIFailure.unexpected,
+                    start: { runtime, params in await runtime.start(params: params) }
+                )
+            }
+
+            /// Starts phone verification using the current context.
+            public func start() async -> APIResult<any PhoneVerificationAPIController, PhoneVerificationStartAPIFailure> {
+                await verification.start()
+            }
+
+            /// Starts phone verification with optional request parameters.
+            public func start(params: PhoneVerificationAPIParams?) async
+                -> APIResult<any PhoneVerificationAPIController, PhoneVerificationStartAPIFailure>
+            {
+                await verification.start(params: params)
+            }
         }
     }
 }

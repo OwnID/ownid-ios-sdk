@@ -15,7 +15,7 @@ struct OperationSignInWithGoogleScreen: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .multilineTextAlignment(.center)
 
-                Button("Start Sign In with Google Operation") {
+                Button("Sign in with Google") {
                     viewModel.startSignInWithGoogleOperation()
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -29,7 +29,7 @@ struct OperationSignInWithGoogleScreen: View {
             .demoContentWidth()
         }
         .background(palette.background.ignoresSafeArea())
-        .navigationTitle("Operations / Sign In with Google")
+        .navigationTitle("Operations / Sign in with Google")
         .navigationBarTitleDisplayMode(.inline)
     }
 

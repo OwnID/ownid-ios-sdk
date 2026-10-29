@@ -3,13 +3,13 @@ import UIKit
 
 internal final class SignInWithAppleUIImpl: SignInWithAppleUI, @unchecked Sendable {
     private let uiContextProvider: @Sendable () throws -> any UIContextProvider
-    private let provider: @Sendable () throws -> any SignInWithApple
+    private let provider: @Sendable () throws -> any AppleSignInProvider
     private let logger: OwnIDLogRouter?
-    private var active: [(id: UUID, provider: any SignInWithApple)] = []
+    private var active: [(id: UUID, provider: any AppleSignInProvider)] = []
 
     init(
         uiContextProvider: @escaping @Sendable () throws -> any UIContextProvider,
-        provider: @escaping @Sendable () throws -> any SignInWithApple,
+        provider: @escaping @Sendable () throws -> any AppleSignInProvider,
         logger: OwnIDLogRouter?
     ) {
         self.uiContextProvider = uiContextProvider
@@ -18,7 +18,7 @@ internal final class SignInWithAppleUIImpl: SignInWithAppleUI, @unchecked Sendab
     }
 
     @MainActor
-    func signIn(clientID: String, nonce: String?) async -> SocialResult {
+    func signIn(clientID: String, nonce: String?) async -> SocialSignInResult {
         do {
             let apple = try provider()
             let window: UIWindow
@@ -37,7 +37,7 @@ internal final class SignInWithAppleUIImpl: SignInWithAppleUI, @unchecked Sendab
                     self.active.remove(at: index)
                 }
             }
-            return await apple.signIn(window: window, params: SignInWithSocialParams(clientID: clientID, nonce: nonce))
+            return await apple.signIn(window: window, params: SocialSignInParams(clientID: clientID, nonce: nonce))
         } catch let missing as MissingDependencyError {
             return .fail(error: .general("Missing dependency: \(missing.dependencyName)", missing))
         } catch {

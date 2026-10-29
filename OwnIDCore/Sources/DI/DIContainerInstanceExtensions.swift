@@ -77,9 +77,11 @@ import Foundation
             // }
             // Any server side logs level will not trigger Http logs as NetworkImpl is already created (unless DI was reset).
             let resolvedLogger = getOrNil(type: (any OwnIDLogger).self)
-            let localInfo = try getOrThrow(type: (any LocalInfo).self)
+            let localInfo = getOrNil(type: (any LocalInfo).self)
             let sessionConfiguration = URLSessionConfiguration.default
-            sessionConfiguration.httpAdditionalHeaders = ["User-Agent": localInfo.userAgent]
+            if let localInfo {
+                sessionConfiguration.httpAdditionalHeaders = ["User-Agent": localInfo.userAgent]
+            }
             sessionConfiguration.tlsMinimumSupportedProtocolVersion = .TLSv12
 
             let network = NetworkImpl(
@@ -88,7 +90,7 @@ import Foundation
                 requestAdapters: NetworkRequest.AdapterChain(adapters: [
                     NetworkRequest.DefaultHeadersAdapter(
                         localInfo: localInfo,
-                        languageTagsProvider: try getOrThrow(type: (any LanguageTagsProvider).self),
+                        languageTagsProvider: getOrNil(type: (any LanguageTagsProvider).self),
                         appURLHeaderValue: try getOrThrow(type: (any OwnIDConfiguration).self).appURLHeaderValue()
                     )
                 ]),
@@ -120,10 +122,14 @@ import Foundation
                     diagnosticsProvider: { resolver.getOrNil(type: (any PasskeyDiagnostics).self) }
                 )
             }
+        } else {
+            registerFactory { _ -> any PasskeyProtocol in
+                UnavailablePasskey(message: "Passkeys require iOS 16 or later")
+            }
         }
 
-        registerFactory { resolver -> any SignInWithApple in
-            SignInWithAppleImpl(
+        registerFactory { resolver -> any AppleSignInProvider in
+            AppleSignInProviderImpl(
                 logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
@@ -153,8 +159,8 @@ import Foundation
         do {
             let appConfigProvider = AppConfigProviderImpl(
                 apiBaseURL: try getOrThrow(type: (any APIBaseURL).self),
-                localInfo: try getOrThrow(type: (any LocalInfo).self),
-                languageTagsProvider: try getOrThrow(type: (any LanguageTagsProvider).self),
+                localInfo: getOrNil(type: (any LocalInfo).self),
+                languageTagsProvider: getOrNil(type: (any LanguageTagsProvider).self),
                 coder: try getOrThrow(type: (any JSONCoder).self),
                 configuration: try getOrThrow(type: (any OwnIDConfiguration).self),
                 loginIdConfigurationProvider: getOrNil(type: (any LoginIDConfigurationProvider).self),
@@ -349,6 +355,7 @@ import Foundation
             dependencies: [
                 (any OperationRegistry).self,
                 (any LoginIDCollectUI).self,
+                (any AppConfigProvider).self,
                 (any LoginIDConfigurationProvider).self,
                 (any LoginIDValidator).self,
                 TaskScope.self,
@@ -454,7 +461,7 @@ import Foundation
         registerFactory(dependencies: [(any UIContextProvider).self, (any PasskeyProtocol).self]) { resolver -> any PasskeyAttestationUI in
             PasskeyAttestationUIImpl(
                 uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
-                passkeyProvider: { try resolver.getOrThrow(type: (any PasskeyProtocol).self) },
+                passkey: try resolver.getOrThrow(type: (any PasskeyProtocol).self),
                 logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
@@ -471,7 +478,7 @@ import Foundation
         registerFactory(dependencies: [(any UIContextProvider).self, (any PasskeyProtocol).self]) { resolver -> any PasskeyAssertionUI in
             PasskeyAssertionUIImpl(
                 uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
-                passkeyProvider: { try resolver.getOrThrow(type: (any PasskeyProtocol).self) },
+                passkey: try resolver.getOrThrow(type: (any PasskeyProtocol).self),
                 logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
@@ -493,10 +500,10 @@ import Foundation
             ]
         ) { resolver -> any PasskeyEnrollOperation in PasskeyEnrollOperationImpl.create(resolver: resolver) }
 
-        registerFactory(dependencies: [(any UIContextProvider).self, (any SignInWithApple).self]) { resolver -> any SignInWithAppleUI in
+        registerFactory(dependencies: [(any UIContextProvider).self, (any AppleSignInProvider).self]) { resolver -> any SignInWithAppleUI in
             SignInWithAppleUIImpl(
                 uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
-                provider: { try resolver.getOrThrow(type: (any SignInWithApple).self) },
+                provider: { try resolver.getOrThrow(type: (any AppleSignInProvider).self) },
                 logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }
@@ -510,10 +517,10 @@ import Foundation
             ]
         ) { resolver -> any SignInWithAppleOperation in SignInWithAppleOperationImpl.create(resolver: resolver) }
 
-        registerFactory(dependencies: [(any UIContextProvider).self, (any SignInWithGoogle).self]) { resolver -> any SignInWithGoogleUI in
+        registerFactory(dependencies: [(any UIContextProvider).self, (any GoogleSignInProvider).self]) { resolver -> any SignInWithGoogleUI in
             SignInWithGoogleUIImpl(
                 uiContextProvider: { try resolver.getOrThrow(type: (any UIContextProvider).self) },
-                provider: { try resolver.getOrThrow(type: (any SignInWithGoogle).self) },
+                provider: { try resolver.getOrThrow(type: (any GoogleSignInProvider).self) },
                 logger: resolver.getOrNil(type: OwnIDLogRouter.self)
             )
         }

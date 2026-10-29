@@ -25,10 +25,8 @@ internal final class PasskeyAttestationResultAPICall: APICall {
             case .usb: return InternalTransportType.usb
             case .nfc: return InternalTransportType.nfc
             case .ble: return InternalTransportType.ble
-            case .smartCard: return InternalTransportType.smartCard
             case .hybrid: return InternalTransportType.hybrid
             case .internal: return InternalTransportType.internal
-            case .cable: return InternalTransportType.cable
             }
         }
 

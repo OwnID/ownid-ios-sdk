@@ -160,6 +160,7 @@ struct OperationUIStartupRuntimeTests {
         LoginIDCollectOperationImpl(
             operationType: .loginIDCollect,
             operationRegistry: OperationRegistryImpl(logger: nil),
+            appConfigProvider: FakeAppConfigProvider(),
             loginIDConfig: FakeLoginIDConfigurationProvider(
                 configuration: LoginIDConfiguration(
                     supportedTypes: [.email, .phoneNumber, .userName],

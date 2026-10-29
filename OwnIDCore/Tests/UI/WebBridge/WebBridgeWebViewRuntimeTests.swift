@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import SwiftUI
 import Testing
 import UIKit
@@ -1369,7 +1370,7 @@ private final class WebBridgeCoordinatorWeakReference {
 }
 
 @MainActor
-private final class CapturingWebBridgeUI: WebBridgeUI, @unchecked Sendable {
+final class CapturingWebBridgeUI: WebBridgeUI, @unchecked Sendable {
     private var startCapture = AsyncSignalRecorder<Start>()
     private var isTornDown = false
     private(set) var startCount = 0
@@ -1413,7 +1414,7 @@ private final class CapturingWebBridgeUI: WebBridgeUI, @unchecked Sendable {
     }
 }
 
-private final class CapturingWebBridge: WebBridge, @unchecked Sendable {
+final class CapturingWebBridge: WebBridge, @unchecked Sendable {
     let plugins: any WebBridgePluginRegistry
     let attachments = FlowLocked<[Attachment]>([])
     let detachCount = FlowLocked(0)
@@ -1445,6 +1446,7 @@ private final class CapturingWebBridge: WebBridge, @unchecked Sendable {
 
 private final class StaticWebBridgeAppConfigProvider: AppConfigProvider, @unchecked Sendable {
     private let config: AppConfig
+    var currentConfig: AppConfig? { config }
 
     init(config: AppConfig) {
         self.config = config
@@ -1466,7 +1468,9 @@ private struct WebBridgeAppConfigTestError: LocalizedError, Sendable {
     var errorDescription: String? { "app config unavailable" }
 }
 
-private struct ThrowingWebBridgeAppConfigProvider: AppConfigProvider, Sendable {
+struct ThrowingWebBridgeAppConfigProvider: AppConfigProvider, Sendable {
+    var currentConfig: AppConfig? { nil }
+
     func getOrFetchConfig() async throws -> AppConfig {
         throw WebBridgeAppConfigTestError()
     }
@@ -1486,8 +1490,11 @@ private struct WebBridgeRuntimeLocalInfo: LocalInfo {
     let correlationId = "webbridge-webview-tests"
     let isDebuggable: Bool
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = false
+    let biometryType: LABiometryType = .none
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = nil
+    let biometryIconSystemName: String? = nil
+    let isPasscodeSet: Bool? = true
 }

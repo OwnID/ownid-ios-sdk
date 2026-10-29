@@ -384,7 +384,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A13IDBoostButtonV04iconE0yACyqd__q_q0_Gqd__Sb_SbyycSStc05SwiftC04ViewRd__lF",
+      "source": "s:12OwnIDSwiftUI0A13IDBoostButtonV04iconE0yACyqd__q_q0_Gqd__Sb_SbyycSS05SwiftC05ImageVtcAF4ViewRd__lF",
       "target": "s:12OwnIDSwiftUI0A13IDBoostButtonV"
     },
     {
@@ -403,7 +403,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A13IDBoostButtonV7onClick6isBusy12instanceName8position7enabled8finished11showSpinner5theme13widgetStrings04iconE06orText9checkmarkACyxq_q0_Gyyc_Sb0A6IDCore08InstanceK0VAA0adE8PositionOSbSgS2bAA0A7IDThemeVSgAQ011BoostWidgetS0VSgxSb_SbyycSStcq_SScq0_yctcfc",
+      "source": "s:12OwnIDSwiftUI0A13IDBoostButtonV7onClick6isBusy12instanceName8position7enabled8finished11showSpinner5theme13widgetStrings04iconE06orText9checkmarkACyxq_q0_Gyyc_Sb0A6IDCore08InstanceK0VAA0adE8PositionOSbSgS2bAA0A7IDThemeVSgAQ011BoostWidgetS0VSgxSb_SbyycSS05SwiftC05ImageVtcq_SScq0_yctcfc",
       "target": "s:12OwnIDSwiftUI0A13IDBoostButtonV"
     },
     {
@@ -418,7 +418,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A13IDLoginWidgetV10iconButtonyACyqd__q_Gqd__Sb_SbyycSStc05SwiftC04ViewRd__lF",
+      "source": "s:12OwnIDSwiftUI0A13IDLoginWidgetV10iconButtonyACyqd__q_Gqd__Sb_SbyycSS05SwiftC05ImageVtcAF4ViewRd__lF",
       "target": "s:12OwnIDSwiftUI0A13IDLoginWidgetV"
     },
     {
@@ -618,7 +618,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:12OwnIDSwiftUI0A21IDCreatePasskeyWidgetV10iconButtonyACyqd__q_q0_Gqd__Sb_SbyycSStc05SwiftC04ViewRd__lF",
+      "source": "s:12OwnIDSwiftUI0A21IDCreatePasskeyWidgetV10iconButtonyACyqd__q_q0_Gqd__Sb_SbyycSS05SwiftC05ImageVtcAF4ViewRd__lF",
       "target": "s:12OwnIDSwiftUI0A21IDCreatePasskeyWidgetV"
     },
     {
@@ -1306,6 +1306,15 @@
         },
         {
           "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:7SwiftUI5ImageV",
+          "spelling": "Image"
+        },
+        {
+          "kind": "text",
           "spelling": ") -> "
         },
         {
@@ -1438,6 +1447,15 @@
               },
               {
                 "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:7SwiftUI5ImageV",
+                "spelling": "Image"
+              },
+              {
+                "kind": "text",
                 "spelling": ") -> "
               },
               {
@@ -1489,7 +1507,7 @@
         "OwnIDBoostButton",
         "iconButton(_:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A13IDBoostButtonV04iconE0yACyqd__q_q0_Gqd__Sb_SbyycSStc05SwiftC04ViewRd__lF",
+      "precise": "s:12OwnIDSwiftUI0A13IDBoostButtonV04iconE0yACyqd__q_q0_Gqd__Sb_SbyycSS05SwiftC05ImageVtcAF4ViewRd__lF",
       "swiftExtension": {
         "constraints": [
           {
@@ -2197,6 +2215,15 @@
         },
         {
           "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:7SwiftUI5ImageV",
+          "spelling": "Image"
+        },
+        {
+          "kind": "text",
           "spelling": ") -> "
         },
         {
@@ -2532,6 +2559,15 @@
               },
               {
                 "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:7SwiftUI5ImageV",
+                "spelling": "Image"
+              },
+              {
+                "kind": "text",
                 "spelling": ") -> "
               },
               {
@@ -2617,7 +2653,7 @@
         "OwnIDBoostButton",
         "init(onClick:isBusy:instanceName:position:enabled:finished:showSpinner:theme:widgetStrings:iconButton:orText:checkmark:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A13IDBoostButtonV7onClick6isBusy12instanceName8position7enabled8finished11showSpinner5theme13widgetStrings04iconE06orText9checkmarkACyxq_q0_Gyyc_Sb0A6IDCore08InstanceK0VAA0adE8PositionOSbSgS2bAA0A7IDThemeVSgAQ011BoostWidgetS0VSgxSb_SbyycSStcq_SScq0_yctcfc",
+      "precise": "s:12OwnIDSwiftUI0A13IDBoostButtonV7onClick6isBusy12instanceName8position7enabled8finished11showSpinner5theme13widgetStrings04iconE06orText9checkmarkACyxq_q0_Gyyc_Sb0A6IDCore08InstanceK0VAA0adE8PositionOSbSgS2bAA0A7IDThemeVSgAQ011BoostWidgetS0VSgxSb_SbyycSS05SwiftC05ImageVtcq_SScq0_yctcfc",
       "swiftGenerics": {
         "constraints": [
           {
@@ -3626,6 +3662,15 @@
         },
         {
           "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:7SwiftUI5ImageV",
+          "spelling": "Image"
+        },
+        {
+          "kind": "text",
           "spelling": ") -> "
         },
         {
@@ -3750,6 +3795,15 @@
               },
               {
                 "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:7SwiftUI5ImageV",
+                "spelling": "Image"
+              },
+              {
+                "kind": "text",
                 "spelling": ") -> "
               },
               {
@@ -3793,7 +3847,7 @@
         "OwnIDLoginWidget",
         "iconButton(_:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A13IDLoginWidgetV10iconButtonyACyqd__q_Gqd__Sb_SbyycSStc05SwiftC04ViewRd__lF",
+      "precise": "s:12OwnIDSwiftUI0A13IDLoginWidgetV10iconButtonyACyqd__q_Gqd__Sb_SbyycSS05SwiftC05ImageVtcAF4ViewRd__lF",
       "swiftExtension": {
         "constraints": [
           {
@@ -9691,6 +9745,15 @@
         },
         {
           "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:7SwiftUI5ImageV",
+          "spelling": "Image"
+        },
+        {
+          "kind": "text",
           "spelling": ") -> "
         },
         {
@@ -9823,6 +9886,15 @@
               },
               {
                 "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:7SwiftUI5ImageV",
+                "spelling": "Image"
+              },
+              {
+                "kind": "text",
                 "spelling": ") -> "
               },
               {
@@ -9874,7 +9946,7 @@
         "OwnIDCreatePasskeyWidget",
         "iconButton(_:)"
       ],
-      "precise": "s:12OwnIDSwiftUI0A21IDCreatePasskeyWidgetV10iconButtonyACyqd__q_q0_Gqd__Sb_SbyycSStc05SwiftC04ViewRd__lF",
+      "precise": "s:12OwnIDSwiftUI0A21IDCreatePasskeyWidgetV10iconButtonyACyqd__q_q0_Gqd__Sb_SbyycSS05SwiftC05ImageVtcAF4ViewRd__lF",
       "swiftExtension": {
         "constraints": [
           {

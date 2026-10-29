@@ -79,7 +79,7 @@ struct PasskeyAttestationAPIImplementationMappingTests {
                         {
                           "id": "ZXhjbHVkZWQtY3JlZGVudGlhbA",
                           "type": "public-key",
-                          "transports": ["internal", "hybrid", "smart-card"]
+                          "transports": ["usb", "nfc", "ble", "hybrid", "internal"]
                         }
                       ]
                     }
@@ -107,7 +107,28 @@ struct PasskeyAttestationAPIImplementationMappingTests {
         #expect(options.timeout == Timeout(milliseconds: 120000))
         #expect(options.excludeCredentials?.first?.id == "ZXhjbHVkZWQtY3JlZGVudGlhbA")
         #expect(options.excludeCredentials?.first?.type == .publicKey)
-        #expect(options.excludeCredentials?.first?.transports == [.internal, .hybrid, .smartCard])
+        #expect(options.excludeCredentials?.first?.transports == [.usb, .nfc, .ble, .hybrid, .internal])
+    }
+
+    @Test(arguments: ["smart-card", "cable"])
+    func `Options reject unsupported transport values`(_ transport: String) throws {
+        let result = try makeOptionsCall().mapHttpSuccess(
+            success(
+                code: 200,
+                path: "passkeys/attestation/options",
+                body: """
+                    {
+                      "rp": {"id": "login.example.test", "name": "Example"},
+                      "user": {"id": "dXNlci0x", "name": "user@example.test", "displayName": "User"},
+                      "challenge": "Y2hhbGxlbmdl",
+                      "pubKeyCredParams": [{"type": "public-key", "alg": -7}],
+                      "excludeCredentials": [{"id": "Y3JlZC0x", "type": "public-key", "transports": ["\(transport)"]}]
+                    }
+                    """
+            )
+        )
+
+        try assertOptionsUnexpectedResponseError(try requireFailure(result), statusCode: 200)
     }
 
     @Test func `Options success accepts padded Base64url attestation options`() throws {
@@ -444,7 +465,7 @@ struct PasskeyAttestationAPIImplementationMappingTests {
                 response: .init(
                     clientDataJSON: "client-data-json",
                     attestationObject: "attestation-object",
-                    transports: [.internal, .hybrid, .smartCard]
+                    transports: [.usb, .nfc, .ble, .hybrid, .internal]
                 ),
                 authenticatorAttachment: .platform
             ),
@@ -468,7 +489,7 @@ struct PasskeyAttestationAPIImplementationMappingTests {
         #expect(body["authenticatorAttachment"] as? String == "platform")
         #expect(response["clientDataJSON"] as? String == "client-data-json")
         #expect(response["attestationObject"] as? String == "attestation-object")
-        #expect(response["transports"] as? [String] == ["internal", "hybrid", "smart-card"])
+        #expect(response["transports"] as? [String] == ["usb", "nfc", "ble", "hybrid", "internal"])
     }
 
     @Test func `Verify success extracts and preserves raw OwnID data object`() throws {

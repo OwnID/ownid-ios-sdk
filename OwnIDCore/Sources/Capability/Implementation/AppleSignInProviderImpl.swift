@@ -69,14 +69,14 @@ private final class ASAuthorizationControllerAdapter: NSObject, SignInWithAppleA
     }
 }
 
-@objc(OwnIDSignInWithAppleImpl)
-internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked Sendable {
+@objc(OwnIDAppleSignInProviderImpl)
+internal final class AppleSignInProviderImpl: NSObject, AppleSignInProvider, @unchecked Sendable {
     private let logger: OwnIDLogRouter?
     private let authorizationControllerFactory: @MainActor (ASAuthorizationAppleIDRequest) -> any SignInWithAppleAuthorizationController
 
     private var window: UIWindow?
     private var authController: (any SignInWithAppleAuthorizationController)?
-    private var continuation: CheckedContinuation<SocialResult, Never>?
+    private var continuation: CheckedContinuation<SocialSignInResult, Never>?
     private var cancelRequested = false
     private var expectedState: String?
 
@@ -92,7 +92,7 @@ internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked 
     }
 
     @MainActor
-    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         guard !Task.isCancelled else {
             return .canceled(reason: .systemError(details: "Operation canceled"))
         }
@@ -142,7 +142,7 @@ internal final class SignInWithAppleImpl: NSObject, SignInWithApple, @unchecked 
     }
 }
 
-extension SignInWithAppleImpl: SignInWithAppleAuthorizationControllerDelegate {
+extension AppleSignInProviderImpl: SignInWithAppleAuthorizationControllerDelegate {
     @MainActor
     func authorizationController(
         _ controller: any SignInWithAppleAuthorizationController,
@@ -165,12 +165,12 @@ extension SignInWithAppleImpl: SignInWithAppleAuthorizationControllerDelegate {
 
         guard let authorization, let identityToken = authorization.identityToken
         else {
-            continuation?.resume(returning: .fail(error: SocialResult.Error.general("Data missing")))
+            continuation?.resume(returning: .fail(error: SocialSignInResult.Error.general("Data missing")))
             return
         }
 
         guard authorization.state == expectedState else {
-            continuation?.resume(returning: .fail(error: SocialResult.Error.general("Apple authorization response state mismatch")))
+            continuation?.resume(returning: .fail(error: SocialSignInResult.Error.general("Apple authorization response state mismatch")))
             return
         }
 
@@ -195,14 +195,14 @@ extension SignInWithAppleImpl: SignInWithAppleAuthorizationControllerDelegate {
         }
 
         if cancelRequested {
-            logger?.logI(source: self, prefix: "AppleSignIn", message: "Apple sign-in canceled", cause: error)
+            logger?.logI(source: self, prefix: "AppleSignIn", message: "Sign in with Apple canceled", cause: error)
             continuation?.resume(returning: .canceled(reason: .userClose(details: "Authorization canceled")))
             return
         }
 
         guard let authorizationError = error as? ASAuthorizationError else {
-            logger?.logW(source: self, prefix: "AppleSignIn", message: "Apple sign-in failed: \(error.localizedDescription)", cause: error)
-            continuation?.resume(returning: .fail(error: SocialResult.Error.general("Error", error)))
+            logger?.logW(source: self, prefix: "AppleSignIn", message: "Sign in with Apple failed: \(error.localizedDescription)", cause: error)
+            continuation?.resume(returning: .fail(error: SocialSignInResult.Error.general("Error", error)))
             return
         }
 
@@ -210,22 +210,22 @@ extension SignInWithAppleImpl: SignInWithAppleAuthorizationControllerDelegate {
             logger?.logI(
                 source: self,
                 prefix: "AppleSignIn",
-                message: "Apple sign-in canceled: \(error.localizedDescription)",
+                message: "Sign in with Apple canceled: \(error.localizedDescription)",
                 cause: error
             )
             continuation?.resume(returning: .canceled(reason: .userClose(details: "User canceled authorization")))
         } else {
-            logger?.logW(source: self, prefix: "AppleSignIn", message: "Apple sign-in failed: \(error.localizedDescription)", cause: error)
-            continuation?.resume(returning: .fail(error: SocialResult.Error.general("ASAuthorizationError", error)))
+            logger?.logW(source: self, prefix: "AppleSignIn", message: "Sign in with Apple failed: \(error.localizedDescription)", cause: error)
+            continuation?.resume(returning: .fail(error: SocialSignInResult.Error.general("ASAuthorizationError", error)))
         }
     }
 }
 
-extension SignInWithAppleImpl: ASAuthorizationControllerPresentationContextProviding {
+extension AppleSignInProviderImpl: ASAuthorizationControllerPresentationContextProviding {
     @MainActor
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         guard let window else {
-            preconditionFailure("Apple Sign-In presentation requested without a resolved window")
+            preconditionFailure("Sign in with Apple presentation requested without a resolved window")
         }
         return window
     }

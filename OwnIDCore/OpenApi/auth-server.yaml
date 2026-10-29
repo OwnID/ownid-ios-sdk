@@ -830,6 +830,36 @@ paths:
           $ref: '#/components/responses/FailedDependencyErrorResponse'
       tags:
         - verifications
+  /api/verifications/password/submit:
+    post:
+      summary: Authenticate with a password
+      operationId: authenticateWithPassword
+      security:
+        - AccessTokenAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/FlowTokenVerifier'
+        - $ref: '#/components/parameters/FlowTokenChallenge'
+      description: Authenticates a login ID using a plaintext password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordAuthenticationRequest'
+      responses:
+        '200':
+          description: Password authentication succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+        '400':
+          $ref: '#/components/responses/BadPasswordAuthenticationRequestErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+      tags:
+        - verifications
   /api/event/journey:
     post:
       summary: Submit a journey event log
@@ -1771,8 +1801,8 @@ components:
           $ref: '#/components/schemas/LoginId'
         AuthorizationTokenJti:
           $ref: '#/components/schemas/AuthorizationTokenJti'
-        IsProofOnly:
-          type: boolean
+        ProcessId:
+          type: string
       required:
         - LoginId
     IdDocChallengeData:
@@ -1958,7 +1988,7 @@ components:
         - FaceKeyVerification
         - FaceKeyCreation
         - FaceKeyEnrollment
-        - IdDocumentVerification
+        - IdDocVerification
     VerificationMethod:
       type: string
       enum:
@@ -2378,10 +2408,8 @@ components:
         - usb
         - nfc
         - ble
-        - smart-card
         - hybrid
         - internal
-        - cable
     KeyAlgorithmType:
       type: integer
       description: The cryptographic algorithm to be used in COSE format
@@ -2664,11 +2692,18 @@ components:
           $ref: '#/components/schemas/ChallengeId'
         timeout:
           $ref: '#/components/schemas/Timeout'
+        processId:
+          type: string
+          description: Unique identifier for the facekeys verification process.
+        sdkToken:
+          type: string
+          description: >-
+            A token that can be used by the SDK to initialize the facekeys
+            verification process.
     CompleteFacekeyChallengeRequest:
       type: object
       required:
         - challengeId
-        - data
       properties:
         challengeId:
           $ref: '#/components/schemas/ChallengeId'
@@ -2812,6 +2847,17 @@ components:
         proofTokenVerifier:
           type: string
           description: The token verifier
+    PasswordAuthenticationRequest:
+      type: object
+      required:
+        - loginId
+        - password
+      properties:
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+        password:
+          type: string
+          description: The plaintext password.
     UserJourneySummary:
       type: object
       properties:
@@ -3280,6 +3326,19 @@ components:
           properties:
             type:
               type: string
+              const: UnicoYou
+            env:
+              type: string
+              enum:
+                - Production
+                - UAT
+          required:
+            - type
+            - env
+        - type: object
+          properties:
+            type:
+              type: string
               const: Okta
             idpId:
               type: string
@@ -3396,6 +3455,17 @@ components:
               - $ref: '#/components/schemas/InvalidArgumentError'
               - $ref: '#/components/schemas/InvalidChallengeError'
               - $ref: '#/components/schemas/MaximumResendAttemptsReachedError'
+              - $ref: '#/components/schemas/UnknownError'
+    BadPasswordAuthenticationRequestErrorResponse:
+      description: >-
+        Bad password authentication request or unsuccessful password
+        authentication.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidArgumentError'
+              - $ref: '#/components/schemas/LoginWithPasswordFailedError'
               - $ref: '#/components/schemas/UnknownError'
     PhoneVerificationCancelled:
       description: Phone LoginIdVerification was cancelled successfully

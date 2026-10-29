@@ -107,7 +107,7 @@ struct ApiVerificationEnrollScreen: View {
                             }
 
                         Button("Verify") {
-                            verificationState.completeWithCode(code)
+                            verificationState.complete(code)
                         }
                         .buttonStyle(PrimaryButtonStyle())
                         .frame(height: 44)

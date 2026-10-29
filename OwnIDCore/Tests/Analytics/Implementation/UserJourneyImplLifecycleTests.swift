@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -469,10 +470,13 @@ private struct FakeLocalInfo: LocalInfo {
     let correlationId = "correlation-id"
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = true
-    let isStrongBiometricEnabled = true
+    let biometryType: LABiometryType = .touchID
+    let isBiometryUsable = true
+    let isBiometryEnrolled: Bool? = true
+    let isBiometryLockedOut: Bool? = false
+    let biometryLocalizedName: String? = "Touch ID"
+    let biometryIconSystemName: String? = "touchid"
+    let isPasscodeSet: Bool? = true
 }
 
 private actor FakeUserRepository: UserRepository {

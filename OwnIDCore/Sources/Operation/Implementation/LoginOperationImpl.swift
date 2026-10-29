@@ -58,8 +58,6 @@ internal final class LoginOperationImpl: LoginOperation, @unchecked Sendable {
         self.stream = stream
         self.controllerImpl = controller
 
-        controller._attachOwner(self)
-
         taskScope.onShutdown { [weak self] in
             self?.handleShutdown()
         }
@@ -209,6 +207,7 @@ internal final class LoginOperationImpl: LoginOperation, @unchecked Sendable {
 
     @discardableResult
     internal func start(params: LoginOperationParams? = nil) -> LoginOperationController {
+        guard controllerImpl._attachOwner(self) else { return controller }
         let stream = self.stream
         taskScope.spawn { [stream] in
             await stream.yield(.start(params))

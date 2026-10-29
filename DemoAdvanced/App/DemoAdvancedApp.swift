@@ -30,7 +30,7 @@ struct DemoAdvancedApp: App {
 
         OwnID.setProviders { registrar in
             registrar.demoIdentityProviders(authIntegration: authIntegration)
-            registrar.signInWithGoogleProvider(configurationProvider: { serverClientID in
+            registrar.googleSignInProvider(configurationProvider: { serverClientID in
                 GIDConfiguration(
                     // Google iOS OAuth client ID for the current DemoAdvanced bundle ID.
                     clientID: DemoConfiguration.googleIOSClientID,

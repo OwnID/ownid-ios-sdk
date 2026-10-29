@@ -6,6 +6,77 @@ import Testing
 // Covers: OPS-110, OPS-180
 struct PasskeyAssertionOperationImplementationTests {
 
+    @Test(arguments: [false, true])
+    func `Unavailable assertion UI fails before a challenge with or without preflight`(checkPreflight: Bool) async throws {
+        let ui = await FakePasskeyAssertionUI(result: .success(testAssertionResult()))
+        let apiController = FakePasskeyAssertionAPIController()
+        let api = FakePasskeyAssertionAPI(apiController: apiController)
+        let registry = OperationRegistryImpl(logger: nil)
+        let operation = makeAssertionOperation(ui: ui, api: api, registry: registry)
+        let params = PasskeyAssertionOperationParams(loginID: testLoginID())
+        if checkPreflight {
+            guard case .available = await operation.availability(params: params) else {
+                Issue.record("Expected an available preflight before the provider changes")
+                return
+            }
+        }
+        await ui.setAvailable(false)
+        if checkPreflight {
+            guard case .unavailable = await operation.availability(params: params) else {
+                Issue.record("Expected an unavailable preflight after the provider changes")
+                return
+            }
+        }
+        await ui.resetAvailabilityParams()
+        let controller = operation.start(params: params)
+        let result = try await withOperationTimeout("assertion unavailable readiness") { await controller.whenSettled() }
+
+        guard case .integration(.providerFailed(let errorCode, _, _, _)) = try requireOperationFailure(result) else {
+            Issue.record("Expected provider failure before the challenge")
+            return
+        }
+        #expect(errorCode == .integrationError)
+        let recorded = await ui.availabilityParams
+        #expect(recorded.count == 1)
+        #expect((recorded.first.flatMap { $0 } as? PasskeyAssertionOperationParams)?.loginID == params.loginID)
+        #expect(api.params.get().isEmpty)
+        #expect(await ui.receivedOptions == nil)
+        #expect(apiController.assertionResults.get().isEmpty)
+        #expect(apiController.cancelReasons.get().isEmpty)
+        await assertRegistryEmpty(registry)
+    }
+
+    @Test(arguments: [false, true])
+    func `Assertion readiness receives original nullable params while API uses context`(explicitParams: Bool) async throws {
+        let ui = await FakePasskeyAssertionUI(result: .success(testAssertionResult()))
+        let api = FakePasskeyAssertionAPI(apiController: FakePasskeyAssertionAPIController())
+        let token = testAccessToken("context-assertion-token")
+        let operation = makeAssertionOperation(ui: ui, api: api, context: testContext(authz: .fromToken(token)))
+        let params: PasskeyAssertionOperationParams? = explicitParams ? PasskeyAssertionOperationParams() : nil
+        guard case .available = await operation.availability(params: params) else {
+            Issue.record("Expected context-backed preflight")
+            return
+        }
+        let controller = operation.start(params: params)
+        let result = try await withOperationTimeout("assertion context readiness") { await controller.whenSettled() }
+        _ = try requireOperationSuccess(result)
+
+        let recorded = await ui.availabilityParams
+        #expect(recorded.count == 2)
+        for value in recorded {
+            if explicitParams {
+                let forwarded = try #require(value as? PasskeyAssertionOperationParams)
+                #expect(forwarded.accessToken == nil)
+                #expect(forwarded.loginID == nil)
+                #expect(forwarded.traceParent == nil)
+            } else {
+                #expect(value == nil)
+            }
+        }
+        #expect(api.params.get().count == 1)
+        #expect(api.params.get().first.flatMap { $0 }?.accessToken == token)
+    }
+
     @Test func `Passkey assertion passes options to UI and verifies result`() async throws {
         let assertionResult = testAssertionResult()
         let ui = await FakePasskeyAssertionUI(result: .success(assertionResult))
@@ -119,7 +190,8 @@ struct PasskeyAssertionOperationImplementationTests {
     private func makeAssertionOperation(
         ui: FakePasskeyAssertionUI,
         api: FakePasskeyAssertionAPI,
-        registry: OperationRegistryImpl = OperationRegistryImpl(logger: nil)
+        registry: OperationRegistryImpl = OperationRegistryImpl(logger: nil),
+        context: Context? = nil
     ) -> PasskeyAssertionOperationImpl {
         PasskeyAssertionOperationImpl(
             operationType: .passkeyAuth,
@@ -127,7 +199,7 @@ struct PasskeyAssertionOperationImplementationTests {
             ui: ui,
             api: api,
             taskScope: testTaskScope(),
-            context: nil,
+            context: context,
             loginIDValidator: FakeLoginIDValidator(),
             logger: nil
         )
@@ -137,6 +209,82 @@ struct PasskeyAssertionOperationImplementationTests {
 // Covers: OPS-160, OPS-190
 struct PasskeyAttestationOperationImplementationTests {
 
+    @Test(arguments: [false, true])
+    func `Unavailable attestation UI fails before a challenge with or without preflight`(checkPreflight: Bool) async throws {
+        let ui = await FakePasskeyAttestationUI(result: .success(testAttestationResult()))
+        let apiController = FakePasskeyAttestationAPIController()
+        let api = FakePasskeyAttestationAPI(apiController: apiController)
+        let registry = OperationRegistryImpl(logger: nil)
+        let operation = makeAttestationOperation(ui: ui, api: api, registry: registry)
+        let params = PasskeyAttestationOperationParams(loginID: testLoginID())
+        if checkPreflight {
+            guard case .available = await operation.availability(params: params) else {
+                Issue.record("Expected an available preflight before the provider changes")
+                return
+            }
+        }
+        await ui.setAvailable(false)
+        if checkPreflight {
+            guard case .unavailable = await operation.availability(params: params) else {
+                Issue.record("Expected an unavailable preflight after the provider changes")
+                return
+            }
+        }
+        await ui.resetAvailabilityParams()
+        let controller = operation.start(params: params)
+        let result = try await withOperationTimeout("attestation unavailable readiness") { await controller.whenSettled() }
+
+        guard case .integration(.providerFailed(let errorCode, _, _, _)) = try requireOperationFailure(result) else {
+            Issue.record("Expected provider failure before the challenge")
+            return
+        }
+        #expect(errorCode == .passkeyNotCreated)
+        let recorded = await ui.availabilityParams
+        #expect(recorded.count == 1)
+        #expect((recorded.first.flatMap { $0 } as? PasskeyAttestationOperationParams)?.loginID == params.loginID)
+        #expect(api.params.get().isEmpty)
+        #expect(await ui.receivedOptions == nil)
+        #expect(apiController.attestationResults.get().isEmpty)
+        #expect(apiController.cancelReasons.get().isEmpty)
+        await assertRegistryEmpty(registry)
+    }
+
+    @Test(arguments: [false, true])
+    func `Attestation readiness receives original nullable params while API uses context`(explicitParams: Bool) async throws {
+        let ui = await FakePasskeyAttestationUI(result: .success(testAttestationResult()))
+        let api = FakePasskeyAttestationAPI(apiController: FakePasskeyAttestationAPIController())
+        let token = testAccessToken("context-attestation-token")
+        let operation = makeAttestationOperation(
+            ui: ui,
+            api: api,
+            context: testContext(authz: .fromToken(token), accountDisplayName: "  Context Attestation User  ")
+        )
+        let params: PasskeyAttestationOperationParams? = explicitParams ? PasskeyAttestationOperationParams() : nil
+        guard case .available = await operation.availability(params: params) else {
+            Issue.record("Expected context-backed preflight")
+            return
+        }
+        let controller = operation.start(params: params)
+        let result = try await withOperationTimeout("attestation context readiness") { await controller.whenSettled() }
+        _ = try requireOperationSuccess(result)
+
+        let recorded = await ui.availabilityParams
+        #expect(recorded.count == 2)
+        for value in recorded {
+            if explicitParams {
+                let forwarded = try #require(value as? PasskeyAttestationOperationParams)
+                #expect(forwarded.accessToken == nil)
+                #expect(forwarded.loginID == nil)
+                #expect(forwarded.traceParent == nil)
+            } else {
+                #expect(value == nil)
+            }
+        }
+        #expect(api.params.get().count == 1)
+        #expect(api.params.get().first.flatMap { $0 }?.accessToken == token)
+        #expect(api.params.get().first.flatMap { $0 }?.accountDisplayName == "  Context Attestation User  ")
+    }
+
     @Test func `Passkey attestation passes options to UI and verifies result`() async throws {
         let attestationResult = testAttestationResult()
         let ui = await FakePasskeyAttestationUI(result: .success(attestationResult))
@@ -144,13 +292,16 @@ struct PasskeyAttestationOperationImplementationTests {
             attestationOptions: testAttestationOptions("attestation-options-challenge"),
             verifyResult: .success(testAttestationResponse(proofToken: testProofToken("verified-proof-token")))
         )
-        let operation = makeAttestationOperation(ui: ui, api: FakePasskeyAttestationAPI(apiController: apiController))
+        let api = FakePasskeyAttestationAPI(apiController: apiController)
+        let operation = makeAttestationOperation(ui: ui, api: api)
 
         let controller = operation.start(params: PasskeyAttestationOperationParams(loginID: testLoginID()))
         let result = try await withOperationTimeout("passkey attestation success") { await controller.whenSettled() }
 
         let response = try requireOperationSuccess(result)
         #expect(response.proofToken == testProofToken("verified-proof-token"))
+        #expect(api.params.get().count == 1)
+        #expect(api.params.get().first.flatMap { $0 }?.accountDisplayName == nil)
         #expect(await ui.receivedOptions?.challenge == ChallengeID("attestation-options-challenge"))
         #expect(apiController.attestationResults.get().map(\.id) == [attestationResult.id])
         #expect(apiController.cancelReasons.get().isEmpty)
@@ -243,7 +394,8 @@ struct PasskeyAttestationOperationImplementationTests {
     private func makeAttestationOperation(
         ui: FakePasskeyAttestationUI,
         api: FakePasskeyAttestationAPI,
-        registry: OperationRegistryImpl = OperationRegistryImpl(logger: nil)
+        registry: OperationRegistryImpl = OperationRegistryImpl(logger: nil),
+        context: Context? = nil
     ) -> PasskeyAttestationOperationImpl {
         PasskeyAttestationOperationImpl(
             operationType: .passkeyCreation,
@@ -251,7 +403,7 @@ struct PasskeyAttestationOperationImplementationTests {
             ui: ui,
             api: api,
             taskScope: testTaskScope(),
-            context: nil,
+            context: context,
             loginIDValidator: FakeLoginIDValidator(),
             logger: nil
         )

@@ -231,16 +231,24 @@ internal class OperationControllerImpl<Success: Sendable, Failure: OperationFail
 
     private let ownerStrongHoldLock = NSLock()
     private var _ownerStrongHold: AnyObject?
+    private var ownerReleased = false
     internal let operationID: OperationID
     private let onUserAborted: @Sendable (Reason) -> Void
     private let storage = Storage()
 
-    internal func _attachOwner(_ owner: AnyObject) {
-        ownerStrongHoldLock.withLock { _ownerStrongHold = owner }
+    internal func _attachOwner(_ owner: AnyObject) -> Bool {
+        ownerStrongHoldLock.withLock {
+            guard !ownerReleased else { return false }
+            _ownerStrongHold = owner
+            return true
+        }
     }
 
     internal func _releaseOwner() {
-        ownerStrongHoldLock.withLock { _ownerStrongHold = nil }
+        ownerStrongHoldLock.withLock {
+            ownerReleased = true
+            _ownerStrongHold = nil
+        }
     }
 
     internal init(operationID: OperationID, onUserAborted: @escaping @Sendable (Reason) -> Void) {
@@ -257,17 +265,17 @@ internal class OperationControllerImpl<Success: Sendable, Failure: OperationFail
     }
 
     internal func complete(_ success: Success) {
-        ownerStrongHoldLock.withLock { _ownerStrongHold = nil }
+        _releaseOwner()
         Task { await storage.resolve(with: .success(success)) }
     }
 
     internal func cancel(_ reason: Reason) {
-        ownerStrongHoldLock.withLock { _ownerStrongHold = nil }
+        _releaseOwner()
         Task { await storage.resolve(with: .canceled(reason)) }
     }
 
     internal func fail(_ failure: Failure) {
-        ownerStrongHoldLock.withLock { _ownerStrongHold = nil }
+        _releaseOwner()
         Task { await storage.resolve(with: .failure(failure)) }
     }
 }

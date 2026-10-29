@@ -298,16 +298,59 @@ final class FakeLoginIDConfigurationProvider: LoginIDConfigurationProvider, @unc
     func clearConfiguration() {}
 }
 
+final class FakeAppConfigProvider: AppConfigProvider, @unchecked Sendable {
+    private let storage: Locked<AppConfig?>
+    private let onRead: (@Sendable () -> Void)?
+    let readCount = Locked(0)
+
+    init(config: AppConfig? = nil, onRead: (@Sendable () -> Void)? = nil) {
+        storage = Locked(config)
+        self.onRead = onRead
+    }
+
+    var currentConfig: AppConfig? {
+        readCount.mutate { $0 += 1 }
+        let config = storage.get()
+        onRead?()
+        return config
+    }
+
+    func set(_ config: AppConfig?) { storage.set(config) }
+
+    func getOrFetchConfig() async throws -> AppConfig {
+        Issue.record("Login ID collect must not fetch AppConfig")
+        return storage.get() ?? .default
+    }
+
+    var configStream: AsyncStream<AppConfig> {
+        Issue.record("Login ID collect must not observe AppConfig")
+        return AsyncStream { $0.finish() }
+    }
+}
+
 final class FakeLoginIDValidator: LoginIDValidator, @unchecked Sendable {
     private let supportedTypes: [LoginIDType]
     private let invalidIDs: Set<String>
+    private let onDetermine: (@Sendable (String) -> Void)?
+    private let onValidate: (@Sendable (LoginID) -> Void)?
+    let determineCalls = Locked<[String]>([])
+    let validationCalls = Locked<[LoginID]>([])
 
-    init(supportedTypes: [LoginIDType] = [.email, .phoneNumber, .userName], invalidIDs: Set<String> = []) {
+    init(
+        supportedTypes: [LoginIDType] = [.email, .phoneNumber, .userName],
+        invalidIDs: Set<String> = [],
+        onDetermine: (@Sendable (String) -> Void)? = nil,
+        onValidate: (@Sendable (LoginID) -> Void)? = nil
+    ) {
         self.supportedTypes = supportedTypes
         self.invalidIDs = invalidIDs
+        self.onDetermine = onDetermine
+        self.onValidate = onValidate
     }
 
     func determineLoginIDType(loginID: String) throws(LoginIDValidationError) -> LoginIDType {
+        determineCalls.mutate { $0.append(loginID) }
+        onDetermine?(loginID)
         let type: LoginIDType = loginID.contains("@") ? .email : (loginID.hasPrefix("+") ? .phoneNumber : .userName)
         guard supportedTypes.contains(type) else {
             throw .typeNotSupported(errorCode: .loginIDTypeNotSupported, message: "Unsupported LoginID.Type: \(type)")
@@ -316,6 +359,8 @@ final class FakeLoginIDValidator: LoginIDValidator, @unchecked Sendable {
     }
 
     func validate(_ loginID: LoginID) throws(LoginIDValidationError) -> LoginID {
+        validationCalls.mutate { $0.append(loginID) }
+        onValidate?(loginID)
         guard supportedTypes.contains(loginID.type) else {
             throw .typeNotSupported(errorCode: .loginIDTypeNotSupported, message: "Unsupported LoginID.Type: \(loginID.type)")
         }
@@ -354,11 +399,16 @@ final class FakeDiscoverAPI: DiscoverAPI, @unchecked Sendable {
 final class FakeLoginIDCollectUI: LoginIDCollectUI, @unchecked Sendable {
     let startCount = Locked(0)
     let controller = MainActorCapturedValue<any LoginIDCollectOperationController>()
+    private let onStart: (@MainActor @Sendable () -> LoginIDCollectOperationFailure.Integration?)?
+
+    init(onStart: (@MainActor @Sendable () -> LoginIDCollectOperationFailure.Integration?)? = nil) {
+        self.onStart = onStart
+    }
 
     @MainActor func start(controller: any LoginIDCollectOperationController) -> LoginIDCollectOperationFailure.Integration? {
         startCount.mutate { $0 += 1 }
         self.controller.set(controller)
-        return nil
+        return onStart?()
     }
 }
 
@@ -430,7 +480,7 @@ final class FakeEmailVerificationAPIController: EmailVerificationAPIController, 
         self.cancelResult = cancelResult
     }
 
-    func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure> {
+    func complete(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure> {
         completedCodes.mutate { $0.append(code) }
         return completeResult
     }
@@ -497,7 +547,7 @@ final class FakePhoneVerificationAPIController: PhoneVerificationAPIController, 
         self.cancelResult = cancelResult
     }
 
-    func completeWithCode(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure> {
+    func complete(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure> {
         completedCodes.mutate { $0.append(code) }
         return completeResult
     }
@@ -516,7 +566,15 @@ final class FakePhoneVerificationAPIController: PhoneVerificationAPIController, 
 final class FakePasskeyAssertionUI: PasskeyAssertionUI, @unchecked Sendable {
     let result: PasskeyResult<AssertionResult>
     private(set) var receivedOptions: AssertionOptions?
+    private var available = true
+    private(set) var availabilityParams: [(any CapabilityParams)?] = []
     init(result: PasskeyResult<AssertionResult>) { self.result = result }
+    func setAvailable(_ value: Bool) { available = value }
+    func resetAvailabilityParams() { availabilityParams.removeAll() }
+    func isAvailable(params: (any CapabilityParams)?) async -> Bool {
+        availabilityParams.append(params)
+        return available
+    }
     func getCredential(options: AssertionOptions) async -> PasskeyResult<AssertionResult> {
         receivedOptions = options
         return result
@@ -562,7 +620,15 @@ final class FakePasskeyAssertionAPIController: PasskeyAssertionAPIController, @u
 final class FakePasskeyAttestationUI: PasskeyAttestationUI, @unchecked Sendable {
     let result: PasskeyResult<AttestationResult>
     private(set) var receivedOptions: AttestationOptions?
+    private var available = true
+    private(set) var availabilityParams: [(any CapabilityParams)?] = []
     init(result: PasskeyResult<AttestationResult>) { self.result = result }
+    func setAvailable(_ value: Bool) { available = value }
+    func resetAvailabilityParams() { availabilityParams.removeAll() }
+    func isAvailable(params: (any CapabilityParams)?) async -> Bool {
+        availabilityParams.append(params)
+        return available
+    }
     func createCredential(options: AttestationOptions) async -> PasskeyResult<AttestationResult> {
         receivedOptions = options
         return result
@@ -659,16 +725,16 @@ final class FakeOIDCAPIController: OIDCAPIController, @unchecked Sendable {
 
 @MainActor
 final class FakeAppleSignInUI: SignInWithAppleUI, @unchecked Sendable {
-    let result: SocialResult?
+    let result: SocialSignInResult?
     let started = MainActorCapturedValue<Void>()
     let canceled = MainActorCapturedValue<Void>()
-    let completion = MainActorCapturedValue<SocialResult>()
+    let completion = MainActorCapturedValue<SocialSignInResult>()
     private(set) var receivedClientID: String?
     private(set) var receivedNonce: String?
     private(set) var signInCallCount = 0
     private(set) var cancelCallCount = 0
-    init(result: SocialResult? = nil) { self.result = result }
-    func signIn(clientID: String, nonce: String?) async -> SocialResult {
+    init(result: SocialSignInResult? = nil) { self.result = result }
+    func signIn(clientID: String, nonce: String?) async -> SocialSignInResult {
         receivedClientID = clientID
         receivedNonce = nonce
         signInCallCount += 1
@@ -688,16 +754,16 @@ final class FakeAppleSignInUI: SignInWithAppleUI, @unchecked Sendable {
 
 @MainActor
 final class FakeGoogleSignInUI: SignInWithGoogleUI, @unchecked Sendable {
-    let result: SocialResult?
+    let result: SocialSignInResult?
     let started = MainActorCapturedValue<Void>()
     let canceled = MainActorCapturedValue<Void>()
-    let completion = MainActorCapturedValue<SocialResult>()
+    let completion = MainActorCapturedValue<SocialSignInResult>()
     private(set) var receivedClientID: String?
     private(set) var receivedNonce: String?
     private(set) var signInCallCount = 0
     private(set) var cancelCallCount = 0
-    init(result: SocialResult? = nil) { self.result = result }
-    func signIn(clientID: String, nonce: String?) async -> SocialResult {
+    init(result: SocialSignInResult? = nil) { self.result = result }
+    func signIn(clientID: String, nonce: String?) async -> SocialSignInResult {
         receivedClientID = clientID
         receivedNonce = nonce
         signInCallCount += 1

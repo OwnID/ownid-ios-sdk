@@ -26,10 +26,11 @@ import Foundation
 /// elapses. Repeated starts on the same operation object return the same controller and do not create a new passkey
 /// prompt.
 ///
-/// Requires version 16+ with passkey capabilities registered. ``OperationCapability/availability(params:)`` and
-/// ``OperationCapability/isAvailable(params:)`` are preflight checks for registered dependencies and resolvable login
-/// ID/access token input; ``OperationCapability/start(params:)`` revalidates the same contract and may still settle
-/// with a typed failure or cancellation if runtime state changes.
+/// The default platform implementation requires iOS 16 or later. ``OperationCapability/availability(params:)`` and
+/// ``OperationCapability/isAvailable(params:)`` check registered dependencies, resolvable login ID/access token input,
+/// and operation UI capability availability. ``OperationCapability/start(params:)`` repeats the capability availability
+/// check before creating a server challenge. A successful preflight does not guarantee UI presentation or credential
+/// success; the operation may still settle with a typed failure or cancellation.
 public protocol PasskeyAttestationOperation: OperationCapability, Sendable
 where
     Params == PasskeyAttestationOperationParams,
@@ -294,10 +295,11 @@ public enum PasskeyAttestationOperationFailure: OperationFailure, CustomStringCo
 /// elapses. Repeated starts on the same operation object return the same controller and do not create a new passkey
 /// prompt.
 ///
-/// Requires version 16+ with passkey capabilities registered. ``OperationCapability/availability(params:)`` and
-/// ``OperationCapability/isAvailable(params:)`` are preflight checks for registered dependencies and resolvable login
-/// ID/access token input; ``OperationCapability/start(params:)`` revalidates the same contract and may still settle
-/// with a typed failure or cancellation if runtime state changes.
+/// The default platform implementation requires iOS 16 or later. ``OperationCapability/availability(params:)`` and
+/// ``OperationCapability/isAvailable(params:)`` check registered dependencies, resolvable login ID/access token input,
+/// and operation UI capability availability. ``OperationCapability/start(params:)`` repeats the capability availability
+/// check before creating a server challenge. A successful preflight does not guarantee UI presentation or credential
+/// success; the operation may still settle with a typed failure or cancellation.
 public protocol PasskeyAssertionOperation: OperationCapability, Sendable
 where
     Params == PasskeyAssertionOperationParams,

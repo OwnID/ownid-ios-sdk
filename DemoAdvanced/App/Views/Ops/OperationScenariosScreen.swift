@@ -26,11 +26,11 @@ struct OperationScenariosScreen: View {
                     OperationDiscoverLoginScreen(viewModel: operationViewModel)
                 }
 
-                ScenarioNavigationLink(title: "Sign In with Apple") {
+                ScenarioNavigationLink(title: "Sign in with Apple") {
                     OperationSignInWithAppleScreen(viewModel: operationViewModel)
                 }
 
-                ScenarioNavigationLink(title: "Sign In with Google") {
+                ScenarioNavigationLink(title: "Sign in with Google") {
                     OperationSignInWithGoogleScreen(viewModel: operationViewModel)
                 }
             }

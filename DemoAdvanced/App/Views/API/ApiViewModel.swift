@@ -14,7 +14,7 @@ final class ApiViewModel: ObservableObject {
         var status: String? = nil
         var resend: () -> Void = {}
         var cancel: () -> Void = {}
-        var completeWithCode: (String) -> Void = { _ in }
+        var complete: (String) -> Void = { _ in }
         var proofToken: ProofToken? = nil
         var accessTokenResult: AccessToken? = nil
         var enrollResult: String? = nil
@@ -197,9 +197,9 @@ final class ApiViewModel: ObservableObject {
                                         .onError { error in verificationState.status = String(describing: error) }
                                 }
                             },
-                            completeWithCode: { [self] code in
+                            complete: { [self] code in
                                 Task { @MainActor in
-                                    await controller.completeWithCode(code: code)
+                                    await controller.complete(code: code)
                                         .onSuccess { token in
                                             switch token {
                                             case .accessToken(let accessToken):
@@ -238,9 +238,9 @@ final class ApiViewModel: ObservableObject {
                                         .onError { error in verificationState.status = String(describing: error) }
                                 }
                             },
-                            completeWithCode: { [self] code in
+                            complete: { [self] code in
                                 Task { @MainActor in
-                                    await controller.completeWithCode(code: code)
+                                    await controller.complete(code: code)
                                         .onSuccess { token in
                                             switch token {
                                             case .accessToken(let accessToken):
@@ -275,14 +275,14 @@ final class ApiViewModel: ObservableObject {
 
             switch screenState.loginIDType {
             case .email:
-                await api.enroll.email.start(params: EmailEnrollAPIParams(proofToken: proofToken))
+                await api.verifications.email.enroll.start(params: EmailEnrollAPIParams(proofToken: proofToken))
                     .onSuccess {
                         verificationState = VerificationScreenState(enrollResult: "Verification enrollment succeeded")
                     }
                     .onError { error in verificationState.enrollResult = String(describing: error) }
 
             case .phoneNumber:
-                await api.enroll.phone.start(params: PhoneEnrollAPIParams(proofToken: proofToken))
+                await api.verifications.phone.enroll.start(params: PhoneEnrollAPIParams(proofToken: proofToken))
                     .onSuccess {
                         verificationState = VerificationScreenState(enrollResult: "Verification enrollment succeeded")
                     }
@@ -364,7 +364,7 @@ final class ApiViewModel: ObservableObject {
                 context.authz = .fromToken(accessToken)
             }
 
-            await api.enroll.passkey.start(params: PasskeyEnrollAPIParams(proofToken: proofToken))
+            await api.passkeys.enroll.start(params: PasskeyEnrollAPIParams(proofToken: proofToken))
                 .onSuccess { passkeyCreateState = PasskeyCreateState(enrollResult: "Passkey enroll succeeded") }
                 .onError { error in passkeyCreateState.enrollResult = String(describing: error) }
         }
@@ -493,7 +493,7 @@ final class ApiViewModel: ObservableObject {
                         challenge: controller.challenge,
                         authorize: { [self] in
                             Task { @MainActor in
-                                let socialResult: SocialResult
+                                let socialResult: SocialSignInResult
                                 do {
                                     let container = OwnID.getInstanceContainer()!
                                     switch provider {

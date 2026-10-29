@@ -165,7 +165,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
                   },
                   "timeout": 3000,
                   "excludeCredentials": [
-                    { "id": "exclude-one", "type": "public-key", "transports": ["internal", "hybrid"] }
+                    { "id": "exclude-one", "type": "public-key", "transports": ["internal", "smart-card", "cable", "hybrid"] }
                   ]
                 }
                 """#
@@ -364,6 +364,7 @@ struct WebBridgePasskeyPluginRuntimeTests {
         #expect(unavailablePasskey.attestationWindow == nil)
     }
 
+    @available(iOS 16.0, *)
     private func makePlugin(
         passkey: any PasskeyProtocol,
         localInfo: any LocalInfo,

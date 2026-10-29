@@ -70,8 +70,8 @@ struct ProviderMainActorBoundaryTests {
     @Test func `Google provider main actor hooks execute on MainActor when called from detached tasks`() async throws {
         let log = await MainActor.run { MainActorProviderEventLog() }
         let window = await MainActor.run { makeTestWindow() }
-        let params = SignInWithSocialParams(clientID: "google-client", nonce: "google-nonce")
-        var builder = SignInWithGoogleBuilder()
+        let params = SocialSignInParams(clientID: "google-client", nonce: "google-nonce")
+        var builder = GoogleSignInProviderBuilder()
         builder.signIn { _, params in
             log.append(.googleSignIn(params.clientID, params.nonce))
             return .success(id: "google-id", idToken: "google-id-token")
@@ -125,7 +125,7 @@ struct ProviderMainActorBoundaryTests {
         let observation = await Task.detached {
             let appleProviderResult = await appleProvider.signIn(
                 window: window,
-                params: SignInWithSocialParams(clientID: "direct-apple-client", nonce: "direct-apple-nonce")
+                params: SocialSignInParams(clientID: "direct-apple-client", nonce: "direct-apple-nonce")
             )
             await appleProvider.cancel()
             let appleUIResult = await appleUI.signIn(clientID: "apple-client", nonce: "apple-nonce")
@@ -193,7 +193,7 @@ private final class MainActorProviderEventLog {
     }
 }
 
-private final class FakeMainActorAppleProvider: SignInWithApple, @unchecked Sendable {
+private final class FakeMainActorAppleProvider: AppleSignInProvider, @unchecked Sendable {
     private let log: MainActorProviderEventLog
     private(set) var receivedWindow: UIWindow?
 
@@ -201,7 +201,7 @@ private final class FakeMainActorAppleProvider: SignInWithApple, @unchecked Send
         self.log = log
     }
 
-    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         receivedWindow = window
         log.append(.appleSignIn(params.clientID, params.nonce))
         return .success(id: "apple-id", idToken: "apple-token")
@@ -212,7 +212,7 @@ private final class FakeMainActorAppleProvider: SignInWithApple, @unchecked Send
     }
 }
 
-private final class FakeMainActorGoogleProvider: SignInWithGoogle, @unchecked Sendable {
+private final class FakeMainActorGoogleProvider: GoogleSignInProvider, @unchecked Sendable {
     private let log: MainActorProviderEventLog
     private(set) var receivedWindow: UIWindow?
 
@@ -220,7 +220,7 @@ private final class FakeMainActorGoogleProvider: SignInWithGoogle, @unchecked Se
         self.log = log
     }
 
-    @MainActor func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    @MainActor func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         receivedWindow = window
         log.append(.googleSignIn(params.clientID, params.nonce))
         return .success(id: "google-id", idToken: "google-token")
@@ -262,7 +262,7 @@ private func requireSessionString(_ result: Result<SessionOutput, any Error & Se
     }
 }
 
-private func requireSocialSuccess(_ result: SocialResult) throws -> (id: String, idToken: String) {
+private func requireSocialSuccess(_ result: SocialSignInResult) throws -> (id: String, idToken: String) {
     switch result {
     case .success(let id, let idToken):
         return (id, idToken)

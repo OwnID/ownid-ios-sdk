@@ -36,6 +36,24 @@ internal struct InternalStartVerificationResponse: Sendable, Codable, Hashable {
         case methods = "methods"
     }
 
+    internal init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.challengeId = try container.decode(InternalChallengeId.self, forKey: .challengeId)
+        self.resendPolicy = try container.decode(InternalResendPolicy.self, forKey: .resendPolicy)
+        self.timeout = try container.decode(InternalTimeout.self, forKey: .timeout)
+        let attempts = try container.decode(Int.self, forKey: .attempts)
+        guard attempts >= 1 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .attempts,
+                in: container,
+                debugDescription: "Verification attempts must be at least 1."
+            )
+        }
+        self.attempts = attempts
+        self.channel = try container.decode(InternalOperationChannel.self, forKey: .channel)
+        self.methods = try container.decode(InternalChallengeResponseMethods.self, forKey: .methods)
+    }
+
     internal func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(challengeId, forKey: .challengeId)

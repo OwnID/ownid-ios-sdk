@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -21,6 +22,45 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
         #expect(report.message.contains("SKIP - Fetch AASA - rpId validation failed"))
         #expect(report.message.contains("SKIP - Apple CDN - rpId validation failed"))
         #expect(PasskeyDiagnosticsTestURLProtocol.allRequests.isEmpty)
+    }
+
+    @available(iOS 16.0, *)
+    @Test(arguments: [
+        ("legacy unknown", false, nil, nil, nil, "false", "unknown", "unknown", "unknown"),
+        ("not enrolled", false, false, false, true, "false", "false", "false", "true"),
+        ("locked out", false, true, true, true, "false", "true", "true", "true"),
+        ("no passcode", false, false, false, false, "false", "false", "false", "false"),
+        ("usable", true, true, false, true, "true", "true", "false", "true"),
+    ] as [(String, Bool, Bool?, Bool?, Bool?, String, String, String, String)])
+    func `Authentication snapshot values remain descriptive in diagnostics`(
+        scenario: String, usable: Bool, enrolled: Bool?, lockedOut: Bool?, passcode: Bool?,
+        usableText: String, enrolledText: String, lockedOutText: String, passcodeText: String
+    ) async throws {
+        PasskeyDiagnosticsTestURLProtocol.reset()
+        let domain = Self.uniqueDomain()
+        Self.registerAASAAndCDN(for: domain, originApps: [Self.validAppEntry], cdnApps: [Self.validAppEntry])
+        var localInfo = PasskeyDiagnosticsLocalInfo()
+        localInfo.isBiometryUsable = usable
+        localInfo.isBiometryEnrolled = enrolled
+        localInfo.isBiometryLockedOut = lockedOut
+        localInfo.isPasscodeSet = passcode
+        let sink = PasskeyDiagnosticsLogSink()
+        let diagnostics = Self.makeDiagnostics(logger: sink, localInfo: localInfo)
+
+        diagnostics.verify(rpId: domain)
+
+        let report = try await Self.waitForReport(in: sink)
+        #expect(report.message.contains("PasskeyDiagnostics: PASS"), "Authentication state must not change the AASA/CDN verdict: \(scenario)")
+        #expect(report.message.contains("Initial process snapshot"))
+        #expect(report.message.contains("biometryType=faceID"))
+        #expect(report.message.contains("isBiometryUsable=\(usableText)"))
+        #expect(report.message.contains("isBiometryEnrolled=\(enrolledText)"))
+        #expect(report.message.contains("isBiometryLockedOut=\(lockedOutText)"))
+        #expect(report.message.contains("isPasscodeSet=\(passcodeText)"))
+        #expect(report.message.contains("sdkDebuggable=true"))
+        #expect(!report.message.contains("isDeviceSecured="))
+        #expect(!report.message.contains("isStrongBiometricEnabled="))
+        #expect(!report.message.contains("Optional("))
     }
 
     @available(iOS 16.0, *)
@@ -366,10 +406,13 @@ struct PasskeyDiagnosticsImplementationRuntimeTests {
     private static let jsonHeaders = ["Content-Type": "application/json"]
 
     @available(iOS 16.0, *)
-    private static func makeDiagnostics(logger: PasskeyDiagnosticsLogSink) -> PasskeyDiagnosticsImpl {
+    private static func makeDiagnostics(
+        logger: PasskeyDiagnosticsLogSink,
+        localInfo: PasskeyDiagnosticsLocalInfo = PasskeyDiagnosticsLocalInfo()
+    ) -> PasskeyDiagnosticsImpl {
         let router = OwnIDLogRouter(ownIDLoggerProvider: { logger }, serverLoggerProvider: { nil })
         return PasskeyDiagnosticsImpl(
-            localInfo: PasskeyDiagnosticsLocalInfo(),
+            localInfo: localInfo,
             logger: router,
             sessionFactory: { configuration, delegate in
                 configuration.protocolClasses = [PasskeyDiagnosticsTestURLProtocol.self]
@@ -446,10 +489,13 @@ private struct PasskeyDiagnosticsLocalInfo: LocalInfo {
     let correlationId = "passkey-diagnostics-correlation-id"
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = true
-    let isFingerprintHardwarePresent = false
-    let isStrongBiometricEnabled = true
+    let biometryType: LABiometryType = .faceID
+    var isBiometryUsable = true
+    var isBiometryEnrolled: Bool? = true
+    var isBiometryLockedOut: Bool? = false
+    let biometryLocalizedName: String? = "Face ID"
+    let biometryIconSystemName: String? = "faceid"
+    var isPasscodeSet: Bool? = true
 }
 
 private enum PasskeyDiagnosticsRoute: Sendable {

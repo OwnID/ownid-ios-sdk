@@ -23,7 +23,7 @@ URL, trusted origins, and web content. The native SDK supplies the bridge so
 that page can call selected native SDK capabilities.
 
 Choose WebBridge when the page needs native OwnID SDK capabilities such as
-passkeys, stored user, scoped context, Sign in with Apple, Google sign-in,
+passkeys, stored user, scoped context, Sign in with Apple, Sign in with Google,
 `sessionCreate`, or `passwordAuthenticate`.
 
 Add `OwnIDCore` and complete iOS passkey prerequisites. WebBridge has no
@@ -58,7 +58,7 @@ bridge.
 
 Sign in with Apple is built into `OwnIDCore` and is enabled through
 Apple/tenant setup. Google uses the source-only provider helper or a custom
-`signInWithGoogle` provider.
+`googleSignIn` provider.
 
 Use the WebBridge docs for the capability table and origin rules. Use
 the providers, context, and namespace-handle references for their detailed

@@ -3,10 +3,56 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: API-CTRL-010, API-CTRL-020, API-CTRL-030
+// Covers: API-CTRL-010, API-CTRL-020, API-CTRL-030, API-250
 struct DirectAPIControllerContextLifetimeTests {
     private let baseURL = URL(string: "https://example.test/api")!
     private let coder = JSONCoderImpl()
+
+    @Test func `Retained verification channels preserve start overloads without enrollment runtime`() async throws {
+        let network = APIRecordingNetwork(
+            response: .success(success(code: 201, path: "verifications/email/start", body: verificationChallengeBody("channel-challenge")))
+        )
+        let container = makeContainer(network: network)
+        let channels = container.apiNamespace.withContext { $0.authz = .fromToken("scoped-token") }.verifications
+        setContextAccessToken("later-parent-token", in: container)
+        let emailLoginID = LoginID(id: "explicit@example.com", type: .email)
+        let phoneLoginID = LoginID(id: "+15551230000", type: .phoneNumber)
+        let emailControllers = [
+            try #require(await channels.email.start().getOrNil()),
+            try #require(await channels.email.start(params: nil).getOrNil()),
+            try #require(await channels.email.start(params: EmailVerificationAPIParams(loginID: emailLoginID)).getOrNil()),
+        ]
+        let phoneControllers = [
+            try #require(await channels.phone.start().getOrNil()),
+            try #require(await channels.phone.start(params: nil).getOrNil()),
+            try #require(await channels.phone.start(params: PhoneVerificationAPIParams(loginID: phoneLoginID)).getOrNil()),
+        ]
+        #expect(emailControllers.allSatisfy { $0.challenge.challengeID == ChallengeID("channel-challenge") })
+        #expect(phoneControllers.allSatisfy { $0.challenge.challengeID == ChallengeID("channel-challenge") })
+        let requests = await network.requestsSnapshot()
+        try #require(requests.count == 6)
+        for (index, request) in requests.enumerated() {
+            let channel = index < 3 ? "email" : "phone"
+            let urlRequest = request.buildURLRequest()
+            #expect(urlRequest.url == baseURL.appendingPathComponent("verifications/\(channel)/start"))
+            #expect(urlRequest.value(forHTTPHeaderField: NetworkRequest.Header.authorization.rawValue) == "Bearer scoped-token")
+        }
+        for index in [0, 1, 3, 4] {
+            #expect(try bodyObject(from: requests[index].buildURLRequest()).isEmpty)
+        }
+        let emailBody = try bodyObject(from: requests[2].buildURLRequest())
+        let phoneBody = try bodyObject(from: requests[5].buildURLRequest())
+        #expect((emailBody["loginId"] as? [String: Any])?["id"] as? String == emailLoginID.id)
+        #expect((phoneBody["loginId"] as? [String: Any])?["id"] as? String == phoneLoginID.id)
+
+        let emailResult = await channels.email.enroll.start(params: EmailEnrollAPIParams(proofToken: ProofToken(token: "email-proof")))
+        let phoneResult = await channels.phone.enroll.start(params: PhoneEnrollAPIParams(proofToken: ProofToken(token: "phone-proof")))
+        guard case .failure(.unexpected) = emailResult, case .failure(.unexpected) = phoneResult else {
+            Issue.record("Missing enrollment runtimes must return their endpoint unexpected failures")
+            return
+        }
+        #expect(await network.requestsSnapshot().count == 6)
+    }
 
     @Test func `Email verification controller keeps start context after scope mutation`() async throws {
         let network = APIRecordingNetwork(
@@ -25,7 +71,7 @@ struct DirectAPIControllerContextLifetimeTests {
         let controller = try #require(await container.apiNamespace.verifications.email.start().getOrNil())
         setContextAccessToken("later-email-token", in: container)
 
-        #expect((await controller.completeWithCode(code: "123456")).getOrNil() == .accessToken(AccessToken(token: "email-complete-token")))
+        #expect((await controller.complete(code: "123456")).getOrNil() == .accessToken(AccessToken(token: "email-complete-token")))
         _ = try #require((await controller.resend()).getOrNil())
         _ = try #require((await controller.cancel(reason: .moveToOtherChallenge)).getOrNil())
 
@@ -91,7 +137,7 @@ struct DirectAPIControllerContextLifetimeTests {
         let controller = try #require(await container.apiNamespace.verifications.phone.start().getOrNil())
         setContextAccessToken("later-phone-token", in: container)
 
-        #expect((await controller.completeWithCode(code: "654321")).getOrNil() == .proofToken(ProofToken(token: "phone-proof-token")))
+        #expect((await controller.complete(code: "654321")).getOrNil() == .proofToken(ProofToken(token: "phone-proof-token")))
         _ = try #require((await controller.resend()).getOrNil())
         _ = try #require((await controller.cancel(reason: .timeout)).getOrNil())
 

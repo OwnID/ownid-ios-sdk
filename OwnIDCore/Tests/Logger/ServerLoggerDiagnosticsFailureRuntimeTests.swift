@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
@@ -135,6 +136,11 @@ struct ServerLoggerDiagnosticsFailureRuntimeTests {
             let payload = try Self.payload(from: request)
             let metadata = try #require(payload["metadata"] as? [String: Any])
             let previousRun = try #require(metadata["previousRun"] as? [String: Any])
+            #expect(metadata["biometryType"] as? String == "touchID")
+            try Self.expectJSONBool(metadata["isBiometryUsable"], equals: false)
+            try Self.expectJSONBool(metadata["isBiometryEnrolled"], equals: nil)
+            try Self.expectJSONBool(metadata["isBiometryLockedOut"], equals: nil)
+            try Self.expectJSONBool(metadata["isPasscodeSet"], equals: true)
             #expect(previousRun["correlationId"] as? String == "retry-correlation")
             #expect(previousRun["processId"] as? Int == 9_001)
             #expect(previousRun["exit"] == nil)
@@ -184,6 +190,16 @@ struct ServerLoggerDiagnosticsFailureRuntimeTests {
         let data = try #require(request.buildURLRequest().httpBody)
         let object = try JSONSerialization.jsonObject(with: data)
         return try #require(object as? [String: Any])
+    }
+
+    private static func expectJSONBool(_ actual: Any?, equals expected: Bool?) throws {
+        if let expected {
+            let number = try #require(actual as? NSNumber)
+            #expect(CFGetTypeID(number) == CFBooleanGetTypeID())
+            #expect(number.boolValue == expected)
+        } else {
+            #expect(actual == nil)
+        }
     }
 
     private static func makeLogger(
@@ -328,6 +344,7 @@ private final class ThrowingDiagnosticsJSONCoder: JSONCoder, @unchecked Sendable
 
 private final class ImmediateDiagnosticsAppConfigProvider: AppConfigProvider, @unchecked Sendable {
     private let config: AppConfig
+    var currentConfig: AppConfig? { config }
 
     init(config: AppConfig) {
         self.config = config
@@ -352,10 +369,13 @@ private struct DiagnosticsServerLocalInfo: LocalInfo {
     let correlationId = "diagnostics-failure-correlation-id"
     let isDebuggable = true
     let isSystemFidoCapable = true
-    let isDeviceSecured = true
-    let isFaceHardwarePresent = false
-    let isFingerprintHardwarePresent = true
-    let isStrongBiometricEnabled = true
+    let biometryType: LABiometryType = .touchID
+    let isBiometryUsable = false
+    let isBiometryEnrolled: Bool? = nil
+    let isBiometryLockedOut: Bool? = nil
+    let biometryLocalizedName: String? = "Touch ID"
+    let biometryIconSystemName: String? = "touchid"
+    let isPasscodeSet: Bool? = true
 }
 
 private final class DiagnosticsLogSink: OwnIDLogger, @unchecked Sendable {

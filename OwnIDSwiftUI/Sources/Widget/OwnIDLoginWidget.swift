@@ -13,6 +13,9 @@ import SwiftUI
 /// and the default icon button is disabled. `showSpinner` controls whether the busy state is shown as a spinner; it
 /// does not make a running flow accept another tap.
 ///
+/// The default icon uses Touch ID on iOS 14+ when Touch ID is usable; otherwise it uses Face ID.
+/// Custom icon-button content may use or replace the suggested icon.
+///
 /// The widget presents flow UI from the window that currently hosts it. If the widget is not attached to a window when
 /// tapped, no flow starts and `onError` receives a UI-context failure.
 ///
@@ -37,7 +40,8 @@ public struct OwnIDLoginWidget<IconButton: View, OrText: View>: View {
     private let onLogin: (BoostFlowLoginResponse) -> Void
     private let onCancel: ((Reason) -> Void)?
     private let onError: ((BoostLoginFlowFailure) -> Void)?
-    private let iconButton: (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton
+    private let iconButton:
+        (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String, _ icon: Image) -> IconButton
     private let orText: (String) -> OrText
 
     internal init(
@@ -52,7 +56,8 @@ public struct OwnIDLoginWidget<IconButton: View, OrText: View>: View {
         viewModel: OwnIDLoginWidgetViewModel?,
         widgetStrings: BoostWidgetStrings?,
         @ViewBuilder iconButton:
-            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton,
+            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String, _ icon: Image) ->
+            IconButton,
         @ViewBuilder orText: @escaping (String) -> OrText
     ) {
         self.onLogin = onLogin
@@ -122,7 +127,8 @@ private struct OwnIDLoginWidgetStatefulContent<IconButton: View, OrText: View>: 
     @LatestValue private var onLogin: (BoostFlowLoginResponse) -> Void
     @LatestValue private var onCancel: ((Reason) -> Void)?
     @LatestValue private var onError: ((BoostLoginFlowFailure) -> Void)?
-    private let iconButton: (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton
+    private let iconButton:
+        (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String, _ icon: Image) -> IconButton
     private let orText: (String) -> OrText
 
     private var effectiveViewModel: OwnIDLoginWidgetViewModel {
@@ -141,7 +147,8 @@ private struct OwnIDLoginWidgetStatefulContent<IconButton: View, OrText: View>: 
         viewModel: OwnIDLoginWidgetViewModel?,
         widgetStrings: BoostWidgetStrings?,
         @ViewBuilder iconButton:
-            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> IconButton,
+            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String, _ icon: Image) ->
+            IconButton,
         @ViewBuilder orText: @escaping (String) -> OrText
     ) {
         self._ownedViewModel = State(initialValue: OwnIDLoginWidgetViewModel(instanceName: instanceName))
@@ -229,7 +236,7 @@ extension OwnIDLoginWidget where IconButton == OwnIDIconButtonView<RoundedRectan
     ///     ``OwnIDBoostButtonPosition/end`` when you place the widget after the app's password field. Defaults to
     ///     ``OwnIDBoostButtonPosition/start``.
     ///   - theme: Optional OwnID theme for this widget. When `nil`, the widget uses the current OwnID theme.
-    ///   - instanceName: Instance used for default flow provisioning and default widget-string resolution.
+    ///   - instanceName: Instance used for default flow provisioning, the suggested icon, and default widget-string resolution.
     ///   - viewModel: Optional externally owned widget view model. By default the widget creates its own view model
     ///     for `instanceName`. Provide one when the screen should control the widget lifetime.
     ///   - widgetStrings: Explicit strings for this widget. When provided, the widget renders them from the first
@@ -258,11 +265,12 @@ extension OwnIDLoginWidget where IconButton == OwnIDIconButtonView<RoundedRectan
             instanceName: instanceName,
             viewModel: viewModel,
             widgetStrings: widgetStrings,
-            iconButton: { isBusy, isEnabled, action, accessibilityLabel in
+            iconButton: { isBusy, isEnabled, action, accessibilityLabel, icon in
                 OwnIDIconButtonView(
                     isBusy: isBusy,
                     accessibilityLabel: accessibilityLabel,
                     isEnabled: isEnabled,
+                    icon: icon,
                     action: action
                 )
             },
@@ -297,11 +305,12 @@ extension OwnIDLoginWidget {
 
     /// Returns a copy that uses a custom icon-button view.
     ///
-    /// The closure receives the busy state, enabled state, tap action, and resolved accessibility label. Custom
-    /// content should invoke the action from its primary user interaction and apply the label to the accessible control.
+    /// The closure receives the busy state, enabled state, tap action, resolved accessibility label, and suggested icon.
+    /// Custom content may ignore that icon; invoke the action from its primary interaction and apply the label to the control.
     public func iconButton<CustomIconButton: View>(
         @ViewBuilder _ customIconButton:
-            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String) -> CustomIconButton
+            @escaping (_ isBusy: Bool, _ isEnabled: Bool, _ action: @escaping () -> Void, _ accessibilityLabel: String, _ icon: Image) ->
+            CustomIconButton
     ) -> OwnIDLoginWidget<CustomIconButton, OrText> {
         .init(
             onLogin: onLogin,

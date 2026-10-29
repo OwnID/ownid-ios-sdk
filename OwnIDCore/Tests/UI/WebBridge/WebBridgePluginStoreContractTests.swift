@@ -72,8 +72,8 @@ struct WebBridgePluginStoreContractTests {
         )
         let metadataPlugin = WebBridgeMetadataPlugin(localInfo: WebBridgePluginMatrixLocalInfo(), coder: coder)
         let socialPlugin = WebBridgeSocialPlugin(
-            signInWithApple: WebBridgePluginMatrixSignInWithApple(),
-            signInWithGoogle: WebBridgePluginMatrixSignInWithGoogle(),
+            appleSignIn: WebBridgePluginMatrixAppleSignInProvider(),
+            googleSignIn: WebBridgePluginMatrixGoogleSignInProvider(),
             uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
             coder: coder,
             logger: nil
@@ -98,8 +98,8 @@ struct WebBridgePluginStoreContractTests {
         #expect(WebBridgeContextPluginImpl(context: nil).injectionData() == nil)
         #expect(
             WebBridgeSocialPlugin(
-                signInWithApple: nil,
-                signInWithGoogle: nil,
+                appleSignIn: nil,
+                googleSignIn: nil,
                 uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
                 coder: coder,
                 logger: nil
@@ -141,7 +141,7 @@ struct WebBridgePluginStoreContractTests {
                 builder.accountDisplayName = "Default WebBridge User"
             }
             .withProviders("webbridge-default-google-provider") { registrar in
-                registrar.signInWithGoogle { builder in
+                registrar.googleSignIn { builder in
                     builder.signIn { _, _ in .success(id: "google-id", idToken: "google-id-token") }
                 }
                 registrar.sessionCreate { builder in
@@ -172,7 +172,7 @@ struct WebBridgePluginStoreContractTests {
         let outerProvider = WebBridgeTestUIContextProvider(window: outerWindow)
         let googleProvider = WebBridgeDIProbeGoogleProvider()
         container.register((any UIContextProvider).self, instance: outerProvider)
-        container.register((any SignInWithGoogle).self, instance: googleProvider)
+        container.register((any GoogleSignInProvider).self, instance: googleProvider)
         let passkeyProvider: AnyObject?
         if #available(iOS 16.0, *) {
             let passkey = WebBridgeDIProbePasskey()
@@ -447,14 +447,14 @@ private final class WebBridgePluginStoreLanguageTagsProvider: LanguageTagsProvid
 }
 
 @MainActor
-private final class WebBridgeDIProbeGoogleProvider: SignInWithGoogle, @unchecked Sendable {
+private final class WebBridgeDIProbeGoogleProvider: GoogleSignInProvider, @unchecked Sendable {
     private(set) var signInWindow: UIWindow?
 
     func isAvailable(params: (any CapabilityParams)?) async -> Bool {
         true
     }
 
-    func signIn(window: UIWindow, params: SignInWithSocialParams) async -> SocialResult {
+    func signIn(window: UIWindow, params: SocialSignInParams) async -> SocialSignInResult {
         signInWindow = window
         return .success(id: "di-id", idToken: "di-id-token")
     }
@@ -488,8 +488,8 @@ struct SocialPluginAvailabilityCase: CustomStringConvertible, Sendable {
     @MainActor
     func makePlugin(coder: any JSONCoder) -> WebBridgeSocialPlugin {
         WebBridgeSocialPlugin(
-            signInWithApple: apple ? WebBridgePluginMatrixSignInWithApple() : nil,
-            signInWithGoogle: google ? WebBridgePluginMatrixSignInWithGoogle() : nil,
+            appleSignIn: apple ? WebBridgePluginMatrixAppleSignInProvider() : nil,
+            googleSignIn: google ? WebBridgePluginMatrixGoogleSignInProvider() : nil,
             uiContextProvider: WebBridgeTestUIContextProvider(window: UIWindow(frame: .zero)),
             coder: coder,
             logger: nil
@@ -519,6 +519,8 @@ private func webBridgePasskeyPluginKeyValue() -> String {
 }
 
 private final class WebBridgePluginStoreAppConfigProvider: AppConfigProvider, @unchecked Sendable {
+    var currentConfig: AppConfig? { .default }
+
     func getOrFetchConfig() async throws -> AppConfig {
         .default
     }

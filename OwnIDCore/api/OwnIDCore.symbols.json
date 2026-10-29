@@ -310,25 +310,37 @@
     },
     {
       "kind": "conformsTo",
-      "source": "s:9OwnIDCore0A5IDAPIV4AuthV",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV",
       "target": "s:s16SendableMetatypeP",
       "targetFallback": "Swift.SendableMetatype"
     },
     {
       "kind": "conformsTo",
-      "source": "s:9OwnIDCore0A5IDAPIV4AuthV",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
     {
       "kind": "conformsTo",
-      "source": "s:9OwnIDCore0A5IDAPIV6EnrollV",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV",
       "target": "s:s16SendableMetatypeP",
       "targetFallback": "Swift.SendableMetatype"
     },
     {
       "kind": "conformsTo",
-      "source": "s:9OwnIDCore0A5IDAPIV6EnrollV",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore0A5IDAPIV4AuthV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore0A5IDAPIV4AuthV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -1004,37 +1016,18 @@
     },
     {
       "kind": "conformsTo",
-      "source": "s:9OwnIDCore12SocialResultO",
+      "source": "s:9OwnIDCore12SocialSignInP",
+      "target": "s:9OwnIDCore10CapabilityP"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore12SocialSignInP",
       "target": "s:s16SendableMetatypeP",
       "targetFallback": "Swift.SendableMetatype"
     },
     {
       "kind": "conformsTo",
-      "source": "s:9OwnIDCore12SocialResultO",
-      "target": "s:s8SendableP",
-      "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore12SocialResultO5ErrorO",
-      "target": "s:10Foundation14LocalizedErrorP",
-      "targetFallback": "Foundation.LocalizedError"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore12SocialResultO5ErrorO",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore12SocialResultO5ErrorO",
-      "target": "s:s5ErrorP",
-      "targetFallback": "Swift.Error"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore12SocialResultO5ErrorO",
+      "source": "s:9OwnIDCore12SocialSignInP",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -2089,28 +2082,6 @@
     },
     {
       "kind": "conformsTo",
-      "source": "s:9OwnIDCore15SignInWithAppleP",
-      "target": "s:9OwnIDCore10CapabilityP"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore15SignInWithAppleP",
-      "target": "s:9OwnIDCore16SignInWithSocialP"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore15SignInWithAppleP",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore15SignInWithAppleP",
-      "target": "s:s8SendableP",
-      "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
       "source": "s:9OwnIDCore15SocialChallengeV",
       "target": "s:SE",
       "targetFallback": "Swift.Encodable"
@@ -2530,45 +2501,6 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore16ServerRepositoryP",
-      "target": "s:s8SendableP",
-      "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore16SignInWithGoogleP",
-      "target": "s:9OwnIDCore10CapabilityP"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore16SignInWithGoogleP",
-      "target": "s:9OwnIDCore16SignInWithSocialP"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore16SignInWithGoogleP",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore16SignInWithGoogleP",
-      "target": "s:s8SendableP",
-      "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore16SignInWithSocialP",
-      "target": "s:9OwnIDCore10CapabilityP"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore16SignInWithSocialP",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore16SignInWithSocialP",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -3203,6 +3135,59 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInParamsV",
+      "target": "s:9OwnIDCore16CapabilityParamsP"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInParamsV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInParamsV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInResultO",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInResultO",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInResultO5ErrorO",
+      "target": "s:10Foundation14LocalizedErrorP",
+      "targetFallback": "Foundation.LocalizedError"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInResultO5ErrorO",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInResultO5ErrorO",
+      "target": "s:s5ErrorP",
+      "targetFallback": "Swift.Error"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore18SocialSignInResultO5ErrorO",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:9OwnIDCore18VerificationMethodO",
       "target": "s:SE",
       "targetFallback": "Swift.Encodable"
@@ -3270,6 +3255,28 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore18WebBridgePluginKeyV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore19AppleSignInProviderP",
+      "target": "s:9OwnIDCore10CapabilityP"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore19AppleSignInProviderP",
+      "target": "s:9OwnIDCore12SocialSignInP"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore19AppleSignInProviderP",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore19AppleSignInProviderP",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -3532,6 +3539,28 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore20ErrorStringsProviderP",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore20GoogleSignInProviderP",
+      "target": "s:9OwnIDCore10CapabilityP"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore20GoogleSignInProviderP",
+      "target": "s:9OwnIDCore12SocialSignInP"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore20GoogleSignInProviderP",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:9OwnIDCore20GoogleSignInProviderP",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -4356,23 +4385,6 @@
     {
       "kind": "conformsTo",
       "source": "s:9OwnIDCore22PasskeyEnrollOperationP",
-      "target": "s:s8SendableP",
-      "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV",
-      "target": "s:9OwnIDCore16CapabilityParamsP"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -7917,12 +7929,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore0A11IDOperationV11SocialLoginV15signInWithAppleAA14OperationEntry_pAA04SignghiJ7FailureO0M0AaGPRts_AA0lghiJ6ParamsVSg0N0AKRtsAA011AccessTokenH8UserInfoV7SuccessAKRtsXPvp",
+      "source": "s:9OwnIDCore0A11IDOperationV11SocialLoginV11appleSignInAA14OperationEntry_pAA0gh9WithAppleI7FailureO0M0AaGPRts_AA0ghklI6ParamsVSg0N0AKRtsAA011AccessTokenK8UserInfoV7SuccessAKRtsXPvp",
       "target": "s:9OwnIDCore0A11IDOperationV11SocialLoginV"
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore0A11IDOperationV11SocialLoginV16signInWithGoogleAA14OperationEntry_pAA04SignghiJ7FailureO0M0AaGPRts_AA0lghiJ6ParamsVSg0N0AKRtsAA011AccessTokenH8UserInfoV7SuccessAKRtsXPvp",
+      "source": "s:9OwnIDCore0A11IDOperationV11SocialLoginV12googleSignInAA14OperationEntry_pAA0gh10WithGoogleI7FailureO0M0AaGPRts_AA0ghklI6ParamsVSg0N0AKRtsAA011AccessTokenK8UserInfoV7SuccessAKRtsXPvp",
       "target": "s:9OwnIDCore0A11IDOperationV11SocialLoginV"
     },
     {
@@ -8064,12 +8076,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV13sessionCreateyyyAA07SessionF7BuilderVzXEF",
+      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV12googleSignInyyyAA06GooglefG15ProviderBuilderVzXEF",
       "target": "s:9OwnIDCore0A20IDProvidersRegistrarV"
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV16signInWithGoogleyyyAA04SignfgH7BuilderVzXEF",
+      "source": "s:9OwnIDCore0A20IDProvidersRegistrarV13sessionCreateyyyAA07SessionF7BuilderVzXEF",
       "target": "s:9OwnIDCore0A20IDProvidersRegistrarV"
     },
     {
@@ -8219,12 +8231,52 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5emailAA8APIEntryVyAA26EmailVerificationAPIParamsVSgAA0gH13APIController_pAA0gH15StartAPIFailureOGvp",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV",
       "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5phoneAA8APIEntryVyAA26PhoneVerificationAPIParamsVSgAA0gH13APIController_pAA0gH15StartAPIFailureOGvp",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV5start6paramsAA9APIResultOyAA0E25VerificationAPIController_pAA0eI15StartAPIFailureOGAA0eI9APIParamsVSg_tYaF",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV5startAA9APIResultOyAA0E25VerificationAPIController_pAA0eH15StartAPIFailureOGyYaF",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV6enrollAA8APIEntryVyAA0E15EnrollAPIParamsVytAA0eH10APIFailureOGvp",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV5start6paramsAA9APIResultOyAA0E25VerificationAPIController_pAA0eI15StartAPIFailureOGAA0eI9APIParamsVSg_tYaF",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV5startAA9APIResultOyAA0E25VerificationAPIController_pAA0eH15StartAPIFailureOGyYaF",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV6enrollAA8APIEntryVyAA0E15EnrollAPIParamsVytAA0eH10APIFailureOGvp",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5emailAE5EmailVvp",
+      "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV13VerificationsV5phoneAE5PhoneVvp",
       "target": "s:9OwnIDCore0A5IDAPIV13VerificationsV"
     },
     {
@@ -8259,37 +8311,17 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore0A5IDAPIV6EnrollV",
-      "target": "s:9OwnIDCore0A5IDAPIV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore0A5IDAPIV6EnrollV5emailAA8APIEntryVyAA05EmailD9APIParamsVytAA0gD10APIFailureOGvp",
-      "target": "s:9OwnIDCore0A5IDAPIV6EnrollV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore0A5IDAPIV6EnrollV5phoneAA8APIEntryVyAA05PhoneD9APIParamsVytAA0gD10APIFailureOGvp",
-      "target": "s:9OwnIDCore0A5IDAPIV6EnrollV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore0A5IDAPIV6EnrollV7passkeyAA8APIEntryVyAA07PasskeyD9APIParamsVytAA0gD10APIFailureOGvp",
-      "target": "s:9OwnIDCore0A5IDAPIV6EnrollV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore0A5IDAPIV6enrollAC6EnrollVvp",
-      "target": "s:9OwnIDCore0A5IDAPIV"
-    },
-    {
-      "kind": "memberOf",
       "source": "s:9OwnIDCore0A5IDAPIV8PasskeysV",
       "target": "s:9OwnIDCore0A5IDAPIV"
     },
     {
       "kind": "memberOf",
       "source": "s:9OwnIDCore0A5IDAPIV8PasskeysV11attestationAA8APIEntryVyAA27PasskeyAttestationAPIParamsVSgAA0gH13APIController_pAA0gH15StartAPIFailureOGvp",
+      "target": "s:9OwnIDCore0A5IDAPIV8PasskeysV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore0A5IDAPIV8PasskeysV6enrollAA8APIEntryVyAA22PasskeyEnrollAPIParamsVytAA0gH10APIFailureOGvp",
       "target": "s:9OwnIDCore0A5IDAPIV8PasskeysV"
     },
     {
@@ -9021,40 +9053,6 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore12SocialResultO4failyA2C5ErrorO_tcACmF",
-      "target": "s:9OwnIDCore12SocialResultO"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore12SocialResultO5ErrorO",
-      "target": "s:9OwnIDCore12SocialResultO"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore12SocialResultO5ErrorO16errorDescriptionSSSgvp",
-      "sourceOrigin": {
-        "displayName": "LocalizedError.errorDescription",
-        "identifier": "s:10Foundation14LocalizedErrorP16errorDescriptionSSSgvp"
-      },
-      "target": "s:9OwnIDCore12SocialResultO5ErrorO"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore12SocialResultO5ErrorO7generalyAESS_sAD_pSgtcAEmF",
-      "target": "s:9OwnIDCore12SocialResultO5ErrorO"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore12SocialResultO7successyACSS_SStcACmF",
-      "target": "s:9OwnIDCore12SocialResultO"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore12SocialResultO8canceledyAcA6ReasonO_tcACmF",
-      "target": "s:9OwnIDCore12SocialResultO"
-    },
-    {
-      "kind": "memberOf",
       "source": "s:9OwnIDCore13LoginResponseO11descriptionSSvp",
       "sourceOrigin": {
         "displayName": "CustomStringConvertible.description",
@@ -9322,6 +9320,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore13OperationTypeO17idDocVerificationyA2CmF",
+      "target": "s:9OwnIDCore13OperationTypeO"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore13OperationTypeO17passkeyEnrollmentyA2CmF",
       "target": "s:9OwnIDCore13OperationTypeO"
     },
@@ -9469,11 +9472,6 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore13TransportTypeO5cableyA2CmF",
-      "target": "s:9OwnIDCore13TransportTypeO"
-    },
-    {
-      "kind": "memberOf",
       "source": "s:9OwnIDCore13TransportTypeO6hybridyA2CmF",
       "target": "s:9OwnIDCore13TransportTypeO"
     },
@@ -9489,11 +9487,6 @@
         "displayName": "RawRepresentable.init(rawValue:)",
         "identifier": "s:SY8rawValuexSg03RawB0Qz_tcfc"
       },
-      "target": "s:9OwnIDCore13TransportTypeO"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore13TransportTypeO9smartCardyA2CmF",
       "target": "s:9OwnIDCore13TransportTypeO"
     },
     {
@@ -11100,6 +11093,55 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInParamsV5nonceSSSgvp",
+      "target": "s:9OwnIDCore18SocialSignInParamsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInParamsV8clientID5nonceACSS_SSSgtcfc",
+      "target": "s:9OwnIDCore18SocialSignInParamsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInParamsV8clientIDSSvp",
+      "target": "s:9OwnIDCore18SocialSignInParamsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInResultO4failyA2C5ErrorO_tcACmF",
+      "target": "s:9OwnIDCore18SocialSignInResultO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInResultO5ErrorO",
+      "target": "s:9OwnIDCore18SocialSignInResultO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInResultO5ErrorO16errorDescriptionSSSgvp",
+      "sourceOrigin": {
+        "displayName": "LocalizedError.errorDescription",
+        "identifier": "s:10Foundation14LocalizedErrorP16errorDescriptionSSSgvp"
+      },
+      "target": "s:9OwnIDCore18SocialSignInResultO5ErrorO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInResultO5ErrorO7generalyAESS_sAD_pSgtcAEmF",
+      "target": "s:9OwnIDCore18SocialSignInResultO5ErrorO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInResultO7successyACSS_SStcACmF",
+      "target": "s:9OwnIDCore18SocialSignInResultO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore18SocialSignInResultO8canceledyAcA6ReasonO_tcACmF",
+      "target": "s:9OwnIDCore18SocialSignInResultO"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore18VerificationMethodO3otpyA2CmF",
       "target": "s:9OwnIDCore18VerificationMethodO"
     },
@@ -11715,7 +11757,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore21LoginIDCollectStringsV7default12loginIDTypes19isSystemFidoCapableACSayAA0C6IDTypeOG_SbtFZ",
+      "source": "s:9OwnIDCore21LoginIDCollectStringsV7default12loginIDTypes19isSystemFidoCapable0I7TouchIDACSayAA0C6IDTypeOG_S2btFZ",
       "target": "s:9OwnIDCore21LoginIDCollectStringsV"
     },
     {
@@ -12331,21 +12373,6 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV5nonceSSSgvp",
-      "target": "s:9OwnIDCore22SignInWithSocialParamsV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV8clientID5nonceACSS_SSSgtcfc",
-      "target": "s:9OwnIDCore22SignInWithSocialParamsV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore22SignInWithSocialParamsV8clientIDSSvp",
-      "target": "s:9OwnIDCore22SignInWithSocialParamsV"
-    },
-    {
-      "kind": "memberOf",
       "source": "s:9OwnIDCore22WebBridgePluginMessageV11isMainFrameSbvp",
       "target": "s:9OwnIDCore22WebBridgePluginMessageV"
     },
@@ -12610,26 +12637,6 @@
       "kind": "memberOf",
       "source": "s:9OwnIDCore23PasskeyEnrollAPIFailureO9forbiddenyAcA9ErrorCodeO_SStcACmF",
       "target": "s:9OwnIDCore23PasskeyEnrollAPIFailureO"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore23SignInWithGoogleBuilderV04signD0yyAA12SocialResultOSo8UIWindowC_AA0cdeI6ParamsVtYaYbScMYccF",
-      "target": "s:9OwnIDCore23SignInWithGoogleBuilderV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore23SignInWithGoogleBuilderV11isAvailableyySbAA0cdE12SocialParamsVYaYbcF",
-      "target": "s:9OwnIDCore23SignInWithGoogleBuilderV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore23SignInWithGoogleBuilderV6cancelyyyyYbScMYccF",
-      "target": "s:9OwnIDCore23SignInWithGoogleBuilderV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:9OwnIDCore23SignInWithGoogleBuilderV7signOutyyyyYbScMYccF",
-      "target": "s:9OwnIDCore23SignInWithGoogleBuilderV"
     },
     {
       "kind": "memberOf",
@@ -13116,6 +13123,26 @@
       "kind": "memberOf",
       "source": "s:9OwnIDCore26PhoneVerificationAPIParamsV7loginIDAA05LoginG0VSgvp",
       "target": "s:9OwnIDCore26PhoneVerificationAPIParamsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore27GoogleSignInProviderBuilderV04signE0yyAA06SocialdE6ResultOSo8UIWindowC_AA0idE6ParamsVtYaYbScMYccF",
+      "target": "s:9OwnIDCore27GoogleSignInProviderBuilderV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore27GoogleSignInProviderBuilderV11isAvailableyySbAA06SocialdE6ParamsVYaYbcF",
+      "target": "s:9OwnIDCore27GoogleSignInProviderBuilderV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore27GoogleSignInProviderBuilderV6cancelyyyyYbScMYccF",
+      "target": "s:9OwnIDCore27GoogleSignInProviderBuilderV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:9OwnIDCore27GoogleSignInProviderBuilderV7signOutyyyyYbScMYccF",
+      "target": "s:9OwnIDCore27GoogleSignInProviderBuilderV"
     },
     {
       "kind": "memberOf",
@@ -16640,6 +16667,16 @@
     },
     {
       "kind": "requirementOf",
+      "source": "s:9OwnIDCore12SocialSignInP04signE06window6paramsAA0cdE6ResultOSo8UIWindowC_AA0cdE6ParamsVtYaF",
+      "target": "s:9OwnIDCore12SocialSignInP"
+    },
+    {
+      "kind": "requirementOf",
+      "source": "s:9OwnIDCore12SocialSignInP6cancelyyF",
+      "target": "s:9OwnIDCore12SocialSignInP"
+    },
+    {
+      "kind": "requirementOf",
       "source": "s:9OwnIDCore13LoginResponseO9NoSessionP6reasonSSSgvp",
       "target": "s:9OwnIDCore13LoginResponseO9NoSessionP"
     },
@@ -16815,21 +16852,6 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore16SignInWithGoogleP7signOutyyF",
-      "target": "s:9OwnIDCore16SignInWithGoogleP"
-    },
-    {
-      "kind": "requirementOf",
-      "source": "s:9OwnIDCore16SignInWithSocialP04signD06window6paramsAA0F6ResultOSo8UIWindowC_AA0cdeF6ParamsVtYaF",
-      "target": "s:9OwnIDCore16SignInWithSocialP"
-    },
-    {
-      "kind": "requirementOf",
-      "source": "s:9OwnIDCore16SignInWithSocialP6cancelyyF",
-      "target": "s:9OwnIDCore16SignInWithSocialP"
-    },
-    {
-      "kind": "requirementOf",
       "source": "s:9OwnIDCore17OIDCAPIControllerP16completeWithCode4codeAA9APIResultOyAA011AccessTokenE8UserInfoVAA22OIDCCompleteAPIFailureOGSS_tYaF",
       "target": "s:9OwnIDCore17OIDCAPIControllerP"
     },
@@ -16865,7 +16887,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
+      "source": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonceAA06SocialcD6ResultOSS_SSSgtYaF",
       "target": "s:9OwnIDCore17SignInWithAppleUIP"
     },
     {
@@ -16900,7 +16922,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
+      "source": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonceAA06SocialcD6ResultOSS_SSSgtYaF",
       "target": "s:9OwnIDCore18SignInWithGoogleUIP"
     },
     {
@@ -16992,6 +17014,11 @@
       "kind": "requirementOf",
       "source": "s:9OwnIDCore20EmailVerificationAPIP5start6paramsAA9APIResultOyAA0cD13APIController_pAA0cD15StartAPIFailureOGAA0cD9APIParamsVSg_tYaF",
       "target": "s:9OwnIDCore20EmailVerificationAPIP"
+    },
+    {
+      "kind": "requirementOf",
+      "source": "s:9OwnIDCore20GoogleSignInProviderP7signOutyyF",
+      "target": "s:9OwnIDCore20GoogleSignInProviderP"
     },
     {
       "kind": "requirementOf",
@@ -17130,11 +17157,6 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore30EmailVerificationAPIControllerP16completeWithCode4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
-      "target": "s:9OwnIDCore30EmailVerificationAPIControllerP"
-    },
-    {
-      "kind": "requirementOf",
       "source": "s:9OwnIDCore30EmailVerificationAPIControllerP6cancel6reasonAA9APIResultOyytAA0cD16CancelAPIFailureOGAA6ReasonO_tYaF",
       "target": "s:9OwnIDCore30EmailVerificationAPIControllerP"
     },
@@ -17145,13 +17167,13 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore30EmailVerificationAPIControllerP9challengeAA0D9ChallengeVvp",
+      "source": "s:9OwnIDCore30EmailVerificationAPIControllerP8complete4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
       "target": "s:9OwnIDCore30EmailVerificationAPIControllerP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore30PhoneVerificationAPIControllerP16completeWithCode4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
-      "target": "s:9OwnIDCore30PhoneVerificationAPIControllerP"
+      "source": "s:9OwnIDCore30EmailVerificationAPIControllerP9challengeAA0D9ChallengeVvp",
+      "target": "s:9OwnIDCore30EmailVerificationAPIControllerP"
     },
     {
       "kind": "requirementOf",
@@ -17161,6 +17183,11 @@
     {
       "kind": "requirementOf",
       "source": "s:9OwnIDCore30PhoneVerificationAPIControllerP6resendAA9APIResultOyytAA0cD16ResendAPIFailureOGyYaF",
+      "target": "s:9OwnIDCore30PhoneVerificationAPIControllerP"
+    },
+    {
+      "kind": "requirementOf",
+      "source": "s:9OwnIDCore30PhoneVerificationAPIControllerP8complete4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
       "target": "s:9OwnIDCore30PhoneVerificationAPIControllerP"
     },
     {
@@ -17315,6 +17342,11 @@
     },
     {
       "kind": "requirementOf",
+      "source": "s:9OwnIDCore9LocalInfoP12biometryTypeSo010LABiometryF0Vvp",
+      "target": "s:9OwnIDCore9LocalInfoP"
+    },
+    {
+      "kind": "requirementOf",
       "source": "s:9OwnIDCore9LocalInfoP12isDebuggableSbvp",
       "target": "s:9OwnIDCore9LocalInfoP"
     },
@@ -17325,7 +17357,22 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore9LocalInfoP15isDeviceSecuredSbvp",
+      "source": "s:9OwnIDCore9LocalInfoP13isPasscodeSetSbSgvp",
+      "target": "s:9OwnIDCore9LocalInfoP"
+    },
+    {
+      "kind": "requirementOf",
+      "source": "s:9OwnIDCore9LocalInfoP16isBiometryUsableSbvp",
+      "target": "s:9OwnIDCore9LocalInfoP"
+    },
+    {
+      "kind": "requirementOf",
+      "source": "s:9OwnIDCore9LocalInfoP18isBiometryEnrolledSbSgvp",
+      "target": "s:9OwnIDCore9LocalInfoP"
+    },
+    {
+      "kind": "requirementOf",
+      "source": "s:9OwnIDCore9LocalInfoP19isBiometryLockedOutSbSgvp",
       "target": "s:9OwnIDCore9LocalInfoP"
     },
     {
@@ -17335,17 +17382,12 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore9LocalInfoP21isFaceHardwarePresentSbvp",
+      "source": "s:9OwnIDCore9LocalInfoP21biometryLocalizedNameSSSgvp",
       "target": "s:9OwnIDCore9LocalInfoP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore9LocalInfoP24isStrongBiometricEnabledSbvp",
-      "target": "s:9OwnIDCore9LocalInfoP"
-    },
-    {
-      "kind": "requirementOf",
-      "source": "s:9OwnIDCore9LocalInfoP28isFingerprintHardwarePresentSbvp",
+      "source": "s:9OwnIDCore9LocalInfoP22biometryIconSystemNameSSSgvp",
       "target": "s:9OwnIDCore9LocalInfoP"
     },
     {
@@ -18448,7 +18490,7 @@
         },
         {
           "kind": "identifier",
-          "spelling": "signInWithApple"
+          "spelling": "appleSignIn"
         },
         {
           "kind": "text",
@@ -18495,10 +18537,10 @@
       "path": [
         "OwnIDOperation",
         "SocialLogin",
-        "signInWithApple"
+        "appleSignIn"
       ],
-      "precise": "s:9OwnIDCore0A11IDOperationV11SocialLoginV15signInWithAppleAA14OperationEntry_pAA04SignghiJ7FailureO0M0AaGPRts_AA0lghiJ6ParamsVSg0N0AKRtsAA011AccessTokenH8UserInfoV7SuccessAKRtsXPvp",
-      "title": "signInWithApple"
+      "precise": "s:9OwnIDCore0A11IDOperationV11SocialLoginV11appleSignInAA14OperationEntry_pAA0gh9WithAppleI7FailureO0M0AaGPRts_AA0ghklI6ParamsVSg0N0AKRtsAA011AccessTokenK8UserInfoV7SuccessAKRtsXPvp",
+      "title": "appleSignIn"
     },
     {
       "access": "public",
@@ -18513,7 +18555,7 @@
         },
         {
           "kind": "identifier",
-          "spelling": "signInWithGoogle"
+          "spelling": "googleSignIn"
         },
         {
           "kind": "text",
@@ -18560,10 +18602,10 @@
       "path": [
         "OwnIDOperation",
         "SocialLogin",
-        "signInWithGoogle"
+        "googleSignIn"
       ],
-      "precise": "s:9OwnIDCore0A11IDOperationV11SocialLoginV16signInWithGoogleAA14OperationEntry_pAA04SignghiJ7FailureO0M0AaGPRts_AA0lghiJ6ParamsVSg0N0AKRtsAA011AccessTokenH8UserInfoV7SuccessAKRtsXPvp",
-      "title": "signInWithGoogle"
+      "precise": "s:9OwnIDCore0A11IDOperationV11SocialLoginV12googleSignInAA14OperationEntry_pAA0gh10WithGoogleI7FailureO0M0AaGPRts_AA0ghklI6ParamsVSg0N0AKRtsAA011AccessTokenK8UserInfoV7SuccessAKRtsXPvp",
+      "title": "googleSignIn"
     },
     {
       "access": "public",
@@ -20638,6 +20680,129 @@
         },
         {
           "kind": "identifier",
+          "spelling": "googleSignIn"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "block"
+        },
+        {
+          "kind": "text",
+          "spelling": ": ("
+        },
+        {
+          "kind": "keyword",
+          "spelling": "inout"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore27GoogleSignInProviderBuilderV",
+          "spelling": "GoogleSignInProviderBuilder"
+        },
+        {
+          "kind": "text",
+          "spelling": ") -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s4Voida",
+          "spelling": "Void"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "block"
+              },
+              {
+                "kind": "text",
+                "spelling": ": ("
+              },
+              {
+                "kind": "keyword",
+                "spelling": "inout"
+              },
+              {
+                "kind": "text",
+                "spelling": " "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore27GoogleSignInProviderBuilderV",
+                "spelling": "GoogleSignInProviderBuilder"
+              },
+              {
+                "kind": "text",
+                "spelling": ") -> "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:s4Voida",
+                "spelling": "Void"
+              }
+            ],
+            "name": "block"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDProvidersRegistrar",
+        "googleSignIn(_:)"
+      ],
+      "precise": "s:9OwnIDCore0A20IDProvidersRegistrarV12googleSignInyyyAA06GooglefG15ProviderBuilderVzXEF",
+      "title": "googleSignIn(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
           "spelling": "sessionCreate"
         },
         {
@@ -20739,129 +20904,6 @@
       ],
       "precise": "s:9OwnIDCore0A20IDProvidersRegistrarV13sessionCreateyyyAA07SessionF7BuilderVzXEF",
       "title": "sessionCreate(_:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "mutating"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "signInWithGoogle"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "_"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "block"
-        },
-        {
-          "kind": "text",
-          "spelling": ": ("
-        },
-        {
-          "kind": "keyword",
-          "spelling": "inout"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore23SignInWithGoogleBuilderV",
-          "spelling": "SignInWithGoogleBuilder"
-        },
-        {
-          "kind": "text",
-          "spelling": ") -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s4Voida",
-          "spelling": "Void"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "block"
-              },
-              {
-                "kind": "text",
-                "spelling": ": ("
-              },
-              {
-                "kind": "keyword",
-                "spelling": "inout"
-              },
-              {
-                "kind": "text",
-                "spelling": " "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:9OwnIDCore23SignInWithGoogleBuilderV",
-                "spelling": "SignInWithGoogleBuilder"
-              },
-              {
-                "kind": "text",
-                "spelling": ") -> "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:s4Voida",
-                "spelling": "Void"
-              }
-            ],
-            "name": "block"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "text",
-            "spelling": "()"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "OwnIDProvidersRegistrar",
-        "signInWithGoogle(_:)"
-      ],
-      "precise": "s:9OwnIDCore0A20IDProvidersRegistrarV16signInWithGoogleyyyAA04SignfgH7BuilderVzXEF",
-      "title": "signInWithGoogle(_:)"
     },
     {
       "access": "public",
@@ -23615,7 +23657,7 @@
       "declaration": [
         {
           "kind": "keyword",
-          "spelling": "let"
+          "spelling": "struct"
         },
         {
           "kind": "text",
@@ -23623,20 +23665,44 @@
         },
         {
           "kind": "identifier",
-          "spelling": "email"
+          "spelling": "Email"
+        }
+      ],
+      "kind": "swift.struct",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Email"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV",
+      "title": "OwnIDAPI.Verifications.Email"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "start"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "params"
         },
         {
           "kind": "text",
           "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
-          "spelling": "APIEntry"
-        },
-        {
-          "kind": "text",
-          "spelling": "<"
         },
         {
           "kind": "typeIdentifier",
@@ -23645,7 +23711,24 @@
         },
         {
           "kind": "text",
-          "spelling": "?, any "
+          "spelling": "?) "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+          "spelling": "APIResult"
+        },
+        {
+          "kind": "text",
+          "spelling": "<any "
         },
         {
           "kind": "typeIdentifier",
@@ -23666,13 +23749,607 @@
           "spelling": ">"
         }
       ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "params"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore26EmailVerificationAPIParamsV",
+                "spelling": "EmailVerificationAPIParams"
+              },
+              {
+                "kind": "text",
+                "spelling": "?"
+              }
+            ],
+            "name": "params"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+            "spelling": "APIResult"
+          },
+          {
+            "kind": "text",
+            "spelling": "<any "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore30EmailVerificationAPIControllerP",
+            "spelling": "EmailVerificationAPIController"
+          },
+          {
+            "kind": "text",
+            "spelling": ", "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore32EmailVerificationStartAPIFailureO",
+            "spelling": "EmailVerificationStartAPIFailure"
+          },
+          {
+            "kind": "text",
+            "spelling": ">"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Email",
+        "start(params:)"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV5start6paramsAA9APIResultOyAA0E25VerificationAPIController_pAA0eI15StartAPIFailureOGAA0eI9APIParamsVSg_tYaF",
+      "title": "start(params:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "start"
+        },
+        {
+          "kind": "text",
+          "spelling": "() "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+          "spelling": "APIResult"
+        },
+        {
+          "kind": "text",
+          "spelling": "<any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore30EmailVerificationAPIControllerP",
+          "spelling": "EmailVerificationAPIController"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore32EmailVerificationStartAPIFailureO",
+          "spelling": "EmailVerificationStartAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "functionSignature": {
+        "returns": [
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+            "spelling": "APIResult"
+          },
+          {
+            "kind": "text",
+            "spelling": "<any "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore30EmailVerificationAPIControllerP",
+            "spelling": "EmailVerificationAPIController"
+          },
+          {
+            "kind": "text",
+            "spelling": ", "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore32EmailVerificationStartAPIFailureO",
+            "spelling": "EmailVerificationStartAPIFailure"
+          },
+          {
+            "kind": "text",
+            "spelling": ">"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Email",
+        "start()"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV5startAA9APIResultOyAA0E25VerificationAPIController_pAA0eH15StartAPIFailureOGyYaF",
+      "title": "start()"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "enroll"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
+          "spelling": "APIEntry"
+        },
+        {
+          "kind": "text",
+          "spelling": "<"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore20EmailEnrollAPIParamsV",
+          "spelling": "EmailEnrollAPIParams"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s4Voida",
+          "spelling": "Void"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21EmailEnrollAPIFailureO",
+          "spelling": "EmailEnrollAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Email",
+        "enroll"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV6enrollAA8APIEntryVyAA0E15EnrollAPIParamsVytAA0eH10APIFailureOGvp",
+      "title": "enroll"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "struct"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "Phone"
+        }
+      ],
+      "kind": "swift.struct",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Phone"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV",
+      "title": "OwnIDAPI.Verifications.Phone"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "start"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "params"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore26PhoneVerificationAPIParamsV",
+          "spelling": "PhoneVerificationAPIParams"
+        },
+        {
+          "kind": "text",
+          "spelling": "?) "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+          "spelling": "APIResult"
+        },
+        {
+          "kind": "text",
+          "spelling": "<any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore30PhoneVerificationAPIControllerP",
+          "spelling": "PhoneVerificationAPIController"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore32PhoneVerificationStartAPIFailureO",
+          "spelling": "PhoneVerificationStartAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "params"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore26PhoneVerificationAPIParamsV",
+                "spelling": "PhoneVerificationAPIParams"
+              },
+              {
+                "kind": "text",
+                "spelling": "?"
+              }
+            ],
+            "name": "params"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+            "spelling": "APIResult"
+          },
+          {
+            "kind": "text",
+            "spelling": "<any "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore30PhoneVerificationAPIControllerP",
+            "spelling": "PhoneVerificationAPIController"
+          },
+          {
+            "kind": "text",
+            "spelling": ", "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore32PhoneVerificationStartAPIFailureO",
+            "spelling": "PhoneVerificationStartAPIFailure"
+          },
+          {
+            "kind": "text",
+            "spelling": ">"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Phone",
+        "start(params:)"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV5start6paramsAA9APIResultOyAA0E25VerificationAPIController_pAA0eI15StartAPIFailureOGAA0eI9APIParamsVSg_tYaF",
+      "title": "start(params:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "start"
+        },
+        {
+          "kind": "text",
+          "spelling": "() "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+          "spelling": "APIResult"
+        },
+        {
+          "kind": "text",
+          "spelling": "<any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore30PhoneVerificationAPIControllerP",
+          "spelling": "PhoneVerificationAPIController"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore32PhoneVerificationStartAPIFailureO",
+          "spelling": "PhoneVerificationStartAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "functionSignature": {
+        "returns": [
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+            "spelling": "APIResult"
+          },
+          {
+            "kind": "text",
+            "spelling": "<any "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore30PhoneVerificationAPIControllerP",
+            "spelling": "PhoneVerificationAPIController"
+          },
+          {
+            "kind": "text",
+            "spelling": ", "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore32PhoneVerificationStartAPIFailureO",
+            "spelling": "PhoneVerificationStartAPIFailure"
+          },
+          {
+            "kind": "text",
+            "spelling": ">"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Phone",
+        "start()"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV5startAA9APIResultOyAA0E25VerificationAPIController_pAA0eH15StartAPIFailureOGyYaF",
+      "title": "start()"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "enroll"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
+          "spelling": "APIEntry"
+        },
+        {
+          "kind": "text",
+          "spelling": "<"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore20PhoneEnrollAPIParamsV",
+          "spelling": "PhoneEnrollAPIParams"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s4Voida",
+          "spelling": "Void"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore21PhoneEnrollAPIFailureO",
+          "spelling": "PhoneEnrollAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "OwnIDAPI",
+        "Verifications",
+        "Phone",
+        "enroll"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV6enrollAA8APIEntryVyAA0E15EnrollAPIParamsVytAA0eH10APIFailureOGvp",
+      "title": "enroll"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "email"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV",
+          "spelling": "OwnIDAPI"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV13VerificationsV",
+          "spelling": "Verifications"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV13VerificationsV5EmailV",
+          "spelling": "Email"
+        }
+      ],
       "kind": "swift.property",
       "path": [
         "OwnIDAPI",
         "Verifications",
         "email"
       ],
-      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5emailAA8APIEntryVyAA26EmailVerificationAPIParamsVSgAA0gH13APIController_pAA0gH15StartAPIFailureOGvp",
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5emailAE5EmailVvp",
       "title": "email"
     },
     {
@@ -23696,39 +24373,26 @@
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
-          "spelling": "APIEntry"
+          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV",
+          "spelling": "OwnIDAPI"
         },
         {
           "kind": "text",
-          "spelling": "<"
+          "spelling": "."
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore26PhoneVerificationAPIParamsV",
-          "spelling": "PhoneVerificationAPIParams"
+          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV13VerificationsV",
+          "spelling": "Verifications"
         },
         {
           "kind": "text",
-          "spelling": "?, any "
+          "spelling": "."
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore30PhoneVerificationAPIControllerP",
-          "spelling": "PhoneVerificationAPIController"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore32PhoneVerificationStartAPIFailureO",
-          "spelling": "PhoneVerificationStartAPIFailure"
-        },
-        {
-          "kind": "text",
-          "spelling": ">"
+          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV13VerificationsV5PhoneV",
+          "spelling": "Phone"
         }
       ],
       "kind": "swift.property",
@@ -23737,7 +24401,7 @@
         "Verifications",
         "phone"
       ],
-      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5phoneAA8APIEntryVyAA26PhoneVerificationAPIParamsVSgAA0gH13APIController_pAA0gH15StartAPIFailureOGvp",
+      "precise": "s:9OwnIDCore0A5IDAPIV13VerificationsV5phoneAE5PhoneVvp",
       "title": "phone"
     },
     {
@@ -24059,271 +24723,6 @@
         },
         {
           "kind": "identifier",
-          "spelling": "Enroll"
-        }
-      ],
-      "kind": "swift.struct",
-      "path": [
-        "OwnIDAPI",
-        "Enroll"
-      ],
-      "precise": "s:9OwnIDCore0A5IDAPIV6EnrollV",
-      "swiftExtension": {
-        "extendedModule": "OwnIDCore",
-        "typeKind": "swift.struct"
-      },
-      "title": "OwnIDAPI.Enroll"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "let"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "email"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
-          "spelling": "APIEntry"
-        },
-        {
-          "kind": "text",
-          "spelling": "<"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore20EmailEnrollAPIParamsV",
-          "spelling": "EmailEnrollAPIParams"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s4Voida",
-          "spelling": "Void"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore21EmailEnrollAPIFailureO",
-          "spelling": "EmailEnrollAPIFailure"
-        },
-        {
-          "kind": "text",
-          "spelling": ">"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "OwnIDAPI",
-        "Enroll",
-        "email"
-      ],
-      "precise": "s:9OwnIDCore0A5IDAPIV6EnrollV5emailAA8APIEntryVyAA05EmailD9APIParamsVytAA0gD10APIFailureOGvp",
-      "title": "email"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "let"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "phone"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
-          "spelling": "APIEntry"
-        },
-        {
-          "kind": "text",
-          "spelling": "<"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore20PhoneEnrollAPIParamsV",
-          "spelling": "PhoneEnrollAPIParams"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s4Voida",
-          "spelling": "Void"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore21PhoneEnrollAPIFailureO",
-          "spelling": "PhoneEnrollAPIFailure"
-        },
-        {
-          "kind": "text",
-          "spelling": ">"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "OwnIDAPI",
-        "Enroll",
-        "phone"
-      ],
-      "precise": "s:9OwnIDCore0A5IDAPIV6EnrollV5phoneAA8APIEntryVyAA05PhoneD9APIParamsVytAA0gD10APIFailureOGvp",
-      "title": "phone"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "let"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "passkey"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
-          "spelling": "APIEntry"
-        },
-        {
-          "kind": "text",
-          "spelling": "<"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore22PasskeyEnrollAPIParamsV",
-          "spelling": "PasskeyEnrollAPIParams"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s4Voida",
-          "spelling": "Void"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore23PasskeyEnrollAPIFailureO",
-          "spelling": "PasskeyEnrollAPIFailure"
-        },
-        {
-          "kind": "text",
-          "spelling": ">"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "OwnIDAPI",
-        "Enroll",
-        "passkey"
-      ],
-      "precise": "s:9OwnIDCore0A5IDAPIV6EnrollV7passkeyAA8APIEntryVyAA07PasskeyD9APIParamsVytAA0gD10APIFailureOGvp",
-      "title": "passkey"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "let"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "enroll"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV",
-          "spelling": "OwnIDAPI"
-        },
-        {
-          "kind": "text",
-          "spelling": "."
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore0A5IDAPIV6EnrollV",
-          "spelling": "Enroll"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "OwnIDAPI",
-        "enroll"
-      ],
-      "precise": "s:9OwnIDCore0A5IDAPIV6enrollAC6EnrollVvp",
-      "title": "enroll"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "struct"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
           "spelling": "Passkeys"
         }
       ],
@@ -24403,6 +24802,71 @@
       ],
       "precise": "s:9OwnIDCore0A5IDAPIV8PasskeysV11attestationAA8APIEntryVyAA27PasskeyAttestationAPIParamsVSgAA0gH13APIController_pAA0gH15StartAPIFailureOGvp",
       "title": "attestation"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "enroll"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore8APIEntryV",
+          "spelling": "APIEntry"
+        },
+        {
+          "kind": "text",
+          "spelling": "<"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore22PasskeyEnrollAPIParamsV",
+          "spelling": "PasskeyEnrollAPIParams"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s4Voida",
+          "spelling": "Void"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore23PasskeyEnrollAPIFailureO",
+          "spelling": "PasskeyEnrollAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "OwnIDAPI",
+        "Passkeys",
+        "enroll"
+      ],
+      "precise": "s:9OwnIDCore0A5IDAPIV8PasskeysV6enrollAA8APIEntryVyAA22PasskeyEnrollAPIParamsVytAA0gH10APIFailureOGvp",
+      "title": "enroll"
     },
     {
       "access": "public",
@@ -33954,7 +34418,7 @@
       "declaration": [
         {
           "kind": "keyword",
-          "spelling": "enum"
+          "spelling": "protocol"
         },
         {
           "kind": "text",
@@ -33962,22 +34426,53 @@
         },
         {
           "kind": "identifier",
-          "spelling": "SocialResult"
+          "spelling": "SocialSignIn"
+        },
+        {
+          "kind": "text",
+          "spelling": " : "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore10CapabilityP",
+          "spelling": "Capability"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s8SendableP",
+          "spelling": "Sendable"
         }
       ],
-      "kind": "swift.enum",
+      "kind": "swift.protocol",
       "path": [
-        "SocialResult"
+        "SocialSignIn"
       ],
-      "precise": "s:9OwnIDCore12SocialResultO",
-      "title": "SocialResult"
+      "precise": "s:9OwnIDCore12SocialSignInP",
+      "title": "SocialSignIn"
     },
     {
       "access": "public",
       "declaration": [
         {
+          "kind": "attribute",
+          "spelling": "@"
+        },
+        {
+          "kind": "attribute",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
           "kind": "keyword",
-          "spelling": "case"
+          "spelling": "func"
         },
         {
           "kind": "text",
@@ -33985,7 +34480,7 @@
         },
         {
           "kind": "identifier",
-          "spelling": "fail"
+          "spelling": "signIn"
         },
         {
           "kind": "text",
@@ -33993,7 +34488,7 @@
         },
         {
           "kind": "externalParam",
-          "spelling": "error"
+          "spelling": "window"
         },
         {
           "kind": "text",
@@ -34001,132 +34496,8 @@
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-          "spelling": "SocialResult"
-        },
-        {
-          "kind": "text",
-          "spelling": "."
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore12SocialResultO5ErrorO",
-          "spelling": "Error"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
-        }
-      ],
-      "kind": "swift.enum.case",
-      "path": [
-        "SocialResult",
-        "fail(error:)"
-      ],
-      "precise": "s:9OwnIDCore12SocialResultO4failyA2C5ErrorO_tcACmF",
-      "title": "SocialResult.fail(error:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "enum"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "Error"
-        }
-      ],
-      "kind": "swift.enum",
-      "path": [
-        "SocialResult",
-        "Error"
-      ],
-      "precise": "s:9OwnIDCore12SocialResultO5ErrorO",
-      "title": "SocialResult.Error"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "var"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "errorDescription"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": "? { "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "get"
-        },
-        {
-          "kind": "text",
-          "spelling": " }"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "SocialResult",
-        "Error",
-        "errorDescription"
-      ],
-      "precise": "s:9OwnIDCore12SocialResultO5ErrorO16errorDescriptionSSSgvp",
-      "title": "errorDescription"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "case"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "general"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "_"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
         },
         {
           "kind": "text",
@@ -34134,37 +34505,109 @@
         },
         {
           "kind": "externalParam",
-          "spelling": "_"
+          "spelling": "params"
         },
         {
           "kind": "text",
-          "spelling": ": (any "
+          "spelling": ": "
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s5ErrorP",
-          "spelling": "Error"
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInParamsV",
+          "spelling": "SocialSignInParams"
         },
         {
           "kind": "text",
-          "spelling": ")? = nil)"
+          "spelling": ") "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+          "spelling": "SocialSignInResult"
         }
       ],
-      "kind": "swift.enum.case",
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "window"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              }
+            ],
+            "name": "window"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "params"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore18SocialSignInParamsV",
+                "spelling": "SocialSignInParams"
+              }
+            ],
+            "name": "params"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+            "spelling": "SocialSignInResult"
+          }
+        ]
+      },
+      "kind": "swift.method",
       "path": [
-        "SocialResult",
-        "Error",
-        "general(_:_:)"
+        "SocialSignIn",
+        "signIn(window:params:)"
       ],
-      "precise": "s:9OwnIDCore12SocialResultO5ErrorO7generalyAESS_sAD_pSgtcAEmF",
-      "title": "SocialResult.Error.general(_:_:)"
+      "precise": "s:9OwnIDCore12SocialSignInP04signE06window6paramsAA0cdE6ResultOSo8UIWindowC_AA0cdE6ParamsVtYaF",
+      "title": "signIn(window:params:)"
     },
     {
       "access": "public",
       "declaration": [
         {
+          "kind": "attribute",
+          "spelling": "@"
+        },
+        {
+          "kind": "attribute",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
           "kind": "keyword",
-          "spelling": "case"
+          "spelling": "func"
         },
         {
           "kind": "text",
@@ -34172,99 +34615,28 @@
         },
         {
           "kind": "identifier",
-          "spelling": "success"
+          "spelling": "cancel"
         },
         {
           "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "id"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "idToken"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
+          "spelling": "()"
         }
       ],
-      "kind": "swift.enum.case",
+      "functionSignature": {
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
       "path": [
-        "SocialResult",
-        "success(id:idToken:)"
+        "SocialSignIn",
+        "cancel()"
       ],
-      "precise": "s:9OwnIDCore12SocialResultO7successyACSS_SStcACmF",
-      "title": "SocialResult.success(id:idToken:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "case"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "canceled"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "reason"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore6ReasonO",
-          "spelling": "Reason"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
-        }
-      ],
-      "kind": "swift.enum.case",
-      "path": [
-        "SocialResult",
-        "canceled(reason:)"
-      ],
-      "precise": "s:9OwnIDCore12SocialResultO8canceledyAcA6ReasonO_tcACmF",
-      "title": "SocialResult.canceled(reason:)"
+      "precise": "s:9OwnIDCore12SocialSignInP6cancelyyF",
+      "title": "cancel()"
     },
     {
       "access": "public",
@@ -36381,6 +36753,30 @@
         },
         {
           "kind": "identifier",
+          "spelling": "idDocVerification"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "OperationType",
+        "idDocVerification"
+      ],
+      "precise": "s:9OwnIDCore13OperationTypeO17idDocVerificationyA2CmF",
+      "title": "OperationType.idDocVerification"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
           "spelling": "passkeyEnrollment"
         }
       ],
@@ -37953,30 +38349,6 @@
         },
         {
           "kind": "identifier",
-          "spelling": "cable"
-        }
-      ],
-      "kind": "swift.enum.case",
-      "path": [
-        "TransportType",
-        "cable"
-      ],
-      "precise": "s:9OwnIDCore13TransportTypeO5cableyA2CmF",
-      "title": "TransportType.cable"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "case"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
           "spelling": "hybrid"
         }
       ],
@@ -38070,30 +38442,6 @@
       ],
       "precise": "s:9OwnIDCore13TransportTypeO8rawValueACSgSS_tcfc",
       "title": "init(rawValue:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "case"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "smartCard"
-        }
-      ],
-      "kind": "swift.enum.case",
-      "path": [
-        "TransportType",
-        "smartCard"
-      ],
-      "precise": "s:9OwnIDCore13TransportTypeO9smartCardyA2CmF",
-      "title": "TransportType.smartCard"
     },
     {
       "access": "public",
@@ -48453,38 +48801,6 @@
       "declaration": [
         {
           "kind": "keyword",
-          "spelling": "protocol"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "SignInWithApple"
-        },
-        {
-          "kind": "text",
-          "spelling": " : "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore16SignInWithSocialP",
-          "spelling": "SignInWithSocial"
-        }
-      ],
-      "kind": "swift.protocol",
-      "path": [
-        "SignInWithApple"
-      ],
-      "precise": "s:9OwnIDCore15SignInWithAppleP",
-      "title": "SignInWithApple"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
           "spelling": "struct"
         },
         {
@@ -54069,312 +54385,6 @@
       "declaration": [
         {
           "kind": "keyword",
-          "spelling": "protocol"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "SignInWithGoogle"
-        },
-        {
-          "kind": "text",
-          "spelling": " : "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore16SignInWithSocialP",
-          "spelling": "SignInWithSocial"
-        }
-      ],
-      "kind": "swift.protocol",
-      "path": [
-        "SignInWithGoogle"
-      ],
-      "precise": "s:9OwnIDCore16SignInWithGoogleP",
-      "title": "SignInWithGoogle"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "attribute",
-          "spelling": "@"
-        },
-        {
-          "kind": "attribute",
-          "preciseIdentifier": "s:ScM",
-          "spelling": "MainActor"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "signOut"
-        },
-        {
-          "kind": "text",
-          "spelling": "()"
-        }
-      ],
-      "functionSignature": {
-        "returns": [
-          {
-            "kind": "text",
-            "spelling": "()"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "SignInWithGoogle",
-        "signOut()"
-      ],
-      "precise": "s:9OwnIDCore16SignInWithGoogleP7signOutyyF",
-      "title": "signOut()"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "protocol"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "SignInWithSocial"
-        },
-        {
-          "kind": "text",
-          "spelling": " : "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore10CapabilityP",
-          "spelling": "Capability"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s8SendableP",
-          "spelling": "Sendable"
-        }
-      ],
-      "kind": "swift.protocol",
-      "path": [
-        "SignInWithSocial"
-      ],
-      "precise": "s:9OwnIDCore16SignInWithSocialP",
-      "title": "SignInWithSocial"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "attribute",
-          "spelling": "@"
-        },
-        {
-          "kind": "attribute",
-          "preciseIdentifier": "s:ScM",
-          "spelling": "MainActor"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "signIn"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "window"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "params"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
-          "spelling": "SignInWithSocialParams"
-        },
-        {
-          "kind": "text",
-          "spelling": ") "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "async"
-        },
-        {
-          "kind": "text",
-          "spelling": " -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-          "spelling": "SocialResult"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "window"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "c:objc(cs)UIWindow",
-                "spelling": "UIWindow"
-              }
-            ],
-            "name": "window"
-          },
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "params"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
-                "spelling": "SignInWithSocialParams"
-              }
-            ],
-            "name": "params"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-            "spelling": "SocialResult"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "SignInWithSocial",
-        "signIn(window:params:)"
-      ],
-      "precise": "s:9OwnIDCore16SignInWithSocialP04signD06window6paramsAA0F6ResultOSo8UIWindowC_AA0cdeF6ParamsVtYaF",
-      "title": "signIn(window:params:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "attribute",
-          "spelling": "@"
-        },
-        {
-          "kind": "attribute",
-          "preciseIdentifier": "s:ScM",
-          "spelling": "MainActor"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "cancel"
-        },
-        {
-          "kind": "text",
-          "spelling": "()"
-        }
-      ],
-      "functionSignature": {
-        "returns": [
-          {
-            "kind": "text",
-            "spelling": "()"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "SignInWithSocial",
-        "cancel()"
-      ],
-      "precise": "s:9OwnIDCore16SignInWithSocialP6cancelyyF",
-      "title": "cancel()"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
           "spelling": "enum"
         },
         {
@@ -57166,8 +57176,8 @@
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-          "spelling": "SocialResult"
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+          "spelling": "SocialSignInResult"
         }
       ],
       "functionSignature": {
@@ -57216,8 +57226,8 @@
         "returns": [
           {
             "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-            "spelling": "SocialResult"
+            "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+            "spelling": "SocialSignInResult"
           }
         ]
       },
@@ -57226,7 +57236,7 @@
         "SignInWithAppleUI",
         "signIn(clientID:nonce:)"
       ],
-      "precise": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
+      "precise": "s:9OwnIDCore17SignInWithAppleUIP04signD08clientID5nonceAA06SocialcD6ResultOSS_SSSgtYaF",
       "title": "signIn(clientID:nonce:)"
     },
     {
@@ -62249,8 +62259,8 @@
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-          "spelling": "SocialResult"
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+          "spelling": "SocialSignInResult"
         }
       ],
       "functionSignature": {
@@ -62299,8 +62309,8 @@
         "returns": [
           {
             "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-            "spelling": "SocialResult"
+            "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+            "spelling": "SocialSignInResult"
           }
         ]
       },
@@ -62309,7 +62319,7 @@
         "SignInWithGoogleUI",
         "signIn(clientID:nonce:)"
       ],
-      "precise": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonceAA12SocialResultOSS_SSSgtYaF",
+      "precise": "s:9OwnIDCore18SignInWithGoogleUIP04signD08clientID5nonceAA06SocialcD6ResultOSS_SSSgtYaF",
       "title": "signIn(clientID:nonce:)"
     },
     {
@@ -62360,6 +62370,514 @@
       ],
       "precise": "s:9OwnIDCore18SignInWithGoogleUIP6cancelyyF",
       "title": "cancel()"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "struct"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "SocialSignInParams"
+        }
+      ],
+      "kind": "swift.struct",
+      "path": [
+        "SocialSignInParams"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInParamsV",
+      "title": "SocialSignInParams"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "nonce"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": "?"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "SocialSignInParams",
+        "nonce"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInParamsV5nonceSSSgvp",
+      "title": "nonce"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "init"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "clientID"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "nonce"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": "?)"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "clientID"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:SS",
+                "spelling": "String"
+              }
+            ],
+            "name": "clientID"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "nonce"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:SS",
+                "spelling": "String"
+              },
+              {
+                "kind": "text",
+                "spelling": "?"
+              }
+            ],
+            "name": "nonce"
+          }
+        ]
+      },
+      "kind": "swift.init",
+      "path": [
+        "SocialSignInParams",
+        "init(clientID:nonce:)"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInParamsV8clientID5nonceACSS_SSSgtcfc",
+      "title": "init(clientID:nonce:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "let"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "clientID"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "SocialSignInParams",
+        "clientID"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInParamsV8clientIDSSvp",
+      "title": "clientID"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "enum"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "SocialSignInResult"
+        }
+      ],
+      "kind": "swift.enum",
+      "path": [
+        "SocialSignInResult"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInResultO",
+      "title": "SocialSignInResult"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "fail"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "error"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+          "spelling": "SocialSignInResult"
+        },
+        {
+          "kind": "text",
+          "spelling": "."
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO5ErrorO",
+          "spelling": "Error"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "SocialSignInResult",
+        "fail(error:)"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInResultO4failyA2C5ErrorO_tcACmF",
+      "title": "SocialSignInResult.fail(error:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "enum"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "Error"
+        }
+      ],
+      "kind": "swift.enum",
+      "path": [
+        "SocialSignInResult",
+        "Error"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInResultO5ErrorO",
+      "title": "SocialSignInResult.Error"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "errorDescription"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": "? { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "SocialSignInResult",
+        "Error",
+        "errorDescription"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInResultO5ErrorO16errorDescriptionSSSgvp",
+      "title": "errorDescription"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "general"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": ": (any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s5ErrorP",
+          "spelling": "Error"
+        },
+        {
+          "kind": "text",
+          "spelling": ")? = nil)"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "SocialSignInResult",
+        "Error",
+        "general(_:_:)"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInResultO5ErrorO7generalyAESS_sAD_pSgtcAEmF",
+      "title": "SocialSignInResult.Error.general(_:_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "success"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "id"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "idToken"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "SocialSignInResult",
+        "success(id:idToken:)"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInResultO7successyACSS_SStcACmF",
+      "title": "SocialSignInResult.success(id:idToken:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "case"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "canceled"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "reason"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore6ReasonO",
+          "spelling": "Reason"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "kind": "swift.enum.case",
+      "path": [
+        "SocialSignInResult",
+        "canceled(reason:)"
+      ],
+      "precise": "s:9OwnIDCore18SocialSignInResultO8canceledyAcA6ReasonO_tcACmF",
+      "title": "SocialSignInResult.canceled(reason:)"
     },
     {
       "access": "public",
@@ -62899,6 +63417,38 @@
       ],
       "precise": "s:9OwnIDCore18WebBridgePluginKeyV4hash4intoys6HasherVz_tF",
       "title": "hash(into:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "protocol"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "AppleSignInProvider"
+        },
+        {
+          "kind": "text",
+          "spelling": " : "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore12SocialSignInP",
+          "spelling": "SocialSignIn"
+        }
+      ],
+      "kind": "swift.protocol",
+      "path": [
+        "AppleSignInProvider"
+      ],
+      "precise": "s:9OwnIDCore19AppleSignInProviderP",
+      "title": "AppleSignInProvider"
     },
     {
       "access": "public",
@@ -66591,6 +67141,87 @@
       ],
       "precise": "s:9OwnIDCore20ErrorStringsProviderP",
       "title": "ErrorStringsProvider"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "protocol"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "GoogleSignInProvider"
+        },
+        {
+          "kind": "text",
+          "spelling": " : "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore12SocialSignInP",
+          "spelling": "SocialSignIn"
+        }
+      ],
+      "kind": "swift.protocol",
+      "path": [
+        "GoogleSignInProvider"
+      ],
+      "precise": "s:9OwnIDCore20GoogleSignInProviderP",
+      "title": "GoogleSignInProvider"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "attribute",
+          "spelling": "@"
+        },
+        {
+          "kind": "attribute",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "signOut"
+        },
+        {
+          "kind": "text",
+          "spelling": "()"
+        }
+      ],
+      "functionSignature": {
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "GoogleSignInProvider",
+        "signOut()"
+      ],
+      "precise": "s:9OwnIDCore20GoogleSignInProviderP7signOutyyF",
+      "title": "signOut()"
     },
     {
       "access": "public",
@@ -72606,7 +73237,24 @@
         },
         {
           "kind": "text",
-          "spelling": ") -> "
+          "spelling": ", "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "isTouchID"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sb",
+          "spelling": "Bool"
+        },
+        {
+          "kind": "text",
+          "spelling": " = false) -> "
         },
         {
           "kind": "typeIdentifier",
@@ -72655,6 +73303,24 @@
               }
             ],
             "name": "isSystemFidoCapable"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "isTouchID"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:Sb",
+                "spelling": "Bool"
+              }
+            ],
+            "name": "isTouchID"
           }
         ],
         "returns": [
@@ -72668,10 +73334,10 @@
       "kind": "swift.type.method",
       "path": [
         "LoginIDCollectStrings",
-        "default(loginIDTypes:isSystemFidoCapable:)"
+        "default(loginIDTypes:isSystemFidoCapable:isTouchID:)"
       ],
-      "precise": "s:9OwnIDCore21LoginIDCollectStringsV7default12loginIDTypes19isSystemFidoCapableACSayAA0C6IDTypeOG_SbtFZ",
-      "title": "default(loginIDTypes:isSystemFidoCapable:)"
+      "precise": "s:9OwnIDCore21LoginIDCollectStringsV7default12loginIDTypes19isSystemFidoCapable0I7TouchIDACSayAA0C6IDTypeOG_S2btFZ",
+      "title": "default(loginIDTypes:isSystemFidoCapable:isTouchID:)"
     },
     {
       "access": "public",
@@ -79915,197 +80581,6 @@
         },
         {
           "kind": "identifier",
-          "spelling": "SignInWithSocialParams"
-        }
-      ],
-      "kind": "swift.struct",
-      "path": [
-        "SignInWithSocialParams"
-      ],
-      "precise": "s:9OwnIDCore22SignInWithSocialParamsV",
-      "title": "SignInWithSocialParams"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "let"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "nonce"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": "?"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "SignInWithSocialParams",
-        "nonce"
-      ],
-      "precise": "s:9OwnIDCore22SignInWithSocialParamsV5nonceSSSgvp",
-      "title": "nonce"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "init"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "clientID"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "nonce"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": "?)"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "clientID"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:SS",
-                "spelling": "String"
-              }
-            ],
-            "name": "clientID"
-          },
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "nonce"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:SS",
-                "spelling": "String"
-              },
-              {
-                "kind": "text",
-                "spelling": "?"
-              }
-            ],
-            "name": "nonce"
-          }
-        ]
-      },
-      "kind": "swift.init",
-      "path": [
-        "SignInWithSocialParams",
-        "init(clientID:nonce:)"
-      ],
-      "precise": "s:9OwnIDCore22SignInWithSocialParamsV8clientID5nonceACSS_SSSgtcfc",
-      "title": "init(clientID:nonce:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "let"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "clientID"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "SignInWithSocialParams",
-        "clientID"
-      ],
-      "precise": "s:9OwnIDCore22SignInWithSocialParamsV8clientIDSSvp",
-      "title": "clientID"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "struct"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
           "spelling": "WebBridgePluginMessage"
         }
       ],
@@ -83063,617 +83538,6 @@
       ],
       "precise": "s:9OwnIDCore23PasskeyEnrollControllerP5abort6reasonyAA6ReasonO_tF",
       "title": "abort(reason:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "struct"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "SignInWithGoogleBuilder"
-        }
-      ],
-      "kind": "swift.struct",
-      "path": [
-        "SignInWithGoogleBuilder"
-      ],
-      "precise": "s:9OwnIDCore23SignInWithGoogleBuilderV",
-      "title": "SignInWithGoogleBuilder"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "mutating"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "signIn"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "_"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "block"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@escaping "
-        },
-        {
-          "kind": "text",
-          "spelling": "@"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:ScM",
-          "spelling": "MainActor"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@Sendable"
-        },
-        {
-          "kind": "text",
-          "spelling": " ("
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "c:objc(cs)UIWindow",
-          "spelling": "UIWindow"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
-          "spelling": "SignInWithSocialParams"
-        },
-        {
-          "kind": "text",
-          "spelling": ") "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "async"
-        },
-        {
-          "kind": "text",
-          "spelling": " -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-          "spelling": "SocialResult"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "block"
-              },
-              {
-                "kind": "text",
-                "spelling": ": @"
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:ScM",
-                "spelling": "MainActor"
-              },
-              {
-                "kind": "text",
-                "spelling": " "
-              },
-              {
-                "kind": "attribute",
-                "spelling": "@Sendable"
-              },
-              {
-                "kind": "text",
-                "spelling": " ("
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "c:objc(cs)UIWindow",
-                "spelling": "UIWindow"
-              },
-              {
-                "kind": "text",
-                "spelling": ", "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
-                "spelling": "SignInWithSocialParams"
-              },
-              {
-                "kind": "text",
-                "spelling": ") "
-              },
-              {
-                "kind": "keyword",
-                "spelling": "async"
-              },
-              {
-                "kind": "text",
-                "spelling": " -> "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:9OwnIDCore12SocialResultO",
-                "spelling": "SocialResult"
-              }
-            ],
-            "name": "block"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "text",
-            "spelling": "()"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "SignInWithGoogleBuilder",
-        "signIn(_:)"
-      ],
-      "precise": "s:9OwnIDCore23SignInWithGoogleBuilderV04signD0yyAA12SocialResultOSo8UIWindowC_AA0cdeI6ParamsVtYaYbScMYccF",
-      "title": "signIn(_:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "mutating"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "isAvailable"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "_"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "block"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@escaping "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@Sendable"
-        },
-        {
-          "kind": "text",
-          "spelling": " ("
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
-          "spelling": "SignInWithSocialParams"
-        },
-        {
-          "kind": "text",
-          "spelling": ") "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "async"
-        },
-        {
-          "kind": "text",
-          "spelling": " -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:Sb",
-          "spelling": "Bool"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "block"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "attribute",
-                "spelling": "@Sendable"
-              },
-              {
-                "kind": "text",
-                "spelling": " ("
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:9OwnIDCore22SignInWithSocialParamsV",
-                "spelling": "SignInWithSocialParams"
-              },
-              {
-                "kind": "text",
-                "spelling": ") "
-              },
-              {
-                "kind": "keyword",
-                "spelling": "async"
-              },
-              {
-                "kind": "text",
-                "spelling": " -> "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:Sb",
-                "spelling": "Bool"
-              }
-            ],
-            "name": "block"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "text",
-            "spelling": "()"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "SignInWithGoogleBuilder",
-        "isAvailable(_:)"
-      ],
-      "precise": "s:9OwnIDCore23SignInWithGoogleBuilderV11isAvailableyySbAA0cdE12SocialParamsVYaYbcF",
-      "title": "isAvailable(_:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "mutating"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "cancel"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "_"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "block"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@escaping "
-        },
-        {
-          "kind": "text",
-          "spelling": "@"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:ScM",
-          "spelling": "MainActor"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@Sendable"
-        },
-        {
-          "kind": "text",
-          "spelling": " () -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s4Voida",
-          "spelling": "Void"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "block"
-              },
-              {
-                "kind": "text",
-                "spelling": ": @"
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:ScM",
-                "spelling": "MainActor"
-              },
-              {
-                "kind": "text",
-                "spelling": " "
-              },
-              {
-                "kind": "attribute",
-                "spelling": "@Sendable"
-              },
-              {
-                "kind": "text",
-                "spelling": " () -> "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:s4Voida",
-                "spelling": "Void"
-              }
-            ],
-            "name": "block"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "text",
-            "spelling": "()"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "SignInWithGoogleBuilder",
-        "cancel(_:)"
-      ],
-      "precise": "s:9OwnIDCore23SignInWithGoogleBuilderV6cancelyyyyYbScMYccF",
-      "title": "cancel(_:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "mutating"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "signOut"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "_"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "block"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@escaping "
-        },
-        {
-          "kind": "text",
-          "spelling": "@"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:ScM",
-          "spelling": "MainActor"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "attribute",
-          "spelling": "@Sendable"
-        },
-        {
-          "kind": "text",
-          "spelling": " () -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:s4Voida",
-          "spelling": "Void"
-        },
-        {
-          "kind": "text",
-          "spelling": ")"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "block"
-              },
-              {
-                "kind": "text",
-                "spelling": ": @"
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:ScM",
-                "spelling": "MainActor"
-              },
-              {
-                "kind": "text",
-                "spelling": " "
-              },
-              {
-                "kind": "attribute",
-                "spelling": "@Sendable"
-              },
-              {
-                "kind": "text",
-                "spelling": " () -> "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:s4Voida",
-                "spelling": "Void"
-              }
-            ],
-            "name": "block"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "text",
-            "spelling": "()"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "SignInWithGoogleBuilder",
-        "signOut(_:)"
-      ],
-      "precise": "s:9OwnIDCore23SignInWithGoogleBuilderV7signOutyyyyYbScMYccF",
-      "title": "signOut(_:)"
     },
     {
       "access": "public",
@@ -90962,6 +90826,617 @@
         },
         {
           "kind": "identifier",
+          "spelling": "GoogleSignInProviderBuilder"
+        }
+      ],
+      "kind": "swift.struct",
+      "path": [
+        "GoogleSignInProviderBuilder"
+      ],
+      "precise": "s:9OwnIDCore27GoogleSignInProviderBuilderV",
+      "title": "GoogleSignInProviderBuilder"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "signIn"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "block"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@escaping "
+        },
+        {
+          "kind": "text",
+          "spelling": "@"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@Sendable"
+        },
+        {
+          "kind": "text",
+          "spelling": " ("
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)UIWindow",
+          "spelling": "UIWindow"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInParamsV",
+          "spelling": "SocialSignInParams"
+        },
+        {
+          "kind": "text",
+          "spelling": ") "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+          "spelling": "SocialSignInResult"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "block"
+              },
+              {
+                "kind": "text",
+                "spelling": ": @"
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:ScM",
+                "spelling": "MainActor"
+              },
+              {
+                "kind": "text",
+                "spelling": " "
+              },
+              {
+                "kind": "attribute",
+                "spelling": "@Sendable"
+              },
+              {
+                "kind": "text",
+                "spelling": " ("
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)UIWindow",
+                "spelling": "UIWindow"
+              },
+              {
+                "kind": "text",
+                "spelling": ", "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore18SocialSignInParamsV",
+                "spelling": "SocialSignInParams"
+              },
+              {
+                "kind": "text",
+                "spelling": ") "
+              },
+              {
+                "kind": "keyword",
+                "spelling": "async"
+              },
+              {
+                "kind": "text",
+                "spelling": " -> "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore18SocialSignInResultO",
+                "spelling": "SocialSignInResult"
+              }
+            ],
+            "name": "block"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "GoogleSignInProviderBuilder",
+        "signIn(_:)"
+      ],
+      "precise": "s:9OwnIDCore27GoogleSignInProviderBuilderV04signE0yyAA06SocialdE6ResultOSo8UIWindowC_AA0idE6ParamsVtYaYbScMYccF",
+      "title": "signIn(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "isAvailable"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "block"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@escaping "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@Sendable"
+        },
+        {
+          "kind": "text",
+          "spelling": " ("
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18SocialSignInParamsV",
+          "spelling": "SocialSignInParams"
+        },
+        {
+          "kind": "text",
+          "spelling": ") "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sb",
+          "spelling": "Bool"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "block"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "attribute",
+                "spelling": "@Sendable"
+              },
+              {
+                "kind": "text",
+                "spelling": " ("
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore18SocialSignInParamsV",
+                "spelling": "SocialSignInParams"
+              },
+              {
+                "kind": "text",
+                "spelling": ") "
+              },
+              {
+                "kind": "keyword",
+                "spelling": "async"
+              },
+              {
+                "kind": "text",
+                "spelling": " -> "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:Sb",
+                "spelling": "Bool"
+              }
+            ],
+            "name": "block"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "GoogleSignInProviderBuilder",
+        "isAvailable(_:)"
+      ],
+      "precise": "s:9OwnIDCore27GoogleSignInProviderBuilderV11isAvailableyySbAA06SocialdE6ParamsVYaYbcF",
+      "title": "isAvailable(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "cancel"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "block"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@escaping "
+        },
+        {
+          "kind": "text",
+          "spelling": "@"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@Sendable"
+        },
+        {
+          "kind": "text",
+          "spelling": " () -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s4Voida",
+          "spelling": "Void"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "block"
+              },
+              {
+                "kind": "text",
+                "spelling": ": @"
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:ScM",
+                "spelling": "MainActor"
+              },
+              {
+                "kind": "text",
+                "spelling": " "
+              },
+              {
+                "kind": "attribute",
+                "spelling": "@Sendable"
+              },
+              {
+                "kind": "text",
+                "spelling": " () -> "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:s4Voida",
+                "spelling": "Void"
+              }
+            ],
+            "name": "block"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "GoogleSignInProviderBuilder",
+        "cancel(_:)"
+      ],
+      "precise": "s:9OwnIDCore27GoogleSignInProviderBuilderV6cancelyyyyYbScMYccF",
+      "title": "cancel(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "mutating"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "signOut"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "_"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "internalParam",
+          "spelling": "block"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@escaping "
+        },
+        {
+          "kind": "text",
+          "spelling": "@"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:ScM",
+          "spelling": "MainActor"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "attribute",
+          "spelling": "@Sendable"
+        },
+        {
+          "kind": "text",
+          "spelling": " () -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:s4Voida",
+          "spelling": "Void"
+        },
+        {
+          "kind": "text",
+          "spelling": ")"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "block"
+              },
+              {
+                "kind": "text",
+                "spelling": ": @"
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:ScM",
+                "spelling": "MainActor"
+              },
+              {
+                "kind": "text",
+                "spelling": " "
+              },
+              {
+                "kind": "attribute",
+                "spelling": "@Sendable"
+              },
+              {
+                "kind": "text",
+                "spelling": " () -> "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:s4Voida",
+                "spelling": "Void"
+              }
+            ],
+            "name": "block"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "text",
+            "spelling": "()"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "GoogleSignInProviderBuilder",
+        "signOut(_:)"
+      ],
+      "precise": "s:9OwnIDCore27GoogleSignInProviderBuilderV7signOutyyyyYbScMYccF",
+      "title": "signOut(_:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "struct"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
           "spelling": "LoginIDCollectStringsParams"
         }
       ],
@@ -96680,137 +97155,6 @@
         },
         {
           "kind": "identifier",
-          "spelling": "completeWithCode"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "code"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": ") "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "async"
-        },
-        {
-          "kind": "text",
-          "spelling": " -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
-          "spelling": "APIResult"
-        },
-        {
-          "kind": "text",
-          "spelling": "<"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
-          "spelling": "AccessOrProofToken"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore35EmailVerificationCompleteAPIFailureO",
-          "spelling": "EmailVerificationCompleteAPIFailure"
-        },
-        {
-          "kind": "text",
-          "spelling": ">"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "code"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:SS",
-                "spelling": "String"
-              }
-            ],
-            "name": "code"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
-            "spelling": "APIResult"
-          },
-          {
-            "kind": "text",
-            "spelling": "<"
-          },
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
-            "spelling": "AccessOrProofToken"
-          },
-          {
-            "kind": "text",
-            "spelling": ", "
-          },
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore35EmailVerificationCompleteAPIFailureO",
-            "spelling": "EmailVerificationCompleteAPIFailure"
-          },
-          {
-            "kind": "text",
-            "spelling": ">"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "EmailVerificationAPIController",
-        "completeWithCode(code:)"
-      ],
-      "precise": "s:9OwnIDCore30EmailVerificationAPIControllerP16completeWithCode4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
-      "title": "completeWithCode(code:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
           "spelling": "cancel"
         },
         {
@@ -97022,6 +97366,137 @@
       ],
       "precise": "s:9OwnIDCore30EmailVerificationAPIControllerP6resendAA9APIResultOyytAA0cD16ResendAPIFailureOGyYaF",
       "title": "resend()"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "complete"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "code"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ") "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+          "spelling": "APIResult"
+        },
+        {
+          "kind": "text",
+          "spelling": "<"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
+          "spelling": "AccessOrProofToken"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore35EmailVerificationCompleteAPIFailureO",
+          "spelling": "EmailVerificationCompleteAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "code"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:SS",
+                "spelling": "String"
+              }
+            ],
+            "name": "code"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+            "spelling": "APIResult"
+          },
+          {
+            "kind": "text",
+            "spelling": "<"
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
+            "spelling": "AccessOrProofToken"
+          },
+          {
+            "kind": "text",
+            "spelling": ", "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore35EmailVerificationCompleteAPIFailureO",
+            "spelling": "EmailVerificationCompleteAPIFailure"
+          },
+          {
+            "kind": "text",
+            "spelling": ">"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "EmailVerificationAPIController",
+        "complete(code:)"
+      ],
+      "precise": "s:9OwnIDCore30EmailVerificationAPIControllerP8complete4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
+      "title": "complete(code:)"
     },
     {
       "access": "public",
@@ -98261,137 +98736,6 @@
         },
         {
           "kind": "identifier",
-          "spelling": "completeWithCode"
-        },
-        {
-          "kind": "text",
-          "spelling": "("
-        },
-        {
-          "kind": "externalParam",
-          "spelling": "code"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:SS",
-          "spelling": "String"
-        },
-        {
-          "kind": "text",
-          "spelling": ") "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "async"
-        },
-        {
-          "kind": "text",
-          "spelling": " -> "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
-          "spelling": "APIResult"
-        },
-        {
-          "kind": "text",
-          "spelling": "<"
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
-          "spelling": "AccessOrProofToken"
-        },
-        {
-          "kind": "text",
-          "spelling": ", "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore35PhoneVerificationCompleteAPIFailureO",
-          "spelling": "PhoneVerificationCompleteAPIFailure"
-        },
-        {
-          "kind": "text",
-          "spelling": ">"
-        }
-      ],
-      "functionSignature": {
-        "parameters": [
-          {
-            "declarationFragments": [
-              {
-                "kind": "identifier",
-                "spelling": "code"
-              },
-              {
-                "kind": "text",
-                "spelling": ": "
-              },
-              {
-                "kind": "typeIdentifier",
-                "preciseIdentifier": "s:SS",
-                "spelling": "String"
-              }
-            ],
-            "name": "code"
-          }
-        ],
-        "returns": [
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
-            "spelling": "APIResult"
-          },
-          {
-            "kind": "text",
-            "spelling": "<"
-          },
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
-            "spelling": "AccessOrProofToken"
-          },
-          {
-            "kind": "text",
-            "spelling": ", "
-          },
-          {
-            "kind": "typeIdentifier",
-            "preciseIdentifier": "s:9OwnIDCore35PhoneVerificationCompleteAPIFailureO",
-            "spelling": "PhoneVerificationCompleteAPIFailure"
-          },
-          {
-            "kind": "text",
-            "spelling": ">"
-          }
-        ]
-      },
-      "kind": "swift.method",
-      "path": [
-        "PhoneVerificationAPIController",
-        "completeWithCode(code:)"
-      ],
-      "precise": "s:9OwnIDCore30PhoneVerificationAPIControllerP16completeWithCode4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
-      "title": "completeWithCode(code:)"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "func"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
           "spelling": "cancel"
         },
         {
@@ -98603,6 +98947,137 @@
       ],
       "precise": "s:9OwnIDCore30PhoneVerificationAPIControllerP6resendAA9APIResultOyytAA0cD16ResendAPIFailureOGyYaF",
       "title": "resend()"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "func"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "complete"
+        },
+        {
+          "kind": "text",
+          "spelling": "("
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "code"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
+        },
+        {
+          "kind": "text",
+          "spelling": ") "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "async"
+        },
+        {
+          "kind": "text",
+          "spelling": " -> "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+          "spelling": "APIResult"
+        },
+        {
+          "kind": "text",
+          "spelling": "<"
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
+          "spelling": "AccessOrProofToken"
+        },
+        {
+          "kind": "text",
+          "spelling": ", "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore35PhoneVerificationCompleteAPIFailureO",
+          "spelling": "PhoneVerificationCompleteAPIFailure"
+        },
+        {
+          "kind": "text",
+          "spelling": ">"
+        }
+      ],
+      "functionSignature": {
+        "parameters": [
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "code"
+              },
+              {
+                "kind": "text",
+                "spelling": ": "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:SS",
+                "spelling": "String"
+              }
+            ],
+            "name": "code"
+          }
+        ],
+        "returns": [
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore9APIResultO",
+            "spelling": "APIResult"
+          },
+          {
+            "kind": "text",
+            "spelling": "<"
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore18AccessOrProofTokenO",
+            "spelling": "AccessOrProofToken"
+          },
+          {
+            "kind": "text",
+            "spelling": ", "
+          },
+          {
+            "kind": "typeIdentifier",
+            "preciseIdentifier": "s:9OwnIDCore35PhoneVerificationCompleteAPIFailureO",
+            "spelling": "PhoneVerificationCompleteAPIFailure"
+          },
+          {
+            "kind": "text",
+            "spelling": ">"
+          }
+        ]
+      },
+      "kind": "swift.method",
+      "path": [
+        "PhoneVerificationAPIController",
+        "complete(code:)"
+      ],
+      "precise": "s:9OwnIDCore30PhoneVerificationAPIControllerP8complete4codeAA9APIResultOyAA18AccessOrProofTokenOAA0cD18CompleteAPIFailureOGSS_tYaF",
+      "title": "complete(code:)"
     },
     {
       "access": "public",
@@ -134183,6 +134658,51 @@
         },
         {
           "kind": "identifier",
+          "spelling": "biometryType"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:@E@LABiometryType",
+          "spelling": "LABiometryType"
+        },
+        {
+          "kind": "text",
+          "spelling": " { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "LocalInfo",
+        "biometryType"
+      ],
+      "precise": "s:9OwnIDCore9LocalInfoP12biometryTypeSo010LABiometryF0Vvp",
+      "title": "biometryType"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
           "spelling": "isDebuggable"
         },
         {
@@ -134273,7 +134793,52 @@
         },
         {
           "kind": "identifier",
-          "spelling": "isDeviceSecured"
+          "spelling": "isPasscodeSet"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sb",
+          "spelling": "Bool"
+        },
+        {
+          "kind": "text",
+          "spelling": "? { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "LocalInfo",
+        "isPasscodeSet"
+      ],
+      "precise": "s:9OwnIDCore9LocalInfoP13isPasscodeSetSbSgvp",
+      "title": "isPasscodeSet"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "isBiometryUsable"
         },
         {
           "kind": "text",
@@ -134300,10 +134865,100 @@
       "kind": "swift.property",
       "path": [
         "LocalInfo",
-        "isDeviceSecured"
+        "isBiometryUsable"
       ],
-      "precise": "s:9OwnIDCore9LocalInfoP15isDeviceSecuredSbvp",
-      "title": "isDeviceSecured"
+      "precise": "s:9OwnIDCore9LocalInfoP16isBiometryUsableSbvp",
+      "title": "isBiometryUsable"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "isBiometryEnrolled"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sb",
+          "spelling": "Bool"
+        },
+        {
+          "kind": "text",
+          "spelling": "? { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "LocalInfo",
+        "isBiometryEnrolled"
+      ],
+      "precise": "s:9OwnIDCore9LocalInfoP18isBiometryEnrolledSbSgvp",
+      "title": "isBiometryEnrolled"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "isBiometryLockedOut"
+        },
+        {
+          "kind": "text",
+          "spelling": ": "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:Sb",
+          "spelling": "Bool"
+        },
+        {
+          "kind": "text",
+          "spelling": "? { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "LocalInfo",
+        "isBiometryLockedOut"
+      ],
+      "precise": "s:9OwnIDCore9LocalInfoP19isBiometryLockedOutSbSgvp",
+      "title": "isBiometryLockedOut"
     },
     {
       "access": "public",
@@ -134363,7 +135018,7 @@
         },
         {
           "kind": "identifier",
-          "spelling": "isFaceHardwarePresent"
+          "spelling": "biometryLocalizedName"
         },
         {
           "kind": "text",
@@ -134371,12 +135026,12 @@
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:Sb",
-          "spelling": "Bool"
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
         },
         {
           "kind": "text",
-          "spelling": " { "
+          "spelling": "? { "
         },
         {
           "kind": "keyword",
@@ -134390,10 +135045,10 @@
       "kind": "swift.property",
       "path": [
         "LocalInfo",
-        "isFaceHardwarePresent"
+        "biometryLocalizedName"
       ],
-      "precise": "s:9OwnIDCore9LocalInfoP21isFaceHardwarePresentSbvp",
-      "title": "isFaceHardwarePresent"
+      "precise": "s:9OwnIDCore9LocalInfoP21biometryLocalizedNameSSSgvp",
+      "title": "biometryLocalizedName"
     },
     {
       "access": "public",
@@ -134408,7 +135063,7 @@
         },
         {
           "kind": "identifier",
-          "spelling": "isStrongBiometricEnabled"
+          "spelling": "biometryIconSystemName"
         },
         {
           "kind": "text",
@@ -134416,12 +135071,12 @@
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:Sb",
-          "spelling": "Bool"
+          "preciseIdentifier": "s:SS",
+          "spelling": "String"
         },
         {
           "kind": "text",
-          "spelling": " { "
+          "spelling": "? { "
         },
         {
           "kind": "keyword",
@@ -134435,55 +135090,10 @@
       "kind": "swift.property",
       "path": [
         "LocalInfo",
-        "isStrongBiometricEnabled"
+        "biometryIconSystemName"
       ],
-      "precise": "s:9OwnIDCore9LocalInfoP24isStrongBiometricEnabledSbvp",
-      "title": "isStrongBiometricEnabled"
-    },
-    {
-      "access": "public",
-      "declaration": [
-        {
-          "kind": "keyword",
-          "spelling": "var"
-        },
-        {
-          "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "identifier",
-          "spelling": "isFingerprintHardwarePresent"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
-        },
-        {
-          "kind": "typeIdentifier",
-          "preciseIdentifier": "s:Sb",
-          "spelling": "Bool"
-        },
-        {
-          "kind": "text",
-          "spelling": " { "
-        },
-        {
-          "kind": "keyword",
-          "spelling": "get"
-        },
-        {
-          "kind": "text",
-          "spelling": " }"
-        }
-      ],
-      "kind": "swift.property",
-      "path": [
-        "LocalInfo",
-        "isFingerprintHardwarePresent"
-      ],
-      "precise": "s:9OwnIDCore9LocalInfoP28isFingerprintHardwarePresentSbvp",
-      "title": "isFingerprintHardwarePresent"
+      "precise": "s:9OwnIDCore9LocalInfoP22biometryIconSystemNameSSSgvp",
+      "title": "biometryIconSystemName"
     },
     {
       "access": "public",

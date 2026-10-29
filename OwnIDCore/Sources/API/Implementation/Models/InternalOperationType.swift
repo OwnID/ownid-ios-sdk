@@ -23,4 +23,5 @@ internal enum InternalOperationType: String, Sendable, Codable, Hashable, CaseIt
     case faceKeyVerification = "FaceKeyVerification"
     case faceKeyCreation = "FaceKeyCreation"
     case faceKeyEnrollment = "FaceKeyEnrollment"
+    case idDocVerification = "IdDocVerification"
 }

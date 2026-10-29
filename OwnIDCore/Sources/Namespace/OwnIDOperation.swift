@@ -141,22 +141,22 @@ extension OwnIDOperation {
     /// Social login operation group.
     public struct SocialLogin: Sendable {
         /// Starts Sign in with Apple.
-        public let signInWithApple:
+        public let appleSignIn:
             any OperationEntry<SignInWithAppleOperationParams?, AccessTokenWithUserInfo, SignInWithAppleOperationFailure>
 
         /// Starts Sign in with Google.
-        public let signInWithGoogle:
+        public let googleSignIn:
             any OperationEntry<SignInWithGoogleOperationParams?, AccessTokenWithUserInfo, SignInWithGoogleOperationFailure>
 
         fileprivate init(container: any DIContainer) {
-            self.signInWithApple = operationEntry(
+            self.appleSignIn = operationEntry(
                 container: container,
                 runtimeType: (any SignInWithAppleOperation).self,
                 operationType: .oidcAuthenticationApple,
                 availability: { runtime, params in await runtime.availability(params: params) },
                 start: { runtime, params in runtime.start(params: params) }
             )
-            self.signInWithGoogle = operationEntry(
+            self.googleSignIn = operationEntry(
                 container: container,
                 runtimeType: (any SignInWithGoogleOperation).self,
                 operationType: .oidcAuthenticationGoogle,

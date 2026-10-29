@@ -29,10 +29,20 @@ public struct LoginIDCollectStrings: StringsData {
     /// Returns embedded English fallback strings for a login ID collection form.
     ///
     /// Email, phone number, and username values select the corresponding single or combined prompt. Unsupported values
-    /// are ignored; if no supported type remains, all returned strings are empty. When the platform passkey
-    /// authenticator is available, the title and message use biometric sign-in wording.
-    public static func `default`(loginIDTypes: [LoginIDType], isSystemFidoCapable: Bool) -> LoginIDCollectStrings {
-        let fidoTitle = "Sign In with Face ID"
+    /// are ignored; if no supported type remains, all returned strings are empty. Passkey-capable forms use the
+    /// selected biometric sign-in title; other forms ask for a login ID to receive a one-time code.
+    ///
+    /// - Parameters:
+    ///   - loginIDTypes: Login ID types the form can collect.
+    ///   - isSystemFidoCapable: The caller-provided passkey capability. When `false`, uses one-time-code wording.
+    ///   - isTouchID: Whether the device supports Touch ID. When passkeys are supported, selects Touch ID wording
+    ///     instead of Face ID. Defaults to `false`.
+    public static func `default`(
+        loginIDTypes: [LoginIDType],
+        isSystemFidoCapable: Bool,
+        isTouchID: Bool = false
+    ) -> LoginIDCollectStrings {
+        let fidoTitle = isTouchID ? "Sign In with Touch ID" : "Sign In with Face ID"
 
         let loginIDTypes = Set(loginIDTypes.filter { $0 == .email || $0 == .phoneNumber || $0 == .userName })
         switch loginIDTypes {
@@ -144,8 +154,9 @@ public struct LoginIDCollectStrings: StringsData {
 /// Provides resolved strings for login ID collection.
 ///
 /// Default SDK providers select the server locale keys from ``LoginIDCollectStringsParams/loginIDTypes`` and platform
-/// passkey availability, then use ``LoginIDCollectStrings/default(loginIDTypes:isSystemFidoCapable:)`` for any missing
-/// key.
+/// passkey availability, then use ``LoginIDCollectStrings/default(loginIDTypes:isSystemFidoCapable:isTouchID:)`` for any missing
+/// key. Touch ID hardware selects Touch ID wording regardless of enrollment or usability; other device types preserve
+/// the Face ID default.
 public protocol LoginIDCollectStringsProvider: StringsProvider, Sendable
 where D == LoginIDCollectStrings, P == LoginIDCollectStringsParams {}
 

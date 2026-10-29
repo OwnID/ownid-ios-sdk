@@ -4,9 +4,22 @@ import Foundation
 ///
 /// OpenAPI source: `ErrorBase` schema `errorCode` property.
 ///
-/// Unknown raw error-code values decode to ``InternalErrorCode/unknown`` before oneOf selection.
+/// Unsupported raw values are rejected so only the literal `unknown` can select an unknown branch.
 internal struct InternalErrorResponseDiscriminator: Sendable, Decodable {
     internal let errorCode: InternalErrorCode
+
+    internal init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let rawValue = try container.decode(String.self, forKey: .errorCode)
+        guard let errorCode = InternalErrorCode(rawValue: rawValue) else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .errorCode,
+                in: container,
+                debugDescription: "Unsupported errorCode=\(rawValue)"
+            )
+        }
+        self.errorCode = errorCode
+    }
 
     internal enum CodingKeys: String, CodingKey {
         case errorCode

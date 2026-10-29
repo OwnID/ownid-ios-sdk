@@ -139,9 +139,9 @@ OwnID passkey operations delegate creation and authentication to Apple's
 AuthenticationServices framework. Treat these as platform outcomes:
 
 - Devices below iOS 16 cannot run platform passkeys.
-- A device can be iOS 16+ and still fail availability because the entitlement,
+- Even on iOS 16+, credential calls can fail because the entitlement,
   provisioning profile, AASA file, domain association, tenant config, or
-  available credentials are not ready.
+  available credentials are not ready. Default availability does not validate these prerequisites.
 - Apple may fetch associated-domain files through its associated-domains CDN,
   so remote file changes may not be reflected instantly on a device.
 - Users can close platform UI or have no applicable credentials.

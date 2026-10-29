@@ -15,7 +15,7 @@ struct OperationSignInWithAppleScreen: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .multilineTextAlignment(.center)
 
-                Button("Start Sign In with Apple Operation") {
+                Button("Sign in with Apple") {
                     viewModel.startSignInWithAppleOperation()
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -29,7 +29,7 @@ struct OperationSignInWithAppleScreen: View {
             .demoContentWidth()
         }
         .background(palette.background.ignoresSafeArea())
-        .navigationTitle("Operations / Sign In with Apple")
+        .navigationTitle("Operations / Sign in with Apple")
         .navigationBarTitleDisplayMode(.inline)
     }
 

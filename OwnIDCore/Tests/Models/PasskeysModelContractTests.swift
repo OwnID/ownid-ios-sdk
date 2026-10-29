@@ -64,7 +64,7 @@ struct PasskeysModelContractTests {
             ),
             timeout: Timeout(milliseconds: 60000),
             excludeCredentials: [
-                .init(id: "excluded-credential", type: .publicKey, transports: [.usb, .smartCard])
+                .init(id: "excluded-credential", type: .publicKey, transports: [.usb, .nfc])
             ]
         )
 
@@ -91,14 +91,14 @@ struct PasskeysModelContractTests {
         let excluded = try #require(encoded["excludeCredentials"] as? [[String: Any]])
         #expect(excluded.first?["id"] as? String == "excluded-credential")
         #expect(excluded.first?["type"] as? String == "public-key")
-        #expect(excluded.first?["transports"] as? [String] == ["usb", "smart-card"])
+        #expect(excluded.first?["transports"] as? [String] == ["usb", "nfc"])
 
         let decoded = try modelJSON.decoder.decode(AttestationOptions.self, from: try modelJSON.data(encoding: options))
         #expect(decoded.rp.id == "login.example.test")
         #expect(decoded.user.id == "user-handle")
         #expect(decoded.pubKeyCredParams.map(\.alg) == [.ES256, .RS256])
         #expect(decoded.authenticatorSelection?.authenticatorAttachment == .crossPlatform)
-        #expect(decoded.excludeCredentials?.first?.transports == [.usb, .smartCard])
+        #expect(decoded.excludeCredentials?.first?.transports == [.usb, .nfc])
     }
 
     @Test func `WebAuthn result Codable preserves response fields and omits nil attachments`() throws {
@@ -287,10 +287,14 @@ struct PasskeysModelContractTests {
         #expect(TransportType.usb.description == "usb")
         #expect(TransportType.nfc.description == "nfc")
         #expect(TransportType.ble.description == "ble")
-        #expect(TransportType.smartCard.description == "smart-card")
         #expect(TransportType.hybrid.description == "hybrid")
         #expect(TransportType.internal.description == "internal")
-        #expect(TransportType.cable.description == "cable")
+        for unsupportedTransport in ["smart-card", "cable"] {
+            #expect(TransportType(rawValue: unsupportedTransport) == nil)
+            #expect(throws: (any Error).self) {
+                try modelJSON.decoder.decode(TransportType.self, from: Data("\"\(unsupportedTransport)\"".utf8))
+            }
+        }
         #expect(UserVerification.required.description == "required")
         #expect(UserVerification.preferred.description == "preferred")
         #expect(UserVerification.discouraged.description == "discouraged")

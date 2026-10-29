@@ -163,6 +163,7 @@ extension InternalOperationType {
         case .faceKeyVerification: return .faceKeyVerification
         case .faceKeyCreation: return .faceKeyCreation
         case .faceKeyEnrollment: return .faceKeyEnrollment
+        case .idDocVerification: return .idDocVerification
         }
     }
 }
@@ -192,6 +193,7 @@ extension OperationType {
         case .faceKeyVerification: return .faceKeyVerification
         case .faceKeyCreation: return .faceKeyCreation
         case .faceKeyEnrollment: return .faceKeyEnrollment
+        case .idDocVerification: return .idDocVerification
         }
     }
 }
