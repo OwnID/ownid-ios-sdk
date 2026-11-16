@@ -15,7 +15,10 @@ internal final class LoginIDConfigurationProviderImpl: LoginIDConfigurationProvi
     private var forcedConfiguration: LoginIDConfiguration?
 
     internal init(initialConfiguration: LoginIDConfiguration) {
-        self.autoConfiguration = LoginIDConfigurationProviderImpl.normalized(initialConfiguration) ?? initialConfiguration
+        self.autoConfiguration = LoginIDConfigurationProviderImpl.normalized(
+            supportedTypes: initialConfiguration.supportedTypes,
+            validationRegexes: initialConfiguration.validationRegexes
+        ) ?? initialConfiguration
     }
 
     internal var configuration: LoginIDConfiguration {
@@ -24,15 +27,27 @@ internal final class LoginIDConfigurationProviderImpl: LoginIDConfigurationProvi
         return forcedConfiguration ?? autoConfiguration
     }
 
-    internal func setServerConfiguration(_ configuration: LoginIDConfiguration) {
-        guard let normalized = LoginIDConfigurationProviderImpl.normalized(configuration) else { return }
+    internal func setServerConfiguration(
+        supportedTypes: [LoginIDType],
+        validationRegexes: [LoginIDType: NSRegularExpression?]
+    ) {
+        guard let normalized = LoginIDConfigurationProviderImpl.normalized(
+            supportedTypes: supportedTypes,
+            validationRegexes: validationRegexes
+        ) else { return }
         lock.lock()
         autoConfiguration = normalized
         lock.unlock()
     }
 
-    internal func setConfiguration(_ configuration: LoginIDConfiguration) {
-        guard let normalized = LoginIDConfigurationProviderImpl.normalized(configuration) else { return }
+    internal func setConfiguration(
+        supportedTypes: [LoginIDType],
+        validationRegexes: [LoginIDType: NSRegularExpression?]
+    ) {
+        guard let normalized = LoginIDConfigurationProviderImpl.normalized(
+            supportedTypes: supportedTypes,
+            validationRegexes: validationRegexes
+        ) else { return }
         lock.lock()
         forcedConfiguration = normalized
         lock.unlock()
@@ -44,11 +59,14 @@ internal final class LoginIDConfigurationProviderImpl: LoginIDConfigurationProvi
         lock.unlock()
     }
 
-    private static func normalized(_ configuration: LoginIDConfiguration) -> LoginIDConfiguration? {
-        let supportedTypes = uniqueTypes(configuration.supportedTypes)
+    private static func normalized(
+        supportedTypes: [LoginIDType],
+        validationRegexes: [LoginIDType: NSRegularExpression?]
+    ) -> LoginIDConfiguration? {
+        let supportedTypes = uniqueTypes(supportedTypes)
         guard !supportedTypes.isEmpty else { return nil }
 
-        let filteredRegexes = configuration.validationRegexes.filter { supportedTypes.contains($0.key) }
+        let filteredRegexes = validationRegexes.filter { supportedTypes.contains($0.key) }
         return LoginIDConfiguration(supportedTypes: supportedTypes, validationRegexes: filteredRegexes)
     }
 

@@ -59,7 +59,7 @@ public enum LoginIDType: String, Codable, Sendable, CaseIterable {
 
     /// Embedded regex used to classify identifiers for this type.
     ///
-    /// The regex is used to infer a type from a raw login ID and as the validation fallback when
+    /// The regex is used for raw type inference and as the typed validation fallback when
     /// ``LoginIDConfiguration/validationRegexes`` has no override for this type. Types without type-specific syntax use
     /// a non-blank value check.
     ///
@@ -128,12 +128,13 @@ public struct User: Codable, Sendable {
 /// ``supportedTypes`` defines which login-ID types may be used and the priority order for resolving a raw login ID
 /// value.
 ///
-/// ``validationRegexes`` contains optional validation overrides for supported types. A missing key or `nil` value means
-/// validation falls back to ``LoginIDType/classificationRegex``.
+/// ``validationRegexes`` contains optional typed validation overrides. Omit the map to use embedded validation rules.
+/// A missing key or `nil` value uses ``LoginIDType/classificationRegex`` for that type. Raw type inference always uses
+/// the embedded classification rule.
 ///
-/// The initializer stores values as supplied. SDK configuration providers normalize before use by preserving the first
-/// occurrence of each supported type, ignoring empty supported-type lists, and dropping validation entries for
-/// unsupported types.
+/// The initializer stores the supplied values unchanged. Built-in configuration providers keep each supported type
+/// only once, in the order it first appears, and ignore regexes for unsupported types. Updates with no supported types
+/// leave the current configuration unchanged.
 public struct LoginIDConfiguration: Sendable {
     public let supportedTypes: [LoginIDType]
 
@@ -141,7 +142,7 @@ public struct LoginIDConfiguration: Sendable {
 
     public init(
         supportedTypes: [LoginIDType],
-        validationRegexes: [LoginIDType: NSRegularExpression?]
+        validationRegexes: [LoginIDType: NSRegularExpression?] = [:]
     ) {
         self.supportedTypes = supportedTypes
         self.validationRegexes = validationRegexes

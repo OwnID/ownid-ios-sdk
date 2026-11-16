@@ -52,6 +52,12 @@ internal final class LoginIDValidatorImpl: LoginIDValidator {
     private func isFullMatch(regex: NSRegularExpression, in value: String) -> Bool {
         let range = NSRange(value.startIndex..<value.endIndex, in: value)
         guard let match = regex.firstMatch(in: value, range: range) else { return false }
-        return match.range.location == range.location && match.range.length == range.length
+        if match.range == range { return true }
+
+        // Valid EOF comments or escapes can prevent wrapping; retain their previous nonmatch in that case.
+        guard !regex.options.contains(.ignoreMetacharacters),
+              let fullRegex = try? NSRegularExpression(pattern: "\\A(?:\(regex.pattern))\\z", options: regex.options)
+        else { return false }
+        return fullRegex.firstMatch(in: value, range: range)?.range == range
     }
 }

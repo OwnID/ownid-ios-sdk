@@ -168,6 +168,23 @@ struct LoginIDContextContractTests {
         #expect(second.loginID == nil)
     }
 
+    @Test func `Raw context uses embedded inference while typed context keeps its declared type`() throws {
+        let configuration = LoginIDConfigurationProviderImpl(initialConfiguration: .default)
+        configuration.setConfiguration(supportedTypes: [.userName], validationRegexes: [.userName: try NSRegularExpression(pattern: "[0-9]{10}")])
+        let validator = LoginIDValidatorImpl(loginIDConfigurationProvider: configuration)
+        let raw = context { $0.authz = .start("0123456789") }
+        let outsideValidationRule = context { $0.authz = .start("123456789") }
+        let invalid = context { $0.authz = .start(" ") }
+        let typed = LoginID(id: "123456789", type: .email)
+        let typedContext = context { $0.authz = .start(typed) }
+
+        #expect(try raw.loginID(loginIDValidator: validator) == LoginID(id: "0123456789", type: .userName))
+        #expect(try outsideValidationRule.loginID(loginIDValidator: validator) == LoginID(id: "123456789", type: .userName))
+        let error = try #require(throws: (any Error).self) { try invalid.loginID(loginIDValidator: validator) }
+        #expect(try requireLoginIDTypeNotSupported(error).errorCode == .loginIDTypeNotSupported)
+        #expect(try typedContext.loginID(loginIDValidator: validator) == typed)
+    }
+
     @Test func `Raw login ID resolution uses validator and maps exposed failure values`() throws {
         let rawLoginIDContext = context { builder in
             builder.authz = .start("raw-login")

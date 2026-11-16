@@ -3,11 +3,133 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: OPS-100, OPS-140, OPS-150, OPS-170, OPS-210
+// Covers: OPS-100, OPS-140, OPS-150, OPS-170, OPS-210, OPS-260
 struct VerificationOperationImplementationTests {
     private let startupTimeout: UInt64 = 15
     private let delayedTerminalTimeout: UInt64 = 5
     private let cleanupTimeout: UInt64 = 5
+
+    @Test func `Availability-only email operation deallocates without instance shutdown`() async throws {
+        let api = FakeEmailVerificationAPI(
+            apiController: FakeEmailVerificationAPIController(completeResult: .success(.accessToken(testAccessToken())))
+        )
+        let scope = testTaskScope()
+        defer { scope.shutdown() }
+        var operation: EmailVerificationOperationImpl? = makeEmailOperation(api: api, ui: FakeEmailVerificationUI(), scope: scope)
+        weak var retainedOperation = operation
+
+        assertAvailable(try await #require(operation).availability(params: EmailVerificationOperationParams(loginID: testLoginID())))
+        operation = nil
+
+        #expect(retainedOperation == nil)
+        #expect(api.params.get().isEmpty)
+    }
+
+    @Test func `Availability-only phone operation deallocates without instance shutdown`() async throws {
+        let api = FakePhoneVerificationAPI(
+            apiController: FakePhoneVerificationAPIController(completeResult: .success(.accessToken(testAccessToken())))
+        )
+        let scope = testTaskScope()
+        defer { scope.shutdown() }
+        var operation: PhoneVerificationOperationImpl? = makePhoneOperation(api: api, ui: FakePhoneVerificationUI(), scope: scope)
+        weak var retainedOperation = operation
+
+        assertAvailable(
+            try await #require(operation).availability(
+                params: PhoneVerificationOperationParams(loginID: testLoginID("+15551234567", type: .phoneNumber))
+            )
+        )
+        operation = nil
+
+        #expect(retainedOperation == nil)
+        #expect(api.params.get().isEmpty)
+    }
+
+    @Test(arguments: [false, true])
+    func `Email cleanup survives operation ownership release and follows instance shutdown`(shutdown: Bool) async throws {
+        let cleanup = VerificationCleanupGate()
+        let apiController = GatedEmailVerificationCleanupController(cleanup: cleanup)
+        let api = FakeEmailVerificationAPI(startResult: .success(apiController))
+        let shutdownToken = ShutdownToken()
+        let scope = TaskScope(shutdownToken: shutdownToken)
+        defer { scope.shutdown() }
+        var operation: EmailVerificationOperationImpl? = makeEmailOperation(api: api, ui: FakeEmailVerificationUI(), scope: scope)
+        weak var retainedOperation = operation
+        let controller = try #require(operation).start(params: EmailVerificationOperationParams(loginID: testLoginID()))
+        _ = try await withOperationTimeout("email cleanup started") { try await cleanup.started.waitUnlessCancelled() }
+        let first = try await withOperationTimeout("email missing-method result while cleanup waits") { await controller.whenSettled() }
+        #expect(try requireOperationFailure(first).errorCode == .integrationError)
+        operation = nil
+        #expect(retainedOperation != nil)
+        if shutdown {
+            shutdownToken.cancel()
+        } else {
+            await cleanup.release.set(())
+        }
+        let completed = try await withOperationTimeout("email cleanup completion") { try await cleanup.completed.waitUnlessCancelled() }
+        #expect(completed == !shutdown)
+        #expect(cleanup.calls.get() == 1)
+        #expect(try requireOperationFailure(await controller.whenSettled()).description == requireOperationFailure(first).description)
+    }
+
+    @Test(arguments: [false, true])
+    func `Phone cleanup survives operation ownership release and follows instance shutdown`(shutdown: Bool) async throws {
+        let cleanup = VerificationCleanupGate()
+        let apiController = GatedPhoneVerificationCleanupController(cleanup: cleanup)
+        let api = FakePhoneVerificationAPI(startResult: .success(apiController))
+        let shutdownToken = ShutdownToken()
+        let scope = TaskScope(shutdownToken: shutdownToken)
+        defer { scope.shutdown() }
+        var operation: PhoneVerificationOperationImpl? = makePhoneOperation(api: api, ui: FakePhoneVerificationUI(), scope: scope)
+        weak var retainedOperation = operation
+        let controller = try #require(operation).start(params: PhoneVerificationOperationParams(loginID: testLoginID("+15551234567", type: .phoneNumber)))
+        _ = try await withOperationTimeout("phone cleanup started") { try await cleanup.started.waitUnlessCancelled() }
+        let first = try await withOperationTimeout("phone missing-method result while cleanup waits") { await controller.whenSettled() }
+        #expect(try requireOperationFailure(first).errorCode == .integrationError)
+        operation = nil
+        #expect(retainedOperation != nil)
+        if shutdown {
+            shutdownToken.cancel()
+        } else {
+            await cleanup.release.set(())
+        }
+        let completed = try await withOperationTimeout("phone cleanup completion") { try await cleanup.completed.waitUnlessCancelled() }
+        #expect(completed == !shutdown)
+        #expect(cleanup.calls.get() == 1)
+        #expect(try requireOperationFailure(await controller.whenSettled()).description == requireOperationFailure(first).description)
+    }
+
+    @Test func `Received email start success after local cancellation is cleaned without changing settlement`() async throws {
+        let apiController = FakeEmailVerificationAPIController(completeResult: .success(.accessToken(testAccessToken())))
+        let api = DelayedEmailVerificationStart(apiController: apiController)
+        let operation = makeEmailOperation(api: api, ui: FakeEmailVerificationUI())
+        let controller = operation.start(params: EmailVerificationOperationParams(loginID: testLoginID()))
+        _ = try await withOperationTimeout("email start entered") { try await api.started.waitUnlessCancelled() }
+        let reason = Reason.userClose(details: "cancel during start")
+        controller.abort(reason: reason)
+        let first = try await withOperationTimeout("email canceled before start success") { await controller.whenSettled() }
+        #expect(try requireOperationCancellation(first).description == reason.description)
+        await api.release.set(())
+        _ = try await withOperationTimeout("late email challenge cleanup") { try await apiController.cancelReason.waitUnlessCancelled() }
+        #expect(apiController.cancelReasons.get().count == 1)
+        #expect(try requireOperationCancellation(await controller.whenSettled()).description == reason.description)
+    }
+
+    @Test func `Received phone start success after local cancellation is cleaned without changing settlement`() async throws {
+        let apiController = FakePhoneVerificationAPIController(completeResult: .success(.accessToken(testAccessToken())))
+        let api = DelayedPhoneVerificationStart(apiController: apiController)
+        let operation = makePhoneOperation(api: api, ui: FakePhoneVerificationUI())
+        let controller = operation.start(params: PhoneVerificationOperationParams(loginID: testLoginID("+15551234567", type: .phoneNumber)))
+        _ = try await withOperationTimeout("phone start entered") { try await api.started.waitUnlessCancelled() }
+        let reason = Reason.userClose(details: "cancel during start")
+        controller.abort(reason: reason)
+        let first = try await withOperationTimeout("phone canceled before start success") { await controller.whenSettled() }
+        #expect(try requireOperationCancellation(first).description == reason.description)
+        await api.release.set(())
+        _ = try await withOperationTimeout("late phone challenge cleanup") { try await apiController.cancelReason.waitUnlessCancelled() }
+        #expect(apiController.cancelReasons.get().count == 1)
+        #expect(try requireOperationCancellation(await controller.whenSettled()).description == reason.description)
+    }
 
     @Test func `Email verification accepts email target without hint and exposes API challenge channel`() async throws {
         let challenge = testVerificationChallenge(
@@ -704,13 +826,15 @@ struct VerificationOperationImplementationTests {
         }
     }
 
-    private func makeEmailOperation(api: FakeEmailVerificationAPI, ui: FakeEmailVerificationUI) -> EmailVerificationOperationImpl {
+    private func makeEmailOperation(
+        api: any EmailVerificationAPI, ui: FakeEmailVerificationUI, scope: TaskScope = testTaskScope()
+    ) -> EmailVerificationOperationImpl {
         EmailVerificationOperationImpl(
             operationType: .emailVerification,
             operationRegistry: OperationRegistryImpl(logger: nil),
             ui: ui,
             api: api,
-            taskScope: testTaskScope(),
+            taskScope: scope,
             errorStringsProvider: nil,
             context: nil,
             loginIDValidator: FakeLoginIDValidator(),
@@ -718,13 +842,15 @@ struct VerificationOperationImplementationTests {
         )
     }
 
-    private func makePhoneOperation(api: FakePhoneVerificationAPI, ui: FakePhoneVerificationUI) -> PhoneVerificationOperationImpl {
+    private func makePhoneOperation(
+        api: any PhoneVerificationAPI, ui: FakePhoneVerificationUI, scope: TaskScope = testTaskScope()
+    ) -> PhoneVerificationOperationImpl {
         PhoneVerificationOperationImpl(
             operationType: .phoneNumberVerification,
             operationRegistry: OperationRegistryImpl(logger: nil),
             ui: ui,
             api: api,
-            taskScope: testTaskScope(),
+            taskScope: scope,
             errorStringsProvider: nil,
             context: nil,
             loginIDValidator: FakeLoginIDValidator(),
@@ -738,5 +864,105 @@ struct VerificationOperationImplementationTests {
             return try #require(nil as String?)
         }
         return details
+    }
+}
+
+private final class DelayedEmailVerificationStart: EmailVerificationAPI, @unchecked Sendable {
+    let started = CapturedValue<Void>()
+    let release = CapturedValue<Void>()
+    private let apiController: FakeEmailVerificationAPIController
+
+    init(apiController: FakeEmailVerificationAPIController) {
+        self.apiController = apiController
+    }
+
+    func start(params: EmailVerificationAPIParams?) async -> APIResult<any EmailVerificationAPIController, EmailVerificationStartAPIFailure> {
+        await started.set(())
+        await release.wait()
+        return .success(apiController)
+    }
+}
+
+private final class DelayedPhoneVerificationStart: PhoneVerificationAPI, @unchecked Sendable {
+    let started = CapturedValue<Void>()
+    let release = CapturedValue<Void>()
+    private let apiController: FakePhoneVerificationAPIController
+
+    init(apiController: FakePhoneVerificationAPIController) {
+        self.apiController = apiController
+    }
+
+    func start(params: PhoneVerificationAPIParams?) async -> APIResult<any PhoneVerificationAPIController, PhoneVerificationStartAPIFailure> {
+        await started.set(())
+        await release.wait()
+        return .success(apiController)
+    }
+}
+
+private final class VerificationCleanupGate: @unchecked Sendable {
+    let started = CapturedValue<Void>()
+    let release = CapturedValue<Void>()
+    let completed = CapturedValue<Bool>()
+    let calls = Locked(0)
+
+    func cancel() async -> Bool {
+        calls.mutate { $0 += 1 }
+        await started.set(())
+        do {
+            try await release.waitUnlessCancelled()
+            await completed.set(true)
+            return true
+        } catch {
+            await completed.set(false)
+            return false
+        }
+    }
+}
+
+private final class GatedEmailVerificationCleanupController: EmailVerificationAPIController, Sendable {
+    let challenge = VerificationChallenge(
+        challengeID: ChallengeID("gated-cleanup"),
+        resendPolicy: .init(allow: true, attempts: 3, debounce: 1),
+        timeout: Timeout(milliseconds: 10_000),
+        attempts: 3,
+        methods: .init(otp: nil, magicLink: .init()),
+        channel: OperationChannel(channel: "masked", id: "channel-id")
+    )
+    private let cleanup: VerificationCleanupGate
+
+    init(cleanup: VerificationCleanupGate) { self.cleanup = cleanup }
+
+    func complete(code: String) async -> APIResult<AccessOrProofToken, EmailVerificationCompleteAPIFailure> {
+        .success(.accessToken(testAccessToken()))
+    }
+
+    func resend() async -> APIResult<Void, EmailVerificationResendAPIFailure> { .success(()) }
+
+    func cancel(reason: Reason) async -> APIResult<Void, EmailVerificationCancelAPIFailure> {
+        await cleanup.cancel() ? .success(()) : .canceled
+    }
+}
+
+private final class GatedPhoneVerificationCleanupController: PhoneVerificationAPIController, Sendable {
+    let challenge = VerificationChallenge(
+        challengeID: ChallengeID("gated-cleanup"),
+        resendPolicy: .init(allow: true, attempts: 3, debounce: 1),
+        timeout: Timeout(milliseconds: 10_000),
+        attempts: 3,
+        methods: .init(otp: nil, magicLink: .init()),
+        channel: OperationChannel(channel: "masked", id: "channel-id")
+    )
+    private let cleanup: VerificationCleanupGate
+
+    init(cleanup: VerificationCleanupGate) { self.cleanup = cleanup }
+
+    func complete(code: String) async -> APIResult<AccessOrProofToken, PhoneVerificationCompleteAPIFailure> {
+        .success(.accessToken(testAccessToken()))
+    }
+
+    func resend() async -> APIResult<Void, PhoneVerificationResendAPIFailure> { .success(()) }
+
+    func cancel(reason: Reason) async -> APIResult<Void, PhoneVerificationCancelAPIFailure> {
+        await cleanup.cancel() ? .success(()) : .canceled
     }
 }

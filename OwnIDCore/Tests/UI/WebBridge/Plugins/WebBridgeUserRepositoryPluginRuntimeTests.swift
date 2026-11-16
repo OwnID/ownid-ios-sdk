@@ -30,6 +30,25 @@ struct WebBridgeUserRepositoryPluginRuntimeTests {
         #expect(saved.authMethod == .passkey)
     }
 
+    @Test func `Storage uses embedded inference without applying validation override`() async throws {
+        let configuration = LoginIDConfigurationProviderImpl(initialConfiguration: .default)
+        configuration.setConfiguration(supportedTypes: [.userName], validationRegexes: [.userName: try NSRegularExpression(pattern: "[0-9]{10}")])
+        let repository = RecordingWebBridgeUserRepository()
+        let plugin = WebBridgeUserRepositoryPlugin(
+            userRepository: repository,
+            loginIdValidator: LoginIDValidatorImpl(loginIDConfigurationProvider: configuration),
+            coder: coder
+        )
+        let accepted = await handleWebBridgePlugin(plugin, pluginID: "STORAGE", action: "setLastUser", params: #"{"loginId":"123456789"}"#)
+        let rejected = await handleWebBridgePlugin(plugin, pluginID: "STORAGE", action: "setLastUser", params: #"{"loginId":""}"#)
+
+        #expect(accepted.error == nil)
+        #expect(rejected.error != nil)
+        let users = await repository.savedUsers
+        #expect(users.count == 1)
+        #expect(users.first?.loginID == LoginID(id: "123456789", type: .userName))
+    }
+
     @Test func `Storage plugin returns stored user and null missing user payloads`() async throws {
         let repository = RecordingWebBridgeUserRepository(
             lastUser: User(loginID: LoginID(id: "stored@example.test", type: .email), authMethod: .socialGoogle)

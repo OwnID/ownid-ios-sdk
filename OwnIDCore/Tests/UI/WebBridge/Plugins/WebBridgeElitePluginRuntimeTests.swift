@@ -44,6 +44,42 @@ struct WebBridgeElitePluginRuntimeTests {
         #expect(passwordParams.password == "correct horse battery staple")
     }
 
+    @Test func `Embedded inference reaches FLOW providers without applying validation overrides`() async throws {
+        let configuration = LoginIDConfigurationProviderImpl(initialConfiguration: .default)
+        configuration.setServerConfiguration(
+            supportedTypes: [.email, .userName],
+            validationRegexes: [.userName: try NSRegularExpression(pattern: "[0-9]{10}")]
+        )
+        let sessionCreate = RecordingWebBridgeSessionCreate()
+        let passwordAuthenticate = RecordingWebBridgePasswordAuthenticate()
+        let plugin = makePlugin(
+            sessionCreate: sessionCreate,
+            passwordAuthenticate: passwordAuthenticate,
+            loginIDValidator: LoginIDValidatorImpl(loginIDConfigurationProvider: configuration)
+        )
+
+        for (action, payload) in [("session_create", Self.sessionCreatePayload), ("auth_password_authenticate", Self.passwordAuthenticatePayload)] {
+            let accepted = await handleWebBridgePlugin(
+                plugin,
+                pluginID: "FLOW",
+                action: action,
+                params: payload.replacingOccurrences(of: "person@example.test", with: "123456789")
+            )
+            #expect(accepted.error == nil)
+            let rejected = await handleWebBridgePlugin(
+                plugin,
+                pluginID: "FLOW",
+                action: action,
+                params: payload.replacingOccurrences(of: "person@example.test", with: "")
+            )
+            #expect(rejected.error != nil)
+        }
+        #expect(sessionCreate.createParams.map(\.loginID) == [LoginID(id: "123456789", type: .userName)])
+        #expect(passwordAuthenticate.authenticateParams.map(\.loginID) == [LoginID(id: "123456789", type: .userName)])
+        #expect(sessionCreate.events == ["available", "create"])
+        #expect(passwordAuthenticate.events == ["available", "authenticate"])
+    }
+
     @Test func `FLOW provider failures and unavailable providers return source-defined failure payloads`() async throws {
         let failedSession = RecordingWebBridgeSessionCreate(createResult: .failure(WebBridgePluginRuntimeError("session rejected")))
         let unavailablePassword = RecordingWebBridgePasswordAuthenticate(available: false)
@@ -164,12 +200,13 @@ struct WebBridgeElitePluginRuntimeTests {
 
     private func makePlugin(
         sessionCreate: (any SessionCreate)?,
-        passwordAuthenticate: (any PasswordAuthenticate)?
+        passwordAuthenticate: (any PasswordAuthenticate)?,
+        loginIDValidator: any LoginIDValidator = WebBridgePluginMatrixLoginIDValidator()
     ) -> WebBridgeElitePlugin {
         WebBridgeElitePlugin(
             sessionCreate: sessionCreate,
             passwordAuthenticate: passwordAuthenticate,
-            loginIDValidator: WebBridgePluginMatrixLoginIDValidator(),
+            loginIDValidator: loginIDValidator,
             coder: coder
         )
     }

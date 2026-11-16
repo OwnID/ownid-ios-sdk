@@ -51,6 +51,7 @@ struct PasskeyImplementationRuntimeTests {
         #expect(request.relyingPartyIdentifier == options.rp.id)
         #expect(request.challenge == Data("attestation challenge".utf8))
         #expect(request.name == options.user.name)
+        #expect(request.displayName == options.user.displayName)
         #expect(request.userID == Data("user handle".utf8))
         #expect(request.userVerificationPreference == .discouraged)
         #expect(request.attestationPreference == .indirect)

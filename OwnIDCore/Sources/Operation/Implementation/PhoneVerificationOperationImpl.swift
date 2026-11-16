@@ -90,14 +90,17 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
         taskScope.spawn(
             onCancel: { [stream = self.stream] in Task { await stream.finish() } }
         ) { [weak self, stream = self.stream] in
+            var runtimeOwner: PhoneVerificationOperationImpl?
+            defer { withExtendedLifetime(runtimeOwner) {} }
             for await event in stream.sequence {
                 if Task.isCancelled { break }
-                guard let self else { break }
+                guard let self = runtimeOwner ?? self else { break }
 
                 switch event {
                 case .start(let params):
                     let state = await MainActor.run { self.controller.state }
                     if case .created = state {
+                        runtimeOwner = self
                         await MainActor.run { self.operationRegistry.register(controller: self.controller) }
                         let resolvedParams = params ?? PhoneVerificationOperationParams()
                         let accessToken = resolvedParams.accessToken ?? self.context?.accessToken
@@ -170,8 +173,30 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
                                     traceParent: paramsWithLoginID.traceParent ?? TraceContext.generateTraceParent()
                                 )
                             )
-                            guard await self.isAlive() else { return }
-                            await self.stream.yield(.api(.start(apiResult)))
+                            let delivered: Bool
+                            if await self.isAlive() {
+                                delivered = await self.stream.yield(.api(.start(apiResult)))
+                            } else {
+                                delivered = false
+                            }
+                            if !delivered {
+                                if case .success(let apiController) = apiResult {
+                                    // Retain the operation until its instance-linked cleanup attempt finishes.
+                                    self.taskScope.spawn { [self] in
+                                        let cancellationResult = await apiController.cancel(
+                                            reason: .systemError(details: "Verification operation completed before challenge activation")
+                                        )
+                                        switch cancellationResult {
+                                        case .success:
+                                            break
+                                        case .failure(let error):
+                                            logger?.logI(source: self, prefix: "Start cleanup", message: "API cancel failed: \(error.message)")
+                                        case .canceled:
+                                            logger?.logI(source: self, prefix: "Start cleanup", message: "API cancel canceled")
+                                        }
+                                    }
+                                }
+                            }
                         }
                         await MainActor.run { self.controller.state = .preparing(params: paramsWithLoginID) }
 
@@ -201,6 +226,20 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
                                 self.taskRefs.clear(.timeout)
 
                                 if apiController.challenge.methods.otp == nil {
+                                    // Retain the operation until its instance-linked cleanup attempt finishes.
+                                    self.taskScope.spawn { [self] in
+                                        let cancellationResult = await apiController.cancel(
+                                            reason: .systemError(details: "Verification operation completed")
+                                        )
+                                        switch cancellationResult {
+                                        case .success:
+                                            break
+                                        case .failure(let error):
+                                            logger?.logI(source: self, prefix: "Start cleanup", message: "API cancel failed: \(error.message)")
+                                        case .canceled:
+                                            logger?.logI(source: self, prefix: "Start cleanup", message: "API cancel canceled")
+                                        }
+                                    }
                                     await self.stream.yield(
                                         .complete(
                                             .failure(
@@ -264,8 +303,23 @@ internal final class PhoneVerificationOperationImpl: PhoneVerificationOperation,
                         case .active:
                             let error = self.unexpectedEventError(eventDescription: "\(apiEvent)", state: state)
                             await self.stream.yield(.complete(.failure(error)))
-                        case .completed:
-                            break
+                        case .completed(let result):
+                            if case .success(let apiController) = apiResponse {
+                                // Retain the operation until its instance-linked cleanup attempt finishes.
+                                self.taskScope.spawn { [self] in
+                                    let cancellationResult = await apiController.cancel(
+                                        reason: result.reasonOrNil() ?? .systemError(details: "Verification operation completed")
+                                    )
+                                    switch cancellationResult {
+                                    case .success:
+                                        break
+                                    case .failure(let error):
+                                        logger?.logI(source: self, prefix: "Start cleanup", message: "API cancel failed: \(error.message)")
+                                    case .canceled:
+                                        logger?.logI(source: self, prefix: "Start cleanup", message: "API cancel canceled")
+                                    }
+                                }
+                            }
                         }
 
                     case .complete(let apiResponse):

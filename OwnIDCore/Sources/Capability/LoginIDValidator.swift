@@ -14,7 +14,8 @@ public protocol LoginIDValidator: Capability, Sendable {
     /// Determines the ``LoginIDType`` for the given raw `loginID` string.
     ///
     /// The resolved type is limited to the login-ID types supported by the current OwnID application configuration. The
-    /// configured type order defines the match priority.
+    /// configured type order defines the match priority. Each type uses ``LoginIDType/classificationRegex``; validation
+    /// regex overrides do not affect inference. The whole value must match, without normalization.
     ///
     /// - Returns: The supported ``LoginIDType`` resolved for `loginID`.
     /// - Throws: ``LoginIDValidationError/typeNotSupported(errorCode:message:)`` when the SDK cannot resolve `loginID`

@@ -3,7 +3,7 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: UI-PRESENT-010, UI-PRESENT-020
+// Covers: UI-PRESENT-010, UI-PRESENT-020, OPS-250
 struct OperationUIStartupRuntimeTests {
 
     @Test func `Core login ID collect without UI settles as integration UI failure`() async throws {
@@ -14,6 +14,42 @@ struct OperationUIStartupRuntimeTests {
 
         let failure = try requireOperationFailure(result)
         try assertLoginIDUIFailure(failure, contains: "No UI implementation registered for LoginIDCollectUI")
+    }
+
+    @Test func `Raw prefill requires embedded classification and configured validation`() async throws {
+        let configuration = LoginIDConfigurationProviderImpl(initialConfiguration: .default)
+        configuration.setConfiguration(supportedTypes: [.phoneNumber], validationRegexes: [.phoneNumber: try NSRegularExpression(pattern: "1234567|ext-[0-9]+")])
+        for (raw, expectedSuccess) in [("1234567", true), ("1234568", false), ("ext-123", false)] {
+            let taskScope = testTaskScope()
+            defer { taskScope.shutdown() }
+            var context = Context.Builder()
+            context.authz = .start(raw)
+            let operation = LoginIDCollectOperationImpl(
+                operationType: .loginIDCollect,
+                operationRegistry: OperationRegistryImpl(logger: nil),
+                appConfigProvider: FakeAppConfigProvider(),
+                loginIDConfig: configuration,
+                loginIDValidator: LoginIDValidatorImpl(loginIDConfigurationProvider: configuration),
+                ui: NoopLoginIDCollectUI(),
+                taskScope: taskScope,
+                errorStringsProvider: nil,
+                context: context.build(scopeName: "configured-prefill"),
+                logger: nil
+            )
+            let controller = operation.start(params: LoginIDCollectOperationParams())
+            let result = try await withOperationTimeout("configured login ID prefill: \(raw)") { await controller.whenSettled() }
+            withExtendedLifetime(operation) {}
+            if expectedSuccess {
+                guard case .success(let loginID) = result else {
+                    Issue.record("Configured raw prefill should complete before UI starts")
+                    return
+                }
+                #expect(loginID == LoginID(id: raw, type: .phoneNumber))
+            } else {
+                let failure = try requireOperationFailure(result)
+                try assertLoginIDUIFailure(failure, contains: "No UI implementation registered for LoginIDCollectUI")
+            }
+        }
     }
 
     @Test func `Core email verification without UI settles as integration UI failure`() async throws {
@@ -118,14 +154,27 @@ struct OperationUIStartupRuntimeTests {
         #expect(ui.startCount.get() == 1)
     }
 
-    @Test func `Email verification missing OTP challenge settles as integration error`() async throws {
+    @Test(arguments: [0, 1, 2]) func `Email verification missing OTP challenge settles as integration error`(cleanupOutcome: Int) async throws {
         let ui = FakeEmailVerificationUI()
-        let api = FakeEmailVerificationAPI(
-            apiController: FakeEmailVerificationAPIController(
-                challenge: verificationChallengeWithoutOTP(),
-                completeResult: .success(.accessToken(testAccessToken()))
-            )
+        let cancelResult: APIResult<Void, EmailVerificationCancelAPIFailure>
+        switch cleanupOutcome {
+        case 0:
+            cancelResult = .success(())
+        case 1:
+            cancelResult = .failure(.unexpected(
+                errorCode: .unknown,
+                message: "cleanup failed",
+                underlyingError: OperationTestTimeout.timedOut("cleanup failed")
+            ))
+        default:
+            cancelResult = .canceled
+        }
+        let apiController = FakeEmailVerificationAPIController(
+            challenge: verificationChallengeWithoutOTP(),
+            completeResult: .success(.accessToken(testAccessToken())),
+            cancelResult: cancelResult
         )
+        let api = FakeEmailVerificationAPI(apiController: apiController)
         let operation = makeEmailOperation(ui: ui, api: api)
 
         let controller = operation.start(params: EmailVerificationOperationParams(loginID: testLoginID()))
@@ -134,16 +183,31 @@ struct OperationUIStartupRuntimeTests {
         let failure = try requireOperationFailure(result)
         try assertEmailUnexpectedMissingOTPFailure(failure)
         #expect(api.params.get().count == 1)
+        _ = try await withOperationTimeout("missing OTP cleanup") { try await apiController.cancelReason.waitUnlessCancelled() }
+        #expect(apiController.cancelReasons.get().count == 1)
     }
 
-    @Test func `Phone verification missing OTP challenge settles as integration error`() async throws {
+    @Test(arguments: [0, 1, 2]) func `Phone verification missing OTP challenge settles as integration error`(cleanupOutcome: Int) async throws {
         let ui = FakePhoneVerificationUI()
-        let api = FakePhoneVerificationAPI(
-            apiController: FakePhoneVerificationAPIController(
-                challenge: verificationChallengeWithoutOTP(),
-                completeResult: .success(.accessToken(testAccessToken()))
-            )
+        let cancelResult: APIResult<Void, PhoneVerificationCancelAPIFailure>
+        switch cleanupOutcome {
+        case 0:
+            cancelResult = .success(())
+        case 1:
+            cancelResult = .failure(.unexpected(
+                errorCode: .unknown,
+                message: "cleanup failed",
+                underlyingError: OperationTestTimeout.timedOut("cleanup failed")
+            ))
+        default:
+            cancelResult = .canceled
+        }
+        let apiController = FakePhoneVerificationAPIController(
+            challenge: verificationChallengeWithoutOTP(),
+            completeResult: .success(.accessToken(testAccessToken())),
+            cancelResult: cancelResult
         )
+        let api = FakePhoneVerificationAPI(apiController: apiController)
         let operation = makePhoneOperation(ui: ui, api: api)
 
         let controller = operation.start(
@@ -154,6 +218,8 @@ struct OperationUIStartupRuntimeTests {
         let failure = try requireOperationFailure(result)
         try assertPhoneUnexpectedMissingOTPFailure(failure)
         #expect(api.params.get().count == 1)
+        _ = try await withOperationTimeout("missing OTP cleanup") { try await apiController.cancelReason.waitUnlessCancelled() }
+        #expect(apiController.cancelReasons.get().count == 1)
     }
 
     private func makeLoginIDCollectOperation(ui: any LoginIDCollectUI) -> LoginIDCollectOperationImpl {

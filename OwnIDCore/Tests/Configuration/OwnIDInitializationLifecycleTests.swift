@@ -43,6 +43,48 @@ struct OwnIDInitializationLifecycleTests {
         }
     }
 
+    @Test func `Login ID configuration follows instance scopes and default replacement`() async throws {
+        try await withOwnIDRootStateTestLock {
+            let namedInstanceName = Self.uniqueInstanceName("login-id-configuration")
+            let defaultAppID = Self.uniqueAppID("LoginIDDefault")
+            defer {
+                OwnID.destroy()
+                OwnID.destroy(instanceName: namedInstanceName)
+            }
+
+            OwnID.initialize { configuration in
+                configuration.appID = defaultAppID
+                configuration.rootURL = "https://127.0.0.1:9"
+            }
+            OwnID.initialize(instanceName: namedInstanceName) { configuration in
+                configuration.appID = Self.uniqueAppID("LoginIDNamed")
+                configuration.rootURL = "https://127.0.0.1:9"
+            }
+            let instance = OwnID.instance()
+            let child = instance.withContext("child") { $0.authz = .start("child@example.test") }
+            let namedInstance = OwnID.instance(instanceName: namedInstanceName)
+
+            OwnID.loginIDConfiguration.setConfiguration(supportedTypes: [.phoneNumber], validationRegexes: [:])
+            #expect(instance.loginIDConfiguration.configuration.supportedTypes == [.phoneNumber])
+            #expect(child.loginIDConfiguration.configuration.supportedTypes == [.phoneNumber])
+            #expect(namedInstance.loginIDConfiguration.configuration.supportedTypes == [.email])
+
+            child.loginIDConfiguration.setConfiguration(supportedTypes: [.userName], validationRegexes: [:])
+            #expect(OwnID.loginIDConfiguration.configuration.supportedTypes == [.userName])
+            #expect(instance.loginIDConfiguration.configuration.supportedTypes == [.userName])
+            namedInstance.loginIDConfiguration.setConfiguration(supportedTypes: [.anonymous], validationRegexes: [:])
+            #expect(OwnID.loginIDConfiguration.configuration.supportedTypes == [.userName])
+
+            OwnID.initialize { configuration in
+                configuration.appID = defaultAppID
+                configuration.rootURL = "https://127.0.0.1:9"
+            }
+            #expect(OwnID.loginIDConfiguration.configuration.supportedTypes == [.email])
+            #expect(OwnID.instance().loginIDConfiguration.configuration.supportedTypes == [.email])
+            #expect(namedInstance.loginIDConfiguration.configuration.supportedTypes == [.anonymous])
+        }
+    }
+
     @Test func `JSON null languages preserves the existing root language mode`() async throws {
         try await withOwnIDRootStateTestLock {
             let languageOwnerName = Self.uniqueInstanceName("json-null-language-owner")

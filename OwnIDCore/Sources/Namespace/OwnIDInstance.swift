@@ -14,8 +14,13 @@ import Foundation
 /// this instance's current scope in place and return this instance view. ``withProviders(_:_:)`` and
 /// ``setProviders(_:)`` return the current instance unchanged when the registrar does not register providers.
 public protocol OwnIDInstance: Sendable, OwnIDNamespace, ContextOverride, ProvidersOverride {
+    /// Initialization settings for this OwnID instance.
     var configuration: any OwnIDConfiguration { get }
 
+    /// Login-ID configuration provider shared by this instance and its child scopes.
+    var loginIDConfiguration: any LoginIDConfigurationProvider { get }
+
+    /// Application, device, and SDK module information shared by all instances in this process.
     var localInfo: any LocalInfo { get }
 
     /// Authentication flows.
@@ -61,6 +66,10 @@ internal struct OwnIDInstanceImpl: OwnIDFullInstance {
 
     var configuration: any OwnIDConfiguration {
         try! container.getOrThrow(type: (any OwnIDConfiguration).self)
+    }
+
+    var loginIDConfiguration: any LoginIDConfigurationProvider {
+        try! container.getOrThrow(type: (any LoginIDConfigurationProvider).self)
     }
 
     var localInfo: any LocalInfo {

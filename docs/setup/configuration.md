@@ -105,6 +105,24 @@ Use language codes with optional regions, such as `en` or `en-US`. Pass an empty
 
 For UI text customization, see [Localization](../customization/localization.md).
 
+## Login ID Configuration
+
+Optionally, override the server-provided login-ID configuration after SDK initialization to customize supported types and validation rules.
+
+```swift
+import Foundation
+import OwnIDCore
+
+OwnID.loginIDConfiguration.setConfiguration(
+    supportedTypes: [.email, .userName],
+    validationRegexes: [.userName: try! NSRegularExpression(pattern: "^[0-9]{10}$")]
+)
+```
+
+`supportedTypes` lists accepted types in inference priority order. `validationRegexes` accepts `[:]` for defaults and applies only to typed validation; types without a custom regex use their embedded SDK rule rather than a server regex.
+
+The override replaces the complete server configuration and remains active through later server updates. It is shared with the instance’s child scopes. Call `clearConfiguration()` to restore the latest server configuration, or the SDK default. Reapply the override after recreating the instance.
+
 ## Logging
 
 Logging is optional and disabled by default. Configure it before initialization when you need SDK logs.

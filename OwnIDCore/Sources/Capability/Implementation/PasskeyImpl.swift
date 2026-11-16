@@ -96,6 +96,7 @@ internal final class PasskeyImpl: NSObject, PasskeyProtocol, @unchecked Sendable
             name: attestationOptions.user.name,
             userID: userID
         )
+        registrationRequest.displayName = attestationOptions.user.displayName
 
         switch attestationOptions.authenticatorSelection?.userVerification {
         case .discouraged: registrationRequest.userVerificationPreference = .discouraged

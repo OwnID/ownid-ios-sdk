@@ -251,6 +251,16 @@ public enum OwnID: Sendable {
         provider.setLanguageTags(tags)
     }
 
+    /// Returns the login-ID configuration provider for the default instance.
+    ///
+    /// The returned provider is bound to the current default instance.
+    /// Fetch it again after ``destroy(instanceName:)`` or same-name reinitialization instead of reusing the old handle.
+    ///
+    /// - Warning: Requires a created default instance; otherwise this call traps.
+    public static var loginIDConfiguration: any LoginIDConfigurationProvider {
+        instance().loginIDConfiguration
+    }
+
     /// Returns ``OwnIDFlows`` for the default instance.
     ///
     /// The returned namespace is bound to the current default instance.

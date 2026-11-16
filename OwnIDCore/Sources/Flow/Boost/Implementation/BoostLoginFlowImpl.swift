@@ -175,7 +175,9 @@ internal final class BoostLoginFlowImpl: BoostLoginFlow, @unchecked Sendable {
         do {
             return BoostLoginFlowImpl(
                 userRepository: resolver.getOrNil(type: (any UserRepository).self),
-                ownIDOperation: (resolver as! any DIContainer).opsNamespace.withContext("BoostLoginFlow") { _ in },
+                ownIDOperation: (resolver as! any DIContainer).opsNamespace.withContext("BoostLoginFlow") { builder in
+                    builder.accountDisplayName = resolver.getOrNil(type: Context.self)?.accountDisplayName
+                },
                 userJourney: userJourneyOverride ?? resolver.getOrNil(type: (any UserJourney).self),
                 sessionCreate: resolver.getOrNil(type: (any SessionCreate).self),
                 coder: try resolver.getOrThrow(type: (any JSONCoder).self),
@@ -306,6 +308,12 @@ private actor BoostLoginFlowActor {
         switch (state, event) {
         case (.active(let controller, _), .abort(let reason)):
             controller.abort(reason: reason)
+            await userJourney?.completeOperation(
+                operationID: controller.operationID,
+                errorCode: .aborted,
+                source: "BoostLoginFlowActor.reduce.abort",
+                message: "Canceled with reason: \(reason.description)"
+            )
             return .completed(result: .canceled(reason))
         case (_, .abort(let reason)):
             if case .completed = state { return state }
@@ -321,14 +329,26 @@ private actor BoostLoginFlowActor {
                 return state
             }
             switch result {
-            case .loginIDCollect(let r): return try await handleLoginIdCollectResult(r, operationID: operationID, context: context)
-            case .login(let r): return try await handleLoginResult(r, operationID: operationID, context: context)
-            case .passkeyAssertion(let r): return try await handlePasskeyAssertionResult(r, context: context)
-            case .passkeyAttestation(let r): return try await handlePasskeyAttestationResult(r, context: context)
-            case .passkeyEnroll(let r): return try await handlePasskeyEnrollResult(r, context: context)
+            case .loginIDCollect(let r):
+                await completeJourneyOperation(operationID: operationID, result: r)
+                return try await handleLoginIdCollectResult(r, operationID: operationID, context: context)
+            case .login(let r):
+                await completeJourneyOperation(operationID: operationID, result: r)
+                return try await handleLoginResult(r, operationID: operationID, context: context)
+            case .passkeyAssertion(let r):
+                await completeJourneyOperation(operationID: operationID, result: r)
+                return try await handlePasskeyAssertionResult(r, context: context)
+            case .passkeyAttestation(let r):
+                await completeJourneyOperation(operationID: operationID, result: r)
+                return try await handlePasskeyAttestationResult(r, context: context)
+            case .passkeyEnroll(let r):
+                await completeJourneyOperation(operationID: operationID, result: r)
+                return try await handlePasskeyEnrollResult(r, context: context)
             case .emailVerification(let r):
+                await completeJourneyOperation(operationID: operationID, result: r)
                 return try await handleVerificationResult(r, operationID: operationID, type: .emailVerification, context: context)
             case .phoneVerification(let r):
+                await completeJourneyOperation(operationID: operationID, result: r)
                 return try await handleVerificationResult(r, operationID: operationID, type: .phoneNumberVerification, context: context)
             }
 
@@ -357,7 +377,6 @@ private actor BoostLoginFlowActor {
             taskScope.spawn { [weak self] in
                 guard let self else { return }
                 let result = await controller.whenSettled()
-                await self.completeJourneyOperation(operationID: controller.operationID, result: result)
                 await self.send(event: .opResult(controller.operationID, .login(result)))
             }
             return .active(controller: controller, context: context)
@@ -402,7 +421,6 @@ private actor BoostLoginFlowActor {
                 taskScope.spawn { [weak self] in
                     guard let self else { return }
                     let loginOpResult = await controller.whenSettled()
-                    await self.completeJourneyOperation(operationID: controller.operationID, result: loginOpResult)
                     await self.send(event: .opResult(controller.operationID, .login(loginOpResult)))
                 }
                 return .active(controller: controller, context: context)
@@ -468,7 +486,6 @@ private actor BoostLoginFlowActor {
             taskScope.spawn { [weak self] in
                 guard let self else { return }
                 let loginIdCollectOpResult = await controller.whenSettled()
-                await self.completeJourneyOperation(operationID: controller.operationID, result: loginIdCollectOpResult)
                 await self.send(event: .opResult(controller.operationID, .loginIDCollect(loginIdCollectOpResult)))
             }
             return .active(controller: controller, context: context)
@@ -510,7 +527,6 @@ private actor BoostLoginFlowActor {
                 taskScope.spawn { [weak self] in
                     guard let self else { return }
                     let loginOpResult = await controller.whenSettled()
-                    await self.completeJourneyOperation(operationID: controller.operationID, result: loginOpResult)
                     await self.send(event: .opResult(controller.operationID, .login(loginOpResult)))
                 }
                 return .active(controller: controller, context: context)
@@ -564,7 +580,6 @@ private actor BoostLoginFlowActor {
                         taskScope.spawn { [weak self] in
                             guard let self else { return }
                             let passkeyEnrollOpResult = await controller.whenSettled()
-                            await self.completeJourneyOperation(operationID: controller.operationID, result: passkeyEnrollOpResult)
                             await self.send(event: .opResult(controller.operationID, .passkeyEnroll(passkeyEnrollOpResult)))
                         }
                         return .active(controller: controller, context: context)
@@ -649,7 +664,6 @@ private actor BoostLoginFlowActor {
                     taskScope.spawn { [weak self] in
                         guard let self else { return }
                         let loginOpResult = await controller.whenSettled()
-                        await self.completeJourneyOperation(operationID: controller.operationID, result: loginOpResult)
                         await self.send(event: .opResult(controller.operationID, .login(loginOpResult)))
                     }
                     return .active(controller: controller, context: context)
@@ -754,7 +768,6 @@ private actor BoostLoginFlowActor {
                     taskScope.spawn { [weak self] in
                         guard let self else { return }
                         let res = await controller.whenSettled()
-                        await self.completeJourneyOperation(operationID: controller.operationID, result: res)
                         await self.send(event: .opResult(controller.operationID, .login(res)))
                     }
                     return .active(controller: controller, context: context)
@@ -850,6 +863,7 @@ private actor BoostLoginFlowActor {
         if passedOperations.keys.contains(.passkeyCreation) {
             nextOpTypes.removeAll { $0 != .emailVerification && $0 != .phoneNumberVerification }
         } else if passedOperations.isEmpty || passedOperations.keys.contains(.passkeyAuth),
+            !nextOpTypes.isEmpty,
             context.isAuthOperationAllowed(.passkeyCreation),
             !nextOpTypes.contains(.passkeyAuth),
             !nextOpTypes.contains(.passkeyCreation)
@@ -890,7 +904,6 @@ private actor BoostLoginFlowActor {
                         taskScope.spawn { [weak self] in
                             guard let self else { return }
                             let result = await controller.whenSettled()
-                            await self.completeJourneyOperation(operationID: controller.operationID, result: result)
                             await self.send(event: .opResult(controller.operationID, .passkeyAssertion(result)))
                         }
                         return .active(controller: controller, context: context)
@@ -928,7 +941,6 @@ private actor BoostLoginFlowActor {
                         taskScope.spawn { [weak self] in
                             guard let self else { return }
                             let verificationOpResult = await controller.whenSettled()
-                            await self.completeJourneyOperation(operationID: controller.operationID, result: verificationOpResult)
                             await self.send(event: .opResult(controller.operationID, .emailVerification(verificationOpResult)))
                         }
                         return .active(controller: controller, context: context)
@@ -965,7 +977,6 @@ private actor BoostLoginFlowActor {
                         taskScope.spawn { [weak self] in
                             guard let self else { return }
                             let verificationOpResult = await controller.whenSettled()
-                            await self.completeJourneyOperation(operationID: controller.operationID, result: verificationOpResult)
                             await self.send(event: .opResult(controller.operationID, .phoneVerification(verificationOpResult)))
                         }
                         return .active(controller: controller, context: context)
@@ -1008,7 +1019,6 @@ private actor BoostLoginFlowActor {
             taskScope.spawn { [weak self] in
                 guard let self else { return }
                 let result = await controller.whenSettled()
-                await self.completeJourneyOperation(operationID: controller.operationID, result: result)
                 await self.send(event: .opResult(controller.operationID, .passkeyAttestation(result)))
             }
             return .active(controller: controller, context: context)

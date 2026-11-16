@@ -2033,7 +2033,7 @@ components:
               $ref: '#/components/schemas/PasskeyProof'
             facekey:
               $ref: '#/components/schemas/FacekeyProof'
-            verificationChannel:
+            channel:
               type: string
     BasicDeviceInfo:
       type: object

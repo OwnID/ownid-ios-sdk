@@ -3,8 +3,194 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: FLOW-ORCH-010, FLOW-ORCH-020
+// Covers: FLOW-ORCH-010, FLOW-ORCH-020, FLOW-220
 struct BoostFlowOrchestrationTests {
+
+    @Test(arguments: [false, true])
+    func `Login explicit abort and result have one ordered journey completion`(resultFirst: Bool) async throws {
+        let events = BoostFlowEventLog()
+        let harness = FlowTestHarness(loginResult: .success(.accountNotFound(.init())))
+        defer { harness.taskScope.shutdown() }
+        let completionGate = CapturedFlowValue<Void>()
+        let journey = RecordingBoostFlowUserJourney(events: events, completionGate: resultFirst ? completionGate : nil)
+        let abortReasons = FlowLocked<[Reason]>([])
+        let operationID = OperationType.sessionCreation.createOperationID()
+        let operationController = OperationControllerImpl<LoginResponse, LoginOperationFailure>(operationID: operationID) { reason in
+            abortReasons.mutate { $0.append(reason) }
+        }
+        let operation = QueuedBoostLoginOperation(controllers: [operationController])
+        harness.container.registerFactory((any LoginOperation).self, dependencies: []) { _ in operation }
+        let flow = BoostLoginFlowImpl(
+            ownIDOperation: harness.operation,
+            userJourney: journey,
+            sessionCreate: nil,
+            coder: harness.coder,
+            taskScope: harness.taskScope,
+            context: nil,
+            loginIDValidator: harness.validator,
+            logger: nil
+        )
+        var context = BoostFlowContext()
+        context.accessToken = FlowFixtures.accessToken(id: "abort@example.test")
+        let controller = flow.start(context)
+        _ = try await withFlowTimeout("owned login operation started") {
+            try #require(await operation.starts.first(where: { _ in true }))
+        }
+        let response = LoginResponse.success(.init(accessToken: FlowFixtures.accessToken(), sessionPayload: "session"))
+        if resultFirst {
+            operationController.complete(response)
+            _ = try await withFlowTimeout("result journey completion entered") { await journey.completionStarted.wait() }
+        }
+        let reason = Reason.userClose(details: "explicit abort")
+        controller.abort(reason: reason)
+        controller.abort(reason: reason)
+        if resultFirst { completionGate.set(()) }
+        let first = try await withFlowTimeout("Boost terminal result") { await controller.whenSettled() }
+        operationController.complete(response)
+        _ = await operationController.whenSettled()
+        let completions = journey.completedOperations.get()
+        #expect(completions.count == 1)
+        #expect(completions.first?.0 == operationID)
+        let snapshot = events.snapshot()
+        if resultFirst {
+            _ = try requireSuccess(first)
+            #expect(completions.first?.1 == nil)
+            #expect(abortReasons.get().isEmpty)
+        } else {
+            #expect(try requireCancellation(first).description == reason.description)
+            #expect(completions.first?.1 == .aborted)
+            #expect(abortReasons.get().map(\.description) == [reason.description])
+            #expect(try requireCancellation(await controller.whenSettled()).description == reason.description)
+        }
+        let stepIndex = try #require(snapshot.firstIndex(where: { $0.hasPrefix("journey.completeOperation:") }))
+        let summaryIndex = try #require(snapshot.firstIndex(where: { $0.hasPrefix("journey.completeFlow:") }))
+        #expect(stepIndex < summaryIndex)
+        #expect(snapshot.filter { $0.hasPrefix("journey.completeFlow:") }.count == 1)
+    }
+
+    @Test(arguments: [false, true])
+    func `Create explicit abort and result have one ordered journey completion`(resultFirst: Bool) async throws {
+        let events = BoostFlowEventLog()
+        let harness = FlowTestHarness(loginResult: .success(.accountNotFound(.init())))
+        defer { harness.taskScope.shutdown() }
+        let completionGate = CapturedFlowValue<Void>()
+        let journey = RecordingBoostFlowUserJourney(events: events, completionGate: resultFirst ? completionGate : nil)
+        let abortReasons = FlowLocked<[Reason]>([])
+        let operationID = OperationType.sessionCreation.createOperationID()
+        let operationController = OperationControllerImpl<LoginResponse, LoginOperationFailure>(operationID: operationID) { reason in
+            abortReasons.mutate { $0.append(reason) }
+        }
+        let operation = QueuedBoostLoginOperation(controllers: [operationController])
+        harness.container.registerFactory((any LoginOperation).self, dependencies: []) { _ in operation }
+        let flow = BoostCreatePasskeyFlowImpl(
+            ownIDOperation: harness.operation,
+            boostLoginFlow: RecordingBoostLoginFlow(events: events, result: .failure(.unexpected(message: "unused child"))),
+            userJourney: journey,
+            sessionCreate: nil,
+            coder: harness.coder,
+            taskScope: harness.taskScope,
+            context: nil,
+            loginIDValidator: harness.validator,
+            logger: nil
+        )
+        var context = BoostFlowContext()
+        context.accessToken = FlowFixtures.accessToken(id: "abort@example.test")
+        let controller = flow.start(context)
+        _ = try await withFlowTimeout("owned login operation started") {
+            try #require(await operation.starts.first(where: { _ in true }))
+        }
+        let response = LoginResponse.success(.init(accessToken: FlowFixtures.accessToken(), sessionPayload: "session"))
+        if resultFirst {
+            operationController.complete(response)
+            _ = try await withFlowTimeout("result journey completion entered") { await journey.completionStarted.wait() }
+        }
+        let reason = Reason.userClose(details: "explicit abort")
+        controller.abort(reason: reason)
+        controller.abort(reason: reason)
+        if resultFirst { completionGate.set(()) }
+        let first = try await withFlowTimeout("Boost terminal result") { await controller.whenSettled() }
+        operationController.complete(response)
+        _ = await operationController.whenSettled()
+        let completions = journey.completedOperations.get()
+        #expect(completions.count == 1)
+        #expect(completions.first?.0 == operationID)
+        let snapshot = events.snapshot()
+        if resultFirst {
+            _ = try requireSuccess(first)
+            #expect(completions.first?.1 == nil)
+            #expect(abortReasons.get().isEmpty)
+        } else {
+            #expect(try requireCancellation(first).description == reason.description)
+            #expect(completions.first?.1 == .aborted)
+            #expect(abortReasons.get().map(\.description) == [reason.description])
+            #expect(try requireCancellation(await controller.whenSettled()).description == reason.description)
+        }
+        let stepIndex = try #require(snapshot.firstIndex(where: { $0.hasPrefix("journey.completeOperation:") }))
+        let summaryIndex = try #require(snapshot.firstIndex(where: { $0.hasPrefix("journey.completeFlow:") }))
+        #expect(stepIndex < summaryIndex)
+        #expect(snapshot.filter { $0.hasPrefix("journey.completeFlow:") }.count == 1)
+    }
+
+    @Test func `Delegated Login owns its aborted step and the only summary`() async throws {
+        let events = BoostFlowEventLog()
+        let harness = FlowTestHarness(loginResult: .success(.accountNotFound(.init())))
+        defer { harness.taskScope.shutdown() }
+        let journey = RecordingBoostFlowUserJourney(events: events)
+        let shutdownToken = ShutdownToken()
+        let parentScope = TaskScope(shutdownToken: shutdownToken)
+        let childScope = TaskScope(shutdownToken: shutdownToken)
+        defer {
+            parentScope.shutdown()
+            childScope.shutdown()
+        }
+        let discoveryID = OperationType.sessionCreation.createOperationID()
+        let childID = OperationType.sessionCreation.createOperationID()
+        let discovery = OperationControllerImpl<LoginResponse, LoginOperationFailure>(operationID: discoveryID) { _ in }
+        discovery.complete(.authRequired(.init(authRequirements: AuthRequirements(
+            targetScore: 1, operations: [OperationRequirement(score: 1, type: .passkeyAuth, channels: nil)]
+        ))))
+        let abortReasons = FlowLocked<[Reason]>([])
+        let childOperation = OperationControllerImpl<LoginResponse, LoginOperationFailure>(operationID: childID) { reason in
+            abortReasons.mutate { $0.append(reason) }
+        }
+        let operation = QueuedBoostLoginOperation(controllers: [discovery, childOperation])
+        harness.container.registerFactory((any LoginOperation).self, dependencies: []) { _ in operation }
+        let childFlow = BoostLoginFlowImpl(
+            ownIDOperation: harness.operation, userJourney: journey, sessionCreate: nil, coder: harness.coder,
+            taskScope: childScope, context: nil, loginIDValidator: harness.validator, logger: nil
+        )
+        let parentFlow = BoostCreatePasskeyFlowImpl(
+            ownIDOperation: harness.operation, boostLoginFlow: childFlow, userJourney: journey, sessionCreate: nil,
+            coder: harness.coder, taskScope: parentScope, context: nil, loginIDValidator: harness.validator, logger: nil
+        )
+        var context = BoostFlowContext()
+        context.accessToken = FlowFixtures.accessToken(id: "delegated-abort@example.test")
+        let parent = parentFlow.start(context)
+        _ = try await withFlowTimeout("delegated login operation started") {
+            try #require(await operation.starts.first(where: { $0 == childID }))
+        }
+        let child = childFlow.start(BoostFlowContext())
+        let reason = Reason.userClose(details: "delegated abort")
+        parent.abort(reason: reason)
+        parent.abort(reason: reason)
+        let parentResult = try await withFlowTimeout("delegated parent abort") { await parent.whenSettled() }
+        let childResult = try await withFlowTimeout("delegated child abort") { await child.whenSettled() }
+        #expect(try requireCancellation(parentResult).description == reason.description)
+        #expect(try requireCancellation(childResult).description == reason.description)
+        childOperation.complete(.success(.init(accessToken: FlowFixtures.accessToken(), sessionPayload: "late")))
+        _ = await childOperation.whenSettled()
+        let completions = journey.completedOperations.get()
+        #expect(completions.filter { $0.0 == discoveryID }.count == 1)
+        #expect(completions.first { $0.0 == discoveryID }?.1 == nil)
+        #expect(completions.filter { $0.0 == childID }.count == 1)
+        #expect(completions.first { $0.0 == childID }?.1 == .aborted)
+        #expect(abortReasons.get().map(\.description) == [reason.description])
+        let snapshot = events.snapshot()
+        #expect(snapshot.filter { $0.hasPrefix("journey.completeFlow:") }.count == 1)
+        let stepIndex = try #require(snapshot.firstIndex(of: "journey.completeOperation:SessionCreation:aborted"))
+        let summaryIndex = try #require(snapshot.firstIndex(of: "journey.completeFlow:error:aborted"))
+        #expect(stepIndex < summaryIndex)
+    }
 
     @Test func `Boost login settles after session storage and analytics terminal work`() async throws {
         let events = BoostFlowEventLog()
@@ -345,9 +531,13 @@ private final class RecordingBoostFlowSessionCreate: SessionCreate, @unchecked S
 
 private final class RecordingBoostFlowUserJourney: UserJourney, @unchecked Sendable {
     private let events: BoostFlowEventLog
+    private let completionGate: CapturedFlowValue<Void>?
+    let completionStarted = CapturedFlowValue<OperationID>()
+    let completedOperations = FlowLocked<[(OperationID, ErrorCode?)]>([])
 
-    init(events: BoostFlowEventLog) {
+    init(events: BoostFlowEventLog, completionGate: CapturedFlowValue<Void>? = nil) {
         self.events = events
+        self.completionGate = completionGate
     }
 
     func startFlow(name: String?, source: FlowInfo.Source, traceParent: String?) async {
@@ -375,6 +565,9 @@ private final class RecordingBoostFlowUserJourney: UserJourney, @unchecked Senda
     }
 
     func completeOperation(operationID: OperationID, errorCode: ErrorCode?, source: String?, message: String?) async {
+        completionStarted.set(operationID)
+        if let completionGate { await completionGate.wait() }
+        completedOperations.mutate { $0.append((operationID, errorCode)) }
         events.record("journey.completeOperation:\(operationID.type.rawValue):\(errorCode?.rawValue ?? "success")")
     }
 
@@ -421,6 +614,29 @@ private final class RecordingBoostLoginFlow: BoostLoginFlow, @unchecked Sendable
         case .failure(let failure):
             controller.fail(failure)
         }
+        return controller
+    }
+}
+
+private final class QueuedBoostLoginOperation: LoginOperation, @unchecked Sendable {
+    let operationType: OperationType = .sessionCreation
+    let starts: AsyncStream<OperationID>
+    private let continuation: AsyncStream<OperationID>.Continuation
+    private let lock = NSLock()
+    private var controllers: [OperationControllerImpl<LoginResponse, LoginOperationFailure>]
+
+    init(controllers: [OperationControllerImpl<LoginResponse, LoginOperationFailure>]) {
+        self.controllers = controllers
+        let (stream, continuation) = AsyncStream.makeStream(of: OperationID.self)
+        starts = stream
+        self.continuation = continuation
+    }
+
+    func availability(params: (any CapabilityParams)?) async -> Availability { .available }
+
+    func start(params: LoginOperationParams?) -> any OperationController<LoginResponse, LoginOperationFailure> {
+        let controller = lock.withLock { controllers.count > 1 ? controllers.removeFirst() : controllers[0] }
+        continuation.yield(controller.operationID)
         return controller
     }
 }

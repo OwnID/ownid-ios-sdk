@@ -8196,6 +8196,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:9OwnIDCore0A2IDO20loginIDConfigurationAA05LoginE8Provider_pvpZ",
+      "target": "s:9OwnIDCore0A2IDO"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:9OwnIDCore0A2IDO5flowsAA0A7IDFlowsVvpZ",
       "target": "s:9OwnIDCore0A2IDO"
     },
@@ -16572,6 +16577,11 @@
     },
     {
       "kind": "requirementOf",
+      "source": "s:9OwnIDCore0A10IDInstanceP20loginIDConfigurationAA05LoginE8Provider_pvp",
+      "target": "s:9OwnIDCore0A10IDInstanceP"
+    },
+    {
+      "kind": "requirementOf",
       "source": "s:9OwnIDCore0A10IDInstanceP5flowsAA0A7IDFlowsVvp",
       "target": "s:9OwnIDCore0A10IDInstanceP"
     },
@@ -17127,7 +17137,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore28LoginIDConfigurationProviderP16setConfigurationyyAA0cD0VF",
+      "source": "s:9OwnIDCore28LoginIDConfigurationProviderP16setConfiguration14supportedTypes17validationRegexesySayAA0C6IDTypeOG_SDyAHSo19NSRegularExpressionCSgGtF",
       "target": "s:9OwnIDCore28LoginIDConfigurationProviderP"
     },
     {
@@ -17137,7 +17147,7 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:9OwnIDCore28LoginIDConfigurationProviderP22setServerConfigurationyyAA0cD0VF",
+      "source": "s:9OwnIDCore28LoginIDConfigurationProviderP22setServerConfiguration14supportedTypes17validationRegexesySayAA0C6IDTypeOG_SDyAHSo19NSRegularExpressionCSgGtF",
       "target": "s:9OwnIDCore28LoginIDConfigurationProviderP"
     },
     {
@@ -18204,6 +18214,51 @@
       ],
       "precise": "s:9OwnIDCore0A10IDInstanceP13configurationAA0A15IDConfiguration_pvp",
       "title": "configuration"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "loginIDConfiguration"
+        },
+        {
+          "kind": "text",
+          "spelling": ": any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore28LoginIDConfigurationProviderP",
+          "spelling": "LoginIDConfigurationProvider"
+        },
+        {
+          "kind": "text",
+          "spelling": " { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.property",
+      "path": [
+        "OwnIDInstance",
+        "loginIDConfiguration"
+      ],
+      "precise": "s:9OwnIDCore0A10IDInstanceP20loginIDConfigurationAA05LoginE8Provider_pvp",
+      "title": "loginIDConfiguration"
     },
     {
       "access": "public",
@@ -23170,6 +23225,59 @@
       ],
       "precise": "s:9OwnIDCore0A2IDO18initializeFromJSON12instanceName5blockyAA08InstanceH0V_yAA0A26IDJSONConfigurationBuilderCXEtFZ",
       "title": "initializeFromJSON(instanceName:block:)"
+    },
+    {
+      "access": "public",
+      "declaration": [
+        {
+          "kind": "keyword",
+          "spelling": "static"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "var"
+        },
+        {
+          "kind": "text",
+          "spelling": " "
+        },
+        {
+          "kind": "identifier",
+          "spelling": "loginIDConfiguration"
+        },
+        {
+          "kind": "text",
+          "spelling": ": any "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore28LoginIDConfigurationProviderP",
+          "spelling": "LoginIDConfigurationProvider"
+        },
+        {
+          "kind": "text",
+          "spelling": " { "
+        },
+        {
+          "kind": "keyword",
+          "spelling": "get"
+        },
+        {
+          "kind": "text",
+          "spelling": " }"
+        }
+      ],
+      "kind": "swift.type.property",
+      "path": [
+        "OwnID",
+        "loginIDConfiguration"
+      ],
+      "precise": "s:9OwnIDCore0A2IDO20loginIDConfigurationAA05LoginE8Provider_pvpZ",
+      "title": "loginIDConfiguration"
     },
     {
       "access": "public",
@@ -67478,7 +67586,7 @@
         },
         {
           "kind": "text",
-          "spelling": "?])"
+          "spelling": "?] = [:])"
         }
       ],
       "functionSignature": {
@@ -93216,28 +93324,46 @@
         },
         {
           "kind": "externalParam",
-          "spelling": "_"
+          "spelling": "supportedTypes"
         },
         {
           "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "configuration"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
+          "spelling": ": ["
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore20LoginIDConfigurationV",
-          "spelling": "LoginIDConfiguration"
+          "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+          "spelling": "LoginIDType"
         },
         {
           "kind": "text",
-          "spelling": ")"
+          "spelling": "], "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "validationRegexes"
+        },
+        {
+          "kind": "text",
+          "spelling": ": ["
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+          "spelling": "LoginIDType"
+        },
+        {
+          "kind": "text",
+          "spelling": " : "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)NSRegularExpression",
+          "spelling": "NSRegularExpression"
+        },
+        {
+          "kind": "text",
+          "spelling": "?])"
         }
       ],
       "functionSignature": {
@@ -93246,19 +93372,54 @@
             "declarationFragments": [
               {
                 "kind": "identifier",
-                "spelling": "configuration"
+                "spelling": "supportedTypes"
               },
               {
                 "kind": "text",
-                "spelling": ": "
+                "spelling": ": ["
               },
               {
                 "kind": "typeIdentifier",
-                "preciseIdentifier": "s:9OwnIDCore20LoginIDConfigurationV",
-                "spelling": "LoginIDConfiguration"
+                "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+                "spelling": "LoginIDType"
+              },
+              {
+                "kind": "text",
+                "spelling": "]"
               }
             ],
-            "name": "configuration"
+            "name": "supportedTypes"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "validationRegexes"
+              },
+              {
+                "kind": "text",
+                "spelling": ": ["
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+                "spelling": "LoginIDType"
+              },
+              {
+                "kind": "text",
+                "spelling": " : "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)NSRegularExpression",
+                "spelling": "NSRegularExpression"
+              },
+              {
+                "kind": "text",
+                "spelling": "?]"
+              }
+            ],
+            "name": "validationRegexes"
           }
         ],
         "returns": [
@@ -93271,10 +93432,10 @@
       "kind": "swift.method",
       "path": [
         "LoginIDConfigurationProvider",
-        "setConfiguration(_:)"
+        "setConfiguration(supportedTypes:validationRegexes:)"
       ],
-      "precise": "s:9OwnIDCore28LoginIDConfigurationProviderP16setConfigurationyyAA0cD0VF",
-      "title": "setConfiguration(_:)"
+      "precise": "s:9OwnIDCore28LoginIDConfigurationProviderP16setConfiguration14supportedTypes17validationRegexesySayAA0C6IDTypeOG_SDyAHSo19NSRegularExpressionCSgGtF",
+      "title": "setConfiguration(supportedTypes:validationRegexes:)"
     },
     {
       "access": "public",
@@ -93333,28 +93494,46 @@
         },
         {
           "kind": "externalParam",
-          "spelling": "_"
+          "spelling": "supportedTypes"
         },
         {
           "kind": "text",
-          "spelling": " "
-        },
-        {
-          "kind": "internalParam",
-          "spelling": "configuration"
-        },
-        {
-          "kind": "text",
-          "spelling": ": "
+          "spelling": ": ["
         },
         {
           "kind": "typeIdentifier",
-          "preciseIdentifier": "s:9OwnIDCore20LoginIDConfigurationV",
-          "spelling": "LoginIDConfiguration"
+          "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+          "spelling": "LoginIDType"
         },
         {
           "kind": "text",
-          "spelling": ")"
+          "spelling": "], "
+        },
+        {
+          "kind": "externalParam",
+          "spelling": "validationRegexes"
+        },
+        {
+          "kind": "text",
+          "spelling": ": ["
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+          "spelling": "LoginIDType"
+        },
+        {
+          "kind": "text",
+          "spelling": " : "
+        },
+        {
+          "kind": "typeIdentifier",
+          "preciseIdentifier": "c:objc(cs)NSRegularExpression",
+          "spelling": "NSRegularExpression"
+        },
+        {
+          "kind": "text",
+          "spelling": "?])"
         }
       ],
       "functionSignature": {
@@ -93363,19 +93542,54 @@
             "declarationFragments": [
               {
                 "kind": "identifier",
-                "spelling": "configuration"
+                "spelling": "supportedTypes"
               },
               {
                 "kind": "text",
-                "spelling": ": "
+                "spelling": ": ["
               },
               {
                 "kind": "typeIdentifier",
-                "preciseIdentifier": "s:9OwnIDCore20LoginIDConfigurationV",
-                "spelling": "LoginIDConfiguration"
+                "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+                "spelling": "LoginIDType"
+              },
+              {
+                "kind": "text",
+                "spelling": "]"
               }
             ],
-            "name": "configuration"
+            "name": "supportedTypes"
+          },
+          {
+            "declarationFragments": [
+              {
+                "kind": "identifier",
+                "spelling": "validationRegexes"
+              },
+              {
+                "kind": "text",
+                "spelling": ": ["
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "s:9OwnIDCore11LoginIDTypeO",
+                "spelling": "LoginIDType"
+              },
+              {
+                "kind": "text",
+                "spelling": " : "
+              },
+              {
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)NSRegularExpression",
+                "spelling": "NSRegularExpression"
+              },
+              {
+                "kind": "text",
+                "spelling": "?]"
+              }
+            ],
+            "name": "validationRegexes"
           }
         ],
         "returns": [
@@ -93388,10 +93602,10 @@
       "kind": "swift.method",
       "path": [
         "LoginIDConfigurationProvider",
-        "setServerConfiguration(_:)"
+        "setServerConfiguration(supportedTypes:validationRegexes:)"
       ],
-      "precise": "s:9OwnIDCore28LoginIDConfigurationProviderP22setServerConfigurationyyAA0cD0VF",
-      "title": "setServerConfiguration(_:)"
+      "precise": "s:9OwnIDCore28LoginIDConfigurationProviderP22setServerConfiguration14supportedTypes17validationRegexesySayAA0C6IDTypeOG_SDyAHSo19NSRegularExpressionCSgGtF",
+      "title": "setServerConfiguration(supportedTypes:validationRegexes:)"
     },
     {
       "access": "public",

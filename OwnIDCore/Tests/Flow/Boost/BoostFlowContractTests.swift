@@ -3,8 +3,50 @@ import Testing
 
 @_spi(OwnIDInternal) @testable import OwnIDCore
 
-// Covers: FLOW-010, FLOW-020, FLOW-030, FLOW-040, FLOW-120, FLOW-130, FLOW-140, FLOW-150, FLOW-170, FLOW-180, FLOW-200
+// Covers: FLOW-010, FLOW-020, FLOW-030, FLOW-040, FLOW-120, FLOW-130, FLOW-140, FLOW-150, FLOW-170, FLOW-180, FLOW-200, FLOW-210
 struct BoostFlowContractTests {
+
+    @Test func `Boost factories preserve display name while clearing operation authorization`() async throws {
+        let displayNames: [String?] = [nil, "Ada Lovelace"]
+        for displayName in displayNames {
+            for mode in 0...2 {
+                let operationTypes: [OperationType] = mode == 2 ? [.passkeyAuth, .emailVerification] : [.emailVerification]
+                let response: LoginResponse = mode == 1 ? .accountNotFound(.init(reason: "register")) : .authRequired(
+                    .init(
+                        authRequirements: AuthRequirements(
+                            targetScore: 1,
+                            operations: operationTypes.map {
+                                OperationRequirement(score: 1, type: $0, channels: nil)
+                            }
+                        ),
+                        reason: "authentication required"
+                    )
+                )
+                let harness = FlowTestHarness(loginResult: .success(response))
+                harness.passkeyAssertion.availability = .unavailable("no passkey")
+                harness.emailVerification.availability = .unavailable("no email")
+                harness.container.setContext {
+                    $0.authz = .fromToken(FlowFixtures.accessToken(id: "factory@example.test"))
+                    $0.accountDisplayName = displayName
+                }
+                if mode == 0 {
+                    let controller = BoostLoginFlowImpl.create(resolver: harness.container).start(BoostFlowContext())
+                    _ = await controller.whenSettled()
+                } else {
+                    let controller = BoostCreatePasskeyFlowImpl.create(resolver: harness.container).start(BoostFlowContext())
+                    _ = await controller.whenSettled()
+                }
+                #expect(!harness.passkeyAttestation.scopedContexts.isEmpty)
+                for context in harness.passkeyAttestation.scopedContexts {
+                    #expect(context?.accountDisplayName == displayName)
+                    #expect(context?.authz == nil)
+                }
+                #expect(harness.container.getOrNil(type: Context.self)?.accountDisplayName == displayName)
+                #expect(harness.container.getOrNil(type: Context.self)?.authz != nil)
+                harness.taskScope.shutdown()
+            }
+        }
+    }
 
     @Test func `Boost context and result descriptions redact sensitive values`() {
         let secret = "1234567890ABCDEFGHIJ"
@@ -913,7 +955,7 @@ struct BoostFlowContractTests {
         #expect(phoneHarness.passkeyAttestation.startParams.isEmpty)
     }
 
-    @Test func `Boost login passkey allow-list permits authentication and creation fallback`() async throws {
+    @Test func `Boost login passkey allow-list permits authentication`() async throws {
         let loginID = FlowFixtures.loginID("passkey-allow-list", type: .userName)
         let authHarness = FlowTestHarness(
             loginResult: .success(
@@ -937,7 +979,10 @@ struct BoostFlowContractTests {
         #expect(authHarness.passkeyAttestation.startParams.isEmpty)
         #expect(authHarness.emailVerification.startParams.isEmpty)
         #expect(authHarness.phoneVerification.startParams.isEmpty)
+    }
 
+    @Test func `Boost login passkey-only allow-list skips creation without permitted fallback`() async throws {
+        let loginID = FlowFixtures.loginID("passkey-allow-list", type: .userName)
         let creationHarness = FlowTestHarness(
             loginResult: .success(
                 authRequiredLoginResponse(
@@ -946,15 +991,65 @@ struct BoostFlowContractTests {
             ),
             loginIDCollectResult: .success(loginID)
         )
+        defer { creationHarness.taskScope.shutdown() }
         let creationFlow = makeBoostLoginFlow(harness: creationHarness)
+        let context = BoostFlowContext { $0.allowedAuthOperations = [.passkey] }
 
         let failure = try await requireFailure(creationFlow.start(context).whenSettled())
 
         try requireLoginInsufficientAuthFailure(failure, expectedMessageFragment: nil)
-        #expect(creationHarness.passkeyAttestation.startParams.count == 1)
+        #expect(creationHarness.passkeyAttestation.availabilityParams.isEmpty)
+        #expect(creationHarness.passkeyAttestation.startParams.isEmpty)
         #expect(creationHarness.passkeyAssertion.startParams.isEmpty)
         #expect(creationHarness.emailVerification.startParams.isEmpty)
         #expect(creationHarness.phoneVerification.startParams.isEmpty)
+    }
+
+    @Test(arguments: [false, true])
+    func `Boost login exhausted passkey authentication skips creation without fallback`(authAvailable: Bool) async throws {
+        let harness = FlowTestHarness(
+            loginResult: .success(authRequiredLoginResponse(operations: [authRequirement(.passkeyAuth)])),
+            passkeyAssertionResult: .failure(.credential(.noApplicablePasskeys(errorCode: .noApplicablePasskeys, message: "No passkey")))
+        )
+        defer { harness.taskScope.shutdown() }
+        if !authAvailable { harness.passkeyAssertion.availability = .unavailable("Passkeys unavailable") }
+        let flow = makeBoostLoginFlow(harness: harness)
+
+        let failure = try await requireFailure(flow.start(.empty).whenSettled())
+
+        try requireLoginInsufficientAuthFailure(failure, expectedMessageFragment: nil)
+        #expect(harness.passkeyAssertion.availabilityParams.count == 1)
+        #expect(harness.passkeyAssertion.startParams.count == (authAvailable ? 1 : 0))
+        #expect(harness.passkeyAttestation.availabilityParams.isEmpty)
+        #expect(harness.passkeyAttestation.startParams.isEmpty)
+        #expect(harness.passkeyEnroll.startParams.isEmpty)
+    }
+
+    @Test(arguments: [false, true])
+    func `Boost login passkey creation preserves permitted verification and enrollment`(serverListsCreation: Bool) async throws {
+        let loginID = FlowFixtures.loginID("permitted-fallback@example.com")
+        let proofToken = ProofToken(token: "proof-token")
+        let operations = serverListsCreation
+            ? [authRequirement(.passkeyCreation), authRequirement(.emailVerification)]
+            : [authRequirement(.emailVerification)]
+        let harness = FlowTestHarness(
+            loginResult: .success(authRequiredLoginResponse(operations: operations)),
+            additionalLoginResults: [.success(FlowFixtures.loginSuccess(id: loginID.id))],
+            loginIDCollectResult: .success(loginID),
+            passkeyAttestationResult: .success(FlowFixtures.attestationResponse(proofToken: proofToken))
+        )
+        defer { harness.taskScope.shutdown() }
+        let flow = makeBoostLoginFlow(harness: harness)
+        let context = BoostFlowContext { $0.allowedAuthOperations = [.passkey, .emailVerification] }
+
+        let response = try await requireSuccess(flow.start(context).whenSettled())
+
+        #expect(response.authMethod == .otp)
+        #expect(harness.passkeyAttestation.startParams.count == 1)
+        #expect(harness.emailVerification.startParams.count == 1)
+        #expect(harness.passkeyAssertion.startParams.isEmpty)
+        let enrollParams = try requireRecordedValue(harness.passkeyEnroll.startParams, "Expected passkey enrollment")
+        #expect(enrollParams.proofToken == proofToken)
     }
 
     @Test func `Boost login unmatched authentication allow-list fails without starting excluded operations`() async throws {
@@ -1105,14 +1200,14 @@ struct BoostFlowContractTests {
             ),
             loginIDCollectResult: .success(loginID)
         )
-        harness.passkeyAttestation.availability = .unavailable("passkey creation unavailable")
         let flow = makeBoostLoginFlow(harness: harness)
 
         let failure = try await requireFailure(flow.start(.empty).whenSettled())
 
-        try requireLoginInsufficientAuthFailure(failure)
+        try requireLoginInsufficientAuthFailure(failure, expectedMessageFragment: "No next operation available")
         #expect(harness.loginIDCollect.startParams.count == 1)
         #expect(harness.login.startParams.count == 1)
+        #expect(harness.passkeyAttestation.availabilityParams.isEmpty)
         #expect(harness.passkeyAttestation.startParams.isEmpty)
         #expect(harness.phoneVerification.startParams.isEmpty)
     }

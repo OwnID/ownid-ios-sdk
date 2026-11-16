@@ -437,7 +437,7 @@ internal actor AppConfigProviderImpl: AppConfigProvider {
             regexes[item.type] = compiledRegex
         }
 
-        provider.setServerConfiguration(LoginIDConfiguration(supportedTypes: supportedTypes, validationRegexes: regexes))
+        provider.setServerConfiguration(supportedTypes: supportedTypes, validationRegexes: regexes)
     }
 
     internal func isNetworkMonitoringActiveForTest() -> Bool {

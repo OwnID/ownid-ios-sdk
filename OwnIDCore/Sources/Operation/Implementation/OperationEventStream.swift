@@ -22,8 +22,11 @@ internal actor OperationEventStream<Event: Sendable> {
     @discardableResult
     internal func yield(_ event: Event) -> Bool {
         guard let continuation else { return false }
-        continuation.yield(event)
-        return true
+        switch continuation.yield(event) {
+        case .enqueued: return true
+        case .dropped, .terminated: return false
+        @unknown default: return false
+        }
     }
 
     internal func finish() {

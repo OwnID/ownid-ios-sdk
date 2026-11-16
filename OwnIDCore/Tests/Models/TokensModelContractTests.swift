@@ -7,6 +7,27 @@ import Testing
 struct TokensModelContractTests {
     private let modelJSON = ModelJSON()
 
+    @Test func `Untyped token subject uses embedded inference and both forms use configured validation`() throws {
+        let configuration = LoginIDConfigurationProviderImpl(initialConfiguration: .default)
+        configuration.setConfiguration(supportedTypes: [.phoneNumber], validationRegexes: [.phoneNumber: try NSRegularExpression(pattern: "ext-[0-9]+")])
+        let validator = LoginIDValidatorImpl(loginIDConfigurationProvider: configuration)
+
+        let accepted = try accessToken(payload: #"{"sub":"PhoneNumber:ext-123"}"#).loginID(coder: JSONCoderImpl(), validator: validator)
+        #expect(accepted == LoginID(id: "ext-123", type: .phoneNumber))
+        let inferred = try #require(throws: TokenError.self) {
+            _ = try accessToken(payload: #"{"sub":"ext-123"}"#).loginID(coder: JSONCoderImpl(), validator: validator)
+        }
+        let rawValidation = try #require(throws: TokenError.self) {
+            _ = try accessToken(payload: #"{"sub":"1234567"}"#).loginID(coder: JSONCoderImpl(), validator: validator)
+        }
+        let typed = try #require(throws: TokenError.self) {
+            _ = try accessToken(payload: #"{"sub":"PhoneNumber:1234567"}"#).loginID(coder: JSONCoderImpl(), validator: validator)
+        }
+        #expect(inferred.errorCode == .loginIDTypeNotSupported)
+        #expect(rawValidation.errorCode == .loginIDValidationFailed)
+        #expect(typed.errorCode == .loginIDValidationFailed)
+    }
+
     @Test func `Access token Codable preserves raw token value`() throws {
         let token = AccessToken(token: "header.payload.signature")
 

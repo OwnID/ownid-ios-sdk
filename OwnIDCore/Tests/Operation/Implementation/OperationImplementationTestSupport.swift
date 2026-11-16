@@ -293,8 +293,12 @@ final class FakeLoginIDConfigurationProvider: LoginIDConfigurationProvider, @unc
     private let storage: Locked<LoginIDConfiguration>
     init(configuration: LoginIDConfiguration = .default) { storage = Locked(configuration) }
     var configuration: LoginIDConfiguration { storage.get() }
-    func setServerConfiguration(_ configuration: LoginIDConfiguration) { storage.set(configuration) }
-    func setConfiguration(_ configuration: LoginIDConfiguration) { storage.set(configuration) }
+    func setServerConfiguration(supportedTypes: [LoginIDType], validationRegexes: [LoginIDType: NSRegularExpression?]) {
+        storage.set(LoginIDConfiguration(supportedTypes: supportedTypes, validationRegexes: validationRegexes))
+    }
+    func setConfiguration(supportedTypes: [LoginIDType], validationRegexes: [LoginIDType: NSRegularExpression?]) {
+        storage.set(LoginIDConfiguration(supportedTypes: supportedTypes, validationRegexes: validationRegexes))
+    }
     func clearConfiguration() {}
 }
 

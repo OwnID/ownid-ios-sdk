@@ -22,7 +22,16 @@ struct AppConfigProviderImplementationRuntimeTests {
         #expect(config.displayName == "Fresh Config")
         #expect(streamedConfig == config)
         #expect(harness.loginIDConfiguration.configuration.supportedTypes == [.email, .phoneNumber])
-        #expect(harness.loginIDConfiguration.configuration.validationRegexes[.email] != nil)
+        let validator = LoginIDValidatorImpl(loginIDConfigurationProvider: harness.loginIDConfiguration)
+        let configuredEmail = LoginID(id: "member!@example.test", type: .email)
+        #expect(try validator.validate(configuredEmail) == configuredEmail)
+        #expect(throws: LoginIDValidationError.self) {
+            _ = try validator.determineLoginIDType(loginID: configuredEmail.id)
+        }
+        #expect(try validator.determineLoginIDType(loginID: "person@other.test") == .email)
+        #expect(throws: LoginIDValidationError.self) {
+            _ = try validator.validate(LoginID(id: "person@other.test", type: .email))
+        }
         #expect(config.localVersion == 0)
         #expect(try Self.cachedConfig(at: harness.cacheFileURL) == config.withLocalVersion(-1))
         #expect(await harness.provider.isNetworkMonitoringActiveForTest() == false)
